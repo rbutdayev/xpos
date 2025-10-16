@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Illuminate\Http\Request;
+use Inertia\Middleware;
+
+class HandleInertiaRequests extends Middleware
+{
+    /**
+     * The root template that is loaded on the first page visit.
+     *
+     * @var string
+     */
+    protected $rootView = 'app';
+
+    /**
+     * Determine the current asset version.
+     */
+    public function version(Request $request): ?string
+    {
+        return parent::version($request);
+    }
+
+    /**
+     * Define the props that are shared by default.
+     *
+     * @return array<string, mixed>
+     */
+    public function share(Request $request): array
+    {
+        $user = $request->user();
+        $selectedWarehouseId = $request->session()->get('selected_warehouse_id');
+        
+        // Validate selected warehouse for sales_staff users
+        if ($user && $user->role === 'sales_staff' && $user->branch_id && $selectedWarehouseId) {
+            $hasAccess = \App\Models\WarehouseBranchAccess::where('warehouse_id', $selectedWarehouseId)
+                ->where('branch_id', $user->branch_id)
+                ->where('can_view_stock', true)
+                ->exists();
+                
+            if (!$hasAccess) {
+                // Clear invalid warehouse selection
+                $request->session()->forget('selected_warehouse_id');
+                $selectedWarehouseId = null;
+            }
+        }
+        
+        return [
+            ...parent::share($request),
+            'auth' => [
+                'user' => $user ? $user->load('branch') : null,
+            ],
+            'warehouses' => $user ? 
+                $this->getWarehousesForUser($user) : [],
+            'selectedWarehouse' => $selectedWarehouseId,
+            'translations' => trans('app'),
+        ];
+    }
+
+    /**
+     * Get warehouses for user based on their role
+     */
+    private function getWarehousesForUser($user): array
+    {
+        // Super admins don't have warehouses (they're global)
+        if ($user->isSuperAdmin() || !$user->account_id) {
+            return [];
+        }
+
+        $query = \App\Models\Warehouse::where('account_id', $user->account_id)
+            ->where('is_active', true);
+
+        // If user is sales_staff, only show warehouses they have access to through their branch
+        if ($user->role === 'sales_staff' && $user->branch_id) {
+            $query->whereHas('branches', function($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        return $query->orderBy('name')
+            ->get(['id', 'name', 'type'])
+            ->toArray();
+    }
+}

@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide number input spinners globally */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Fix number input behavior */
+input[type=number] {
+    text-align: left;
+}
+
+input[type=number]:not(:focus):invalid {
+    background-color: transparent;
+}
+
+/* Better placeholder handling for number inputs */
+input[type=number]::placeholder {
+    color: #9ca3af;
+}
+
+/* Ensure dropdown components are always on top */
+.dropdown-container {
+    position: relative;
+    z-index: 50;
+}
+
+/* Fix potential stacking context issues */
+.bg-white.shadow-sm,
+.bg-gray-50 {
+    position: relative;
+}
+
+.bg-white.shadow-sm > .relative,
+.bg-gray-50 > .relative {
+    z-index: auto;
+}
+
+/* Override any potential z-index conflicts for dropdown overlays */
+[role="listbox"] {
+    z-index: 9999 !important;
+}
