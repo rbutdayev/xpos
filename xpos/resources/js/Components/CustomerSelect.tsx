@@ -172,8 +172,8 @@ export default function CustomerSelect({
                                          {customer.active_vehicles_count !== undefined && customer.active_vehicles_count > 0 && (
                                             <span>🚗 {customer.active_vehicles_count}</span>
                                         )}
-                                         {customer.total_service_records !== undefined && customer.total_service_records > 0 && (
-                                            <span>🔧 {customer.total_service_records}</span>
+                                         {customer.total_tailor_services !== undefined && customer.total_tailor_services > 0 && (
+                                            <span>🔧 {customer.total_tailor_services}</span>
                                         )}
                                     </div>
                                 </div>

@@ -193,11 +193,27 @@ sudo chown -R www-data:www-data /var/www/.npm /var/www/.cache 2>/dev/null || tru
 # Ensure we're using PHP 8.3 (not 8.4 or other versions)
 sudo -u www-data /usr/bin/php8.3 /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
 
-# Install NPM dependencies and build assets  
+# Install NPM dependencies and build assets
 sudo -u www-data npm ci --cache /tmp/.npm --legacy-peer-deps
 sudo -u www-data npm run build
 
-print_success "Dependencies installed"
+# Verify build was successful
+if [ ! -f "public/build/manifest.json" ]; then
+    print_error "Build failed! manifest.json not found"
+    exit 1
+else
+    print_success "Build manifest found: public/build/manifest.json"
+    # Show build files for debugging
+    ls -lh public/build/assets/ | head -5
+fi
+
+# Remove Vite hot file (prevents dev server mode in production)
+if [ -f "public/hot" ]; then
+    sudo rm -f public/hot
+    print_success "Removed Vite hot file (ensures production mode)"
+fi
+
+print_success "Dependencies installed and assets built successfully"
 
 # =====================================================
 # CONFIGURE APPLICATION
@@ -208,6 +224,9 @@ print_status "Configuring application..."
 if [ -f "/tmp/.env.backup" ]; then
     sudo mv /tmp/.env.backup \$APP_PATH/.env
     print_status "Restored existing .env configuration"
+    # Ensure production settings are correct
+    sudo sed -i 's/^APP_ENV=.*/APP_ENV=production/' .env
+    sudo sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
 else
     # Use .env.production from deployment and customize for domain
     if [ -f ".env.production" ]; then
@@ -220,6 +239,12 @@ else
         exit 1
     fi
 fi
+
+# Verify critical production settings
+print_status "Verifying production environment settings..."
+grep "^APP_ENV=" .env
+grep "^APP_DEBUG=" .env
+grep "^APP_URL=" .env
 
 # Generate application key if not set or malformed
 if ! grep -q "^APP_KEY=base64:[A-Za-z0-9+/=]\{44\}$" .env; then
@@ -305,14 +330,12 @@ sudo -u www-data php artisan route:clear
 # Wait a moment for file system sync
 sleep 2
 
-# Cache configuration
+# Cache configuration for production
 sudo -u www-data php artisan config:cache
 sudo -u www-data php artisan route:cache
 sudo -u www-data php artisan view:cache 2>/dev/null || print_warning "View cache creation skipped"
 
-# Final cache clear and restart to ensure clean state
-sleep 1
-sudo -u www-data php artisan config:clear
+# Restart PHP-FPM to apply changes
 sudo systemctl restart php8.3-fpm
 
 # Create storage link

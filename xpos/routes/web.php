@@ -270,16 +270,19 @@ Route::middleware(['auth', 'account.access'])->group(function () {
 
     // Customer Items Management (clothing, fabrics for tailor services)
     Route::get('/customer-items/search', [CustomerItemController::class, 'search'])->name('customer-items.search');
+    Route::patch('/customer-items/{customer_item}/status', [CustomerItemController::class, 'updateStatus'])->name('customer-items.update-status');
     Route::resource('customer-items', CustomerItemController::class);
 
     // Tailor Service Management (renamed from service-records)
-    Route::resource('tailor-services', TailorServiceController::class)->except(['create']);
+    Route::resource('tailor-services', TailorServiceController::class)->parameters([
+        'tailor-services' => 'tailorService'
+    ]);
     Route::patch('/tailor-services/{tailorService}/make-credit', [TailorServiceController::class, 'makeCredit'])->name('tailor-services.make-credit');
     Route::patch('/tailor-services/{tailorService}/pay-credit', [TailorServiceController::class, 'payServiceCredit'])->name('tailor-services.pay-credit');
-    Route::patch('/tailor-services/{tailor_service}/status', [TailorServiceController::class, 'updateStatus'])->name('tailor-services.update-status');
-    Route::get('/tailor-services/{tailor_service}/print-options', [TailorServiceController::class, 'getPrintOptions'])->name('tailor-services.print-options');
-    Route::post('/tailor-services/{tailor_service}/print', [TailorServiceController::class, 'print'])->name('tailor-services.print');
-    Route::post('/tailor-services/{tailor_service}/send-to-printer', [TailorServiceController::class, 'sendToPrinter'])->name('tailor-services.send-to-printer');
+    Route::patch('/tailor-services/{tailorService}/status', [TailorServiceController::class, 'updateStatus'])->name('tailor-services.update-status');
+    Route::get('/tailor-services/{tailorService}/print-options', [TailorServiceController::class, 'getPrintOptions'])->name('tailor-services.print-options');
+    Route::post('/tailor-services/{tailorService}/print', [TailorServiceController::class, 'print'])->name('tailor-services.print');
+    Route::post('/tailor-services/{tailorService}/send-to-printer', [TailorServiceController::class, 'sendToPrinter'])->name('tailor-services.send-to-printer');
 
     // Helper routes
     Route::get('customers/{customer}/items', [TailorServiceController::class, 'getCustomerItems'])
@@ -331,13 +334,10 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/pos/sale', [\App\Http\Controllers\POSController::class, 'storeSale'])->name('pos.sale');
     Route::post('/pos/service', [\App\Http\Controllers\POSController::class, 'storeService'])->name('pos.service');
     
-    // Redirect standalone create pages to POS system
+    // Redirect standalone sales create page to POS system
     Route::get('/sales/create', function() {
         return redirect()->route('pos.index');
     })->name('sales.create.redirect');
-    Route::get('/tailor-services/create', function() {
-        return redirect()->route('pos.index', ['mode' => 'service']);
-    })->name('tailor-services.create.redirect');
     
     Route::get('/sales/search', [SaleController::class, 'search'])->name('sales.search');
     Route::resource('sales', SaleController::class)->except(['create']);

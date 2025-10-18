@@ -149,9 +149,9 @@ export default function TouchProductGrid({
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 text-base">
-                        {item.type === 'service' ? item.service?.name : item.product?.name || item.item_name}
+                        {item.product?.name || item.item_name}
                       </div>
-                      {item.type === 'product' && item.product?.sku && (
+                      {item.product?.sku && (
                         <div className="text-sm text-gray-500 mt-1">Kod: {item.product.sku}</div>
                       )}
                     </div>

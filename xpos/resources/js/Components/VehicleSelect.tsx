@@ -203,8 +203,8 @@ export default function VehicleSelect({
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-1 text-xs opacity-75">
-                                         {vehicle.total_service_records !== undefined && vehicle.total_service_records > 0 && (
-                                            <span>🔧 {vehicle.total_service_records}</span>
+                                         {vehicle.total_tailor_services !== undefined && vehicle.total_tailor_services > 0 && (
+                                            <span>🔧 {vehicle.total_tailor_services}</span>
                                         )}
                                         {!vehicle.is_active && (
                                             <span className="text-red-400">●</span>

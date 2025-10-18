@@ -8,35 +8,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { PageProps } from '@/types';
 
-interface TailorService {
-    id: number;
-    customer_id: number;
-    customer_item_id?: number;
-    employee_id?: number;
-    branch_id: number;
-    description: string;
-    item_condition?: string;
-    labor_cost: number;
-    received_date: string;
-    promised_date?: string;
-    status: string;
-    notes?: string;
-    payment_status: string;
-    paid_amount: number;
-    credit_amount: number;
-    credit_due_date?: string;
-    items: Array<{
-        id: number;
-        item_type: string;
-        product_id?: number;
-        item_name: string;
-        quantity: number;
-        unit_price: number;
-    }>;
-}
-
 interface Props extends PageProps {
-    service: TailorService;
     customers: Array<{ id: number; name: string; phone?: string }>;
     customerItems: Array<{ id: number; customer_id: number; display_name: string; description: string }>;
     employees: Array<{ id: number; name: string; position?: string; role: string }>;
@@ -52,35 +24,26 @@ interface ServiceItem {
     unit_price: number;
 }
 
-export default function Edit({ service, customers, customerItems, employees, products, branches }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
-        customer_id: service.customer_id.toString(),
-        customer_item_id: service.customer_item_id?.toString() || '',
-        employee_id: service.employee_id?.toString() || '',
-        branch_id: service.branch_id.toString(),
-        description: service.description,
-        item_condition: service.item_condition || '',
-        labor_cost: service.labor_cost,
-        received_date: service.received_date ? (typeof service.received_date === 'string' ? service.received_date.split('T')[0] : service.received_date) : '',
-        promised_date: service.promised_date ? (typeof service.promised_date === 'string' ? service.promised_date.split('T')[0] : service.promised_date) : '',
-        status: service.status,
-        notes: service.notes || '',
-        payment_status: service.payment_status || 'paid',
-        paid_amount: service.paid_amount || 0,
-        credit_amount: service.credit_amount || 0,
-        credit_due_date: service.credit_due_date ? (typeof service.credit_due_date === 'string' ? service.credit_due_date.split('T')[0] : service.credit_due_date) : '',
-        items: service.items.map(item => ({
-            item_type: item.item_type as 'product' | 'service',
-            product_id: item.product_id,
-            item_name: item.item_name,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-        })) as ServiceItem[],
+export default function Create({ customers, customerItems, employees, products, branches }: Props) {
+    const { data, setData, post, processing, errors } = useForm({
+        customer_id: '',
+        customer_item_id: '',
+        employee_id: '',
+        branch_id: branches[0]?.id || '',
+        description: '',
+        item_condition: '',
+        labor_cost: 0,
+        received_date: new Date().toISOString().split('T')[0],
+        promised_date: '',
+        notes: '',
+        items: [] as ServiceItem[],
+        payment_status: 'paid',
+        paid_amount: 0,
+        credit_amount: 0,
+        credit_due_date: '',
     });
 
-    const [filteredItems, setFilteredItems] = useState(
-        customerItems.filter(item => item.customer_id === service.customer_id)
-    );
+    const [filteredItems, setFilteredItems] = useState(customerItems);
 
     const handleCustomerChange = (customerId: string) => {
         setData('customer_id', customerId);
@@ -124,31 +87,29 @@ export default function Edit({ service, customers, customerItems, employees, pro
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(route('tailor-services.update', service.id));
+        post(route('tailor-services.store'));
     };
 
     const totalMaterials = data.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
     const totalCost = parseFloat(data.labor_cost.toString()) + totalMaterials;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Xidməti Redaktə Et
-                    </h2>
-                    <SecondaryButton onClick={() => router.visit(route('tailor-services.show', service.id))}>
-                        Geri
-                    </SecondaryButton>
-                </div>
-            }
-        >
-            <Head title="Xidməti Redaktə Et" />
+        <AuthenticatedLayout>
+            <Head title="Yeni Dərzi Xidməti" />
 
-            <div className="py-12">
+            <div className="py-6">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-semibold text-gray-800">
+                                    Yeni Dərzi Xidməti
+                                </h2>
+                                <SecondaryButton onClick={() => router.visit(route('tailor-services.index'))}>
+                                    Geri
+                                </SecondaryButton>
+                            </div>
+
                             {/* General Error Message */}
                             {(errors as any).error && (
                                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -273,8 +234,8 @@ export default function Edit({ service, customers, customerItems, employees, pro
                                     <InputError message={errors.item_condition} className="mt-2" />
                                 </div>
 
-                                {/* Dates and Status */}
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                {/* Dates */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <InputLabel htmlFor="received_date" value="Qəbul tarixi *" />
                                         <TextInput
@@ -313,24 +274,6 @@ export default function Edit({ service, customers, customerItems, employees, pro
                                             required
                                         />
                                         <InputError message={errors.labor_cost} className="mt-2" />
-                                    </div>
-
-                                    <div>
-                                        <InputLabel htmlFor="status" value="Status *" />
-                                        <select
-                                            id="status"
-                                            value={data.status}
-                                            onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                            required
-                                        >
-                                            <option value="received">Qəbul edildi</option>
-                                            <option value="in_progress">İşləniir</option>
-                                            <option value="completed">Tamamlandı</option>
-                                            <option value="delivered">Təhvil verildi</option>
-                                            <option value="cancelled">Ləğv edildi</option>
-                                        </select>
-                                        <InputError message={errors.status} className="mt-2" />
                                     </div>
                                 </div>
 
@@ -410,7 +353,7 @@ export default function Edit({ service, customers, customerItems, employees, pro
                                 <div className="bg-gray-50 p-4 rounded space-y-2">
                                     <div className="flex justify-between">
                                         <span>İşçilik xərci:</span>
-                                        <span className="font-medium">{parseFloat(data.labor_cost as any).toFixed(2)} ₼</span>
+                                        <span className="font-medium">{data.labor_cost.toFixed(2)} ₼</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span>Xidmət xərci:</span>
@@ -568,11 +511,11 @@ export default function Edit({ service, customers, customerItems, employees, pro
 
                                 {/* Submit */}
                                 <div className="flex justify-end gap-3">
-                                    <SecondaryButton type="button" onClick={() => router.visit(route('tailor-services.show', service.id))}>
+                                    <SecondaryButton type="button" onClick={() => router.visit(route('tailor-services.index'))}>
                                         Ləğv et
                                     </SecondaryButton>
                                     <PrimaryButton type="submit" disabled={processing}>
-                                        {processing ? 'Saxlanılır...' : 'Yenilə'}
+                                        {processing ? 'Saxlanılır...' : 'Saxla'}
                                     </PrimaryButton>
                                 </div>
                             </form>

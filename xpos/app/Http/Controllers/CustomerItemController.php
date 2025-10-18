@@ -33,9 +33,14 @@ class CustomerItemController extends Controller
 
         $query = CustomerItem::query()
             ->forAccount($accountId) // ⚠️ CRITICAL: Scope by account via customer
-            ->with(['customer' => function($q) use ($accountId) {
-                $q->where('account_id', $accountId);
-            }]);
+            ->with([
+                'customer' => function($q) use ($accountId) {
+                    $q->where('account_id', $accountId);
+                },
+                'tailorServices' => function($q) use ($accountId) {
+                    $q->where('account_id', $accountId);
+                }
+            ]);
 
         // Search functionality
         if ($search = $request->input('search')) {
@@ -52,11 +57,22 @@ class CustomerItemController extends Controller
             $query->where('customer_id', $customerId);
         }
 
+        // Filter by status
+        if ($status = $request->input('status')) {
+            $query->byStatus($status);
+        }
+
         $items = $query->latest()->paginate(15);
+
+        // Get customers for filter dropdown
+        $customers = Customer::where('account_id', $accountId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('CustomerItems/Index', [
             'items' => $items,
-            'filters' => $request->only(['search', 'type', 'customer_id']),
+            'customers' => $customers,
+            'filters' => $request->only(['search', 'type', 'customer_id', 'status']),
         ]);
     }
 
@@ -100,13 +116,15 @@ class CustomerItemController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'item_type' => 'required|string|max:100',
-            'item_description' => 'nullable|string|max:500',
-            'fabric' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:500',
+            'fabric_type' => 'nullable|string|max:100',
             'size' => 'nullable|string|max:50',
             'color' => 'nullable|string|max:50',
-            'purchase_date' => 'nullable|date',
-            'special_instructions' => 'nullable|string|max:1000',
+            'measurements' => 'nullable|array',
+            'reference_number' => 'nullable|string|max:100',
+            'received_date' => 'nullable|date',
             'notes' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $item = CustomerItem::create($validated);
@@ -129,6 +147,7 @@ class CustomerItemController extends Controller
                 },
                 'tailorServices' => function($q) use ($accountId) {
                     $q->where('account_id', $accountId)
+                      ->with('employee')
                       ->latest()
                       ->take(10);
                 }
@@ -140,13 +159,18 @@ class CustomerItemController extends Controller
                 'id' => $item->id,
                 'customer' => $item->customer,
                 'item_type' => $item->item_type,
-                'item_description' => $item->item_description,
-                'fabric' => $item->fabric,
+                'description' => $item->description,
+                'fabric_type' => $item->fabric_type,
                 'size' => $item->size,
                 'color' => $item->color,
-                'purchase_date' => $item->purchase_date,
-                'special_instructions' => $item->special_instructions,
+                'measurements' => $item->measurements,
+                'reference_number' => $item->reference_number,
+                'received_date' => $item->received_date,
+                'status' => $item->status,
+                'status_text' => $item->status_text,
+                'status_color' => $item->status_color,
                 'notes' => $item->notes,
+                'is_active' => $item->is_active,
                 'full_description' => $item->full_description,
                 'display_name' => $item->display_name,
                 'created_at' => $item->created_at,
@@ -204,13 +228,15 @@ class CustomerItemController extends Controller
         $validated = $request->validate([
             'customer_id' => 'sometimes|required|exists:customers,id',
             'item_type' => 'sometimes|required|string|max:100',
-            'item_description' => 'nullable|string|max:500',
-            'fabric' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:500',
+            'fabric_type' => 'nullable|string|max:100',
             'size' => 'nullable|string|max:50',
             'color' => 'nullable|string|max:50',
-            'purchase_date' => 'nullable|date',
-            'special_instructions' => 'nullable|string|max:1000',
+            'measurements' => 'nullable|array',
+            'reference_number' => 'nullable|string|max:100',
+            'received_date' => 'nullable|date',
             'notes' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $item->update($validated);
@@ -260,5 +286,32 @@ class CustomerItemController extends Controller
             ->get();
 
         return response()->json($customerItems);
+    }
+
+    /**
+     * Update the status of a customer item
+     * This allows marking items as delivered when customer picks them up
+     */
+    public function updateStatus(Request $request, int $id)
+    {
+        Gate::authorize('edit-account-data');
+
+        $accountId = $this->getAccountId();
+
+        $item = CustomerItem::forAccount($accountId)
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|in:received,in_service,completed,delivered',
+        ]);
+
+        // Don't allow changing to 'in_service' manually - only through tailor service creation
+        if ($validated['status'] === 'in_service' && $item->status !== 'in_service') {
+            return back()->withErrors(['status' => 'Status "in_service" can only be set through tailor service creation.']);
+        }
+
+        $item->update(['status' => $validated['status']]);
+
+        return back()->with('success', 'Item status updated successfully');
     }
 }

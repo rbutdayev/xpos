@@ -1,15 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import CustomerSelect from '@/Components/CustomerSelect';
-import VehicleSelect from '@/Components/VehicleSelect';
-import TextInput from '@/Components/TextInput';
-import { Branch, Customer, Vehicle } from '@/types';
+import { Branch, Customer } from '@/types';
 
 interface Props {
-  mode: 'sale' | 'service';
   customers: Customer[];
-  vehicles: Vehicle[];
   branches: Branch[];
   formData: any;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
@@ -17,20 +13,9 @@ interface Props {
   userBranchId?: number;
 }
 
-function CustomerSection({ mode, customers, vehicles, branches, formData, setFormData, errors, userBranchId }: Props) {
-  const customerVehicles = useMemo(() => {
-    if (!formData.customer_id) return [] as Vehicle[];
-    return vehicles.filter((v) => v.customer_id?.toString() === formData.customer_id);
-  }, [vehicles, formData.customer_id]);
-
+function CustomerSection({ customers, branches, formData, setFormData, errors, userBranchId }: Props) {
   const isBranchFixed = !!userBranchId;
   const selectedBranch = branches.find(b => b.id.toString() === formData.branch_id);
-
-  useEffect(() => {
-    if (!formData.customer_id) {
-      setFormData((prev: any) => ({ ...prev, vehicle_id: '' }));
-    }
-  }, [formData.customer_id, setFormData]);
 
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6">
@@ -73,41 +58,6 @@ function CustomerSection({ mode, customers, vehicles, branches, formData, setFor
             )}
             <InputError message={errors.branch_id} className="mt-2" />
           </div>
-
-          {/* Vehicle select - both modes allow vehicle link if customer selected */}
-          {formData.customer_id && (
-            <div>
-              <InputLabel htmlFor="vehicle_id" value="Nəqliyyat Vasitəsi" />
-              <VehicleSelect
-                vehicles={customerVehicles}
-                value={formData.vehicle_id}
-                onChange={(value) => setFormData((prev: any) => ({ ...prev, vehicle_id: value }))}
-                className="mt-1 block w-full"
-                placeholder="Nəqliyyat vasitəsi seçin (ixtiyari)"
-              />
-              <InputError message={errors.vehicle_id} className="mt-2" />
-            </div>
-          )}
-
-          {mode === 'service' && formData.vehicle_id && (
-            <div className="mt-4">
-              <InputLabel htmlFor="vehicle_mileage" value="Kilometraj" />
-              <TextInput
-                id="vehicle_mileage"
-                type="number"
-                value={formData.vehicle_mileage || ''}
-                onChange={(e) =>
-                  setFormData((prev: any) => ({
-                    ...prev,
-                    vehicle_mileage: e.target.value ? parseInt(e.target.value) : undefined,
-                  }))
-                }
-                className="mt-1 block w-full"
-                placeholder="Cari kilometraj"
-              />
-              <InputError message={errors.vehicle_mileage} className="mt-2" />
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -443,7 +443,7 @@ export const serviceRecordTableConfig = {
                         {service.customer?.name}
                     </div>
                     <div className="text-gray-500">
-                        {service.vehicle?.formatted_plate} - {service.vehicle?.brand} {service.vehicle?.model}
+                        {(service as any).customerItem ? `${(service as any).customerItem.display_name} - ${(service as any).customerItem.full_description}` : 'Məhsul yoxdur'}
                     </div>
                 </div>
             ),

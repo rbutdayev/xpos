@@ -5,10 +5,8 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 
 interface Props {
-  mode: 'sale' | 'service';
   processing: boolean;
   subtotal: number;
-  laborCost: number;
   taxAmount: number;
   discountAmount: number;
   grandTotal: number;
@@ -19,10 +17,8 @@ interface Props {
 }
 
 function SummaryPaymentSection({
-  mode,
   processing,
   subtotal,
-  laborCost,
   taxAmount,
   discountAmount,
   grandTotal,
@@ -42,31 +38,22 @@ function SummaryPaymentSection({
             <span>{(Math.round(subtotal * 100) / 100).toFixed(2)} AZN</span>
           </div>
 
-          {mode === 'service' && (
-            <div className="flex justify-between">
-              <span>İşçilik:</span>
-              <span>{(Math.round(laborCost * 100) / 100).toFixed(2)} AZN</span>
-            </div>
-          )}
-
-          {mode === 'sale' && (
-            <div className="flex justify-between">
-              <span>Vergi:</span>
-              <TextInput
-                type="number"
-                step="0.01"
-                value={taxAmount}
-                onChange={(e) =>
-                  setFormData((prev: any) => ({ ...prev, tax_amount: parseFloat(e.target.value) || 0 }))
-                }
-                onBlur={(e) =>
-                  setFormData((prev: any) => ({ ...prev, tax_amount: Math.round((parseFloat(e.target.value) || 0) * 100) / 100 }))
-                }
-                className="w-20 text-right text-sm"
-                min="0"
-              />
-            </div>
-          )}
+          <div className="flex justify-between">
+            <span>Vergi:</span>
+            <TextInput
+              type="number"
+              step="0.01"
+              value={taxAmount}
+              onChange={(e) =>
+                setFormData((prev: any) => ({ ...prev, tax_amount: parseFloat(e.target.value) || 0 }))
+              }
+              onBlur={(e) =>
+                setFormData((prev: any) => ({ ...prev, tax_amount: Math.round((parseFloat(e.target.value) || 0) * 100) / 100 }))
+              }
+              className="w-20 text-right text-sm"
+              min="0"
+            />
+          </div>
 
           <div className="flex justify-between">
             <span>Endirim:</span>
@@ -233,7 +220,7 @@ function SummaryPaymentSection({
         {/* Submit Button */}
         <div className="mt-6">
           <PrimaryButton type="submit" disabled={processing || cartCount === 0} className="w-full">
-            {processing ? 'Emal edilir...' : mode === 'sale' ? 'Satışı Tamamla' : 'Servisi Tamamla'}
+            {processing ? 'Emal edilir...' : 'Satışı Tamamla'}
           </PrimaryButton>
         </div>
       </div>

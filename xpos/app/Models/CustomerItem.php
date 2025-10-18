@@ -26,6 +26,7 @@ class CustomerItem extends Model
         'measurements',         // JSON field for customer measurements
         'reference_number',     // Reference number for the item
         'received_date',        // When item was received
+        'status',               // Lifecycle: received, in_service, completed, delivered
         'is_active',
         'notes',
         'created_at',
@@ -44,7 +45,31 @@ class CustomerItem extends Model
     protected $appends = [
         'full_description',
         'display_name',
+        'status_text',
+        'status_color',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Set default status and generate reference number when creating
+        static::creating(function ($customerItem) {
+            if (!$customerItem->status) {
+                $customerItem->status = 'received';
+            }
+
+            // Auto-generate reference number if not provided
+            if (!$customerItem->reference_number) {
+                $customerItem->reference_number = static::generateReferenceNumber($customerItem->account_id ?? auth()->user()->account_id);
+            }
+
+            // Auto-set account_id if not set
+            if (!$customerItem->account_id && auth()->check()) {
+                $customerItem->account_id = auth()->user()->account_id;
+            }
+        });
+    }
 
     public function account(): BelongsTo
     {
@@ -102,7 +127,13 @@ class CustomerItem extends Model
         return $query->where(function($q) use ($search) {
             $q->where('item_type', 'like', "%{$search}%")
               ->orWhere('description', 'like', "%{$search}%")
-              ->orWhere('fabric_type', 'like', "%{$search}%");
+              ->orWhere('fabric_type', 'like', "%{$search}%")
+              ->orWhere('reference_number', 'like', "%{$search}%")
+              ->orWhere('color', 'like', "%{$search}%")
+              ->orWhereHas('customer', function($customerQuery) use ($search) {
+                  $customerQuery->where('name', 'like', "%{$search}%")
+                               ->orWhere('phone', 'like', "%{$search}%");
+              });
         });
     }
 
@@ -140,5 +171,83 @@ class CustomerItem extends Model
     public function getDisplayNameAttribute(): string
     {
         return ($this->item_type ?? 'Item') . ' #' . $this->id;
+    }
+
+    /**
+     * Get status text in Azerbaijani
+     */
+    public function getStatusTextAttribute(): string
+    {
+        return match($this->status ?? 'received') {
+            'received' => 'Qəbul edildi',
+            'in_service' => 'İşdə',
+            'completed' => 'Hazır',
+            'delivered' => 'Təhvil verildi',
+            default => 'Qəbul edildi',
+        };
+    }
+
+    /**
+     * Get status color for UI
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return match($this->status ?? 'received') {
+            'received' => 'blue',
+            'in_service' => 'yellow',
+            'completed' => 'green',
+            'delivered' => 'gray',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * Scope to filter by status
+     */
+    public function scopeByStatus(Builder $query, string|array $status): Builder
+    {
+        if (is_array($status)) {
+            return $query->whereIn('status', $status);
+        }
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Check if item is available for new service
+     * Only items with 'received' status are available for new services
+     * Completed/delivered items should not be available
+     */
+    public function scopeAvailableForService(Builder $query): Builder
+    {
+        return $query->where('status', 'received');
+    }
+
+    /**
+     * Generate unique reference number for customer item
+     * Format: CI-YYYY-NNNN (CI = Customer Item)
+     * ⚠️ CRITICAL: Must be scoped by account_id for multi-tenant!
+     */
+    public static function generateReferenceNumber(int $accountId): string
+    {
+        $year = date('Y');
+        $prefix = "CI-{$year}-";
+
+        // Get last reference number for this account and year
+        $lastItem = static::whereHas('customer', function($q) use ($accountId) {
+                $q->where('account_id', $accountId);
+            })
+            ->where('reference_number', 'like', "{$prefix}%")
+            ->orderBy('reference_number', 'desc')
+            ->first();
+
+        if ($lastItem) {
+            // Extract number from last reference: CI-2025-0001 → 0001
+            $lastNumber = (int) substr($lastItem->reference_number, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

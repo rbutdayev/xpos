@@ -1,15 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Product, Service, ProductVariant } from '@/types';
+import { Product, ProductVariant } from '@/types';
 
 export type CartItem = {
   id: string;
-  type: 'product' | 'service' | 'manual';
+  type: 'product' | 'manual';
   product_id?: number;
   variant_id?: number;
-  service_id_ref?: number;
   product?: Product;
   variant?: ProductVariant;
-  service?: Service;
   item_name?: string;
   quantity: number;
   base_quantity?: number;
@@ -20,10 +18,6 @@ export type CartItem = {
   is_packaging?: boolean;
   notes?: string;
 };
-
-function isServiceItem(item: Product | Service): item is Service {
-  return (item as any).type === 'service' || (!('sale_price' in item) && 'price' in item);
-}
 
 export function useCart(initial: CartItem[] = []) {
   const [cart, setCart] = useState<CartItem[]>(initial);
@@ -61,83 +55,67 @@ export function useCart(initial: CartItem[] = []) {
     }));
   }, []);
 
-  const addToCart = useCallback((item: Product | Service, variant?: ProductVariant) => {
-    if (isServiceItem(item)) {
-      const price = Number(item.price || 0);
-      const cartItem: CartItem = {
-        id: `service-${item.id}-${Date.now()}`,
-        type: 'service',
-        quantity: 1,
-        unit_price: price,
-        discount_amount: 0,
-        total: price,
-        selling_unit: 'ədəd',
-        service_id_ref: item.id,
-        service: item,
-      };
-      setCart((prev) => [...prev, cartItem]);
-    } else {
-      const product = item as Product;
-      setCart((prev) => {
-        // If variant is specified, check for existing cart item with same product_id AND variant_id
-        const existingIndex = prev.findIndex((ci) =>
-          ci.type === 'product' &&
-          ci.product_id === product.id &&
-          ci.variant_id === variant?.id
-        );
+  const addToCart = useCallback((item: Product, variant?: ProductVariant) => {
+    const product = item;
+    setCart((prev) => {
+      // If variant is specified, check for existing cart item with same product_id AND variant_id
+      const existingIndex = prev.findIndex((ci) =>
+        ci.type === 'product' &&
+        ci.product_id === product.id &&
+        ci.variant_id === variant?.id
+      );
 
-        if (existingIndex >= 0) {
-          const existing = prev[existingIndex];
-          const updatedQty = existing.quantity + 1;
-          const updated: CartItem = {
-            ...existing,
-            quantity: updatedQty,
-            base_quantity:
-              product.packaging_quantity && product.packaging_quantity > 0
-                ? existing.selling_unit === product.base_unit
-                  ? updatedQty
-                  : updatedQty * product.packaging_quantity
-                : updatedQty,
-            total: updatedQty * existing.unit_price - existing.discount_amount,
-          };
-          const next = prev.slice();
-          next[existingIndex] = updated;
-          return next;
-        }
-
-        // Default olaraq base unit istifadə et (litr üçün)
-        const sellingUnit = product.base_unit || product.unit || 'ədəd';
-
-        // If variant is provided, use variant's final_price, otherwise use product price
-        let unitPrice = variant?.final_price
-          ? Number(variant.final_price)
-          : (Number(product.unit_price) || Number(product.sale_price) || 0);
-        let quantity = 1;
-
-        // Əgər packaging məlumatları varsa, unit_price istifadə et (litr qiyməti)
-        if (product.packaging_quantity && product.packaging_quantity > 0 && product.unit_price && !variant) {
-          unitPrice = Math.round(Number(product.unit_price) * 100) / 100; // Litr qiyməti - rounded
-          quantity = 1; // 1 litr
-        }
-
-        const ci: CartItem = {
-          id: `product-${product.id}-${variant?.id || 'none'}-${Date.now()}`,
-          type: 'product',
-          quantity,
-          unit_price: unitPrice,
-          discount_amount: 0,
-          is_packaging: false,
-          total: Math.round((quantity * unitPrice) * 100) / 100,
-          selling_unit: sellingUnit,
-          base_quantity: quantity,
-          product_id: product.id,
-          variant_id: variant?.id,
-          variant,
-          product,
+      if (existingIndex >= 0) {
+        const existing = prev[existingIndex];
+        const updatedQty = existing.quantity + 1;
+        const updated: CartItem = {
+          ...existing,
+          quantity: updatedQty,
+          base_quantity:
+            product.packaging_quantity && product.packaging_quantity > 0
+              ? existing.selling_unit === product.base_unit
+                ? updatedQty
+                : updatedQty * product.packaging_quantity
+              : updatedQty,
+          total: updatedQty * existing.unit_price - existing.discount_amount,
         };
-        return [...prev, ci];
-      });
-    }
+        const next = prev.slice();
+        next[existingIndex] = updated;
+        return next;
+      }
+
+      // Default olaraq base unit istifadə et (litr üçün)
+      const sellingUnit = product.base_unit || product.unit || 'ədəd';
+
+      // If variant is provided, use variant's final_price, otherwise use product price
+      let unitPrice = variant?.final_price
+        ? Number(variant.final_price)
+        : (Number(product.unit_price) || Number(product.sale_price) || 0);
+      let quantity = 1;
+
+      // Əgər packaging məlumatları varsa, unit_price istifadə et (litr qiyməti)
+      if (product.packaging_quantity && product.packaging_quantity > 0 && product.unit_price && !variant) {
+        unitPrice = Math.round(Number(product.unit_price) * 100) / 100; // Litr qiyməti - rounded
+        quantity = 1; // 1 litr
+      }
+
+      const ci: CartItem = {
+        id: `product-${product.id}-${variant?.id || 'none'}-${Date.now()}`,
+        type: 'product',
+        quantity,
+        unit_price: unitPrice,
+        discount_amount: 0,
+        is_packaging: false,
+        total: Math.round((quantity * unitPrice) * 100) / 100,
+        selling_unit: sellingUnit,
+        base_quantity: quantity,
+        product_id: product.id,
+        variant_id: variant?.id,
+        variant,
+        product,
+      };
+      return [...prev, ci];
+    });
   }, []);
 
   const updateCartItem = useCallback((id: string, field: keyof CartItem, value: any) => {

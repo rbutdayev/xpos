@@ -1,6 +1,7 @@
 import React from 'react';
 import { Customer, Branch } from '@/types';
-import { TrashIcon, UserIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, UserIcon, BuildingStorefrontIcon, ArrowLeftIcon, HomeIcon } from '@heroicons/react/24/outline';
+import { Link } from '@inertiajs/react';
 
 interface Props {
   customers: Customer[];
@@ -24,8 +25,19 @@ export default function TouchHeader({
   return (
     <div className="bg-white border-b border-gray-200 p-4">
       <div className="flex items-center justify-between">
-        {/* Left - Title */}
+        {/* Left - Back Button & Title */}
         <div className="flex items-center space-x-4">
+          {/* Back to Dashboard Button */}
+          <Link
+            href="/dashboard"
+            className="flex items-center space-x-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 px-5 py-3 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md border border-slate-300"
+          >
+            <HomeIcon className="w-6 h-6" />
+            <span className="text-lg">Ana Səhifə</span>
+          </Link>
+
+          <div className="h-10 w-px bg-gray-300"></div>
+
           <h1 className="text-2xl font-bold text-gray-900">TouchPOS</h1>
           <span className="text-sm text-gray-500">Satış Terminali</span>
         </div>

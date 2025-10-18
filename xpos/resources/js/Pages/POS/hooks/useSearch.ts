@@ -1,25 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Product, Service } from '@/types';
+import { useEffect, useRef, useState } from 'react';
+import { Product } from '@/types';
 
-export type SearchResult = (Product | (Service & { type?: 'service' }))[];
+export type SearchResult = Product[];
 
-export function useSearch(mode: 'sale' | 'service', services: Service[], branchId?: string) {
+export function useSearch(branchId?: string) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult>([]);
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<number | null>(null);
-
-  // Pre-filter service search by name/code once when query changes
-  const filterServices = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q || mode !== 'service') return [] as (Service & { type?: 'service' })[];
-    return services
-      .filter(
-        (s) => s.name.toLowerCase().includes(q) || (s.code && s.code.toLowerCase().includes(q))
-      )
-      .map((s) => ({ ...s, type: 'service' as const }));
-  }, [mode, query, services]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -28,8 +17,8 @@ export function useSearch(mode: 'sale' | 'service', services: Service[], branchI
     }
     if (query.length < 2) return;
 
-    // For sale mode, require branch selection
-    if (mode === 'sale' && !branchId) {
+    // Require branch selection
+    if (!branchId) {
       setResults([]);
       setLoading(false);
       return;
@@ -47,18 +36,16 @@ export function useSearch(mode: 'sale' | 'service', services: Service[], branchI
 
       const params = new URLSearchParams({
         q: query,
-        ...(mode === 'service' && { include_services: 'true' }),
         ...(branchId && { branch_id: branchId }),
       });
-      
+
       const url = `/products/search?${params.toString()}`;
 
       fetch(url, { signal: controller.signal })
         .then((r) => r.json())
         .then((data) => {
           if (!controller.signal.aborted) {
-            const merged = mode === 'service' ? [...data, ...filterServices] : data;
-            setResults(merged);
+            setResults(data);
             setLoading(false);
           }
         })
@@ -75,7 +62,7 @@ export function useSearch(mode: 'sale' | 'service', services: Service[], branchI
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
       if (abortRef.current) abortRef.current.abort();
     };
-  }, [mode, query, filterServices, branchId]);
+  }, [query, branchId]);
 
   return {
     query,

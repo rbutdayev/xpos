@@ -1,13 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Customer, Vehicle, ServiceRecord } from '@/types';
-import { 
-    UserIcon, 
-    PhoneIcon, 
-    EnvelopeIcon, 
+import { Customer, CustomerItem, TailorService } from '@/types';
+import {
+    UserIcon,
+    PhoneIcon,
+    EnvelopeIcon,
     MapPinIcon,
-    TruckIcon,
-    WrenchScrewdriverIcon,
+    ShoppingBagIcon,
+    ScissorsIcon,
     PlusIcon,
     PencilIcon,
     TrashIcon
@@ -15,20 +15,20 @@ import {
 
 interface Props {
     customer: Customer;
-    vehicles: Vehicle[];
-    serviceHistory: ServiceRecord[];
+    customerItems: CustomerItem[];
+    serviceHistory: TailorService[];
 }
 
-export default function Show({ customer, vehicles, serviceHistory }: Props) {
+export default function Show({ customer, customerItems, serviceHistory }: Props) {
     const handleDelete = () => {
         if (confirm('Bu müştərini silmək istədiyinizə əminsiniz?')) {
             router.delete(`/customers/${customer.id}`);
         }
     };
 
-    const handleDeleteVehicle = (vehicle: Vehicle) => {
-        if (confirm('Bu nəqliyyat vasitəsini silmək istədiyinizə əminsiniz?')) {
-            router.delete(`/vehicles/${vehicle.id}`);
+    const handleDeleteItem = (item: CustomerItem) => {
+        if (confirm('Bu geyimi silmək istədiyinizə əminsiniz?')) {
+            router.delete(`/customer-items/${item.id}`);
         }
     };
 
@@ -128,15 +128,15 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-gray-50 p-4 rounded-lg text-center">
                                         <div className="text-2xl font-bold text-gray-900">
-                                            {customer.active_vehicles_count || 0}
+                                            {customer.active_customerItems_count || 0}
                                         </div>
-                                        <div className="text-sm text-gray-500">Nəqliyyat vasitəsi</div>
+                                        <div className="text-sm text-gray-500">Geyim</div>
                                     </div>
                                     <div className="bg-gray-50 p-4 rounded-lg text-center">
                                         <div className="text-2xl font-bold text-gray-900">
-                                            {customer.total_service_records || 0}
+                                            {customer.total_tailor_services || 0}
                                         </div>
-                                        <div className="text-sm text-gray-500">Servis qeydi</div>
+                                        <div className="text-sm text-gray-500">Dərzi xidməti</div>
                                     </div>
                                 </div>
                             </div>
@@ -150,13 +150,13 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                         </div>
                     </div>
 
-                    {/* Vehicles */}
+                    {/* Customer Items */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-medium text-gray-900">Nəqliyyat vasitələri</h3>
+                                <h3 className="text-lg font-medium text-gray-900">Geyimlər</h3>
                                 <Link
-                                    href={`/vehicles/create?customer_id=${customer.id}`}
+                                    href={`/customer-items/create?customer_id=${customer.id}`}
                                     className="inline-flex items-center px-3 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                                 >
                                     <PlusIcon className="w-4 h-4 mr-1" />
@@ -164,60 +164,64 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                                 </Link>
                             </div>
 
-                            {vehicles.length > 0 ? (
+                            {customerItems.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {vehicles.map((vehicle) => (
-                                        <div key={vehicle.id} className="border border-gray-200 rounded-lg p-4">
+                                    {customerItems.map((item) => (
+                                        <div key={item.id} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div className="flex items-center">
-                                                    <TruckIcon className="w-6 h-6 text-gray-400 mr-3" />
+                                                    <ShoppingBagIcon className="w-6 h-6 text-gray-400 mr-3" />
                                                     <div>
                                                         <h4 className="text-sm font-medium text-gray-900">
-                                                            {vehicle.full_name}
+                                                            {item.full_description || item.description}
                                                         </h4>
                                                         <p className="text-sm text-gray-500">
-                                                            {vehicle.formatted_plate}
+                                                            {item.reference_number}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex space-x-2">
                                                     <Link
-                                                        href={`/vehicles/${vehicle.id}`}
+                                                        href={`/customer-items/${item.id}`}
                                                         className="text-blue-600 hover:text-blue-900 text-xs"
                                                     >
                                                         Bax
                                                     </Link>
                                                     <button
-                                                        onClick={() => handleDeleteVehicle(vehicle)}
+                                                        onClick={() => handleDeleteItem(item)}
                                                         className="text-red-600 hover:text-red-900 text-xs"
                                                     >
                                                         Sil
                                                     </button>
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="text-xs text-gray-500 space-y-1">
-                                                <div>Mühərrik: {vehicle.engine_type_text}</div>
-                                                {vehicle.mileage && (
-                                                    <div>Kilometraj: {vehicle.mileage.toLocaleString('az-AZ')} km</div>
+                                                {item.fabric_type && (
+                                                    <div>Parça: {item.fabric_type}</div>
                                                 )}
-                                                {vehicle.total_service_records && (
-                                                    <div>Servislər: {vehicle.total_service_records}</div>
+                                                {item.size && (
+                                                    <div>Ölçü: {item.size}</div>
                                                 )}
+                                                <div>
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${item.status_color}-100 text-${item.status_color}-800`}>
+                                                        {item.status_text}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="text-center py-6">
-                                    <TruckIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500">Hələ nəqliyyat vasitəsi əlavə edilməyib</p>
+                                    <ShoppingBagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                    <p className="text-gray-500">Hələ geyim əlavə edilməyib</p>
                                     <Link
-                                        href={`/vehicles/create?customer_id=${customer.id}`}
+                                        href={`/customer-items/create?customer_id=${customer.id}`}
                                         className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 mt-4"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
-                                        İlk nəqliyyat vasitəsini əlavə et
+                                        İlk geyimi əlavə et
                                     </Link>
                                 </div>
                             )}
@@ -228,13 +232,13 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-medium text-gray-900">Servis tarixçəsi</h3>
+                                <h3 className="text-lg font-medium text-gray-900">Dərzi xidmətləri tarixçəsi</h3>
                                 <Link
-                                    href={route('pos.index', { mode: 'service', customer_id: customer.id })}
+                                    href={`/tailor-services/create?customer_id=${customer.id}`}
                                     className="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
                                 >
                                     <PlusIcon className="w-4 h-4 mr-1" />
-                                    Yeni servis
+                                    Yeni xidmət
                                 </Link>
                             </div>
 
@@ -245,7 +249,7 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <div className="flex items-center space-x-2">
-                                                        <WrenchScrewdriverIcon className="w-5 h-5 text-gray-400" />
+                                                        <ScissorsIcon className="w-5 h-5 text-gray-400" />
                                                         <span className="font-medium text-gray-900">
                                                             {service.service_number}
                                                         </span>
@@ -258,25 +262,25 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                                                     </p>
                                                 </div>
                                                 <Link
-                                                    href={`/service-records/${service.id}`}
+                                                    href={`/tailor-services/${service.id}`}
                                                     className="text-blue-600 hover:text-blue-900 text-sm"
                                                 >
                                                     Bax
                                                 </Link>
                                             </div>
-                                            
+
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-500">
                                                 <div>
                                                     <span className="block">Tarix:</span>
                                                     <span className="text-gray-900">
-                                                        {new Date(service.service_date).toLocaleDateString('az-AZ')}
+                                                        {new Date(service.received_date).toLocaleDateString('az-AZ')}
                                                     </span>
                                                 </div>
-                                                {service.vehicle && (
+                                                {service.customer_item && (
                                                     <div>
-                                                        <span className="block">Nəqliyyat:</span>
+                                                        <span className="block">Geyim:</span>
                                                         <span className="text-gray-900">
-                                                            {service.vehicle.formatted_plate}
+                                                            {service.customer_item.description}
                                                         </span>
                                                     </div>
                                                 )}
@@ -286,39 +290,39 @@ export default function Show({ customer, vehicles, serviceHistory }: Props) {
                                                         {service.formatted_total_cost}
                                                     </span>
                                                 </div>
-                                                {service.user && (
+                                                {service.employee && (
                                                     <div>
                                                         <span className="block">İşçi:</span>
                                                         <span className="text-gray-900">
-                                                            {service.user.name}
+                                                            {service.employee.name}
                                                         </span>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     ))}
-                                    
+
                                     {serviceHistory.length >= 10 && (
                                         <div className="text-center">
                                             <Link
-                                                href={`/service-records?customer_id=${customer.id}`}
+                                                href={`/tailor-services?customer_id=${customer.id}`}
                                                 className="text-blue-600 hover:text-blue-900 text-sm"
                                             >
-                                                Bütün servis qeydlərini gör →
+                                                Bütün xidmət qeydlərini gör →
                                             </Link>
                                         </div>
                                     )}
                                 </div>
                             ) : (
                                 <div className="text-center py-6">
-                                    <WrenchScrewdriverIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500">Hələ servis qeydi yoxdur</p>
+                                    <ScissorsIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                    <p className="text-gray-500">Hələ dərzi xidməti qeydi yoxdur</p>
                                     <Link
-                                        href={route('pos.index', { mode: 'service', customer_id: customer.id })}
+                                        href={`/tailor-services/create?customer_id=${customer.id}`}
                                         className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 mt-4"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
-                                        İlk servisi əlavə et
+                                        İlk xidməti əlavə et
                                     </Link>
                                 </div>
                             )}

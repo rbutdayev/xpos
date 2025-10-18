@@ -321,7 +321,7 @@ class XPOSSeeder extends Seeder
                         'color' => $colorName,
                         'color_code' => $colorCode,
                         'sku' => $product->sku . '-' . $size . '-' . strtoupper(substr($colorName, 0, 3)),
-                        'barcode' => $account->id . str_pad($variantCount + rand(10000, 99999), 9, '0', STR_PAD_LEFT),
+                        'barcode' => $account->id . str_pad($variantCount + 1000000, 9, '0', STR_PAD_LEFT),
                         'price_adjustment' => 0.00,
                         'is_active' => true,
                     ]);
@@ -438,7 +438,7 @@ class XPOSSeeder extends Seeder
     private function createTailorServices(Account $account, array $customers, Branch $branch, User $user): void
     {
         $serviceTypes = ['alteration', 'repair', 'custom'];
-        $statuses = ['pending', 'in_progress', 'completed'];
+        $statuses = ['received', 'in_progress', 'completed'];
 
         $serviceCount = 0;
 
@@ -452,9 +452,8 @@ class XPOSSeeder extends Seeder
                 $serviceType = $serviceTypes[array_rand($serviceTypes)];
                 $status = $statuses[array_rand($statuses)];
 
-                $laborTotal = rand(30, 150);
-                $materialsTotal = rand(20, 100);
-                $totalCost = $laborTotal + $materialsTotal;
+                $laborCost = rand(30, 150);
+                $materialsCost = rand(20, 100);
 
                 TailorService::create([
                     'account_id' => $account->id,
@@ -462,21 +461,19 @@ class XPOSSeeder extends Seeder
                     'customer_item_id' => $customerItem->id,
                     'branch_id' => $branch->id,
                     'employee_id' => $user->id,
-                    'service_type' => $serviceType,
                     'description' => ucfirst($serviceType) . ' service for ' . $customerItem->item_type,
-                    'customer_item_condition' => 'Good condition, minor wear',
-                    'labor_total' => $laborTotal,
-                    'materials_total' => $materialsTotal,
-                    'total_cost' => $totalCost,
-                    'service_date' => now()->subDays(rand(1, 30)),
-                    'delivery_date' => now()->addDays(rand(3, 14)),
+                    'item_condition' => 'Good condition, minor wear',
+                    'labor_cost' => $laborCost,
+                    'materials_cost' => $materialsCost,
+                    'received_date' => now()->subDays(rand(1, 30)),
+                    'promised_date' => now()->addDays(rand(3, 14)),
                     'status' => $status,
                     'payment_status' => 'paid',
-                    'paid_amount' => $totalCost,
+                    'paid_amount' => $laborCost + $materialsCost,
                     'credit_amount' => 0,
-                    'started_at' => $status !== 'pending' ? now()->subDays(rand(1, 5)) : null,
-                    'completed_at' => $status === 'completed' ? now()->subDays(rand(0, 3)) : null,
+                    'completed_date' => $status === 'completed' ? now()->subDays(rand(0, 3)) : null,
                     'notes' => 'Test service record',
+                    'created_by' => $user->id,
                 ]);
 
                 $serviceCount++;

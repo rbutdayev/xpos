@@ -1,37 +1,72 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
-import { ServiceRecord, PageProps } from '@/types';
+import { PageProps } from '@/types';
+import { EyeIcon, PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-interface ServiceRecordsIndexProps extends PageProps {
-    serviceRecords: {
-        data: ServiceRecord[];
+interface TailorService {
+    id: number;
+    service_number: string;
+    customer: {
+        id: number;
+        name: string;
+        phone?: string;
+    };
+    customer_item?: {
+        id: number;
+        display_name: string;
+    };
+    description: string;
+    labor_cost: number;
+    materials_cost: number;
+    total_cost: number;
+    received_date: string;
+    promised_date?: string;
+    status: string;
+    status_text: string;
+    status_color: string;
+    payment_status: string;
+    payment_status_text: string;
+    payment_status_color: string;
+    paid_amount: number;
+    credit_amount: number;
+    is_overdue: boolean;
+}
+
+interface Props extends PageProps {
+    services: {
+        data: TailorService[];
         links: any[];
         meta: any;
     };
     filters: {
         search?: string;
         status?: string;
-        customer_id?: string;
-        vehicle_id?: string;
         date_from?: string;
         date_to?: string;
+        branch_id?: string;
     };
     branches: Array<{
         id: number;
         name: string;
     }>;
+    stats: {
+        total_credit: number;
+        total_credit_amount: number;
+        total_partial: number;
+        total_partial_amount: number;
+    };
 }
 
-export default function Index({ auth, serviceRecords, filters, branches }: ServiceRecordsIndexProps) {
+export default function Index({ services, filters, branches, stats }: Props) {
     const [localFilters, setLocalFilters] = useState(filters);
 
     const handleSearch = (search: string) => {
         const newFilters = { ...localFilters, search };
         setLocalFilters(newFilters);
-        router.get('/service-records', newFilters, {
+        router.get(route('tailor-services.index'), newFilters, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -40,14 +75,7 @@ export default function Index({ auth, serviceRecords, filters, branches }: Servi
     const handleFilter = (key: string, value: any) => {
         const newFilters = { ...localFilters, [key]: value };
         setLocalFilters(newFilters);
-        router.get('/service-records', newFilters, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    };
-
-    const handleSort = (field: string, direction: 'asc' | 'desc') => {
-        router.get('/service-records', { ...localFilters, sort: field, direction }, {
+        router.get(route('tailor-services.index'), newFilters, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -56,33 +84,40 @@ export default function Index({ auth, serviceRecords, filters, branches }: Servi
     const columns: Column[] = [
         {
             key: 'service_number',
-            label: 'Servis nömrəsi',
+            label: 'Servis №',
             sortable: true,
-            render: (serviceRecord: ServiceRecord) => (
+            render: (service: TailorService) => (
                 <div>
-                    <Link 
-                        href={`/service-records/${serviceRecord.id}`}
+                    <Link
+                        href={route('tailor-services.show', service.id)}
                         className="text-blue-600 hover:text-blue-800 font-medium"
                     >
-                        {serviceRecord.service_number}
+                        {service.service_number}
                     </Link>
                     <div className="text-xs text-gray-500 mt-1">
-                        {new Date(serviceRecord.service_date).toLocaleDateString('az-AZ')}
+                        {new Date(service.received_date).toLocaleDateString('az-AZ')}
                     </div>
                 </div>
             ),
         },
         {
-            key: 'customer_info',
-            label: 'Müştəri və avtomobil',
-            render: (serviceRecord: ServiceRecord) => (
-                <div className="space-y-1">
-                    <div className="font-medium text-sm">
-                        {serviceRecord.customer?.name || 'Müştəri seçilməyib'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                        {serviceRecord.vehicle?.formatted_plate || 'Avtomobil yoxdur'}
-                    </div>
+            key: 'customer',
+            label: 'Müştəri',
+            render: (service: TailorService) => (
+                <div>
+                    <div className="font-medium text-sm">{service.customer.name}</div>
+                    {service.customer_item && (
+                        <div className="text-xs text-gray-500">{service.customer_item.display_name}</div>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: 'description',
+            label: 'Xidmət',
+            render: (service: TailorService) => (
+                <div className="text-sm max-w-md truncate" title={service.description}>
+                    {service.description}
                 </div>
             ),
         },
@@ -90,102 +125,146 @@ export default function Index({ auth, serviceRecords, filters, branches }: Servi
             key: 'status',
             label: 'Status',
             sortable: true,
-            render: (serviceRecord: ServiceRecord) => {
-                const statusColors = {
-                    pending: 'bg-yellow-100 text-yellow-800',
-                    in_progress: 'bg-blue-100 text-blue-800',
-                    completed: 'bg-green-100 text-green-800',
-                    cancelled: 'bg-red-100 text-red-800',
-                };
-                return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[serviceRecord.status as keyof typeof statusColors]}`}>
-                        {serviceRecord.status_text}
+            render: (service: TailorService) => (
+                <div className="space-y-1">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        service.status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : ''
+                    }${
+                        service.status_color === 'blue' ? 'bg-blue-100 text-blue-800' : ''
+                    }${
+                        service.status_color === 'green' ? 'bg-green-100 text-green-800' : ''
+                    }${
+                        service.status_color === 'purple' ? 'bg-purple-100 text-purple-800' : ''
+                    }${
+                        service.status_color === 'red' ? 'bg-red-100 text-red-800' : ''
+                    }`}>
+                        {service.status_text}
                     </span>
-                );
-            },
+                    {service.is_overdue && (
+                        <div className="text-xs text-red-600 font-medium">Gecikmiş</div>
+                    )}
+                </div>
+            ),
         },
         {
-            key: 'financial_info',
+            key: 'payment_status',
             label: 'Ödəniş',
-            sortable: true,
-            render: (serviceRecord: ServiceRecord) => (
-                <div className="text-right space-y-1">
-                    <div className="font-semibold text-sm">
-                        {serviceRecord.formatted_total_cost}
-                    </div>
-                    <div>
-                        {serviceRecord.payment_status === 'credit' || serviceRecord.payment_status === 'partial' ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                {serviceRecord.payment_status === 'credit' ? 'Borc' : 'Qismən'}
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Ödənilib
-                            </span>
-                        )}
-                    </div>
-                    {serviceRecord.customer_credit && serviceRecord.customer_credit.remaining_amount > 0 && (
-                        <div className="text-xs text-red-600">
-                            {Number(serviceRecord.customer_credit.remaining_amount || 0).toFixed(2)} AZN qalır
+            render: (service: TailorService) => (
+                <div className="space-y-1">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        service.payment_status_color === 'green' ? 'bg-green-100 text-green-800' : ''
+                    }${
+                        service.payment_status_color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : ''
+                    }${
+                        service.payment_status_color === 'red' ? 'bg-red-100 text-red-800' : ''
+                    }${
+                        service.payment_status_color === 'orange' ? 'bg-orange-100 text-orange-800' : ''
+                    }`}>
+                        {service.payment_status_text}
+                    </span>
+                    {service.payment_status === 'partial' && service.credit_amount > 0 && (
+                        <div className="text-xs text-orange-600 font-medium">
+                            Qalıq: {parseFloat(service.credit_amount as any).toFixed(2)} ₼
+                        </div>
+                    )}
+                    {service.payment_status === 'credit' && service.credit_amount > 0 && (
+                        <div className="text-xs text-orange-600 font-medium">
+                            Borc: {parseFloat(service.credit_amount as any).toFixed(2)} ₼
                         </div>
                     )}
                 </div>
             ),
         },
+        {
+            key: 'total_cost',
+            label: 'Məbləğ',
+            sortable: true,
+            render: (service: TailorService) => (
+                <div className="text-right font-medium">
+                    {parseFloat(service.total_cost as any).toFixed(2)} ₼
+                </div>
+            ),
+        },
     ];
 
-    const filters_config: Filter[] = [
+    const actions: Action[] = [
+        {
+            label: 'Bax',
+            href: (service: TailorService) => route('tailor-services.show', service.id),
+            variant: 'primary',
+            icon: <EyeIcon className="w-4 h-4" />,
+        },
+        {
+            label: 'Düzəliş et',
+            href: (service: TailorService) => route('tailor-services.edit', service.id),
+            variant: 'secondary',
+            icon: <PencilIcon className="w-4 h-4" />,
+        },
+        {
+            label: 'Təhvil verildi',
+            onClick: (service: TailorService) => {
+                if (confirm('Bu xidməti təhvil verildi olaraq işarələmək istədiyinizə əminsiniz?')) {
+                    router.patch(route('tailor-services.update-status', service.id), {
+                        status: 'delivered'
+                    });
+                }
+            },
+            variant: 'success',
+            icon: <CheckIcon className="w-4 h-4" />,
+            condition: (service: TailorService) => service.status !== 'delivered' && service.status !== 'cancelled',
+        },
+        {
+            label: 'Sil',
+            onClick: (service: TailorService) => {
+                if (confirm('Bu xidməti silmək istədiyinizə əminsiniz?')) {
+                    router.delete(route('tailor-services.destroy', service.id));
+                }
+            },
+            variant: 'danger',
+            icon: <TrashIcon className="w-4 h-4" />,
+        },
+    ];
+
+    const tableFilters: Filter[] = [
         {
             key: 'status',
             label: 'Status',
             type: 'dropdown',
             options: [
                 { value: '', label: 'Hamısı' },
-                { value: 'pending', label: 'Gözləyir' },
-                { value: 'in_progress', label: 'Davam edir' },
+                { value: 'received', label: 'Qəbul edildi' },
+                { value: 'in_progress', label: 'İşləniir' },
                 { value: 'completed', label: 'Tamamlandı' },
+                { value: 'delivered', label: 'Təhvil verildi' },
                 { value: 'cancelled', label: 'Ləğv edildi' },
             ],
             value: localFilters.status || '',
-            onChange: (value: string) => handleFilter('status', value),
+            onChange: (value) => handleFilter('status', value),
+        },
+        {
+            key: 'branch_id',
+            label: 'Filial',
+            type: 'dropdown',
+            options: [
+                { value: '', label: 'Hamısı' },
+                ...branches.map(b => ({ value: b.id.toString(), label: b.name })),
+            ],
+            value: localFilters.branch_id || '',
+            onChange: (value) => handleFilter('branch_id', value),
         },
         {
             key: 'date_from',
-            label: 'Başlanğıc tarixi',
+            label: 'Tarixdən',
             type: 'date',
             value: localFilters.date_from || '',
-            onChange: (value: string) => handleFilter('date_from', value),
+            onChange: (value) => handleFilter('date_from', value),
         },
         {
             key: 'date_to',
-            label: 'Son tarix',
+            label: 'Tarixədək',
             type: 'date',
             value: localFilters.date_to || '',
-            onChange: (value: string) => handleFilter('date_to', value),
-        },
-    ];
-
-    const actions: Action[] = [
-        {
-            label: '',
-            icon: (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-            ),
-            href: (serviceRecord: ServiceRecord) => `/service-records/${serviceRecord.id}`,
-            variant: 'primary',
-        },
-        {
-            label: '',
-            icon: (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-            ),
-            href: (serviceRecord: ServiceRecord) => `/service-records/${serviceRecord.id}/edit`,
-            variant: 'secondary',
+            onChange: (value) => handleFilter('date_to', value),
         },
     ];
 
@@ -194,42 +273,79 @@ export default function Index({ auth, serviceRecords, filters, branches }: Servi
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Servis qeydləri
+                        Dərzi Xidmətləri
                     </h2>
-                    <Link href={route('pos.index', { mode: 'service' })}>
+                    <Link href={route('tailor-services.create')}>
                         <PrimaryButton>
-                            POS-da Xidmət Et
+                            Yeni xidmət
                         </PrimaryButton>
                     </Link>
                 </div>
             }
         >
-            <Head title="Servis qeydləri" />
+            <Head title="Dərzi Xidmətləri" />
 
             <div className="py-12">
                 <div className="w-full">
+                    {/* Payment Statistics */}
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-6 lg:px-8">
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-orange-800">Tam Borc</p>
+                                    <p className="text-2xl font-bold text-orange-900">{stats.total_credit}</p>
+                                    <p className="text-sm text-orange-600 mt-1">
+                                        Məbləğ: {parseFloat(stats.total_credit_amount as any).toFixed(2)} ₼
+                                    </p>
+                                </div>
+                                <div className="p-3 bg-orange-100 rounded-full">
+                                    <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-yellow-800">Qismən Ödəniş</p>
+                                    <p className="text-2xl font-bold text-yellow-900">{stats.total_partial}</p>
+                                    <p className="text-sm text-yellow-600 mt-1">
+                                        Qalan borc: {parseFloat(stats.total_partial_amount as any).toFixed(2)} ₼
+                                    </p>
+                                </div>
+                                <div className="p-3 bg-yellow-100 rounded-full">
+                                    <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <SharedDataTable
                             data={{
-                                data: serviceRecords.data,
-                                links: serviceRecords.links,
-                                current_page: serviceRecords.meta?.current_page || 1,
-                                last_page: serviceRecords.meta?.last_page || 1,
-                                total: serviceRecords.meta?.total || 0,
-                                per_page: serviceRecords.meta?.per_page || 15,
-                                from: serviceRecords.meta?.from || 0,
-                                to: serviceRecords.meta?.to || 0
+                                data: services.data,
+                                links: services.links,
+                                current_page: services.meta?.current_page || 1,
+                                last_page: services.meta?.last_page || 1,
+                                total: services.meta?.total || 0,
+                                per_page: services.meta?.per_page || 15,
+                                from: services.meta?.from || 0,
+                                to: services.meta?.to || 0
                             }}
                             columns={columns}
-                            filters={filters_config}
+                            filters={tableFilters}
                             actions={actions}
-                            searchPlaceholder="Servis nömrəsi, təsvir və ya müştəri adı ilə axtar..."
+                            searchValue={localFilters.search || ''}
+                            searchPlaceholder="Servis №, müştəri və ya xidmət axtarın..."
                             emptyState={{
-                                title: "Heç bir servis qeydi tapılmadı",
-                                description: "Hələ ki heç bir servis qeydi əlavə edilməyib."
+                                title: "Heç bir xidmət tapılmadı",
+                                description: "İlk dərzi xidmətini əlavə etməklə başlayın."
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
-                            onSort={(field: string) => handleSort(field, 'asc')}
                             fullWidth={true}
                         />
                     </div>

@@ -94,29 +94,6 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
             ),
         },
         {
-            key: 'vehicles_count',
-            label: 'Nəqliyyat vasitələri',
-            render: (customer: Customer) => (
-                <div>
-                    <div className="font-medium">
-                        {customer.active_vehicles_count || 0} ədəd
-                    </div>
-                    <div className="text-xs text-gray-500">
-                        {customer.total_service_records || 0} servis
-                    </div>
-                </div>
-            ),
-        },
-        {
-            key: 'last_service_date',
-            label: 'Son servis',
-            sortable: true,
-            render: (customer: Customer) => 
-                customer.last_service_date ? 
-                    new Date(customer.last_service_date).toLocaleDateString('az-AZ') :
-                    <span className="text-gray-500">Servis yoxdur</span>,
-        },
-        {
             key: 'credit_status',
             label: 'Borc vəziyyəti',
             render: (customer: Customer) => (
@@ -239,6 +216,7 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
                             columns={columns}
                             filters={filters_config}
                             actions={actions}
+                            searchValue={localFilters.search || ''}
                             searchPlaceholder="Müştəri adı və ya əlaqə məlumatları ilə axtar..."
                             emptyState={{
                                 title: "Heç bir müştəri tapılmadı",

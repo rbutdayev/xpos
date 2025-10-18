@@ -1,1 +1,1 @@
-i have system that contain car service records and sales. 
+mutlitenant system and shpuld be consider account_id on each request from database! 

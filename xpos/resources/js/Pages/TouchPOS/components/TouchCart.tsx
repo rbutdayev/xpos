@@ -52,9 +52,9 @@ export default function TouchCart({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-gray-900 text-sm leading-tight">
-                    {item.type === 'service' ? item.service?.name : item.product?.name || item.item_name}
+                    {item.product?.name || item.item_name}
                   </div>
-                  {item.type === 'product' && item.product?.sku && (
+                  {item.product?.sku && (
                     <div className="text-xs text-gray-500 mt-1">Kod: {item.product.sku}</div>
                   )}
                 </div>
@@ -67,7 +67,7 @@ export default function TouchCart({
               </div>
 
               {/* Unit Selection for Products */}
-              {item.type === 'product' && item.product && changeItemUnit && 
+              {item.product && changeItemUnit &&
                (item.product.packaging_quantity && item.product.unit_price) && (
                 <div className="mb-3">
                   <select
@@ -99,7 +99,7 @@ export default function TouchCart({
                   >
                     <MinusIcon className="w-4 h-4 text-gray-700" />
                   </button>
-                  
+
                   <input
                     type="number"
                     step={item.selling_unit?.toLowerCase().includes('l') ? '0.1' : '1'}
@@ -108,7 +108,7 @@ export default function TouchCart({
                     className="w-16 text-center text-lg font-medium border border-gray-300 rounded-lg py-2 focus:ring-blue-500 focus:border-blue-500"
                     min="0"
                   />
-                  
+
                   <button
                     onClick={() => adjustQuantity(item.id, item.quantity, 1)}
                     className="w-10 h-10 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"

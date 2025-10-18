@@ -20,11 +20,8 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
           <div className="flex items-center space-x-2">
             <div className="flex-1">
               <div className="font-medium">
-                {item.type === 'service' ? item.service?.name : item.product?.name || item.item_name}
-                {item.type === 'service' && item.service?.code && (
-                  <span className="ml-2 text-xs text-gray-500">({item.service.code})</span>
-                )}
-                {item.type === 'product' && item.product?.sku && (
+                {item.product?.name || item.item_name}
+                {item.product?.sku && (
                   <span className="ml-2 text-xs text-gray-500">({item.product.sku})</span>
                 )}
               </div>
@@ -49,7 +46,7 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
                   )}
                 </div>
               )}
-              {item.type === 'product' && item.product && (
+              {item.product && (
                 <div className="text-xs text-gray-500 mt-1">
                   {/* Unit seçim dropdown */}
                   {changeItemUnit && (item.product.packaging_quantity && item.product.unit_price) ? (

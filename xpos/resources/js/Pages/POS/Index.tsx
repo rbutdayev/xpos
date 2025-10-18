@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PageProps, Product, Customer, Vehicle, Branch, User, Service } from '@/types';
-import ModeSelector from './components/ModeSelector';
+import { PageProps, Product, Customer, Branch } from '@/types';
 import CustomerSection from './components/CustomerSection';
-import ServiceSection from './components/ServiceSection';
 import ProductSearchSection from './components/ProductSearchSection';
 import CartSection from './components/CartSection';
 import SummaryPaymentSection from './components/SummaryPaymentSection';
@@ -14,21 +12,10 @@ import { useSearch } from './hooks/useSearch';
 
 interface POSIndexProps extends PageProps {
   customers: Customer[];
-  vehicles: Vehicle[];
-  employees: User[];
-  services: Service[];
   branches: Branch[];
 }
 
-export default function Index({ auth, customers, vehicles, employees, services, branches }: POSIndexProps) {
-  const { url } = usePage();
-  const urlParams = new URLSearchParams(url.split('?')[1] || '');
-  const initialMode = urlParams.get('mode') === 'service' ? 'service' : 'sale';
-  const initialCustomerId = urlParams.get('customer_id') || '';
-  const initialVehicleId = urlParams.get('vehicle_id') || '';
-
-  // Mode selection
-  const [mode, setMode] = useState<'sale' | 'service'>(initialMode);
+export default function Index({ auth, customers, branches }: POSIndexProps) {
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -43,23 +30,14 @@ export default function Index({ auth, customers, vehicles, employees, services, 
     return '';
   };
 
-  // Form data
+  // Form data (simplified for sales only)
   const [formData, setFormData] = useState({
-    customer_id: initialCustomerId,
-    vehicle_id: initialVehicleId,
+    customer_id: '',
     branch_id: getUserBranch(),
-    employee_id: '', // Only for service mode
-    description: '', // Only for service mode
-    labor_cost: 0, // Only for service mode
-    service_date: new Date().toISOString().split('T')[0], // Only for service mode
-    service_time: new Date().toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }), // Only for service mode
-    status: 'pending', // Only for service mode
-    tax_amount: 0, // Only for sale mode
+    tax_amount: 0,
     discount_amount: 0,
     notes: '',
-    vehicle_mileage: undefined as number | undefined, // Only for service mode
-    // Payment fields (unified for both modes)
-    payment_status: 'paid', // paid, credit, partial
+    payment_status: 'paid' as 'paid' | 'credit' | 'partial',
     paid_amount: 0,
     credit_amount: 0,
     credit_due_date: '',
@@ -75,17 +53,13 @@ export default function Index({ auth, customers, vehicles, employees, services, 
   const [variantModalOpen, setVariantModalOpen] = useState(false);
   const [selectedProductForVariant, setSelectedProductForVariant] = useState<Product | null>(null);
 
-  // Product/Service search using debounced + abortable fetch
-  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch(mode, services, formData.branch_id);
-
-  // Check if user can edit date/time (service mode only)
-  const canEditDateTime = auth?.user?.role && ['account_owner', 'admin', 'branch_manager'].includes(auth.user.role);
+  // Product search using debounced + abortable fetch
+  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch(formData.branch_id);
 
   // Calculate totals
-  const taxAmount = mode === 'sale' ? formData.tax_amount : 0;
+  const taxAmount = formData.tax_amount;
   const discountAmount = formData.discount_amount;
-  const laborCost = mode === 'service' ? formData.labor_cost : 0;
-  const grandTotal = useMemo(() => subtotal + taxAmount + laborCost - discountAmount, [subtotal, taxAmount, laborCost, discountAmount]);
+  const grandTotal = useMemo(() => subtotal + taxAmount - discountAmount, [subtotal, taxAmount, discountAmount]);
 
   // Update payment amounts when payment status or total changes
   useEffect(() => {
@@ -99,9 +73,7 @@ export default function Index({ auth, customers, vehicles, employees, services, 
   }, [formData.payment_status, grandTotal]);
 
   // Handle product selection (check if has variants)
-  const handleProductSelect = (item: Product | Service) => {
-    const product = item as Product;
-
+  const handleProductSelect = (product: Product) => {
     // Check if product has variants
     if (product.has_variants && product.variants && product.variants.length > 0) {
       // Open variant selector modal
@@ -109,7 +81,7 @@ export default function Index({ auth, customers, vehicles, employees, services, 
       setVariantModalOpen(true);
     } else {
       // Add directly to cart without variant
-      addToCart(item);
+      addToCart(product);
     }
 
     // Clear search
@@ -123,34 +95,6 @@ export default function Index({ auth, customers, vehicles, employees, services, 
     setSelectedProductForVariant(null);
   };
 
-  // Clear mode-specific fields when switching modes
-  useEffect(() => {
-    if (mode === 'sale') {
-      setFormData((prev) => ({
-        ...prev,
-        vehicle_id: '',
-        employee_id: '',
-        description: '',
-        labor_cost: 0,
-        service_date: new Date().toISOString().split('T')[0],
-        service_time: new Date().toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }),
-        status: 'pending',
-        vehicle_mileage: undefined as number | undefined,
-        payment_status: 'paid',
-        paid_amount: 0,
-        credit_amount: 0,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        tax_amount: 0,
-        payment_status: 'paid',
-        paid_amount: 0,
-        credit_amount: 0,
-      }));
-    }
-    setCart([]);
-  }, [mode, setCart]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,16 +112,11 @@ export default function Index({ auth, customers, vehicles, employees, services, 
 
     const newErrors: Record<string, string> = {};
     if (!formData.branch_id) newErrors.branch_id = 'Filial seçmək məcburidir';
-    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul və ya xidmət əlavə edilməlidir';
+    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul əlavə edilməlidir';
 
     // For credit or partial payment, customer is required
     if ((formData.payment_status === 'credit' || formData.payment_status === 'partial') && !formData.customer_id) {
       newErrors.customer_id = 'Borc və ya qismən ödəniş üçün müştəri seçmək məcburidir';
-    }
-
-    if (mode === 'service') {
-      if (!formData.customer_id) newErrors.customer_id = 'Servis üçün müştəri seçmək məcburidir';
-      if (!formData.description.trim()) newErrors.description = 'Servis açıqlaması məcburidir';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -186,13 +125,12 @@ export default function Index({ auth, customers, vehicles, employees, services, 
       return;
     }
 
-    const submitData: any = {
+    const submitData = {
       ...formData,
       items: cart.map((item) => ({
-        item_type: item.type === 'service' ? 'service' : 'product',
+        item_type: 'product',
         product_id: item.product_id,
         variant_id: item.variant_id,
-        service_id_ref: item.service_id_ref,
         item_name: item.item_name,
         quantity: item.quantity,
         base_quantity: item.base_quantity,
@@ -203,60 +141,28 @@ export default function Index({ auth, customers, vehicles, employees, services, 
       total: grandTotal,
     };
 
-    if (mode === 'sale') {
-      submitData.service_items = undefined;
-      router.post('/pos/sale', submitData, {
-        onSuccess: () => {
-          setCart([]);
-          setFormData((prev) => ({
-            ...prev,
-            customer_id: '',
-            vehicle_id: '',
-            notes: '',
-            discount_amount: 0,
-            tax_amount: 0,
-            payment_status: 'paid',
-            paid_amount: 0,
-            credit_amount: 0,
-            credit_due_date: '',
-          }));
-        },
-        onError: (errs) => {
-          console.error('Sale submission errors:', errs);
-          setErrors(errs);
-          setProcessing(false);
-        },
-        onFinish: () => setProcessing(false),
-      });
-    } else {
-      submitData.service_items = submitData.items;
-      submitData.items = undefined;
-      router.post('/pos/service', submitData, {
-        onSuccess: () => {
-          setCart([]);
-          setFormData((prev) => ({
-            ...prev,
-            customer_id: '',
-            vehicle_id: '',
-            description: '',
-            notes: '',
-            discount_amount: 0,
-            labor_cost: 0,
-            vehicle_mileage: undefined,
-            payment_status: 'paid',
-            paid_amount: 0,
-            credit_amount: 0,
-            credit_due_date: '',
-          }));
-        },
-        onError: (errs) => {
-          console.error('Service submission errors:', errs);
-          setErrors(errs);
-          setProcessing(false);
-        },
-        onFinish: () => setProcessing(false),
-      });
-    }
+    router.post('/pos/sale', submitData, {
+      onSuccess: () => {
+        setCart([]);
+        setFormData((prev) => ({
+          ...prev,
+          customer_id: '',
+          notes: '',
+          discount_amount: 0,
+          tax_amount: 0,
+          payment_status: 'paid',
+          paid_amount: 0,
+          credit_amount: 0,
+          credit_due_date: '',
+        }));
+      },
+      onError: (errs) => {
+        console.error('Sale submission errors:', errs);
+        setErrors(errs);
+        setProcessing(false);
+      },
+      onFinish: () => setProcessing(false),
+    });
   };
 
   return (
@@ -264,9 +170,6 @@ export default function Index({ auth, customers, vehicles, employees, services, 
       <Head title="POS Satış" />
       <div className="py-6">
         <div className="w-full">
-          {/* Mode Selection */}
-          <ModeSelector mode={mode} onChange={setMode} />
-
           <form onSubmit={handleSubmit}>
             {/* Display general errors */}
             {(errors.items || errors.general) && (
@@ -281,9 +184,7 @@ export default function Index({ auth, customers, vehicles, employees, services, 
               <div className="lg:col-span-2">
                 {/* Customer Selection */}
                 <CustomerSection
-                  mode={mode}
                   customers={customers}
-                  vehicles={vehicles}
                   branches={branches}
                   formData={formData}
                   setFormData={setFormData}
@@ -291,25 +192,13 @@ export default function Index({ auth, customers, vehicles, employees, services, 
                   userBranchId={auth?.user?.branch_id}
                 />
 
-                {/* Service Details (Service mode only) */}
-                {mode === 'service' && (
-                  <ServiceSection
-                    canEditDateTime={!!canEditDateTime}
-                    employees={employees}
-                    formData={formData}
-                    setFormData={setFormData}
-                    errors={errors}
-                  />
-                )}
-
                 {/* Product Search */}
                 <ProductSearchSection
                   query={itemSearch}
                   setQuery={(q) => setItemSearch(q)}
                   loading={!!isSearching}
-                  results={searchResults as (Product | Service)[]}
+                  results={searchResults}
                   onSelect={handleProductSelect}
-                  mode={mode}
                   branchId={formData.branch_id}
                 />
 
@@ -320,10 +209,8 @@ export default function Index({ auth, customers, vehicles, employees, services, 
               {/* Right Column - Summary & Actions */}
               <div className="lg:col-span-1">
                 <SummaryPaymentSection
-                  mode={mode}
                   processing={processing}
                   subtotal={subtotal}
-                  laborCost={laborCost}
                   taxAmount={formData.tax_amount}
                   discountAmount={formData.discount_amount}
                   grandTotal={grandTotal}

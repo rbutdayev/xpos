@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { PageProps, Product, Customer, Branch, Service } from '@/types';
+import { PageProps, Product, Customer, Branch } from '@/types';
 import TouchCart from './components/TouchCart';
 import TouchHeader from './components/TouchHeader';
 import TouchPayment from './components/TouchPayment';
@@ -46,8 +46,13 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
 
-  // Product search using exact same logic as POS
-  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch('sale', [], formData.branch_id);
+  // Number pad state
+  const [showNumberPad, setShowNumberPad] = useState(false);
+  const [numberPadValue, setNumberPadValue] = useState('');
+  const [numberPadTargetIndex, setNumberPadTargetIndex] = useState<number | null>(null); // cart item index
+
+  // Product search using exact same logic as POS (only products, no services)
+  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch(formData.branch_id);
 
   // Calculate totals
   const taxAmount = formData.tax_amount;
@@ -149,12 +154,11 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
               query={itemSearch}
               setQuery={setItemSearch}
               loading={!!isSearching}
-              results={searchResults as (Product | Service)[]}
+              results={searchResults}
               onSelect={(item) => {
                 addToCart(item);
                 setItemSearch('');
               }}
-              mode="sale"
               branchId={formData.branch_id}
             />
             

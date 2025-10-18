@@ -377,6 +377,8 @@ export interface Customer {
     formatted_phone?: string;
     customer_type_text?: string;
     active_vehicles_count?: number;
+    active_customerItems_count?: number;
+    total_tailor_services?: number;
     total_service_records?: number;
     last_service_date?: string;
     total_credit_amount?: number;
@@ -403,7 +405,7 @@ export interface Vehicle {
     engine_type_text?: string;
     full_name?: string;
     formatted_plate?: string;
-    total_service_records?: number;
+    total_tailor_services?: number;
     last_service_date?: string;
     last_service_mileage?: number;
 }
@@ -412,7 +414,7 @@ export interface ServiceRecord {
     id: number;
     account_id: number;
     customer_id: number;
-    vehicle_id?: number;
+    customer_item_id?: number;
     branch_id: number;
     user_id?: number;
     service_number: string;
@@ -424,7 +426,7 @@ export interface ServiceRecord {
     service_date: string;
     notes?: string;
     customer?: Customer;
-    vehicle?: Vehicle;
+    customer_item?: CustomerItem;
     user?: User;
     formatted_total_cost?: string;
     formatted_labor_cost?: string;
@@ -433,19 +435,10 @@ export interface ServiceRecord {
     updated_at?: string;
     started_at?: string;
     completed_at?: string;
-    notes?: string;
-    vehicle_mileage?: number;
-    created_at?: string;
-    updated_at?: string;
-    customer?: Customer;
-    vehicle?: Vehicle;
     branch?: Branch;
-    user?: User;
     service_items?: ServiceItem[];
-    status_text?: string;
     status_color?: string;
     duration?: string;
-    formatted_total_cost?: string;
     customer_credit_id?: number;
     payment_status?: 'paid' | 'credit' | 'partial';
     paid_amount?: number;
@@ -521,15 +514,20 @@ export interface CustomerItem {
     item_type: string;
     description: string;
     color?: string;
+    size?: string;
     fabric_type?: string;
     measurements?: Record<string, any>;
     notes?: string;
     reference_number?: string;
     received_date?: string;
+    status?: string;
+    status_text?: string;
+    status_color?: string;
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
     full_description?: string;
+    display_name?: string;
     formatted_measurements?: string;
     tailor_services?: TailorService[];
 }
@@ -543,19 +541,22 @@ export interface TailorService {
     employee_id?: number;
     service_number: string;
     description?: string;
+    item_condition?: string;
     labor_cost: number;
-    parts_total: number;
+    materials_cost: number;
     total_cost: number;
-    status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-    service_date: string;
-    started_at?: string;
-    completed_at?: string;
+    status: 'received' | 'in_progress' | 'completed' | 'delivered' | 'cancelled';
+    received_date: string;
+    promised_date?: string;
+    completed_date?: string;
+    delivered_date?: string;
     notes?: string;
-    payment_status: 'unpaid' | 'partial' | 'paid';
+    payment_status: 'unpaid' | 'partial' | 'paid' | 'credit';
     paid_amount: number;
     credit_amount: number;
     credit_due_date?: string;
     customer_credit_id?: number;
+    created_by?: number;
     created_at?: string;
     updated_at?: string;
     customer?: Customer;
@@ -567,9 +568,9 @@ export interface TailorService {
     status_color?: string;
     formatted_total_cost?: string;
     formatted_labor_cost?: string;
-    duration?: string;
     payment_status_text?: string;
     payment_status_color?: string;
+    is_overdue?: boolean;
 }
 
 export interface TailorServiceItem {

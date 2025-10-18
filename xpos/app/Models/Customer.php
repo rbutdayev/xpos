@@ -30,8 +30,10 @@ class Customer extends Model
         'formatted_phone',
         'customer_type_text',
         'active_customerItems_count',
-        'total_service_records',
+        'total_tailor_services',
         'last_service_date',
+        'total_credit_amount',
+        'has_pending_credits',
     ];
 
     protected $attributes = [
@@ -126,31 +128,53 @@ class Customer extends Model
 
     public function getTotalTailorServicesAttribute(): int
     {
-        return $this->service_records_count ?? $this->tailorServices()->count();
+        return $this->tailorServices()->count();
     }
 
     public function getLastServiceDateAttribute(): ?string
     {
         $lastService = $this->tailorServices()
-            ->orderBy('service_date', 'desc')
+            ->orderBy('received_date', 'desc')
             ->first();
-            
-        return $lastService?->service_date;
+
+        return $lastService?->received_date?->format('Y-m-d');
     }
 
     public function getTotalCreditAmountAttribute(): float
     {
-        return $this->credits()
+        // Get credits from customer_credits table
+        $customerCredits = $this->credits()
             ->where('type', 'credit')
             ->whereIn('status', ['pending', 'partial'])
             ->sum('remaining_amount') ?? 0;
+
+        // Get unpaid amounts from tailor services
+        $tailorServiceCredits = $this->tailorServices()
+            ->whereIn('payment_status', ['unpaid', 'partial', 'credit'])
+            ->sum('credit_amount') ?? 0;
+
+        return $customerCredits + $tailorServiceCredits;
+    }
+
+    public function getHasPendingCreditsAttribute(): bool
+    {
+        // Check customer_credits table
+        $hasCustomerCredits = $this->credits()
+            ->where('type', 'credit')
+            ->whereIn('status', ['pending', 'partial'])
+            ->exists();
+
+        // Check tailor services for unpaid amounts
+        $hasTailorServiceCredits = $this->tailorServices()
+            ->whereIn('payment_status', ['unpaid', 'partial', 'credit'])
+            ->where('credit_amount', '>', 0)
+            ->exists();
+
+        return $hasCustomerCredits || $hasTailorServiceCredits;
     }
 
     public function hasPendingCredits(): bool
     {
-        return $this->credits()
-            ->where('type', 'credit')
-            ->whereIn('status', ['pending', 'partial'])
-            ->exists();
+        return $this->has_pending_credits;
     }
 }

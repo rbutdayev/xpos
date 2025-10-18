@@ -46,12 +46,6 @@ class CustomerController extends Controller
         $customers = $query->latest()
             ->paginate(15)
             ->withQueryString();
-            
-        // Add credit information to each customer
-        $customers->getCollection()->transform(function ($customer) {
-            $customer->has_pending_credits = $customer->hasPendingCredits();
-            return $customer;
-        });
 
         return Inertia::render('Customers/Index', [
             'customers' => $customers,
@@ -113,8 +107,29 @@ class CustomerController extends Controller
             abort(403);
         }
 
+        // Load customer items
+        $customerItems = $customer->customerItems()
+            ->where('is_active', true)
+            ->latest()
+            ->get();
+
+        // Load relationships
+        $serviceHistory = $customer->tailorServices()
+            ->with(['employee:id,name', 'customerItem:id,description'])
+            ->latest('received_date')
+            ->limit(10)
+            ->get()
+            ->map(function ($service) {
+                // Map employee to user for frontend compatibility
+                $service->user = $service->employee;
+                return $service;
+            });
+
         return Inertia::render('Customers/Show', [
             'customer' => $customer,
+            'customerItems' => $customerItems,
+            'vehicles' => [], // Vehicles feature not implemented yet
+            'serviceHistory' => $serviceHistory,
         ]);
     }
 

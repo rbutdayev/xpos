@@ -56,8 +56,7 @@ class ProductController extends Controller
             }
         }
         
-        $query = Product::with(['category'])
-            ->where('type', 'product'); // Only show products, not services
+        $query = Product::with(['category']); // Show both products and services
         
         // For salesmen, only show products from warehouses they have access to
         if ($user->role === 'sales_staff' && $user->branch_id) {

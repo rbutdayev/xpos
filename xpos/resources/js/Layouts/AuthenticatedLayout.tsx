@@ -458,31 +458,31 @@ export default function Authenticated({
                             }
                         }}
                         className={`
-                            group flex w-full items-center rounded-lg px-4 py-3 text-left text-base font-medium transition-colors duration-200
-                            ${item.current 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                            group relative flex w-full items-center rounded-xl px-3 py-3 text-left text-base font-semibold transition-all duration-200
+                            ${item.current
+                                ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                                : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 hover:text-slate-900 hover:shadow-md'
                             }
                             ${sidebarCollapsed ? 'justify-center' : ''}
                         `}
-                        style={{ paddingLeft: sidebarCollapsed ? '16px' : `${16 + level * 20}px` }}
+                        style={{ paddingLeft: sidebarCollapsed ? '12px' : `${12 + level * 16}px` }}
                         title={sidebarCollapsed ? item.name : ''}
                     >
-                        <IconComponent className={`h-6 w-6 flex-shrink-0 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                        <IconComponent className={`h-6 w-6 flex-shrink-0 transition-all duration-200 group-hover:scale-110 ${sidebarCollapsed ? '' : 'mr-3'} ${item.current ? 'text-white' : 'text-blue-500'}`} />
                         {!sidebarCollapsed && (
                             <>
                                 <span className="flex-1">{item.name}</span>
                                 {isOpen ? (
-                                    <ChevronDownIcon className="h-5 w-5" />
+                                    <ChevronDownIcon className="h-5 w-5 transition-transform duration-200" />
                                 ) : (
-                                    <ChevronRightIcon className="h-5 w-5" />
+                                    <ChevronRightIcon className="h-5 w-5 transition-transform duration-200" />
                                 )}
                             </>
                         )}
                     </button>
                     
                     {isOpen && !sidebarCollapsed && (
-                        <div className="mt-1 space-y-1">
+                        <div className="mt-1 space-y-0.5 pl-2">
                             {item.children?.map((child) => (
                                 <SidebarItem key={child.name} item={child} level={level + 1} />
                             ))}
@@ -496,17 +496,17 @@ export default function Authenticated({
             <Link
                 href={item.href!}
                 className={`
-                    group flex items-center rounded-lg px-4 py-3 text-base font-medium transition-colors duration-200
-                    ${item.current 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    group relative flex items-center rounded-xl px-3 py-3 text-base font-semibold transition-all duration-200
+                    ${item.current
+                        ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 hover:text-slate-900 hover:shadow-md'
                     }
                     ${sidebarCollapsed ? 'justify-center' : ''}
                 `}
-                style={{ paddingLeft: sidebarCollapsed ? '16px' : `${16 + level * 20}px` }}
+                style={{ paddingLeft: sidebarCollapsed ? '12px' : `${12 + level * 16}px` }}
                 title={sidebarCollapsed ? item.name : ''}
             >
-                <IconComponent className={`h-5 w-5 flex-shrink-0 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                <IconComponent className={`h-6 w-6 flex-shrink-0 transition-all duration-200 group-hover:scale-110 ${sidebarCollapsed ? '' : 'mr-3'} ${item.current ? 'text-white' : 'text-blue-500'}`} />
                 {!sidebarCollapsed && item.name}
             </Link>
         );
@@ -526,99 +526,80 @@ export default function Authenticated({
                 </div>
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar - Premium Light Theme */}
             <div className={`
-                fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-lg transform transition-all duration-300 ease-in-out lg:translate-x-0
+                fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-2xl shadow-slate-200/50 transform transition-all duration-300 ease-in-out lg:translate-x-0 border-r border-slate-200
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                ${sidebarCollapsed ? 'w-20' : 'w-80'}
+                ${sidebarCollapsed ? 'w-20' : 'w-72'}
             `}>
                 {/* Sidebar header */}
-                <div className="flex h-16 flex-shrink-0 items-center border-b border-gray-200 px-4 justify-between">
-                    <Link href="/dashboard" className={`flex items-center ${sidebarCollapsed ? 'justify-center w-full' : ''}`}>
-                        <ApplicationLogo className="h-8 w-auto" />
-                    </Link>
-                    {/* Collapse/Expand button - only show on desktop */}
-                    <button
-                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                        title={sidebarCollapsed ? 'Genişlət' : 'Kiçilt'}
-                    >
-                        <ChevronLeftIcon className={`w-5 h-5 transition-transform duration-200 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
-                    </button>
+                <div className="flex h-16 flex-shrink-0 items-center border-b border-slate-200 px-4 justify-between bg-gradient-to-r from-white to-slate-50">
+                    {sidebarCollapsed ? (
+                        <button
+                            onClick={() => setSidebarCollapsed(false)}
+                            className="flex items-center justify-center w-full group"
+                            title="Genişlət"
+                        >
+                            <div className="flex h-10 w-10 items-center justify-center bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white text-xl font-bold shadow-lg shadow-blue-500/30 group-hover:shadow-cyan-500/50 group-hover:scale-105 transition-all duration-200 rounded-xl">
+                                X
+                            </div>
+                        </button>
+                    ) : (
+                        <>
+                            <Link href="/dashboard" className="flex items-center group">
+                                <ApplicationLogo className="h-8 w-auto" />
+                            </Link>
+                            {/* Collapse button */}
+                            <button
+                                onClick={() => setSidebarCollapsed(true)}
+                                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-all duration-200"
+                                title="Kiçilt"
+                            >
+                                <ChevronLeftIcon className="w-5 h-5" />
+                            </button>
+                        </>
+                    )}
                 </div>
 
-                {/* Warehouse Context Selector - Hide for salesmen */}
-                {warehouses.length > 0 && user.role !== 'sales_staff' && !sidebarCollapsed && (
-                    <div className="border-b border-gray-200 p-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Hazırki Anbar
-                        </label>
-                        <SearchableWarehouseSelect
-                            warehouses={warehouses}
-                            value={selectedWarehouse?.toString() || ''}
-                            onChange={(warehouseId) => handleWarehouseChange(warehouseId.toString())}
-                            placeholder="Bütün anbarlar"
-                            required={false}
-                            className="text-sm"
-                        />
-                        {getCurrentWarehouse() && (
-                            <div className="mt-1 text-sm text-blue-600">
-                                <HomeModernIcon className="w-4 h-4 inline mr-1" />
-                                {getCurrentWarehouse()?.name}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Branch Info for Salesmen */}
-                {user.role === 'sales_staff' && user.branch && !sidebarCollapsed && (
-                    <div className="border-b border-gray-200 p-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Filial
-                        </label>
-                        <div className="flex items-center text-base text-gray-900">
-                            <BuildingOffice2Icon className="w-5 h-5 mr-2 text-blue-600" />
-                            {user.branch.name}
-                        </div>
-                    </div>
-                )}
-
                 {/* Navigation */}
-                <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
+                <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
                     {navigation.map((item) => (
                         <SidebarItem key={item.name} item={item} />
                     ))}
                 </nav>
 
                 {/* User menu */}
-                <div className="flex-shrink-0 border-t border-gray-200 p-4 relative z-[60]">
+                <div className={`flex-shrink-0 border-t border-slate-200 p-3 relative z-[60] bg-gradient-to-r from-white to-slate-50`}>
                     <Dropdown>
                         <Dropdown.Trigger>
-                            <button className={`group block w-full rounded-lg bg-gray-50 px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-gray-100 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
-                                {sidebarCollapsed ? (
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-base font-medium text-white" title={user.name || ''}>
-                                        {user.name?.charAt(0).toUpperCase() || '?'}
-                                    </div>
-                                ) : (
+                            {sidebarCollapsed ? (
+                                <button
+                                    className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-base font-bold text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105 transition-all duration-200 mx-auto ring-2 ring-cyan-400/20"
+                                    title={`${user.name}\n${user.email}`}
+                                >
+                                    {user.name?.charAt(0).toUpperCase() || '?'}
+                                </button>
+                            ) : (
+                                <button className="group block w-full rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 px-3 py-2.5 text-left transition-all duration-200 shadow-sm hover:shadow-md border border-slate-200">
                                     <div className="flex items-center">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-base font-medium text-white">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-sm font-bold text-white shadow-md shadow-cyan-500/30 ring-2 ring-cyan-400/20">
                                             {user.name?.charAt(0).toUpperCase() || '?'}
                                         </div>
-                                        <div className="ml-3 flex-1">
-                                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                                            <p className="text-xs text-gray-500">{user.email}</p>
+                                        <div className="ml-3 flex-1 min-w-0">
+                                            <p className="text-base font-semibold text-slate-900 truncate">{user.name}</p>
+                                            <p className="text-sm text-slate-600 truncate">{user.email}</p>
                                         </div>
-                                        <ChevronDownIcon className="h-5 w-5" />
+                                        <ChevronDownIcon className="h-5 w-5 text-slate-500 group-hover:text-slate-700 transition-colors" />
                                     </div>
-                                )}
-                            </button>
+                                </button>
+                            )}
                         </Dropdown.Trigger>
 
-                        <Dropdown.Content align="right" direction="up" contentClasses="py-1 bg-white border border-gray-200" width="48">
+                        <Dropdown.Content align="right" direction="up" contentClasses="py-1 bg-white border border-slate-200 shadow-xl" width="48">
                             <Dropdown.Link href="/profile">Profil</Dropdown.Link>
-                            <Dropdown.Link 
-                                href={route('logout')} 
-                                method="post" 
+                            <Dropdown.Link
+                                href={route('logout')}
+                                method="post"
                                 as="button"
                             >
                                 Çıxış
@@ -629,7 +610,7 @@ export default function Authenticated({
             </div>
 
             {/* Main content */}
-            <div className={`flex flex-1 flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-80'}`}>
+            <div className={`flex flex-1 flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
                 {/* Mobile header */}
                 <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white lg:hidden">
                     <button
