@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 interface ApplicationLogoProps {
     className?: string;
+    size?: number; // Size in pixels (default: 170)
 }
 
-export default function ApplicationLogo({ className = '' }: ApplicationLogoProps) {
+export default function ApplicationLogo({ className = '', size = 170 }: ApplicationLogoProps) {
     const [imageError, setImageError] = useState(false);
 
     const handleImageError = () => {
@@ -25,6 +26,7 @@ export default function ApplicationLogo({ className = '' }: ApplicationLogoProps
             src="/logo.png"
             alt="ONYX xPos Logo"
             className={`${className}`}
+            style={{ width: `${size}px`, height: `${size}px` }}
             onError={handleImageError}
         />
     );

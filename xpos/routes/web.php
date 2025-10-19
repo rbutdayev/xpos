@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CreditController;
+use App\Http\Controllers\SmsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -44,8 +45,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+// 301 Permanent Redirect to main website - SEO optimized
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('https://onyx.az/az/xpos', 301);
 });
 
 // Super Admin Routes (Before Main Dashboard)
@@ -403,12 +405,24 @@ Route::middleware(['auth', 'account.access'])->group(function () {
 
     // Audit Logs
     Route::resource('audit-logs', AuditLogController::class, ['only' => ['index', 'show']]);
-    
+
+    // SMS Management
+    Route::prefix('sms')->name('sms.')->group(function () {
+        Route::get('/', [SmsController::class, 'index'])->name('index');
+        Route::get('/send-sms', [SmsController::class, 'sendPage'])->name('send-page');
+        Route::post('/credentials', [SmsController::class, 'storeCredentials'])->name('credentials.store');
+        Route::post('/send', [SmsController::class, 'send'])->name('send');
+        Route::post('/send-bulk', [SmsController::class, 'sendBulk'])->name('send-bulk');
+        Route::post('/send-all', [SmsController::class, 'sendAll'])->name('send-all');
+        Route::get('/logs', [SmsController::class, 'logs'])->name('logs');
+        Route::post('/test', [SmsController::class, 'test'])->name('test');
+    });
+
     // Redirect legacy/misspelled stock routes
     Route::get('/stock-herektleri', function() {
         return redirect('/stock-movements');
     });
-    
+
     Route::get('/stock-xeberdaligi', function() {
         return redirect('/alerts');
     });

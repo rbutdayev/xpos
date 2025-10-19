@@ -31,7 +31,9 @@ import {
     ArrowUturnLeftIcon,
     InboxIcon,
     ChevronLeftIcon,
-    DeviceTabletIcon
+    DeviceTabletIcon,
+    ChatBubbleLeftRightIcon,
+    PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -88,7 +90,8 @@ export default function Authenticated({
         
         if (currentRoute?.includes('customers') ||
             currentRoute?.includes('customer-items') ||
-            currentRoute?.includes('tailor-services')) {
+            currentRoute?.includes('tailor-services') ||
+            currentRoute?.includes('sms')) {
             openMenus.push('Müştəri Xidmətləri');
         }
         
@@ -213,6 +216,18 @@ export default function Authenticated({
                             href: '/tailor-services',
                             icon: WrenchScrewdriverIcon,
                             current: route().current('tailor-services.*')
+                        },
+                        {
+                            name: 'SMS Göndər',
+                            href: '/sms/send-sms',
+                            icon: PaperAirplaneIcon,
+                            current: route().current('sms.send-page')
+                        },
+                        {
+                            name: 'SMS Parametrləri',
+                            href: '/sms',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('sms.index')
                         }
                     ]
                 },
@@ -309,6 +324,18 @@ export default function Authenticated({
                     href: '/tailor-services',
                     icon: WrenchScrewdriverIcon,
                     current: route().current('tailor-services.*')
+                },
+                {
+                    name: 'SMS Göndər',
+                    href: '/sms/send-sms',
+                    icon: PaperAirplaneIcon,
+                    current: route().current('sms.send-page')
+                },
+                {
+                    name: 'SMS Parametrləri',
+                    href: '/sms',
+                    icon: ChatBubbleLeftRightIcon,
+                    current: route().current('sms.index')
                 }
             ]
         },
@@ -547,7 +574,7 @@ export default function Authenticated({
                     ) : (
                         <>
                             <Link href="/dashboard" className="flex items-center group">
-                                <ApplicationLogo className="h-8 w-auto" />
+                                <ApplicationLogo className="h-14 w-14" />
                             </Link>
                             {/* Collapse button */}
                             <button
@@ -644,7 +671,7 @@ export default function Authenticated({
                 </main>
 
                 {/* Bottom Information Bar */}
-                <footer className={`fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white shadow-lg transition-all duration-300 ${sidebarCollapsed ? 'lg:left-20' : 'lg:left-80'}`}>
+                <footer className={`fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white shadow-lg transition-all duration-300 ${sidebarCollapsed ? 'lg:left-20' : 'lg:left-72'}`}>
                     <div className="flex items-center justify-between px-4 py-2 text-xs">
                         {/* Left section - Only Version */}
                         <div className="flex items-center space-x-6">
