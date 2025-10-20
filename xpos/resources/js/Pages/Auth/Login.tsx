@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import InstallPrompt from '@/Components/InstallPrompt';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import {
@@ -59,6 +60,9 @@ export default function Login({
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
             <Head title="Daxil ol - ONYX xPos" />
+
+            {/* PWA Install Prompt */}
+            <InstallPrompt />
 
             {/* Animated Background Grid */}
             <div

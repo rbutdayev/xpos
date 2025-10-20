@@ -81,18 +81,26 @@ export default function Create() {
                             {/* Phone */}
                             <div>
                                 <InputLabel htmlFor="phone" value="Telefon" />
-                                <TextInput
-                                    id="phone"
-                                    type="tel"
-                                    name="phone"
-                                    value={data.phone}
-                                    className="mt-1 block w-full"
-                                    placeholder="+994501234567"
-                                    onChange={(e) => setData('phone', e.target.value)}
-                                />
+                                <div className="mt-1 flex rounded-md shadow-sm">
+                                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                        +994
+                                    </span>
+                                    <TextInput
+                                        id="phone"
+                                        type="tel"
+                                        name="phone"
+                                        value={data.phone.startsWith('+994') ? data.phone.slice(4) : data.phone}
+                                        className="flex-1 block w-full rounded-l-none"
+                                        placeholder="501234567"
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/\D/g, '');
+                                            setData('phone', value ? `+994${value}` : '');
+                                        }}
+                                    />
+                                </div>
                                 <InputError message={errors.phone} className="mt-2" />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Məsələn: +994501234567
+                                    Məsələn: 501234567 (9 rəqəm)
                                 </p>
                             </div>
 

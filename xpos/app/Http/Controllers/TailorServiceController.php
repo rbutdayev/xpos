@@ -25,12 +25,22 @@ class TailorServiceController extends Controller
         $this->middleware('branch.access');
     }
 
-    public function index(Request $request)
+    public function index(Request $request, $serviceType = 'tailor')
     {
         Gate::authorize('access-account-data');
 
+        // Validate and convert service type
+        $validTypes = ['tailor', 'phone-repair', 'electronics', 'general'];
+        if (!in_array($serviceType, $validTypes)) {
+            abort(404, 'Invalid service type');
+        }
+
+        // Convert to snake_case for database
+        $dbServiceType = str_replace('-', '_', $serviceType);
+
         $query = TailorService::with(['customer', 'customerItem', 'employee', 'branch'])
-            ->where('account_id', Auth::user()->account_id);
+            ->where('account_id', Auth::user()->account_id)
+            ->ofType($dbServiceType);
 
         // Search
         if ($request->filled('search')) {
@@ -81,12 +91,22 @@ class TailorServiceController extends Controller
             'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'branch_id']),
             'branches' => $branches,
             'stats' => $stats,
+            'serviceType' => $serviceType,
         ]);
     }
 
-    public function create()
+    public function create($serviceType = 'tailor')
     {
         Gate::authorize('create-account-data');
+
+        // Validate service type
+        $validTypes = ['tailor', 'phone-repair', 'electronics', 'general'];
+        if (!in_array($serviceType, $validTypes)) {
+            abort(404, 'Invalid service type');
+        }
+
+        // Convert route param to service_type (phone-repair -> phone_repair)
+        $serviceTypeForFilter = str_replace('-', '_', $serviceType);
 
         $customers = Customer::where('account_id', Auth::user()->account_id)
             ->active()
@@ -98,6 +118,7 @@ class TailorServiceController extends Controller
             })
             ->where('is_active', true)
             ->availableForService()
+            ->byServiceType($serviceTypeForFilter)  // Filter customer items by service type
             ->with('customer')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -118,6 +139,7 @@ class TailorServiceController extends Controller
 
         $products = Product::where('account_id', Auth::user()->account_id)
             ->where('is_active', true)
+            ->byServiceType($serviceTypeForFilter)  // Filter products by service type
             ->orderBy('name')
             ->get(['id', 'name', 'sku', 'sale_price', 'type']);
 
@@ -131,12 +153,22 @@ class TailorServiceController extends Controller
             'employees' => $employees,
             'products' => $products,
             'branches' => $branches,
+            'serviceType' => $serviceType,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $serviceType = 'tailor')
     {
         Gate::authorize('create-account-data');
+
+        // Validate and convert service type
+        $validTypes = ['tailor', 'phone-repair', 'electronics', 'general'];
+        if (!in_array($serviceType, $validTypes)) {
+            abort(404, 'Invalid service type');
+        }
+
+        // Convert to snake_case for database
+        $dbServiceType = str_replace('-', '_', $serviceType);
 
         // Convert empty strings to null for optional fields
         $request->merge([
@@ -184,11 +216,12 @@ class TailorServiceController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($validated) {
+            DB::transaction(function () use ($validated, $dbServiceType) {
                 $items = $validated['items'] ?? [];
                 unset($validated['items']);
 
                 $validated['account_id'] = Auth::user()->account_id;
+                $validated['service_type'] = $dbServiceType;
                 $validated['materials_cost'] = 0;
                 $validated['status'] = 'received';
 
@@ -247,7 +280,7 @@ class TailorServiceController extends Controller
                 }
             });
 
-            return redirect()->route('tailor-services.index')
+            return redirect()->route('services.index', ['serviceType' => $serviceType])
                 ->with('success', 'Xidmət qeydi uğurla yaradıldı.');
         } catch (\Exception $e) {
             \Log::error('Tailor service creation failed', [
@@ -259,7 +292,7 @@ class TailorServiceController extends Controller
         }
     }
 
-    public function show(TailorService $tailorService)
+    public function show($serviceType, TailorService $tailorService)
     {
         Gate::authorize('access-account-data');
 
@@ -278,16 +311,20 @@ class TailorServiceController extends Controller
 
         return Inertia::render('TailorServices/Show', [
             'service' => $tailorService,
+            'serviceType' => $serviceType,
         ]);
     }
 
-    public function edit(TailorService $tailorService)
+    public function edit($serviceType, TailorService $tailorService)
     {
         Gate::authorize('edit-account-data');
 
         if ($tailorService->account_id !== Auth::user()->account_id) {
             abort(403);
         }
+
+        // Convert route param to service_type (phone-repair -> phone_repair)
+        $serviceTypeForFilter = str_replace('-', '_', $serviceType);
 
         $tailorService->load(['items.product', 'customer', 'customerItem', 'employee']);
 
@@ -302,11 +339,14 @@ class TailorServiceController extends Controller
                 $q->where('account_id', Auth::user()->account_id);
             })
             ->where('is_active', true)
-            ->where(function($q) use ($tailorService) {
-                $q->availableForService()
-                  ->when($tailorService->customer_item_id, function($query) use ($tailorService) {
-                      $query->orWhere('id', $tailorService->customer_item_id);
-                  });
+            ->where(function($q) use ($tailorService, $serviceTypeForFilter) {
+                $q->where(function($subQ) use ($serviceTypeForFilter) {
+                    $subQ->availableForService()
+                         ->byServiceType($serviceTypeForFilter);  // Filter by service type
+                })
+                ->when($tailorService->customer_item_id, function($query) use ($tailorService) {
+                    $query->orWhere('id', $tailorService->customer_item_id);
+                });
             })
             ->with('customer')
             ->orderBy('created_at', 'desc')
@@ -328,6 +368,7 @@ class TailorServiceController extends Controller
 
         $products = Product::where('account_id', Auth::user()->account_id)
             ->where('is_active', true)
+            ->byServiceType($serviceTypeForFilter)  // Filter products by service type
             ->orderBy('name')
             ->get(['id', 'name', 'sku', 'sale_price', 'type']);
 
@@ -342,10 +383,11 @@ class TailorServiceController extends Controller
             'employees' => $employees,
             'products' => $products,
             'branches' => $branches,
+            'serviceType' => $serviceType,
         ]);
     }
 
-    public function update(Request $request, TailorService $tailorService)
+    public function update(Request $request, $serviceType, TailorService $tailorService)
     {
         Gate::authorize('edit-account-data');
 
@@ -475,14 +517,14 @@ class TailorServiceController extends Controller
                 }
             });
 
-            return redirect()->route('tailor-services.show', $tailorService)
+            return redirect()->route('services.show', ['serviceType' => $serviceType, 'tailorService' => $tailorService])
                 ->with('success', 'Xidmət qeydi yeniləndi.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
 
-    public function updateStatus(Request $request, TailorService $tailorService)
+    public function updateStatus(Request $request, $serviceType, TailorService $tailorService)
     {
         Gate::authorize('edit-account-data');
 
@@ -524,7 +566,7 @@ class TailorServiceController extends Controller
         return back()->with('success', 'Xidmət statusu yeniləndi.');
     }
 
-    public function destroy(TailorService $tailorService)
+    public function destroy($serviceType, TailorService $tailorService)
     {
         Gate::authorize('delete-account-data');
 
@@ -550,7 +592,7 @@ class TailorServiceController extends Controller
             $tailorService->delete();
         });
 
-        return redirect()->route('tailor-services.index')
+        return redirect()->route('services.index', ['serviceType' => $serviceType])
             ->with('success', 'Xidmət qeydi silindi və stok geri qaytarıldı.');
     }
 

@@ -5,6 +5,7 @@ import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedData
 import PrimaryButton from '@/Components/PrimaryButton';
 import { PageProps } from '@/types';
 import { EyeIcon, PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { getServiceConfig, getCurrentServiceType, routeParamToServiceType, serviceTypeToRouteParam } from '@/config/serviceTypes';
 
 interface TailorService {
     id: number;
@@ -58,15 +59,23 @@ interface Props extends PageProps {
         total_partial: number;
         total_partial_amount: number;
     };
+    serviceType?: string;
 }
 
-export default function Index({ services, filters, branches, stats }: Props) {
+export default function Index({ services, filters, branches, stats, serviceType }: Props) {
     const [localFilters, setLocalFilters] = useState(filters);
+
+    // Get service type from props or determine from URL/localStorage
+    const currentServiceType = serviceType
+        ? routeParamToServiceType(serviceType)
+        : getCurrentServiceType();
+    const serviceConfig = getServiceConfig(currentServiceType);
+    const routeParam = serviceTypeToRouteParam(currentServiceType);
 
     const handleSearch = (search: string) => {
         const newFilters = { ...localFilters, search };
         setLocalFilters(newFilters);
-        router.get(route('tailor-services.index'), newFilters, {
+        router.get(route('services.index', { serviceType: routeParam }), newFilters, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -75,7 +84,7 @@ export default function Index({ services, filters, branches, stats }: Props) {
     const handleFilter = (key: string, value: any) => {
         const newFilters = { ...localFilters, [key]: value };
         setLocalFilters(newFilters);
-        router.get(route('tailor-services.index'), newFilters, {
+        router.get(route('services.index', { serviceType: routeParam }), newFilters, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -89,7 +98,7 @@ export default function Index({ services, filters, branches, stats }: Props) {
             render: (service: TailorService) => (
                 <div>
                     <Link
-                        href={route('tailor-services.show', service.id)}
+                        href={route('services.show', { serviceType: routeParam, tailorService: service.id })}
                         className="text-blue-600 hover:text-blue-800 font-medium"
                     >
                         {service.service_number}
@@ -190,13 +199,13 @@ export default function Index({ services, filters, branches, stats }: Props) {
     const actions: Action[] = [
         {
             label: 'Bax',
-            href: (service: TailorService) => route('tailor-services.show', service.id),
+            href: (service: TailorService) => route('services.show', { serviceType: routeParam, tailorService: service.id }),
             variant: 'primary',
             icon: <EyeIcon className="w-4 h-4" />,
         },
         {
             label: 'Düzəliş et',
-            href: (service: TailorService) => route('tailor-services.edit', service.id),
+            href: (service: TailorService) => route('services.edit', { serviceType: routeParam, tailorService: service.id }),
             variant: 'secondary',
             icon: <PencilIcon className="w-4 h-4" />,
         },
@@ -204,7 +213,7 @@ export default function Index({ services, filters, branches, stats }: Props) {
             label: 'Təhvil verildi',
             onClick: (service: TailorService) => {
                 if (confirm('Bu xidməti təhvil verildi olaraq işarələmək istədiyinizə əminsiniz?')) {
-                    router.patch(route('tailor-services.update-status', service.id), {
+                    router.patch(route('services.update-status', { serviceType: routeParam, tailorService: service.id }), {
                         status: 'delivered'
                     });
                 }
@@ -217,7 +226,7 @@ export default function Index({ services, filters, branches, stats }: Props) {
             label: 'Sil',
             onClick: (service: TailorService) => {
                 if (confirm('Bu xidməti silmək istədiyinizə əminsiniz?')) {
-                    router.delete(route('tailor-services.destroy', service.id));
+                    router.delete(route('services.destroy', { serviceType: routeParam, tailorService: service.id }));
                 }
             },
             variant: 'danger',
@@ -273,17 +282,17 @@ export default function Index({ services, filters, branches, stats }: Props) {
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Dərzi Xidmətləri
+                        {serviceConfig.name}
                     </h2>
-                    <Link href={route('tailor-services.create')}>
+                    <Link href={route('services.create', { serviceType: routeParam })}>
                         <PrimaryButton>
-                            Yeni xidmət
+                            Yeni {serviceConfig.nameSingular.toLowerCase()}
                         </PrimaryButton>
                     </Link>
                 </div>
             }
         >
-            <Head title="Dərzi Xidmətləri" />
+            <Head title={serviceConfig.name} />
 
             <div className="py-12">
                 <div className="w-full">
@@ -342,8 +351,8 @@ export default function Index({ services, filters, branches, stats }: Props) {
                             searchValue={localFilters.search || ''}
                             searchPlaceholder="Servis №, müştəri və ya xidmət axtarın..."
                             emptyState={{
-                                title: "Heç bir xidmət tapılmadı",
-                                description: "İlk dərzi xidmətini əlavə etməklə başlayın."
+                                title: serviceConfig.emptyStateTitle,
+                                description: serviceConfig.emptyStateDesc
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
                             fullWidth={true}

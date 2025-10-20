@@ -5,6 +5,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useEffect } from 'react';
 import { getAppVersion } from '@/utils/version';
 import { Toaster } from 'react-hot-toast';
+import { SERVICE_TYPES, getServiceRoute, serviceTypeToRouteParam } from '@/config/serviceTypes';
 import {
     HomeIcon,
     CubeIcon,
@@ -33,7 +34,8 @@ import {
     ChevronLeftIcon,
     DeviceTabletIcon,
     ChatBubbleLeftRightIcon,
-    PaperAirplaneIcon
+    PaperAirplaneIcon,
+    MegaphoneIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -91,8 +93,11 @@ export default function Authenticated({
         if (currentRoute?.includes('customers') ||
             currentRoute?.includes('customer-items') ||
             currentRoute?.includes('tailor-services') ||
-            currentRoute?.includes('sms')) {
+            currentRoute?.includes('services')) {
             openMenus.push('Müştəri Xidmətləri');
+            if (currentRoute?.includes('services')) {
+                openMenus.push('Xidmətlər');
+            }
         }
         
         if (currentRoute?.includes('stock-movements') || 
@@ -104,8 +109,8 @@ export default function Authenticated({
             openMenus.push('Stok İdarəetməsi');
         }
         
-        if (currentRoute?.includes('sales')) {
-            openMenus.push('Satış və POS');
+        if (currentRoute?.includes('sales') || currentRoute?.includes('sms')) {
+            openMenus.push('Satış və Marketinq');
         }
         
         if (currentRoute?.includes('pos')) {
@@ -212,10 +217,46 @@ export default function Authenticated({
                             current: route().current('customer-items.*')
                         },
                         {
-                            name: 'Dərzi Xidmətləri',
-                            href: '/tailor-services',
+                            name: 'Xidmətlər',
                             icon: WrenchScrewdriverIcon,
-                            current: route().current('tailor-services.*')
+                            children: [
+                                {
+                                    name: SERVICE_TYPES.tailor.name,
+                                    href: getServiceRoute('tailor'),
+                                    icon: SERVICE_TYPES.tailor.icon,
+                                    current: route().current('services.index') && route().params.serviceType === 'tailor'
+                                },
+                                {
+                                    name: SERVICE_TYPES.phone_repair.name,
+                                    href: getServiceRoute('phone_repair'),
+                                    icon: SERVICE_TYPES.phone_repair.icon,
+                                    current: route().current('services.*') && route().params.serviceType === 'phone-repair'
+                                },
+                                {
+                                    name: SERVICE_TYPES.electronics.name,
+                                    href: getServiceRoute('electronics'),
+                                    icon: SERVICE_TYPES.electronics.icon,
+                                    current: route().current('services.*') && route().params.serviceType === 'electronics'
+                                },
+                                {
+                                    name: SERVICE_TYPES.general.name,
+                                    href: getServiceRoute('general'),
+                                    icon: SERVICE_TYPES.general.icon,
+                                    current: route().current('services.*') && route().params.serviceType === 'general'
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: 'Satış və Marketinq',
+                    icon: MegaphoneIcon,
+                    children: [
+                        {
+                            name: 'Satışlar',
+                            href: '/sales',
+                            icon: ShoppingCartIcon,
+                            current: route().current('sales.*')
                         },
                         {
                             name: 'SMS Göndər',
@@ -228,18 +269,12 @@ export default function Authenticated({
                             href: '/sms',
                             icon: ChatBubbleLeftRightIcon,
                             current: route().current('sms.index')
-                        }
-                    ]
-                },
-                {
-                    name: 'Satış və POS',
-                    icon: ShoppingCartIcon,
-                    children: [
+                        },
                         {
-                            name: 'Satışlar',
-                            href: '/sales',
-                            icon: ShoppingCartIcon,
-                            current: route().current('sales.*')
+                            name: 'SMS Logları',
+                            href: '/sms/logs',
+                            icon: ClipboardDocumentListIcon,
+                            current: route().current('sms.logs')
                         }
                     ]
                 }
@@ -320,22 +355,34 @@ export default function Authenticated({
                     current: route().current('customer-items.*')
                 },
                 {
-                    name: 'Dərzi Xidmətləri',
-                    href: '/tailor-services',
+                    name: 'Xidmətlər',
                     icon: WrenchScrewdriverIcon,
-                    current: route().current('tailor-services.*')
-                },
-                {
-                    name: 'SMS Göndər',
-                    href: '/sms/send-sms',
-                    icon: PaperAirplaneIcon,
-                    current: route().current('sms.send-page')
-                },
-                {
-                    name: 'SMS Parametrləri',
-                    href: '/sms',
-                    icon: ChatBubbleLeftRightIcon,
-                    current: route().current('sms.index')
+                    children: [
+                        {
+                            name: SERVICE_TYPES.tailor.name,
+                            href: getServiceRoute('tailor'),
+                            icon: SERVICE_TYPES.tailor.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'tailor'
+                        },
+                        {
+                            name: SERVICE_TYPES.phone_repair.name,
+                            href: getServiceRoute('phone_repair'),
+                            icon: SERVICE_TYPES.phone_repair.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'phone-repair'
+                        },
+                        {
+                            name: SERVICE_TYPES.electronics.name,
+                            href: getServiceRoute('electronics'),
+                            icon: SERVICE_TYPES.electronics.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'electronics'
+                        },
+                        {
+                            name: SERVICE_TYPES.general.name,
+                            href: getServiceRoute('general'),
+                            icon: SERVICE_TYPES.general.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'general'
+                        }
+                    ]
                 }
             ]
         },
@@ -382,14 +429,32 @@ export default function Authenticated({
             ]
         },
         {
-            name: 'Satış və POS',
-            icon: ShoppingCartIcon,
+            name: 'Satış və Marketinq',
+            icon: MegaphoneIcon,
             children: [
                 {
                     name: 'Satışlar',
                     href: '/sales',
                     icon: ShoppingCartIcon,
                     current: route().current('sales.*')
+                },
+                {
+                    name: 'SMS Göndər',
+                    href: '/sms/send-sms',
+                    icon: PaperAirplaneIcon,
+                    current: route().current('sms.send-page')
+                },
+                {
+                    name: 'SMS Parametrləri',
+                    href: '/sms',
+                    icon: ChatBubbleLeftRightIcon,
+                    current: route().current('sms.index')
+                },
+                {
+                    name: 'SMS Logları',
+                    href: '/sms/logs',
+                    icon: ClipboardDocumentListIcon,
+                    current: route().current('sms.logs')
                 }
             ]
         },

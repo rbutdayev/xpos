@@ -19,6 +19,7 @@ interface SearchableProductSelectProps {
     className?: string;
     showPrice?: boolean;
     showBarcode?: boolean;
+    serviceType?: string; // Filter products by service type
 }
 
 export default function SearchableProductSelect({
@@ -30,7 +31,8 @@ export default function SearchableProductSelect({
     required = false,
     className = "",
     showPrice = false,
-    showBarcode = true
+    showBarcode = true,
+    serviceType
 }: SearchableProductSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -70,9 +72,12 @@ export default function SearchableProductSelect({
             setIsSearching(true);
 
             const timer = setTimeout(() => {
-                window.axios.get(route('products.search'), {
-                    params: { q: searchTerm }
-                })
+                const params: any = { q: searchTerm };
+                if (serviceType) {
+                    params.service_type = serviceType;
+                }
+
+                window.axios.get(route('products.search'), { params })
                 .then(response => {
                     setFilteredProducts(response.data);
                 })

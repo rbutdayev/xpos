@@ -275,10 +275,55 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::patch('/customer-items/{customer_item}/status', [CustomerItemController::class, 'updateStatus'])->name('customer-items.update-status');
     Route::resource('customer-items', CustomerItemController::class);
 
-    // Tailor Service Management (renamed from service-records)
+    // Dynamic Service Routes (multi-service support)
+    Route::prefix('services/{serviceType}')->group(function () {
+        Route::get('/', [TailorServiceController::class, 'index'])->name('services.index');
+        Route::get('/create', [TailorServiceController::class, 'create'])->name('services.create');
+        Route::post('/', [TailorServiceController::class, 'store'])->name('services.store');
+        Route::get('/{tailorService}', [TailorServiceController::class, 'show'])->name('services.show');
+        Route::get('/{tailorService}/edit', [TailorServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/{tailorService}', [TailorServiceController::class, 'update'])->name('services.update');
+        Route::delete('/{tailorService}', [TailorServiceController::class, 'destroy'])->name('services.destroy');
+        Route::patch('/{tailorService}/status', [TailorServiceController::class, 'updateStatus'])->name('services.update-status');
+        Route::patch('/{tailorService}/make-credit', [TailorServiceController::class, 'makeCredit'])->name('services.make-credit');
+        Route::patch('/{tailorService}/pay-credit', [TailorServiceController::class, 'payServiceCredit'])->name('services.pay-credit');
+        Route::get('/{tailorService}/print-options', [TailorServiceController::class, 'getPrintOptions'])->name('services.print-options');
+        Route::post('/{tailorService}/print', [TailorServiceController::class, 'print'])->name('services.print');
+        Route::post('/{tailorService}/send-to-printer', [TailorServiceController::class, 'sendToPrinter'])->name('services.send-to-printer');
+    });
+
+    // Legacy routes - redirect old service types to new ones
+    Route::get('/services/tv-repair', function () {
+        return redirect('/services/electronics');
+    });
+    Route::get('/services/tv-repair/{id}', function ($id) {
+        return redirect("/services/electronics/{$id}");
+    });
+    Route::get('/services/appliance', function () {
+        return redirect('/services/electronics');
+    });
+    Route::get('/services/appliance/{id}', function ($id) {
+        return redirect("/services/electronics/{$id}");
+    });
+
+    // Tailor Service Management (legacy routes - redirect to new structure for backward compatibility)
+    Route::get('/tailor-services', function () {
+        return redirect('/services/tailor');
+    })->name('tailor-services.index.redirect');
+    Route::get('/tailor-services/create', function () {
+        return redirect('/services/tailor/create');
+    })->name('tailor-services.create.redirect');
+    Route::get('/tailor-services/{id}', function ($id) {
+        return redirect("/services/tailor/{$id}");
+    })->name('tailor-services.show.redirect');
+    Route::get('/tailor-services/{id}/edit', function ($id) {
+        return redirect("/services/tailor/{$id}/edit");
+    })->name('tailor-services.edit.redirect');
+
+    // Keep legacy resource routes for any remaining references
     Route::resource('tailor-services', TailorServiceController::class)->parameters([
         'tailor-services' => 'tailorService'
-    ]);
+    ])->except(['index', 'create', 'show', 'edit']);
     Route::patch('/tailor-services/{tailorService}/make-credit', [TailorServiceController::class, 'makeCredit'])->name('tailor-services.make-credit');
     Route::patch('/tailor-services/{tailorService}/pay-credit', [TailorServiceController::class, 'payServiceCredit'])->name('tailor-services.pay-credit');
     Route::patch('/tailor-services/{tailorService}/status', [TailorServiceController::class, 'updateStatus'])->name('tailor-services.update-status');

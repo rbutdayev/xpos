@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { CustomerItem, PageProps } from '@/types';
+import { SERVICE_TYPES, ServiceType, getCurrentServiceType, getServiceConfig } from '@/config/serviceTypes';
 
 interface CustomerItemsIndexProps extends PageProps {
     items: {
@@ -22,6 +23,10 @@ interface CustomerItemsIndexProps extends PageProps {
 
 export default function Index({ items, customers, filters }: CustomerItemsIndexProps) {
     const [localFilters, setLocalFilters] = useState(filters);
+
+    // Get current service type (default to 'tailor' for backward compatibility)
+    const currentServiceType: ServiceType = 'tailor'; // We can enhance this later with URL params
+    const serviceConfig = getServiceConfig(currentServiceType);
 
     const handleSearch = (search: string) => {
         const newFilters = { ...localFilters, search };
@@ -88,7 +93,7 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
         },
         {
             key: 'item_details',
-            label: 'Geyim məlumatları',
+            label: 'Məhsul məlumatları',
             render: (item: CustomerItem) => (
                 <div>
                     <div className="text-sm font-medium text-gray-900">
@@ -221,21 +226,21 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                            Müştəri Geyimləri
+                            Müştəri Məhsulları
                         </h2>
                         <p className="text-sm text-gray-600 mt-1">
-                            Müştərilərdən qəbul edilmiş geyimlərin siyahısı və xidmət tarixçəsi
+                            Müştərilərdən qəbul edilmiş məhsulların siyahısı və xidmət tarixçəsi
                         </p>
                     </div>
                     <Link href={route('customer-items.create')}>
                         <PrimaryButton>
-                            Yeni geyim əlavə et
+                            Yeni məhsul əlavə et
                         </PrimaryButton>
                     </Link>
                 </div>
             }
         >
-            <Head title="Müştəri Geyimləri" />
+            <Head title="Müştəri Məhsulları" />
 
             <div className="py-12">
                 <div className="w-full">
@@ -255,10 +260,10 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
                             filters={filters_config}
                             actions={actions}
                             searchValue={localFilters.search || ''}
-                            searchPlaceholder="Geyim, müştəri və ya referans nömrəsi ilə axtar..."
+                            searchPlaceholder="Məhsul, müştəri və ya referans nömrəsi ilə axtar..."
                             emptyState={{
-                                title: "Heç bir geyim tapılmadı",
-                                description: "Müştəridən qəbul edilən ilk geyimi əlavə etməklə başlayın. Hər geyim üçün ayrıca xidmət tarixçəsi saxlanılır."
+                                title: "Heç bir məhsul tapılmadı",
+                                description: "Müştəridən qəbul edilən ilk məhsulu əlavə etməklə başlayın. Hər məhsul üçün ayrıca xidmət tarixçəsi saxlanılır."
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
                             onSort={(field: string) => handleSort(field, 'asc')}

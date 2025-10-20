@@ -48,7 +48,7 @@ export default function Create({ parentCategories }: Props) {
                                 <ArrowLeftIcon className="w-5 h-5" />
                             </Link>
                             <h2 className="text-2xl font-semibold text-gray-900">
-                                Yeni Kateqoriya Əlavə Et
+                                Yeni Kateqoriya
                             </h2>
                         </div>
 
@@ -75,7 +75,7 @@ export default function Create({ parentCategories }: Props) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="parent_id" value="Ana Kateqoriya" />
+                                        <InputLabel htmlFor="parent_id" value="Əsas Kateqoriya" />
                                         <select
                                             id="parent_id"
                                             name="parent_id"
@@ -83,7 +83,7 @@ export default function Create({ parentCategories }: Props) {
                                             onChange={(e) => setData('parent_id', e.target.value)}
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         >
-                                            <option value="">Ana kateqoriya seç (isteğe bağlı)</option>
+                                            <option value="">Əsas kateqoriya seç (istəyə bağlı)</option>
                                             {parentCategories.map((category) => (
                                                 <option key={category.id} value={category.id}>
                                                     {category.name}
@@ -92,7 +92,7 @@ export default function Create({ parentCategories }: Props) {
                                         </select>
                                         <InputError message={errors.parent_id} className="mt-2" />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Alt kateqoriya yaratmaq üçün ana kateqoriya seçin
+                                            Alt kateqoriya yaratmaq üçün Əsas kateqoriya seçin
                                         </p>
                                     </div>
 
@@ -150,7 +150,7 @@ export default function Create({ parentCategories }: Props) {
                                         />
                                         <InputError message={errors.sort_order} className="mt-2" />
                                         <p className="mt-1 text-xs text-gray-500">
-                                            Kiçik rəqəm daha yuxarıda görünür. Boş buraxsanız 0 təyin edilər.
+                                            Kiçik rəqəm daha yuxarıda görünür. Boş buraxsanız 0 təyin ediləcək.
                                         </p>
                                     </div>
                                 </div>
@@ -162,9 +162,9 @@ export default function Create({ parentCategories }: Props) {
                                     Nümunələr:
                                 </h4>
                                 <div className="text-sm text-blue-800 space-y-1">
-                                    <div><strong>Məhsul kateqoriyaları:</strong> Ehtiyat hissələri, Yağlar, Avadanlıqlar</div>
-                                    <div><strong>Xidmət kateqoriyaları:</strong> Təmir, Texniki baxış, Diaqnostika</div>
-                                    <div><strong>Alt kateqoriyalar:</strong> Ehtiyat hissələri → Motor hissələri → Pistonlar</div>
+                                    <div><strong>Məhsul kateqoriyaları:</strong>Üst geyim, Alt geyim, Bluz</div>
+                                    <div><strong>Xidmət kateqoriyaları:</strong> Tikiş, kəsim</div>
+                                    <div><strong>Alt kateqoriyalar:</strong> Üst geyim → Qış → Palto</div>
                                 </div>
                             </div>
 

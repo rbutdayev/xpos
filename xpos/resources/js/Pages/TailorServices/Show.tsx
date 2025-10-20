@@ -4,6 +4,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import { PageProps } from '@/types';
+import { getServiceConfig, getCurrentServiceType, routeParamToServiceType, serviceTypeToRouteParam } from '@/config/serviceTypes';
 
 interface TailorService {
     id: number;
@@ -62,12 +63,20 @@ interface TailorService {
 
 interface Props extends PageProps {
     service: TailorService;
+    serviceType?: string;
 }
 
-export default function Show({ service }: Props) {
+export default function Show({ service, serviceType }: Props) {
+    // Get service type from props or determine from URL/localStorage
+    const currentServiceType = serviceType
+        ? routeParamToServiceType(serviceType)
+        : getCurrentServiceType();
+    const serviceConfig = getServiceConfig(currentServiceType);
+    const routeParam = serviceTypeToRouteParam(currentServiceType);
+
     const handleDelete = () => {
         if (confirm('Bu xidməti silmək istədiyinizə əminsiniz?')) {
-            router.delete(route('tailor-services.destroy', service.id));
+            router.delete(route('services.destroy', { serviceType: routeParam, tailorService: service.id }));
         }
     };
 
@@ -86,13 +95,13 @@ export default function Show({ service }: Props) {
                     </div>
                     <div className="flex space-x-2">
                         <Link
-                            href={route('tailor-services.edit', service.id)}
+                            href={route('services.edit', { serviceType: routeParam, tailorService: service.id })}
                             className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
                         >
                             Düzəliş et
                         </Link>
                         <Link
-                            href={route('tailor-services.index')}
+                            href={route('services.index', { serviceType: routeParam })}
                             className="text-gray-600 hover:text-gray-900 inline-flex items-center"
                         >
                             Geri

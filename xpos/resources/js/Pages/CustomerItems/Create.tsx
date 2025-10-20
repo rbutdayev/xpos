@@ -7,6 +7,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { useState } from 'react';
+import { SERVICE_TYPES, ServiceType, getServiceConfig } from '@/config/serviceTypes';
 
 interface Props {
     customers: Customer[];
@@ -14,6 +15,7 @@ interface Props {
 
 interface CustomerItemFormData {
     customer_id: string;
+    service_type: ServiceType;
     item_type: string;
     description: string;
     color: string;
@@ -28,6 +30,7 @@ interface CustomerItemFormData {
 export default function Create({ customers }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm<CustomerItemFormData>({
         customer_id: '',
+        service_type: 'tailor',
         item_type: '',
         description: '',
         color: '',
@@ -41,6 +44,9 @@ export default function Create({ customers }: Props) {
 
     const [measurementKey, setMeasurementKey] = useState('');
     const [measurementValue, setMeasurementValue] = useState('');
+
+    // Get current service configuration
+    const serviceConfig = getServiceConfig(data.service_type);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,7 +75,7 @@ export default function Create({ customers }: Props) {
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Yeni müştəri məhsulu
+                        Yeni məhsul qəbulu
                     </h2>
                     <Link
                         href={route('customer-items.index')}
@@ -80,12 +86,31 @@ export default function Create({ customers }: Props) {
                 </div>
             }
         >
-            <Head title="Yeni müştəri məhsulu" />
+            <Head title="Yeni məhsul qəbulu" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <form onSubmit={submit} className="p-6 space-y-6">
+                            {/* Service Type Selector */}
+                            <div>
+                                <InputLabel htmlFor="service_type" value="Xidmət növü *" />
+                                <select
+                                    id="service_type"
+                                    name="service_type"
+                                    value={data.service_type}
+                                    onChange={(e) => setData('service_type', e.target.value as ServiceType)}
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                >
+                                    {Object.values(SERVICE_TYPES).map((type) => (
+                                        <option key={type.id} value={type.id}>
+                                            {type.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.service_type} className="mt-2" />
+                            </div>
+
                             {/* Customer */}
                             <div>
                                 <InputLabel htmlFor="customer_id" value="Müştəri *" />
@@ -106,9 +131,9 @@ export default function Create({ customers }: Props) {
                                 <InputError message={errors.customer_id} className="mt-2" />
                             </div>
 
-                            {/* Item Type */}
+                            {/* Item Type - Dynamic label based on service type */}
                             <div>
-                                <InputLabel htmlFor="item_type" value="Məhsul növü *" />
+                                <InputLabel htmlFor="item_type" value={`${serviceConfig.itemLabel} *`} />
                                 <TextInput
                                     id="item_type"
                                     type="text"
@@ -117,7 +142,7 @@ export default function Create({ customers }: Props) {
                                     className="mt-1 block w-full"
                                     isFocused={true}
                                     onChange={(e) => setData('item_type', e.target.value)}
-                                    placeholder="Məsələn: Paltar, Köynək, Şalvar"
+                                    placeholder={serviceConfig.itemLabelOptional}
                                 />
                                 <InputError message={errors.item_type} className="mt-2" />
                             </div>
@@ -152,20 +177,22 @@ export default function Create({ customers }: Props) {
                                 <InputError message={errors.color} className="mt-2" />
                             </div>
 
-                            {/* Fabric Type */}
-                            <div>
-                                <InputLabel htmlFor="fabric_type" value="Parça növü" />
-                                <TextInput
-                                    id="fabric_type"
-                                    type="text"
-                                    name="fabric_type"
-                                    value={data.fabric_type}
-                                    className="mt-1 block w-full"
-                                    onChange={(e) => setData('fabric_type', e.target.value)}
-                                    placeholder="Məsələn: Pambıq, İpək, Satin"
-                                />
-                                <InputError message={errors.fabric_type} className="mt-2" />
-                            </div>
+                            {/* Fabric Type - Only for tailor service */}
+                            {data.service_type === 'tailor' && (
+                                <div>
+                                    <InputLabel htmlFor="fabric_type" value="Parça növü" />
+                                    <TextInput
+                                        id="fabric_type"
+                                        type="text"
+                                        name="fabric_type"
+                                        value={data.fabric_type}
+                                        className="mt-1 block w-full"
+                                        onChange={(e) => setData('fabric_type', e.target.value)}
+                                        placeholder="Məsələn: Pambıq, İpək, Satin"
+                                    />
+                                    <InputError message={errors.fabric_type} className="mt-2" />
+                                </div>
+                            )}
 
                             {/* Measurements */}
                             <div>
@@ -297,10 +324,10 @@ export default function Create({ customers }: Props) {
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-blue-900 mb-2">Məlumat</h3>
                         <ul className="text-sm text-blue-700 space-y-1">
-                            <li>• Müştəri, məhsul növü və təsvir mütləq sahələrdir</li>
-                            <li>• Ölçüləri əlavə etmək üçün ad və dəyər daxil edib "Əlavə et" düyməsini basın</li>
+                            <li>• Xidmət növü, müştəri və {serviceConfig.itemLabel.toLowerCase()} mütləq sahələrdir</li>
+                            <li>• Ölçüləri/Parametrləri əlavə etmək üçün ad və dəyər daxil edib "Əlavə et" düyməsini basın</li>
                             <li>• Referans nömrəsi məhsulu asanlıqla izləmək üçün istifadə olunur</li>
-                            <li>• Məhsul yaradıldıqdan sonra ona terzi xidmətləri əlavə edə bilərsiniz</li>
+                            <li>• Məhsul yaradıldıqdan sonra ona xidmətlər əlavə edə bilərsiniz</li>
                         </ul>
                     </div>
                 </div>

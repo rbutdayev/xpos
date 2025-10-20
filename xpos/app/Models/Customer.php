@@ -31,6 +31,7 @@ class Customer extends Model
         'customer_type_text',
         'active_customerItems_count',
         'total_tailor_services',
+        'total_services',
         'last_service_date',
         'total_credit_amount',
         'has_pending_credits',
@@ -127,6 +128,11 @@ class Customer extends Model
     }
 
     public function getTotalTailorServicesAttribute(): int
+    {
+        return $this->tailorServices()->count();
+    }
+
+    public function getTotalServicesAttribute(): int
     {
         return $this->tailorServices()->count();
     }

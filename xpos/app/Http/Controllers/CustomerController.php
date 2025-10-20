@@ -113,7 +113,7 @@ class CustomerController extends Controller
             ->latest()
             ->get();
 
-        // Load relationships
+        // Load relationships - get all services regardless of type
         $serviceHistory = $customer->tailorServices()
             ->with(['employee:id,name', 'customerItem:id,description'])
             ->latest('received_date')
@@ -125,11 +125,20 @@ class CustomerController extends Controller
                 return $service;
             });
 
+        // Calculate service counts by type
+        $serviceCounts = [
+            'tailor' => $customer->tailorServices()->where('service_type', 'tailor')->count(),
+            'phone_repair' => $customer->tailorServices()->where('service_type', 'phone_repair')->count(),
+            'electronics' => $customer->tailorServices()->where('service_type', 'electronics')->count(),
+            'general' => $customer->tailorServices()->where('service_type', 'general')->count(),
+        ];
+
         return Inertia::render('Customers/Show', [
             'customer' => $customer,
             'customerItems' => $customerItems,
             'vehicles' => [], // Vehicles feature not implemented yet
             'serviceHistory' => $serviceHistory,
+            'serviceCounts' => $serviceCounts,
         ]);
     }
 

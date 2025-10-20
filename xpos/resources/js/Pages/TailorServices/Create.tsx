@@ -7,6 +7,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { PageProps } from '@/types';
+import { getServiceConfig, getCurrentServiceType, routeParamToServiceType, serviceTypeToRouteParam } from '@/config/serviceTypes';
 
 interface Props extends PageProps {
     customers: Array<{ id: number; name: string; phone?: string }>;
@@ -14,6 +15,7 @@ interface Props extends PageProps {
     employees: Array<{ id: number; name: string; position?: string; role: string }>;
     products: Array<{ id: number; name: string; sku?: string; sale_price: number; type: string }>;
     branches: Array<{ id: number; name: string }>;
+    serviceType?: string;
 }
 
 interface ServiceItem {
@@ -24,7 +26,13 @@ interface ServiceItem {
     unit_price: number;
 }
 
-export default function Create({ customers, customerItems, employees, products, branches }: Props) {
+export default function Create({ customers, customerItems, employees, products, branches, serviceType }: Props) {
+    // Get service type from props or determine from URL/localStorage
+    const currentServiceType = serviceType
+        ? routeParamToServiceType(serviceType)
+        : getCurrentServiceType();
+    const serviceConfig = getServiceConfig(currentServiceType);
+    const routeParam = serviceTypeToRouteParam(currentServiceType);
     const { data, setData, post, processing, errors } = useForm({
         customer_id: '',
         customer_item_id: '',
@@ -44,15 +52,37 @@ export default function Create({ customers, customerItems, employees, products, 
     });
 
     const [filteredItems, setFilteredItems] = useState(customerItems);
+    const [filteredProducts, setFilteredProducts] = useState(products);
+    const [selectedCustomerItem, setSelectedCustomerItem] = useState<any>(null);
 
     const handleCustomerChange = (customerId: string) => {
         setData('customer_id', customerId);
         setData('customer_item_id', '');
+        setSelectedCustomerItem(null);
+        setFilteredProducts([]); // Clear products until customer item is selected
 
         if (customerId) {
             setFilteredItems(customerItems.filter(item => item.customer_id === parseInt(customerId)));
         } else {
             setFilteredItems(customerItems);
+        }
+    };
+
+    const handleCustomerItemChange = (itemId: string) => {
+        setData('customer_item_id', itemId);
+
+        if (itemId) {
+            // Find the selected customer item to get its service_type
+            const selectedItem = customerItems.find(item => item.id === parseInt(itemId));
+            setSelectedCustomerItem(selectedItem);
+
+            // Filter products based on the customer item's service_type
+            // This is already filtered on the backend, but we keep all products for now
+            // Since the backend already filtered by service_type, all products should match
+            setFilteredProducts(products);
+        } else {
+            setSelectedCustomerItem(null);
+            setFilteredProducts([]);
         }
     };
 
@@ -75,7 +105,7 @@ export default function Create({ customers, customerItems, employees, products, 
 
         // Auto-fill item name when service is selected
         if (field === 'product_id' && value) {
-            const service = products.find(p => p.id === parseInt(value));
+            const service = filteredProducts.find(p => p.id === parseInt(value));
             if (service) {
                 newItems[index].item_name = service.name;
                 newItems[index].unit_price = service.sale_price;
@@ -87,7 +117,7 @@ export default function Create({ customers, customerItems, employees, products, 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('tailor-services.store'));
+        post(route('services.store', { serviceType: routeParam }));
     };
 
     const totalMaterials = data.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
@@ -95,7 +125,7 @@ export default function Create({ customers, customerItems, employees, products, 
 
     return (
         <AuthenticatedLayout>
-            <Head title="Yeni Dərzi Xidməti" />
+            <Head title={`Yeni ${serviceConfig.nameSingular}`} />
 
             <div className="py-6">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -103,9 +133,9 @@ export default function Create({ customers, customerItems, employees, products, 
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-semibold text-gray-800">
-                                    Yeni Dərzi Xidməti
+                                    Yeni {serviceConfig.nameSingular}
                                 </h2>
-                                <SecondaryButton onClick={() => router.visit(route('tailor-services.index'))}>
+                                <SecondaryButton onClick={() => router.visit(route('services.index', { serviceType: routeParam }))}>
                                     Geri
                                 </SecondaryButton>
                             </div>
@@ -152,11 +182,11 @@ export default function Create({ customers, customerItems, employees, products, 
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="customer_item_id" value="Müştəri məhsulu" />
+                                        <InputLabel htmlFor="customer_item_id" value={serviceConfig.itemLabel} />
                                         <select
                                             id="customer_item_id"
                                             value={data.customer_item_id}
-                                            onChange={(e) => setData('customer_item_id', e.target.value)}
+                                            onChange={(e) => handleCustomerItemChange(e.target.value)}
                                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                                         >
                                             <option value="">Seçilməyib</option>
@@ -210,7 +240,7 @@ export default function Create({ customers, customerItems, employees, products, 
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="description" value="Xidmət təsviri *" />
+                                    <InputLabel htmlFor="description" value={`${serviceConfig.serviceDescLabel} *`} />
                                     <textarea
                                         id="description"
                                         value={data.description}
@@ -223,7 +253,7 @@ export default function Create({ customers, customerItems, employees, products, 
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="item_condition" value="Məhsulun vəziyyəti" />
+                                    <InputLabel htmlFor="item_condition" value={serviceConfig.conditionLabel} />
                                     <textarea
                                         id="item_condition"
                                         value={data.item_condition}
@@ -262,7 +292,7 @@ export default function Create({ customers, customerItems, employees, products, 
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="labor_cost" value="İşçilik xərci (₼) *" />
+                                        <InputLabel htmlFor="labor_cost" value={`${serviceConfig.laborCostLabel} *`} />
                                         <TextInput
                                             id="labor_cost"
                                             type="number"
@@ -280,11 +310,23 @@ export default function Create({ customers, customerItems, employees, products, 
                                 {/* Items */}
                                 <div className="border-t pt-6">
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-semibold">Xidmətlər</h3>
-                                        <SecondaryButton type="button" onClick={addItem}>
-                                            + Xidmət əlavə et
+                                        <h3 className="text-lg font-semibold">{serviceConfig.materialsLabel}</h3>
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={addItem}
+                                            disabled={!data.customer_item_id}
+                                        >
+                                            + {serviceConfig.addItemButton}
                                         </SecondaryButton>
                                     </div>
+
+                                    {!data.customer_item_id && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                            <p className="text-sm text-blue-700">
+                                                Məhsul və xidmətləri əlavə etmək üçün əvvəlcə müştəri məhsulunu seçin.
+                                            </p>
+                                        </div>
+                                    )}
 
                                     {data.items.length > 0 && (
                                         <div className="space-y-3">
@@ -296,7 +338,7 @@ export default function Create({ customers, customerItems, employees, products, 
                                                         className="flex-1 border-gray-300 rounded text-sm"
                                                     >
                                                         <option value="">Xidmət seçin</option>
-                                                        {products.filter(p => p.type === 'service').map(p => (
+                                                        {filteredProducts.filter(p => p.type === 'service').map(p => (
                                                             <option key={p.id} value={p.id}>{p.name}</option>
                                                         ))}
                                                     </select>
@@ -511,7 +553,7 @@ export default function Create({ customers, customerItems, employees, products, 
 
                                 {/* Submit */}
                                 <div className="flex justify-end gap-3">
-                                    <SecondaryButton type="button" onClick={() => router.visit(route('tailor-services.index'))}>
+                                    <SecondaryButton type="button" onClick={() => router.visit(route('services.index', { serviceType: routeParam }))}>
                                         Ləğv et
                                     </SecondaryButton>
                                     <PrimaryButton type="submit" disabled={processing}>

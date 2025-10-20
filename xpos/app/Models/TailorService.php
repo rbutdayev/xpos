@@ -16,6 +16,7 @@ class TailorService extends Model
 
     protected $fillable = [
         'account_id',
+        'service_type',
         'branch_id',
         'customer_id',
         'customer_item_id',
@@ -67,13 +68,16 @@ class TailorService extends Model
 
         static::creating(function ($service) {
             if (!$service->service_number) {
-                $service->service_number = static::generateServiceNumber($service->account_id);
+                $service->service_number = static::generateServiceNumber($service->account_id, $service->service_type ?? 'tailor');
             }
             if (!$service->created_by) {
                 $service->created_by = auth()->id();
             }
             if (!$service->received_date) {
                 $service->received_date = now();
+            }
+            if (!$service->service_type) {
+                $service->service_type = 'tailor';
             }
         });
 
@@ -152,6 +156,11 @@ class TailorService extends Model
         });
     }
 
+    public function scopeOfType(Builder $query, string $serviceType): Builder
+    {
+        return $query->where('service_type', $serviceType);
+    }
+
     // Accessors
     public function getStatusTextAttribute(): string
     {
@@ -208,12 +217,23 @@ class TailorService extends Model
     }
 
     // Helper methods
-    public static function generateServiceNumber(int $accountId): string
+    public static function generateServiceNumber(int $accountId, string $serviceType = 'tailor'): string
     {
         $year = date('Y');
-        $prefix = "TS-{$year}-";
+
+        // Generate prefix based on service type
+        $typePrefixes = [
+            'tailor' => 'TS',
+            'phone_repair' => 'PR',
+            'electronics' => 'EL',
+            'general' => 'GS',
+        ];
+
+        $typePrefix = $typePrefixes[$serviceType] ?? 'TS';
+        $prefix = "{$typePrefix}-{$year}-";
 
         $lastService = static::where('account_id', $accountId)
+            ->where('service_type', $serviceType)
             ->where('service_number', 'like', "{$prefix}%")
             ->orderBy('service_number', 'desc')
             ->first();

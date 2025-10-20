@@ -545,20 +545,27 @@ class ProductController extends Controller
                 'q' => 'required|string|max:255',
                 'include_services' => 'nullable|string',
                 'branch_id' => 'nullable|integer|exists:branches,id',
+                'service_type' => 'nullable|string|in:tailor,phone_repair,electronics,general',
             ]);
-            
+
             $query = $request->input('q');
             $includeServices = $request->boolean('include_services', false);
             $branchId = $request->input('branch_id');
-            
+            $serviceType = $request->input('service_type');
+
             $productsQuery = Product::where('account_id', Auth::user()->account_id);
-            
+
             if ($includeServices) {
                 // For service mode, include both products and services
                 $productsQuery->whereIn('type', ['product', 'service']);
             } else {
                 // For sale mode, only products
                 $productsQuery->where('type', 'product');
+            }
+
+            // Filter by service_type if provided
+            if ($serviceType) {
+                $productsQuery->byServiceType($serviceType);
             }
             
             $productsQuery = $productsQuery->where(function ($q) use ($query) {

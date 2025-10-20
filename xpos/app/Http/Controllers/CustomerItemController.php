@@ -90,15 +90,6 @@ class CustomerItemController extends Controller
 
         return Inertia::render('CustomerItems/Create', [
             'customers' => $customers,
-            'itemTypes' => [
-                'Jacket' => 'Gödəkçə',
-                'Dress' => 'Paltar',
-                'Suit' => 'Kostyum',
-                'Pants' => 'Şalvar',
-                'Shirt' => 'Köynək',
-                'Coat' => 'Palto',
-                'Other' => 'Digər',
-            ],
         ]);
     }
 
@@ -115,6 +106,7 @@ class CustomerItemController extends Controller
 
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'service_type' => 'required|string|in:tailor,phone_repair,electronics,general',
             'item_type' => 'required|string|max:100',
             'description' => 'nullable|string|max:500',
             'fabric_type' => 'nullable|string|max:100',
@@ -197,15 +189,6 @@ class CustomerItemController extends Controller
         return Inertia::render('CustomerItems/Edit', [
             'item' => $item,
             'customers' => $customers,
-            'itemTypes' => [
-                'Jacket' => 'Gödəkçə',
-                'Dress' => 'Paltar',
-                'Suit' => 'Kostyum',
-                'Pants' => 'Şalvar',
-                'Shirt' => 'Köynək',
-                'Coat' => 'Palto',
-                'Other' => 'Digər',
-            ],
         ]);
     }
 
@@ -227,6 +210,7 @@ class CustomerItemController extends Controller
 
         $validated = $request->validate([
             'customer_id' => 'sometimes|required|exists:customers,id',
+            'service_type' => 'sometimes|required|string|in:tailor,phone_repair,electronics,general',
             'item_type' => 'sometimes|required|string|max:100',
             'description' => 'nullable|string|max:500',
             'fabric_type' => 'nullable|string|max:100',

@@ -23,6 +23,7 @@ class Product extends Model
         'barcode_type',
         'has_custom_barcode',
         'category_id',
+        'service_type',  // Filter products by service sector: tailor, phone_repair, electronics, general
         'type',
         'description',
         'purchase_price',
@@ -140,6 +141,18 @@ class Product extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeByServiceType(Builder $query, ?string $serviceType): Builder
+    {
+        if (!$serviceType) {
+            return $query;
+        }
+        // Products with matching service_type OR NULL (available for all services)
+        return $query->where(function($q) use ($serviceType) {
+            $q->where('service_type', $serviceType)
+              ->orWhereNull('service_type');
+        });
     }
 
     public function scopeWithBarcode(Builder $query): Builder

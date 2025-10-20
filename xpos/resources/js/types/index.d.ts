@@ -511,6 +511,7 @@ export interface CustomerItem {
     account_id: number;
     customer_id: number;
     customer?: Customer;
+    service_type?: 'tailor' | 'phone_repair' | 'electronics' | 'general';
     item_type: string;
     description: string;
     color?: string;
@@ -535,6 +536,7 @@ export interface CustomerItem {
 export interface TailorService {
     id: number;
     account_id: number;
+    service_type?: 'tailor' | 'phone_repair' | 'tv_repair' | 'appliance' | 'general';
     customer_id: number;
     customer_item_id?: number;
     branch_id?: number;

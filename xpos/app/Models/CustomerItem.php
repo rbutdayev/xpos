@@ -18,12 +18,13 @@ class CustomerItem extends Model
     protected $fillable = [
         'account_id',
         'customer_id',
-        'item_type',            // e.g., "Jacket", "Dress", "Suit"
+        'service_type',         // Service sector: tailor, phone_repair, electronics, retail, general
+        'item_type',            // e.g., "Jacket", "Dress", "Suit" (tailor) or "iPhone 13", "TV" (other services)
         'description',          // Detailed description
-        'fabric_type',          // e.g., "Cotton", "Wool", "Polyester"
+        'fabric_type',          // e.g., "Cotton", "Wool", "Polyester" (mainly for tailor)
         'size',                 // e.g., "M", "L", "42"
         'color',
-        'measurements',         // JSON field for customer measurements
+        'measurements',         // JSON field for customer measurements (flexible for all services)
         'reference_number',     // Reference number for the item
         'received_date',        // When item was received
         'status',               // Lifecycle: received, in_service, completed, delivered
@@ -57,6 +58,11 @@ class CustomerItem extends Model
         static::creating(function ($customerItem) {
             if (!$customerItem->status) {
                 $customerItem->status = 'received';
+            }
+
+            // Set default service_type if not provided
+            if (!$customerItem->service_type) {
+                $customerItem->service_type = 'tailor';
             }
 
             // Auto-generate reference number if not provided
@@ -109,6 +115,14 @@ class CustomerItem extends Model
         return $query->whereHas('customer', function($q) use ($accountId) {
             $q->where('account_id', $accountId);
         });
+    }
+
+    /**
+     * Scope to filter by service type
+     */
+    public function scopeByServiceType(Builder $query, string $serviceType): Builder
+    {
+        return $query->where('service_type', $serviceType);
     }
 
     /**
