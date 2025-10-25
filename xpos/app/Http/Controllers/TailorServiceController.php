@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\Branch;
 use App\Models\User;
 use App\Models\ProductStock;
+use App\Models\ReceiptTemplate;
+use App\Services\ThermalPrintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -640,5 +642,104 @@ class TailorServiceController extends Controller
         ]);
 
         $stock->increment('quantity', $quantity);
+    }
+
+    /**
+     * Print tailor service receipt
+     */
+    public function print(Request $request, $serviceType, TailorService $tailorService)
+    {
+        Gate::authorize('access-account-data');
+
+        // Verify service belongs to current account
+        if ($tailorService->account_id !== Auth::user()->account_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'template_id' => 'nullable|exists:receipt_templates,template_id',
+        ]);
+
+        try {
+            $printService = new ThermalPrintService();
+            // Use generateServiceReceipt which works with ServiceRecord-like models
+            // TailorService has compatible structure
+            $result = $printService->generateServiceReceipt(
+                $tailorService,
+                $validated['template_id'] ?? null
+            );
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Send print to thermal printer
+     */
+    public function sendToPrinter(Request $request, $serviceType, TailorService $tailorService)
+    {
+        Gate::authorize('access-account-data');
+
+        // Verify service belongs to current account
+        if ($tailorService->account_id !== Auth::user()->account_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'template_id' => 'nullable|exists:receipt_templates,template_id',
+        ]);
+
+        try {
+            $printService = new ThermalPrintService();
+            $result = $printService->generateServiceReceipt(
+                $tailorService,
+                $validated['template_id'] ?? null
+            );
+
+            if ($result['success']) {
+                $printResult = $printService->printContent(
+                    $result['content'],
+                    $result['printer_config']
+                );
+
+                return response()->json($printResult);
+            }
+
+            return response()->json($result, 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Get available templates and printers for print modal
+     */
+    public function getPrintOptions($serviceType, TailorService $tailorService)
+    {
+        Gate::authorize('access-account-data');
+
+        // Verify service belongs to current account
+        if ($tailorService->account_id !== Auth::user()->account_id) {
+            abort(403);
+        }
+
+        $templates = ReceiptTemplate::where('account_id', Auth::user()->account_id)
+            ->where('type', 'service')
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name')
+            ->get(['template_id', 'name', 'is_default']);
+
+        return response()->json([
+            'templates' => $templates,
+        ]);
     }
 }

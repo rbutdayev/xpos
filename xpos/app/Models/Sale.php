@@ -34,6 +34,10 @@ class Sale extends Model
         'credit_amount',
         'credit_due_date',
         'customer_credit_id',
+        'is_online_order',
+        'customer_name',
+        'customer_phone',
+        'delivery_notes',
     ];
 
     protected function casts(): array
@@ -48,6 +52,7 @@ class Sale extends Model
             'has_negative_stock' => 'boolean',
             'sale_date' => 'datetime',
             'credit_due_date' => 'date',
+            'is_online_order' => 'boolean',
         ];
     }
 
@@ -111,6 +116,32 @@ class Sale extends Model
         return $query->whereDate('sale_date', today());
     }
 
+    public function scopeOnlineOrders(Builder $query): Builder
+    {
+        return $query->where('is_online_order', true);
+    }
+
+    public function scopePosOrders(Builder $query): Builder
+    {
+        return $query->where('is_online_order', false);
+    }
+
+    /**
+     * Scope to only include sales that should be counted in reports/lists
+     * - All regular POS sales (regardless of status)
+     * - Only COMPLETED online orders
+     */
+    public function scopeCountable(Builder $query): Builder
+    {
+        return $query->where(function($q) {
+            $q->where('is_online_order', false)
+              ->orWhere(function($q) {
+                  $q->where('is_online_order', true)
+                    ->where('status', 'completed');
+              });
+        });
+    }
+
     public function isCompleted(): bool
     {
         return $this->status === 'completed';
@@ -129,6 +160,11 @@ class Sale extends Model
     public function hasNegativeStock(): bool
     {
         return $this->has_negative_stock;
+    }
+
+    public function isOnlineOrder(): bool
+    {
+        return $this->is_online_order;
     }
 
     public function getTotalPaidAttribute(): float

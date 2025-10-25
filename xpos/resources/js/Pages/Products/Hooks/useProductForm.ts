@@ -10,6 +10,7 @@ export interface ProductFormState {
   barcode_type: string;
   has_custom_barcode: boolean;
   category_id: string;
+  parent_product_id: string | null;  // NEW: Link to mother product
   type: 'product' | 'service';
   description: string;
   purchase_price: string;
@@ -25,6 +26,7 @@ export interface ProductFormState {
   // create-only helpers
   initial_stock: { [warehouse_id: string]: string };
   min_levels: { [warehouse_id: string]: string };
+  primary_photo_index?: number;
   // flags
   is_active?: boolean;
 }
@@ -37,6 +39,7 @@ export const useProductForm = (initial?: Partial<ProductFormState>) => {
     barcode_type: initial?.barcode_type || 'EAN-13',
     has_custom_barcode: initial?.has_custom_barcode || false,
     category_id: initial?.category_id || '',
+    parent_product_id: initial?.parent_product_id || null,  // NEW
     type: (initial?.type as 'product' | 'service') || 'product',
     description: initial?.description || '',
     purchase_price: initial?.purchase_price || '',
@@ -51,6 +54,7 @@ export const useProductForm = (initial?: Partial<ProductFormState>) => {
     attributes: initial?.attributes || {},
     initial_stock: initial?.initial_stock || {},
     min_levels: initial?.min_levels || {},
+    primary_photo_index: initial?.primary_photo_index || 0,
     is_active: initial?.is_active,
   });
 

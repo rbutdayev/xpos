@@ -40,13 +40,14 @@ class SaleController extends Controller
         
         $query = Sale::with(['customer', 'branch'])
             ->where('account_id', Auth::user()->account_id)
+            ->countable() // Only include POS sales + completed online orders
             ->where(function($q) use ($searchTerm) {
                 $q->where('sale_number', 'like', '%' . $searchTerm . '%')
                   ->orWhereHas('customer', function($q) use ($searchTerm) {
                       $q->where('name', 'like', '%' . $searchTerm . '%');
                   });
             });
-            
+
         // Filter by sales_staff's branch if user is sales_staff
         if (Auth::user()->role === 'sales_staff') {
             $query->where('branch_id', Auth::user()->branch_id);
@@ -70,10 +71,12 @@ class SaleController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'has_negative_stock' => 'nullable|boolean',
             'payment_status' => 'nullable|string|in:paid,credit,partial',
+            'online' => 'nullable|boolean',
         ]);
 
         $query = Sale::with(['customer', 'branch', 'user', 'items.product', 'customerCredit'])
-            ->where('account_id', Auth::user()->account_id);
+            ->where('account_id', Auth::user()->account_id)
+            ->countable(); // Only include POS sales + completed online orders
 
         // Filter by sales_staff's branch if user is sales_staff
         if (Auth::user()->role === 'sales_staff') {
@@ -120,6 +123,11 @@ class SaleController extends Controller
         // Filter by payment status
         if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
+        }
+
+        // Filter by online orders
+        if ($request->filled('online')) {
+            $query->where('is_online_order', $request->boolean('online'));
         }
 
         $sales = $query->latest('sale_date')

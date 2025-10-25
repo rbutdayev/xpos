@@ -32,8 +32,9 @@ export default function Create() {
 
     const templateTypes = [
         { value: 'sale', label: 'Satış Qəbzi' },
-        { value: 'return', label: 'Geri Qaytarma Qəbzi' },
         { value: 'service', label: 'Xidmət Qəbzi' },
+        { value: 'customer_item', label: 'Müştəri Məhsulu Qəbzi' },
+        { value: 'return', label: 'Geri Qaytarma Qəbzi' },
         { value: 'payment', label: 'Ödəniş Qəbzi' }
     ];
 
@@ -91,6 +92,28 @@ export default function Create() {
                     'labor_cost': 'İş haqqı',
                     'parts_cost': 'Hissələrin dəyəri',
                     'total_cost': 'Ümumi dəyər',
+                };
+            case 'customer_item':
+                return {
+                    ...baseVariables,
+                    'customer_name': 'Müştəri adı',
+                    'customer_phone': 'Müştəri telefonu',
+                    'item_type': 'Məhsul növü',
+                    'service_type': 'Xidmət növü',
+                    'item_description': 'Məhsul təsviri',
+                    'item_color': 'Rəng',
+                    'fabric_type': 'Parça növü',
+                    'reference_number': 'Referans nömrəsi',
+                    'received_date': 'Qəbul tarixi',
+                    'status': 'Status',
+                    'measurements': 'Ölçülər',
+                    'services_count': 'Xidmət sayı',
+                    'services_summary': 'Xidmətlər siyahısı',
+                    'subtotal': 'Ümumi məbləğ',
+                    'paid_amount': 'Ödənilmiş',
+                    'balance': 'Qalıq',
+                    'payment_status': 'Ödəniş statusu',
+                    'notes': 'Qeydlər',
                 };
             default:
                 return baseVariables;

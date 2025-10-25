@@ -54,6 +54,7 @@ export default function Create({ categories, warehouses }: Props) {
                 return {
                   name: form.name,
                   category_id: form.category_id,
+                  parent_product_id: form.parent_product_id,
                   type: form.type,
                   description: form.description,
                   sale_price: form.sale_price,

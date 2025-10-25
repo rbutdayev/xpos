@@ -103,7 +103,29 @@ class ReceiptTemplate extends Model
                     'parts_cost' => 'Hissələrin dəyəri',
                     'total_cost' => 'Ümumi dəyər',
                 ]);
-            
+
+            case 'customer_item':
+                return array_merge($baseVariables, [
+                    'customer_name' => 'Müştəri adı',
+                    'customer_phone' => 'Müştəri telefonu',
+                    'item_type' => 'Məhsul növü',
+                    'service_type' => 'Xidmət növü',
+                    'item_description' => 'Məhsul təsviri',
+                    'item_color' => 'Rəng',
+                    'fabric_type' => 'Parça növü',
+                    'reference_number' => 'Referans nömrəsi',
+                    'received_date' => 'Qəbul tarixi',
+                    'status' => 'Status',
+                    'measurements' => 'Ölçülər',
+                    'services_count' => 'Xidmət sayı',
+                    'services_summary' => 'Xidmətlər siyahısı',
+                    'subtotal' => 'Ümumi məbləğ',
+                    'paid_amount' => 'Ödənilmiş',
+                    'balance' => 'Qalıq',
+                    'payment_status' => 'Ödəniş statusu',
+                    'notes' => 'Qeydlər',
+                ]);
+
             default:
                 return $baseVariables;
         }

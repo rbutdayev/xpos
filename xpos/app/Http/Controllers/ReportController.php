@@ -376,6 +376,7 @@ class ReportController extends Controller
     {
         // Get summary data with single query
         $summaryData = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereBetween('sale_date', [$dateFrom, $dateTo])
             ->selectRaw('
                 COUNT(*) as total_sales,
@@ -386,6 +387,7 @@ class ReportController extends Controller
 
         // Get top customer with efficient query
         $topCustomer = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereBetween('sale_date', [$dateFrom, $dateTo])
             ->select('customer_id', DB::raw('SUM(total) as total_spent'))
             ->groupBy('customer_id')
@@ -405,6 +407,7 @@ class ReportController extends Controller
 
         // Get sales data separately for display
         $sales = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereBetween('sale_date', [$dateFrom, $dateTo])
             ->with(['customer', 'items.product', 'items.variant'])
             ->get();
@@ -530,6 +533,7 @@ class ReportController extends Controller
     private function generateFinancialReport($account, $dateFrom, $dateTo)
     {
         $sales = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereBetween('sale_date', [$dateFrom, $dateTo])
             ->sum('total');
 
@@ -552,6 +556,7 @@ class ReportController extends Controller
 
         // Get all sales grouped by date (1 query instead of 365+)
         $salesByDate = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereBetween('sale_date', [$dateFrom, $dateTo])
             ->selectRaw('DATE(sale_date) as date, SUM(total) as total_revenue')
             ->groupBy('date')

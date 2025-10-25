@@ -253,4 +253,46 @@ class SmsService
             'pending' => $pending,
         ];
     }
+
+    /**
+     * Get SMS balance for account from gateway
+     */
+    public function getBalance(int $accountId): ?int
+    {
+        try {
+            $credentials = $this->getCredentials($accountId);
+
+            if (!$credentials) {
+                return null;
+            }
+
+            // Note: LSim/QuickSMS balance API endpoint would need to be implemented
+            // This is a placeholder - adjust based on actual balance API endpoint
+            $passwordMD5 = $this->generateMD5($credentials->password);
+            $key = $this->generateMD5($passwordMD5 . $credentials->login);
+
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post($credentials->gateway_url . '/balance', [
+                    'login' => $credentials->login,
+                    'key' => $key,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return (int) ($data['balance'] ?? 0);
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Failed to get SMS balance', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
 }

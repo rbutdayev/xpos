@@ -7,6 +7,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductPhotoController;
 use App\Http\Controllers\ProductVariantController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\DocumentController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\WarehouseTransferController;
 use App\Http\Controllers\ProductReturnController;
 use App\Http\Controllers\MinMaxAlertController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\OnlineOrderController;
 use App\Http\Controllers\PrinterConfigController;
 use App\Http\Controllers\ReceiptTemplateController;
 use App\Http\Controllers\ExpenseController;
@@ -44,6 +46,11 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+
+// Awareness landing page - separate URL for local testing
+Route::get('/awareness', function () {
+    return Inertia::render('Awareness');
+})->name('awareness');
 
 // 301 Permanent Redirect to main website - SEO optimized
 Route::get('/', function () {
@@ -112,6 +119,22 @@ Route::get('/debug-translations', function () {
     return \Inertia\Inertia::render('DebugTranslations');
 })->middleware(['auth', 'verified'])->name('debug.translations');
 
+// Photo serving route (PUBLIC - for shop frontend and fallback when Azure temporaryUrl fails)
+Route::get('/photos/serve/{path}', function (Request $request, string $path) {
+    $decodedPath = base64_decode($path);
+
+    if (!Storage::disk('documents')->exists($decodedPath)) {
+        abort(404, 'Photo not found');
+    }
+
+    $mimeType = Storage::disk('documents')->mimeType($decodedPath);
+    $content = Storage::disk('documents')->get($decodedPath);
+
+    return response($content, 200)
+        ->header('Content-Type', $mimeType)
+        ->header('Cache-Control', 'public, max-age=3600');
+})->name('photos.serve')->where('path', '.*');
+
 Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -179,6 +202,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/categories/tree', [CategoryController::class, 'tree'])->name('categories.tree');
     
     Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+    Route::get('/products/search-parent', [ProductController::class, 'searchParentProducts'])->name('products.search-parent');
     Route::post('/products/{product}/calculate-price', [ProductController::class, 'calculatePrice'])->name('products.calculate-price');
     Route::post('/products/generate-barcode', [ProductController::class, 'generateBarcode'])->name('products.generate-barcode');
     Route::resource('products', ProductController::class);
@@ -218,7 +242,14 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/documents/{document}/thumbnail', [DocumentController::class, 'thumbnail'])->name('documents.thumbnail');
     Route::get('/documents/types', [DocumentController::class, 'types'])->name('documents.types');
     Route::get('/documents/statistics', [DocumentController::class, 'statistics'])->name('documents.statistics');
-    
+
+    // Product Photo Management
+    Route::get('/products/{product}/photos', [ProductPhotoController::class, 'index'])->name('products.photos.index');
+    Route::post('/products/{product}/photos', [ProductPhotoController::class, 'store'])->name('products.photos.store');
+    Route::delete('/products/{product}/photos/{photo}', [ProductPhotoController::class, 'destroy'])->name('products.photos.destroy');
+    Route::post('/products/{product}/photos/{photo}/set-primary', [ProductPhotoController::class, 'setPrimary'])->name('products.photos.set-primary');
+    Route::post('/products/{product}/photos/update-order', [ProductPhotoController::class, 'updateOrder'])->name('products.photos.update-order');
+
     // Generic file serving route for uploaded files (company logos, etc.)
     Route::get('/files/{path}', function (Request $request, $path) {
         Gate::authorize('access-account-data');
@@ -273,6 +304,9 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Customer Items Management (clothing, fabrics for tailor services)
     Route::get('/customer-items/search', [CustomerItemController::class, 'search'])->name('customer-items.search');
     Route::patch('/customer-items/{customer_item}/status', [CustomerItemController::class, 'updateStatus'])->name('customer-items.update-status');
+    Route::get('/customer-items/{customer_item}/print-options', [CustomerItemController::class, 'getPrintOptions'])->name('customer-items.print-options');
+    Route::post('/customer-items/{customer_item}/print', [CustomerItemController::class, 'print'])->name('customer-items.print');
+    Route::post('/customer-items/{customer_item}/send-to-printer', [CustomerItemController::class, 'sendToPrinter'])->name('customer-items.send-to-printer');
     Route::resource('customer-items', CustomerItemController::class);
 
     // Dynamic Service Routes (multi-service support)
@@ -393,6 +427,11 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/sales/{sale}/print-options', [SaleController::class, 'getPrintOptions'])->name('sales.print-options');
     Route::post('/sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
     Route::post('/sales/{sale}/send-to-printer', [SaleController::class, 'sendToPrinter'])->name('sales.send-to-printer');
+
+    // Online Orders Management
+    Route::get('/online-orders', [OnlineOrderController::class, 'index'])->name('online-orders.index');
+    Route::patch('/online-orders/{sale}/status', [OnlineOrderController::class, 'updateStatus'])->name('online-orders.update-status');
+    Route::delete('/online-orders/{sale}/cancel', [OnlineOrderController::class, 'cancel'])->name('online-orders.cancel');
     
     // Thermal Printing Management
     Route::get('/printer-configs/search', [PrinterConfigController::class, 'search'])->name('printer-configs.search');
@@ -405,10 +444,19 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/receipt-templates/create-default', [ReceiptTemplateController::class, 'createDefault'])->name('receipt-templates.create-default');
     Route::resource('receipt-templates', ReceiptTemplateController::class);
     
-    // System Settings
-    Route::get('/settings', [SystemSettingsController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [SystemSettingsController::class, 'update'])->name('settings.update');
-    
+    // Unified Settings (Company, Shop, Notifications)
+    Route::get('/settings', [App\Http\Controllers\UnifiedSettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/company', [App\Http\Controllers\UnifiedSettingsController::class, 'updateCompany'])->name('settings.company.update');
+    Route::post('/settings/shop', [App\Http\Controllers\UnifiedSettingsController::class, 'updateShop'])->name('settings.shop.update');
+    Route::post('/settings/notifications', [App\Http\Controllers\UnifiedSettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+    Route::post('/settings/sms', [App\Http\Controllers\UnifiedSettingsController::class, 'updateSms'])->name('settings.sms.update');
+    Route::post('/settings/telegram', [App\Http\Controllers\UnifiedSettingsController::class, 'updateTelegram'])->name('settings.telegram.update');
+    Route::post('/settings/telegram/test', [App\Http\Controllers\UnifiedSettingsController::class, 'testTelegram'])->name('settings.telegram.test');
+    Route::post('/settings/test-notification', [App\Http\Controllers\UnifiedSettingsController::class, 'testNotification'])->name('settings.test-notification');
+
+    // Telegram Logs
+    Route::get('/telegram/logs', [App\Http\Controllers\UnifiedSettingsController::class, 'telegramLogs'])->name('telegram.logs');
+
     // Expense Management
     Route::get('/expense-categories/search', [ExpenseCategoryController::class, 'search'])->name('expense-categories.search');
     Route::resource('expense-categories', ExpenseCategoryController::class);
@@ -474,4 +522,23 @@ Route::middleware(['auth', 'account.access'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// NOTE: Shop and Notification settings are now unified in /settings with tabs
+// Old separate routes kept for backward compatibility (redirects to unified page)
+Route::middleware(['auth', 'account.access'])->group(function () {
+    Route::get('/settings/shop', function() {
+        return redirect('/settings?tab=shop');
+    });
+    Route::get('/settings/notifications', function() {
+        return redirect('/settings?tab=notifications');
+    });
+});
+
+// Public shop routes (no auth, rate limiting only)
+Route::prefix('shop/{shop_slug}')->name('shop.')->middleware(['throttle:60,1'])->group(function () {
+    Route::get('/', [App\Http\Controllers\PublicShopController::class, 'index'])->name('home');
+    Route::get('/product/{id}', [App\Http\Controllers\PublicShopController::class, 'show'])->name('product');
+    Route::post('/order', [App\Http\Controllers\PublicShopController::class, 'createOrder'])->name('order');
+    Route::get('/order/success/{order_number}', [App\Http\Controllers\PublicShopController::class, 'orderSuccess'])->name('order.success');
+});
 

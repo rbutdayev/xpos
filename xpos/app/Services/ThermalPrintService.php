@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ReceiptTemplate;
 use App\Models\ServiceRecord;
 use App\Models\Sale;
+use App\Models\CustomerItem;
 use Illuminate\Support\Facades\Auth;
 
 class ThermalPrintService
@@ -199,6 +200,120 @@ class ThermalPrintService
         return $query->where('is_default', true)->first() ?: $query->first();
     }
 
+
+    /**
+     * Generate print content for customer item
+     */
+    public function generateCustomerItemReceipt(CustomerItem $item, ?int $templateId = null): array
+    {
+        // Get template
+        $template = $this->getTemplate('customer_item', $templateId);
+        if (!$template) {
+            throw new \Exception('Müştəri məhsulu çek şablonu tapılmadı.');
+        }
+
+        // Default thermal printer settings
+        $defaultSettings = (object)[
+            'width_chars' => 32,
+            'paper_size' => '80mm',
+            'printer_type' => 'thermal'
+        ];
+
+        // Load relationships
+        $item->load(['customer', 'tailorServices']);
+
+        // Get service type configuration
+        $serviceTypeLabels = [
+            'tailor' => 'Dərzi',
+            'phone_repair' => 'Telefon Təmiri',
+            'electronics' => 'Elektronika Təmiri',
+            'general' => 'Ümumi Xidmət',
+        ];
+
+        // Calculate totals from associated services
+        $servicesTotal = $item->tailorServices->sum('total_cost');
+        $servicesPaid = $item->tailorServices->sum('paid_amount');
+        $servicesBalance = $servicesTotal - $servicesPaid;
+
+        // Determine payment status
+        $paymentStatus = 'Ödənilməyib';
+        if ($servicesTotal > 0) {
+            if ($servicesPaid >= $servicesTotal) {
+                $paymentStatus = 'Ödənilib';
+            } elseif ($servicesPaid > 0) {
+                $paymentStatus = 'Qismən ödənilib';
+            }
+        }
+
+        // Format measurements
+        $measurementsText = '';
+        if ($item->measurements && is_array($item->measurements)) {
+            foreach ($item->measurements as $key => $value) {
+                $measurementsText .= sprintf("%-15s: %s\n", mb_substr($key, 0, 15), $value);
+            }
+        }
+
+        // Format services summary
+        $servicesSummary = '';
+        if ($item->tailorServices && $item->tailorServices->count() > 0) {
+            foreach ($item->tailorServices as $service) {
+                $servicesSummary .= sprintf(
+                    "%-20s %8.2f ₼\n",
+                    mb_substr($service->service_number, 0, 20),
+                    $service->total_cost
+                );
+            }
+        } else {
+            $servicesSummary = "Hələ xidmət yoxdur\n";
+        }
+
+        // Prepare template variables
+        $account = Auth::user()->account ?? null;
+        $variables = [
+            'company_name' => $account->company_name ?? '',
+            'company_address' => $account->address ?? '',
+            'company_phone' => $account->phone ?? '',
+            'company_email' => $account->email ?? '',
+            'company_website' => '',
+            'tax_number' => $account->tax_number ?? '',
+            'branch_name' => '', // Customer items don't have branch
+            'branch_address' => '',
+            'branch_phone' => '',
+            'branch_email' => '',
+            'date' => $item->received_date ? $item->received_date->format('d.m.Y') : now()->format('d.m.Y'),
+            'time' => $item->created_at->format('H:i'),
+            'receipt_number' => $item->reference_number ?? '',
+            'customer_name' => $item->customer->name ?? '',
+            'customer_phone' => $item->customer->phone ?? '',
+            'item_type' => $item->item_type ?? '',
+            'service_type' => $serviceTypeLabels[$item->service_type] ?? $item->service_type,
+            'item_description' => $item->description ?? '',
+            'item_color' => $item->color ?? '',
+            'fabric_type' => $item->fabric_type ?? '',
+            'reference_number' => $item->reference_number ?? '',
+            'received_date' => $item->received_date ? $item->received_date->format('d.m.Y') : '',
+            'status' => $item->status_text ?? '',
+            'measurements' => $measurementsText,
+            'services_count' => $item->tailorServices->count(),
+            'services_summary' => $servicesSummary,
+            'subtotal' => number_format($servicesTotal, 2) . ' ₼',
+            'paid_amount' => number_format($servicesPaid, 2) . ' ₼',
+            'balance' => number_format($servicesBalance, 2) . ' ₼',
+            'payment_status' => $paymentStatus,
+            'notes' => $item->notes ?? '',
+            'divider' => str_repeat('-', $template->width_chars ?? $defaultSettings->width_chars),
+        ];
+
+        // Replace variables in template
+        $content = $this->replaceTemplateVariables($template->template_content, $variables);
+
+        return [
+            'success' => true,
+            'content' => $content,
+            'printer_config' => $defaultSettings,
+            'template' => $template,
+        ];
+    }
 
     /**
      * Replace template variables with actual values

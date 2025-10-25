@@ -45,18 +45,10 @@ class StorageServiceProvider extends ServiceProvider
             $container = StorageSetting::getAzureContainer();
 
             if ($connectionString) {
-                // Extend the storage manager to add the documents disk
-                Storage::extend('azure_dynamic', function ($app, $config) {
-                    $client = BlobRestProxy::createBlobService($config['connection_string']);
-                    $adapter = new AzureBlobStorageAdapter($client, $config['container'], $config['prefix'] ?? '');
-                    $filesystem = new Filesystem($adapter);
-                    return new FilesystemAdapter($filesystem, $adapter, $config);
-                });
-
                 // Dynamically configure the documents disk with database credentials
                 config([
                     'filesystems.disks.documents' => [
-                        'driver' => 'azure_dynamic',
+                        'driver' => 'azure',
                         'connection_string' => $connectionString,
                         'container' => $container,
                         'prefix' => '',

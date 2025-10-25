@@ -1,5 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrintModal from '@/Components/PrintModal';
 import { Customer, CustomerItem, TailorService } from '@/types';
 import {
     ShoppingBagIcon,
@@ -7,7 +9,8 @@ import {
     PlusIcon,
     PencilIcon,
     TrashIcon,
-    ArrowLeftIcon
+    ArrowLeftIcon,
+    PrinterIcon
 } from '@heroicons/react/24/outline';
 
 interface Props {
@@ -22,6 +25,8 @@ interface Props {
 }
 
 export default function Show({ item, tailorServices }: Props) {
+    const [showPrintModal, setShowPrintModal] = useState(false);
+
     const handleDelete = () => {
         if (confirm('Bu məhsulu silmək istədiyinizə əminsiniz?')) {
             router.delete(`/customer-items/${item.id}`);
@@ -51,6 +56,13 @@ export default function Show({ item, tailorServices }: Props) {
                         </p>
                     </div>
                     <div className="flex space-x-4">
+                        <button
+                            onClick={() => setShowPrintModal(true)}
+                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
+                        >
+                            <PrinterIcon className="w-4 h-4 mr-2" />
+                            Çap et
+                        </button>
                         <Link
                             href={`/customer-items/${item.id}/edit`}
                             className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
@@ -310,6 +322,14 @@ export default function Show({ item, tailorServices }: Props) {
                     </div>
                 </div>
             </div>
+
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => setShowPrintModal(false)}
+                resourceType="customer-item"
+                resourceId={item.id}
+                title={`Məhsul ${item.reference_number}`}
+            />
         </AuthenticatedLayout>
     );
 }

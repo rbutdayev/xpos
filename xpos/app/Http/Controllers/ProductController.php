@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Warehouse;
 use App\Services\BarcodeService;
 use App\Services\DocumentUploadService;
+use App\Services\ProductPhotoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,14 +18,60 @@ class ProductController extends Controller
 {
     private BarcodeService $barcodeService;
     private DocumentUploadService $documentService;
+    private ProductPhotoService $photoService;
 
-    public function __construct(BarcodeService $barcodeService, DocumentUploadService $documentService)
-    {
+    public function __construct(
+        BarcodeService $barcodeService,
+        DocumentUploadService $documentService,
+        ProductPhotoService $photoService
+    ) {
         $this->middleware('auth');
         $this->middleware('account.access');
         $this->middleware('branch.access');
         $this->barcodeService = $barcodeService;
         $this->documentService = $documentService;
+        $this->photoService = $photoService;
+    }
+
+    /**
+     * Search products for parent product selector
+     * Returns only parent products (no child variants)
+     */
+    public function searchParentProducts(Request $request)
+    {
+        Gate::authorize('access-account-data');
+
+        $request->validate([
+            'q' => 'nullable|string|max:255',
+            'limit' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        $user = Auth::user();
+        $query = $request->input('q', '');
+        $limit = $request->input('limit', 20);
+
+        $products = Product::where('account_id', $user->account_id)
+            ->where('type', 'product')
+            ->parentProducts()  // Only parent products
+            ->active()
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('sku', 'like', "%{$query}%")
+                  ->orWhere('id', $query);
+            })
+            ->select('id', 'name', 'sku', 'image_url')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'data' => $products->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'sku' => $p->sku,
+                'label' => $p->name . ($p->sku ? " ({$p->sku})" : ''),
+            ])
+        ]);
     }
 
     public function index(Request $request)
@@ -182,6 +229,7 @@ class ProductController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:categories,id,account_id,' . Auth::user()->account_id,
+            'parent_product_id' => 'nullable|exists:products,id,account_id,' . Auth::user()->account_id,
             'type' => 'required|in:product,service',
             'description' => 'nullable|string',
             'sale_price' => 'required|numeric|min:0',
@@ -212,27 +260,34 @@ class ProductController extends Controller
                 'initial_stock.*.quantity' => 'required|numeric|min:0',
                 'initial_stock.*.min_level' => 'nullable|numeric|min:0',
                 'initial_stock.*.location' => 'nullable|string|max:100',
-                // Clothing attributes - mandatory
-                'attributes.size' => 'required|string|max:50',
-                'attributes.color' => 'required|string|max:100',
+                // Clothing attributes - optional (only for non-variants or if specified)
+                'attributes.size' => 'nullable|string|max:50',
+                'attributes.color' => 'nullable|string|max:100',
+                'attributes.color_code' => 'nullable|string|max:7',
             ]);
+        }
+
+        // Add photo validation
+        if ($request->hasFile('photos')) {
+            $rules['photos'] = 'array|max:' . ProductPhotoService::getMaxPhotos();
+            $rules['photos.*'] = 'image|mimes:jpeg,png,gif,webp|max:' . (ProductPhotoService::getMaxFileSize() / 1024);
         }
 
         $request->validate($rules);
 
-        DB::transaction(function () use ($request) {
+        $product = DB::transaction(function () use ($request) {
             // Base fields for both products and services
             $productData = $request->only([
-                'name', 'category_id', 'type', 'description', 'sale_price', 'unit', 'attributes'
+                'name', 'category_id', 'parent_product_id', 'type', 'description', 'sale_price', 'unit', 'attributes'
             ]);
-            
+
             // Add product-specific fields
             if ($request->type === 'product') {
                 $productData = array_merge($productData, $request->only([
-                    'sku', 'purchase_price', 'packaging_size', 'base_unit', 
+                    'sku', 'purchase_price', 'packaging_size', 'base_unit',
                     'packaging_quantity', 'weight', 'dimensions', 'brand', 'model'
                 ]));
-                
+
                 $productData['allow_negative_stock'] = $request->boolean('allow_negative_stock');
                 $productData['has_custom_barcode'] = $request->boolean('has_custom_barcode');
 
@@ -245,7 +300,7 @@ class ProductController extends Controller
                 if (empty($productData['packaging_quantity'])) {
                     $productData['packaging_quantity'] = 1;
                 }
-                
+
                 // Generate barcode if not provided
                 if (!$request->has_custom_barcode && empty($request->barcode)) {
                     $productData['barcode'] = $this->barcodeService->generateUniqueBarcode(
@@ -264,15 +319,15 @@ class ProductController extends Controller
                 $productData['packaging_quantity'] = 1;
                 $productData['allow_negative_stock'] = true; // Services don't need stock tracking
             }
-            
+
             $product = Product::create($productData);
-            
+
             // Auto-parse packaging size if provided (products only)
             if ($request->type === 'product' && !empty($productData['packaging_size'])) {
                 $product->updatePackagingFromSize();
                 $product->save();
             }
-            
+
             // Create initial stock entries (products only)
             if ($request->type === 'product' && $request->filled('initial_stock')) {
                 foreach ($request->initial_stock as $stock) {
@@ -283,7 +338,7 @@ class ProductController extends Controller
                             'min_level' => $stock['min_level'] ?? 0,
                             'location' => $stock['location'] ?? null,
                         ]);
-                        
+
                         // Create stock history entry
                         $product->stockHistory()->create([
                             'warehouse_id' => $stock['warehouse_id'],
@@ -299,6 +354,22 @@ class ProductController extends Controller
                     }
                 }
             }
+
+            // Upload photos if provided
+            if ($request->hasFile('photos')) {
+                try {
+                    $primaryIndex = $request->input('primary_photo_index', 0);
+                    foreach ($request->file('photos') as $index => $file) {
+                        $isPrimary = ($index == $primaryIndex);
+                        $this->photoService->uploadPhoto($product, $file, $isPrimary);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Photo upload failed during product creation: ' . $e->getMessage());
+                    // Continue - don't fail product creation if photo upload fails
+                }
+            }
+
+            return $product;
         });
 
         return redirect()->route('products.index')
@@ -308,14 +379,16 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         Gate::authorize('access-account-data', $product);
-        
+
         $product->load([
             'category',
+            'parentProduct',
             'stock.warehouse',
             'stockHistory' => function ($query) {
                 $query->with(['warehouse', 'user'])->latest('occurred_at')->take(10);
             },
-            'documents.uploader'
+            'documents.uploader',
+            'orderedPhotos'
         ]);
 
         // Format documents for frontend
@@ -333,10 +406,28 @@ class ProductController extends Controller
                 'thumbnail_url' => $this->documentService->getThumbnailUrl($doc),
             ];
         });
-        
+
+        // Format photos for frontend
+        $formattedPhotos = $product->orderedPhotos->map(function ($photo) {
+            $originalPath = $photo->original_path;
+            $mediumPath = $photo->medium_path ?: $photo->original_path;
+            $thumbnailPath = $photo->thumbnail_path ?: ($photo->medium_path ?: $photo->original_path);
+
+            return [
+                'id' => $photo->id,
+                'original_url' => $this->photoService->getPhotoUrl($originalPath),
+                'medium_url' => $this->photoService->getPhotoUrl($mediumPath),
+                'thumbnail_url' => $this->photoService->getPhotoUrl($thumbnailPath),
+                'is_primary' => $photo->is_primary,
+                'alt_text' => $photo->alt_text,
+                'sort_order' => $photo->sort_order,
+            ];
+        });
+
         return Inertia::render('Products/Show', [
             'product' => $product,
-            'documents' => $formattedDocuments
+            'documents' => $formattedDocuments,
+            'photos' => $formattedPhotos,
         ]);
     }
 
@@ -344,7 +435,7 @@ class ProductController extends Controller
     {
         Gate::authorize('manage-products');
         Gate::authorize('access-account-data', $product);
-        
+
         $categories = Category::where('account_id', Auth::user()->account_id)
             ->where('is_service', false)
             ->where('is_active', true)
@@ -352,8 +443,8 @@ class ProductController extends Controller
             ->get();
         $warehouses = Warehouse::where('account_id', Auth::user()->account_id)
             ->where('is_active', true)->orderBy('name')->get();
-        
-        $product->load(['stock.warehouse', 'documents.uploader']);
+
+        $product->load(['stock.warehouse', 'documents.uploader', 'orderedPhotos', 'parentProduct']);
 
         // Format documents for frontend
         $formattedDocuments = $product->documents->map(function ($doc) {
@@ -370,12 +461,42 @@ class ProductController extends Controller
                 'thumbnail_url' => $this->documentService->getThumbnailUrl($doc),
             ];
         });
-        
+
+        // Format photos for frontend
+        $formattedPhotos = $product->orderedPhotos->map(function ($photo) {
+            $originalPath = $photo->original_path;
+            $mediumPath = $photo->medium_path ?: $photo->original_path;
+            $thumbnailPath = $photo->thumbnail_path ?: ($photo->medium_path ?: $photo->original_path);
+
+            return [
+                'id' => $photo->id,
+                'original_url' => $this->photoService->getPhotoUrl($originalPath),
+                'medium_url' => $this->photoService->getPhotoUrl($mediumPath),
+                'thumbnail_url' => $this->photoService->getPhotoUrl($thumbnailPath),
+                'is_primary' => $photo->is_primary,
+                'alt_text' => $photo->alt_text,
+                'sort_order' => $photo->sort_order,
+            ];
+        });
+
+        // Format parent product info if this is a variant
+        $parentProductInfo = null;
+        if ($product->parent_product_id && $product->parentProduct) {
+            $parentProductInfo = [
+                'id' => $product->parentProduct->id,
+                'name' => $product->parentProduct->name,
+                'sku' => $product->parentProduct->sku,
+            ];
+        }
+
         return Inertia::render('Products/Edit', [
             'product' => $product,
+            'parentProduct' => $parentProductInfo,
             'categories' => $categories,
             'warehouses' => $warehouses,
-            'documents' => $formattedDocuments
+            'documents' => $formattedDocuments,
+            'photos' => $formattedPhotos,
+            'maxPhotos' => ProductPhotoService::getMaxPhotos(),
         ]);
     }
 
@@ -412,6 +533,7 @@ class ProductController extends Controller
             'barcode_type' => 'nullable|in:EAN-13,UPC-A,Code-128,QR-Code',
             'has_custom_barcode' => 'boolean',
             'category_id' => 'nullable|exists:categories,id,account_id,' . Auth::user()->account_id,
+            'parent_product_id' => 'nullable|exists:products,id,account_id,' . Auth::user()->account_id,
             'type' => 'required|in:product,service',
             'description' => 'nullable|string',
             'purchase_price' => 'required|numeric|min:0',
@@ -429,16 +551,17 @@ class ProductController extends Controller
             'is_active' => 'boolean',
         ];
 
-        // Add clothing attributes validation for products
+        // Add clothing attributes validation for products (optional now for variants)
         if ($request->type === 'product') {
-            $rules['attributes.size'] = 'required|string|max:50';
-            $rules['attributes.color'] = 'required|string|max:100';
+            $rules['attributes.size'] = 'nullable|string|max:50';
+            $rules['attributes.color'] = 'nullable|string|max:100';
+            $rules['attributes.color_code'] = 'nullable|string|max:7';
         }
 
         $request->validate($rules);
 
         $productData = $request->only([
-            'name', 'sku', 'category_id', 'type', 'description',
+            'name', 'sku', 'category_id', 'parent_product_id', 'type', 'description',
             'purchase_price', 'sale_price', 'unit', 'packaging_size',
             'base_unit', 'packaging_quantity', 'weight',
             'dimensions', 'brand', 'model', 'attributes'
@@ -472,15 +595,23 @@ class ProductController extends Controller
         if (Auth::user()->role === 'sales_staff') {
             abort(403, 'Satış əməkdaşları məhsulu silə bilməz.');
         }
-        
+
         Gate::authorize('manage-products');
         Gate::authorize('access-account-data', $product);
-        
+
         // Check if product has been used in any transactions
         if ($product->stockHistory()->count() > 0) {
             return back()->withErrors(['error' => 'İstifadə edilmiş məhsul silinə bilməz. Deaktiv edin.']);
         }
-        
+
+        // Delete all product photos
+        try {
+            $this->photoService->deleteAllProductPhotos($product);
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete product photos during product deletion: ' . $e->getMessage());
+            // Continue with product deletion even if photo deletion fails
+        }
+
         $product->delete();
 
         return redirect()->route('products.index')

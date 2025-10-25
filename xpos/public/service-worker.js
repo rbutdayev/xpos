@@ -1,8 +1,7 @@
-const CACHE_NAME = 'onyx-xpos-v1';
+const CACHE_NAME = 'onyx-xpos-v4';
+// Only cache essential static pages - no external redirects
 const urlsToCache = [
-  '/',
   '/login',
-  '/dashboard',
   '/manifest.json'
 ];
 
@@ -12,7 +11,15 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // Try to cache each URL individually to avoid one failure blocking all
+        return Promise.allSettled(
+          urlsToCache.map(url =>
+            cache.add(url).catch(err => {
+              console.log(`Failed to cache ${url}:`, err);
+              return null;
+            })
+          )
+        );
       })
       .catch((error) => {
         console.log('Cache installation failed:', error);
@@ -40,22 +47,48 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache when offline, network first for dynamic content
 self.addEventListener('fetch', (event) => {
+  // Skip caching for non-GET requests (POST, PUT, DELETE, etc.)
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  const url = new URL(event.request.url);
+
+  // Don't cache API requests, dynamic data, or shop product pages
+  // These should always fetch fresh data from the network
+  const skipCache =
+    url.pathname.includes('/api/') ||
+    url.pathname.includes('/shop/') ||
+    url.pathname.includes('/products/') ||
+    url.pathname.includes('/dashboard') ||
+    url.pathname.includes('/sales') ||
+    url.pathname.includes('/inventory') ||
+    url.pathname.includes('/reports') ||
+    url.search.length > 0; // Skip caching URLs with query parameters
+
+  if (skipCache) {
+    // Network only - always fetch fresh data, no caching
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // For static assets (CSS, JS, images), use network first with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone the response
-        const responseToCache = response.clone();
-
-        // Cache the fetched response
-        caches.open(CACHE_NAME)
-          .then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
+        // Only cache successful responses
+        if (response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+        }
         return response;
       })
       .catch(() => {
-        // If network fails, try cache
+        // If network fails, try cache (offline fallback)
         return caches.match(event.request)
           .then((response) => {
             if (response) {

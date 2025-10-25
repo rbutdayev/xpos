@@ -54,6 +54,7 @@ class ReceiptTemplateController extends Controller
             'templateTypes' => [
                 'sale' => 'Satış Qəbzi',
                 'service' => 'Xidmət Qəbzi',
+                'customer_item' => 'Müştəri Məhsulu Qəbzi',
                 'return' => 'Qaytarma Qəbzi',
                 'payment' => 'Ödəniş Qəbzi',
             ],
@@ -66,6 +67,7 @@ class ReceiptTemplateController extends Controller
             'templateTypes' => [
                 'sale' => 'Satış Qəbzi',
                 'service' => 'Xidmət Qəbzi',
+                'customer_item' => 'Müştəri Məhsulu Qəbzi',
                 'return' => 'Qaytarma Qəbzi',
                 'payment' => 'Ödəniş Qəbzi',
             ],
@@ -82,7 +84,7 @@ class ReceiptTemplateController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:sale,service,return,payment',
+            'type' => 'required|in:sale,service,customer_item,return,payment',
             'template_content' => 'required|string',
             'paper_size' => 'required|in:58mm,80mm,A4,letter',
             'width_chars' => 'required|integer|min:20|max:100',
@@ -127,6 +129,7 @@ class ReceiptTemplateController extends Controller
             'templateTypes' => [
                 'sale' => 'Satış Qəbzi',
                 'service' => 'Xidmət Qəbzi',
+                'customer_item' => 'Müştəri Məhsulu Qəbzi',
                 'return' => 'Qaytarma Qəbzi',
                 'payment' => 'Ödəniş Qəbzi',
             ],
@@ -146,7 +149,7 @@ class ReceiptTemplateController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:sale,service,return,payment',
+            'type' => 'required|in:sale,service,customer_item,return,payment',
             'template_content' => 'required|string',
             'paper_size' => 'required|in:58mm,80mm,A4,letter',
             'width_chars' => 'required|integer|min:20|max:100',

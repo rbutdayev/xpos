@@ -6,27 +6,31 @@ import { ArrowLeftIcon, EyeIcon } from '@heroicons/react/24/outline';
 import ProductForm from './Components/ProductForm';
 import { ProductFormState } from './Hooks/useProductForm';
 
-interface DocumentData {
+interface PhotoData {
   id: number;
-  original_name: string;
-  file_type: string;
-  file_size: number;
-  document_type: string;
-  description?: string;
-  uploaded_at: string;
-  uploaded_by?: string;
-  download_url: string;
-  thumbnail_url?: string;
+  original_url: string;
+  medium_url: string;
+  thumbnail_url: string;
+  is_primary: boolean;
+  alt_text?: string;
+  sort_order: number;
+}
+
+interface ParentProduct {
+  id: number;
+  name: string;
+  sku: string;
 }
 
 interface Props {
   product: Product & { stock?: any[] };
+  parentProduct?: ParentProduct | null;
   categories: Category[];
   warehouses: Warehouse[];
-  documents?: DocumentData[];
+  photos?: PhotoData[];
 }
 
-export default function Edit({ product, categories, warehouses, documents = [] }: Props) {
+export default function Edit({ product, parentProduct, categories, warehouses, photos = [] }: Props) {
   const initialData: Partial<ProductFormState> = {
     name: product.name || '',
     sku: product.sku || '',
@@ -34,6 +38,7 @@ export default function Edit({ product, categories, warehouses, documents = [] }
     barcode_type: product.barcode_type || 'EAN-13',
     has_custom_barcode: product.has_custom_barcode || false,
     category_id: product.category_id ? String(product.category_id) : '',
+    parent_product_id: product.parent_product_id ? String(product.parent_product_id) : null,
     type: (product.type as any) || 'product',
     description: product.description || '',
     purchase_price: product.purchase_price != null ? String(product.purchase_price) : '',
@@ -45,6 +50,7 @@ export default function Edit({ product, categories, warehouses, documents = [] }
     allow_negative_stock: product.allow_negative_stock || false,
     brand: product.brand || '',
     model: product.model || '',
+    attributes: product.attributes || {},
     is_active: product.is_active,
   };
 
@@ -62,6 +68,11 @@ export default function Edit({ product, categories, warehouses, documents = [] }
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900">Məhsulu Düzəlt</h2>
                   <p className="text-gray-600">{product.name}</p>
+                  {parentProduct && (
+                    <p className="text-sm text-indigo-600 mt-1">
+                      Variant: {parentProduct.name} ({parentProduct.sku})
+                    </p>
+                  )}
                 </div>
               </div>
               <Link href={`/products/${product.id}`} className="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
@@ -87,6 +98,7 @@ export default function Edit({ product, categories, warehouses, documents = [] }
                   barcode_type: form.barcode_type,
                   has_custom_barcode: form.has_custom_barcode,
                   category_id: form.category_id,
+                  parent_product_id: form.parent_product_id,
                   type: form.type,
                   description: form.description,
                   purchase_price: form.purchase_price,
@@ -98,11 +110,12 @@ export default function Edit({ product, categories, warehouses, documents = [] }
                   allow_negative_stock: form.allow_negative_stock,
                   brand: form.brand,
                   model: form.model,
+                  attributes: form.attributes,
                   is_active: form.is_active,
                 } as any;
               }}
             />
-            <ImageUploadSection productId={product.id} documents={documents} />
+            <ImageUploadSection productId={product.id} photos={photos} />
           </div>
         </div>
       </div>

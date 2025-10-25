@@ -17,6 +17,7 @@ class Product extends Model
 
     protected $fillable = [
         'account_id',
+        'parent_product_id',  // Link to parent product for variants
         'name',
         'sku',
         'barcode',
@@ -128,6 +129,45 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class)->where('is_active', true);
     }
 
+    public function photos(): HasMany
+    {
+        return $this->hasMany(ProductPhoto::class);
+    }
+
+    public function primaryPhoto(): HasMany
+    {
+        return $this->hasMany(ProductPhoto::class)->where('is_primary', true);
+    }
+
+    public function orderedPhotos(): HasMany
+    {
+        return $this->hasMany(ProductPhoto::class)->orderBy('sort_order')->orderBy('created_at');
+    }
+
+    /**
+     * Get the parent product (if this is a variant)
+     */
+    public function parentProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'parent_product_id');
+    }
+
+    /**
+     * Get child products (variants of this product)
+     */
+    public function childProducts(): HasMany
+    {
+        return $this->hasMany(Product::class, 'parent_product_id');
+    }
+
+    /**
+     * Get active child products only
+     */
+    public function activeChildProducts(): HasMany
+    {
+        return $this->hasMany(Product::class, 'parent_product_id')->where('is_active', true);
+    }
+
     public function scopeProducts(Builder $query): Builder
     {
         return $query->where('type', 'product');
@@ -163,6 +203,22 @@ class Product extends Model
     public function scopeWithoutBarcode(Builder $query): Builder
     {
         return $query->whereNull('barcode');
+    }
+
+    /**
+     * Scope to get only parent products (no parent_product_id)
+     */
+    public function scopeParentProducts(Builder $query): Builder
+    {
+        return $query->whereNull('parent_product_id');
+    }
+
+    /**
+     * Scope to get only child products (have parent_product_id)
+     */
+    public function scopeChildProducts(Builder $query): Builder
+    {
+        return $query->whereNotNull('parent_product_id');
     }
 
     public function isProduct(): bool
@@ -243,6 +299,43 @@ class Product extends Model
             ->whereNotNull('color')
             ->pluck('color', 'color_code')
             ->toArray();
+    }
+
+    /**
+     * Check if this product is a parent (has child products)
+     */
+    public function isParentProduct(): bool
+    {
+        return $this->parent_product_id === null && $this->childProducts()->exists();
+    }
+
+    /**
+     * Check if this product is a child variant
+     */
+    public function isChildProduct(): bool
+    {
+        return $this->parent_product_id !== null;
+    }
+
+    /**
+     * Get the master product (parent if child, self if parent)
+     */
+    public function getMasterProduct(): Product
+    {
+        return $this->isChildProduct() ? $this->parentProduct : $this;
+    }
+
+    /**
+     * Get all variant products including self if parent
+     */
+    public function getAllVariantProducts()
+    {
+        if ($this->isParentProduct()) {
+            return $this->activeChildProducts;
+        } elseif ($this->isChildProduct()) {
+            return $this->parentProduct->activeChildProducts;
+        }
+        return collect([$this]);
     }
 
     protected static function boot()

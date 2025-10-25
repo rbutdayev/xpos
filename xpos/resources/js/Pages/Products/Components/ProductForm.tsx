@@ -5,8 +5,9 @@ import { useProductForm, ProductFormState } from '../Hooks/useProductForm';
 import BasicInfoSection from './BasicInfoSection';
 import PricingSection from './PricingSection';
 import InventorySection from './InventorySection';
-import AttributesSection from './AttributesSection';
 import ClothingInfoSection from './ClothingInfoSection';
+import VariantConfigSection from './VariantConfigSection';
+import PhotoUploadSection from './PhotoUploadSection';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { Link } from '@inertiajs/react';
@@ -27,6 +28,8 @@ export const ProductForm = memo(({ mode, initialData, categories, warehouses, su
   const { data, setData, errors, processing, calculations, setError, clearErrors } = useProductForm(initialData);
   const [generatingBarcode, setGeneratingBarcode] = useState(false);
   const [initialType] = useState(initialData?.type || 'product');
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [primaryPhotoIndex, setPrimaryPhotoIndex] = useState(0);
 
   // reset some fields when type changes (but not during initialization)
   useEffect(() => {
@@ -57,7 +60,16 @@ export const ProductForm = memo(({ mode, initialData, categories, warehouses, su
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = onSubmitTransform ? onSubmitTransform(data) : data;
+    let payload: any = onSubmitTransform ? onSubmitTransform(data) : data;
+
+    // Add photos to payload if in create mode
+    if (mode === 'create' && photos.length > 0) {
+      payload = {
+        ...payload,
+        photos: photos,
+        primary_photo_index: primaryPhotoIndex,
+      };
+    }
 
     clearErrors();
 
@@ -120,6 +132,12 @@ export const ProductForm = memo(({ mode, initialData, categories, warehouses, su
         generatingBarcode={generatingBarcode}
       />
 
+      <VariantConfigSection
+        data={data}
+        errors={errors as any}
+        onChange={onChange}
+      />
+
       <PricingSection
         data={data}
         errors={errors as any}
@@ -141,10 +159,15 @@ export const ProductForm = memo(({ mode, initialData, categories, warehouses, su
         onChange={onChange}
       />
 
-      <AttributesSection
-        data={data}
-        onChange={onChange}
-      />
+      {mode === 'create' && (
+        <PhotoUploadSection
+          photos={photos}
+          primaryIndex={primaryPhotoIndex}
+          onPhotosChange={setPhotos}
+          onPrimaryChange={setPrimaryPhotoIndex}
+          errors={{}}
+        />
+      )}
 
       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
         <Link href={cancelUrl}>

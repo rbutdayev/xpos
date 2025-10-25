@@ -8,25 +8,22 @@ import PricingSummary from './Components/Show/PricingSummary';
 import SettingsSection from './Components/Show/SettingsSection';
 import ImageUploadSection from './Components/ImageUploadSection';
 
-interface DocumentData {
+interface PhotoData {
   id: number;
-  original_name: string;
-  file_type: string;
-  file_size: number;
-  document_type: string;
-  description?: string;
-  uploaded_at: string;
-  uploaded_by?: string;
-  download_url: string;
-  thumbnail_url?: string;
+  original_url: string;
+  medium_url: string;
+  thumbnail_url: string;
+  is_primary: boolean;
+  alt_text?: string;
+  sort_order: number;
 }
 
 interface Props {
-  product: Product & { stockHistory?: any[]; documents?: any[] };
-  documents: DocumentData[];
+  product: Product & { stockHistory?: any[] };
+  photos: PhotoData[];
 }
 
-export default function Show({ product, documents }: Props) {
+export default function Show({ product, photos }: Props) {
   const { auth } = usePage().props as any;
   const currentUser = auth.user;
 
@@ -65,6 +62,16 @@ export default function Show({ product, documents }: Props) {
                   {stockStatus.text}
                 </span>
               </div>
+              {product.parentProduct && (
+                <div className="mt-2 flex items-center">
+                  <Link
+                    href={`/products/${product.parentProduct.id}`}
+                    className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+                  >
+                    <span className="text-gray-500">Variant:</span> {product.parentProduct.name} ({product.parentProduct.sku})
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
           {currentUser?.role !== 'sales_staff' && (
@@ -86,7 +93,7 @@ export default function Show({ product, documents }: Props) {
           </div>
         </div>
 
-        <ImageUploadSection productId={product.id} documents={documents} />
+        <ImageUploadSection productId={product.id} photos={photos} />
       </div>
     </AuthenticatedLayout>
   );

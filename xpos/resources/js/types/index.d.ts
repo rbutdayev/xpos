@@ -152,6 +152,8 @@ export interface Product {
     has_variants?: boolean;
     category_id?: number;
     category?: Category;
+    parent_product_id?: number | null;
+    parentProduct?: Product;
     type: 'product' | 'service';
     description?: string;
     unit: string;

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomerItem;
 use App\Models\Customer;
+use App\Models\ReceiptTemplate;
+use App\Services\ThermalPrintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -297,5 +299,102 @@ class CustomerItemController extends Controller
         $item->update(['status' => $validated['status']]);
 
         return back()->with('success', 'Item status updated successfully');
+    }
+
+    /**
+     * Print customer item receipt
+     */
+    public function print(Request $request, int $id)
+    {
+        Gate::authorize('access-account-data');
+
+        $accountId = $this->getAccountId();
+
+        $item = CustomerItem::forAccount($accountId)
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'template_id' => 'nullable|exists:receipt_templates,template_id',
+        ]);
+
+        try {
+            $printService = new ThermalPrintService();
+            $result = $printService->generateCustomerItemReceipt(
+                $item,
+                $validated['template_id'] ?? null
+            );
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Send print to thermal printer
+     */
+    public function sendToPrinter(Request $request, int $id)
+    {
+        Gate::authorize('access-account-data');
+
+        $accountId = $this->getAccountId();
+
+        $item = CustomerItem::forAccount($accountId)
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'template_id' => 'nullable|exists:receipt_templates,template_id',
+        ]);
+
+        try {
+            $printService = new ThermalPrintService();
+            $result = $printService->generateCustomerItemReceipt(
+                $item,
+                $validated['template_id'] ?? null
+            );
+
+            if ($result['success']) {
+                $printResult = $printService->printContent(
+                    $result['content'],
+                    $result['printer_config']
+                );
+
+                return response()->json($printResult);
+            }
+
+            return response()->json($result, 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Get available templates and printers for print modal
+     */
+    public function getPrintOptions(int $id)
+    {
+        Gate::authorize('access-account-data');
+
+        $accountId = $this->getAccountId();
+
+        $item = CustomerItem::forAccount($accountId)
+            ->findOrFail($id);
+
+        $templates = ReceiptTemplate::where('account_id', $accountId)
+            ->where('type', 'customer_item')
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name')
+            ->get(['template_id', 'name', 'is_default']);
+
+        return response()->json([
+            'templates' => $templates,
+        ]);
     }
 }

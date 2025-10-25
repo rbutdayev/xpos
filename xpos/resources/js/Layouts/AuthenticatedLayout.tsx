@@ -35,7 +35,9 @@ import {
     DeviceTabletIcon,
     ChatBubbleLeftRightIcon,
     PaperAirplaneIcon,
-    MegaphoneIcon
+    MegaphoneIcon,
+    ShoppingBagIcon,
+    DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -109,7 +111,9 @@ export default function Authenticated({
             openMenus.push('Stok İdarəetməsi');
         }
         
-        if (currentRoute?.includes('sales') || currentRoute?.includes('sms')) {
+        if (currentRoute?.includes('sales') ||
+            currentRoute?.includes('sms') ||
+            currentRoute?.includes('online-orders')) {
             openMenus.push('Satış və Marketinq');
         }
         
@@ -256,25 +260,19 @@ export default function Authenticated({
                             name: 'Satışlar',
                             href: '/sales',
                             icon: ShoppingCartIcon,
-                            current: route().current('sales.*')
+                            current: route().current('sales.*') && !route().current('sales.online')
+                        },
+                        {
+                            name: 'Online Sifarişlər',
+                            href: '/online-orders',
+                            icon: ShoppingBagIcon,
+                            current: route().current('online-orders.*')
                         },
                         {
                             name: 'SMS Göndər',
                             href: '/sms/send-sms',
                             icon: PaperAirplaneIcon,
                             current: route().current('sms.send-page')
-                        },
-                        {
-                            name: 'SMS Parametrləri',
-                            href: '/sms',
-                            icon: ChatBubbleLeftRightIcon,
-                            current: route().current('sms.index')
-                        },
-                        {
-                            name: 'SMS Logları',
-                            href: '/sms/logs',
-                            icon: ClipboardDocumentListIcon,
-                            current: route().current('sms.logs')
                         }
                     ]
                 }
@@ -436,25 +434,19 @@ export default function Authenticated({
                     name: 'Satışlar',
                     href: '/sales',
                     icon: ShoppingCartIcon,
-                    current: route().current('sales.*')
+                    current: route().current('sales.*') && !route().current('sales.online')
+                },
+                {
+                    name: 'Online Sifarişlər',
+                    href: '/online-orders',
+                    icon: ShoppingBagIcon,
+                    current: route().current('online-orders.*')
                 },
                 {
                     name: 'SMS Göndər',
                     href: '/sms/send-sms',
                     icon: PaperAirplaneIcon,
                     current: route().current('sms.send-page')
-                },
-                {
-                    name: 'SMS Parametrləri',
-                    href: '/sms',
-                    icon: ChatBubbleLeftRightIcon,
-                    current: route().current('sms.index')
-                },
-                {
-                    name: 'SMS Logları',
-                    href: '/sms/logs',
-                    icon: ClipboardDocumentListIcon,
-                    current: route().current('sms.logs')
                 }
             ]
         },
@@ -497,6 +489,18 @@ export default function Authenticated({
                     href: '/reports',
                     icon: ChartBarIcon,
                     current: route().current('reports.*')
+                },
+                {
+                    name: 'SMS Logları',
+                    href: '/sms/logs',
+                    icon: ClipboardDocumentListIcon,
+                    current: route().current('sms.logs')
+                },
+                {
+                    name: 'Telegram Logları',
+                    href: '/telegram/logs',
+                    icon: ClipboardDocumentListIcon,
+                    current: route().current('telegram.logs')
                 }
             ]
         },
@@ -518,9 +522,15 @@ export default function Authenticated({
                     current: route().current('receipt-templates.*')
                 },
                 {
+                    name: 'Parametrlər',
+                    href: '/settings',
+                    icon: CogIcon,
+                    current: route().current('settings.*')
+                },
+                {
                     name: 'Audit Logları',
                     href: '/audit-logs',
-                    icon: CogIcon,
+                    icon: DocumentTextIcon,
                     current: route().current('audit-logs.*')
                 }
             ]

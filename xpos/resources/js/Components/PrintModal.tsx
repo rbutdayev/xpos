@@ -14,7 +14,7 @@ interface PrintTemplate {
 interface PrintModalProps {
     isOpen: boolean;
     onClose: () => void;
-    resourceType: 'service-record' | 'sale';
+    resourceType: 'service-record' | 'sale' | 'customer-item';
     resourceId: number;
     title: string;
 }
@@ -27,6 +27,20 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
     const [error, setError] = useState<string>('');
     const [showPreview, setShowPreview] = useState(false);
 
+    // Helper to get correct URL path based on resource type
+    const getResourcePath = () => {
+        switch (resourceType) {
+            case 'service-record':
+                return 'service-records';
+            case 'sale':
+                return 'sales';
+            case 'customer-item':
+                return 'customer-items';
+            default:
+                return `${resourceType}s`;
+        }
+    };
+
     useEffect(() => {
         if (isOpen) {
             fetchPrintOptions();
@@ -36,9 +50,10 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
     const fetchPrintOptions = async () => {
         setLoading(true);
         setError('');
-        
+
         try {
-            const response = await fetch(`/${resourceType}s/${resourceId}/print-options`);
+            const resourcePath = getResourcePath();
+            const response = await fetch(`/${resourcePath}/${resourceId}/print-options`);
             const data = await response.json();
             
             setTemplates(data.templates || []);
@@ -62,9 +77,10 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
 
         setLoading(true);
         setError('');
-        
+
         try {
-            const response = await fetch(`/${resourceType}s/${resourceId}/print`, {
+            const resourcePath = getResourcePath();
+            const response = await fetch(`/${resourcePath}/${resourceId}/print`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,9 +115,10 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
 
         setLoading(true);
         setError('');
-        
+
         try {
-            const response = await fetch(`/${resourceType}s/${resourceId}/print`, {
+            const resourcePath = getResourcePath();
+            const response = await fetch(`/${resourcePath}/${resourceId}/print`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

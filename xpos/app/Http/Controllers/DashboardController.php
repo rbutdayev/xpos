@@ -195,6 +195,7 @@ class DashboardController extends Controller
                 for ($i = 23; $i >= 0; $i--) {
                     $hour = Carbon::now()->subHours($i);
                     $salesQuery = Sale::where('account_id', $account->id)
+                        ->countable() // Only include POS sales + completed online orders
                         ->whereBetween('sale_date', [
                             $hour->copy()->startOfHour(),
                             $hour->copy()->endOfHour()
@@ -235,6 +236,7 @@ class DashboardController extends Controller
             for ($i = $days - 1; $i >= 0; $i--) {
                 $date = Carbon::now()->subDays($i);
                 $salesQuery = Sale::where('account_id', $account->id)
+                    ->countable() // Only include POS sales + completed online orders
                     ->whereDate('sale_date', $date);
                 
                 // Note: Sales filtering by warehouse commented out as sales are branch-based
@@ -286,6 +288,7 @@ class DashboardController extends Controller
 
         // Recent sales based on selected time range
         $recentSalesQuery = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->where('sale_date', '>=', Carbon::now()->subDays($topProductsDays));
         
         // Note: Warehouse filtering removed as sales are branch-based
@@ -315,6 +318,7 @@ class DashboardController extends Controller
 
         // Current month revenue and expenses
         $monthlyRevenue = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereYear('sale_date', $currentMonth->year)
             ->whereMonth('sale_date', $currentMonth->month)
             ->sum('total') ?? 0;
@@ -333,6 +337,7 @@ class DashboardController extends Controller
 
         // Previous month for growth calculation
         $prevMonthRevenue = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->whereYear('sale_date', $previousMonth->year)
             ->whereMonth('sale_date', $previousMonth->month)
             ->sum('total') ?? 0;
@@ -351,6 +356,7 @@ class DashboardController extends Controller
 
         // Total revenue and expenses (all time)
         $totalRevenue = Sale::where('account_id', $account->id)
+            ->countable() // Only include POS sales + completed online orders
             ->sum('total') ?? 0;
 
         $totalExpenses = Expense::where('account_id', $account->id)
