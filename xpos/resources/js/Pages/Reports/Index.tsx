@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { __ } from '@/utils/translations';
 import toast from 'react-hot-toast';
 import { 
     ChartBarIcon, 

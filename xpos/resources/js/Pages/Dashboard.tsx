@@ -395,8 +395,8 @@ export default function Dashboard({
                 <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-700 rounded-2xl shadow-xl p-8 text-white">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div className="mb-6 md:mb-0">
-                            <h1 className="text-4xl font-bold mb-2">ONYX E-SERVİS</h1>
-                            <p className="text-blue-100 text-lg">Avtomobil Servis İdarəetmə Sistemi</p>
+                            <h1 className="text-4xl font-bold mb-2">xPOS</h1>
+                            <p className="text-blue-100 text-lg">Satış İdarəetmə Sistemi</p>
 
                             <div className="mt-4 flex flex-wrap gap-3">
                                 {selectedWarehouse && (

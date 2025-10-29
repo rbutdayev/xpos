@@ -1,10 +1,11 @@
 import { useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 import { SettingsSection, FormGrid, FormField } from '@/Components/Admin';
-import { BuildingOffice2Icon } from '@heroicons/react/24/outline';
+import { BuildingOffice2Icon, PrinterIcon } from '@heroicons/react/24/outline';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Checkbox from '@/Components/Checkbox';
 
 interface Props {
     company: any;

@@ -99,7 +99,7 @@ class ShopSettingsController extends Controller
                 'email' => 'online-shop@system.local',
                 'password' => Hash::make(bin2hex(random_bytes(32))), // Random unguessable password
                 'role' => 'sales_staff', // Limited role - can only create sales
-                'is_active' => true,
+                'status' => 'active',
             ]);
 
             \Log::info('Created online shop system user', [

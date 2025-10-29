@@ -60,6 +60,12 @@ class UserController extends Controller
             ->paginate($validated['per_page'] ?? 25)
             ->withQueryString();
 
+        // Add is_system_user flag to each user
+        $users->through(function ($user) {
+            $user->is_system_user = $user->isSystemUser();
+            return $user;
+        });
+
         return Inertia::render('Users/Index', [
             'users' => $users,
             'filters' => $request->only(['search', 'role', 'status']),
@@ -120,7 +126,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         Gate::authorize('access-account-data');
-        
+
         if (!Auth::user()->hasRole(['account_owner', 'admin'])) {
             abort(403);
         }
@@ -128,6 +134,11 @@ class UserController extends Controller
         // Ensure user belongs to same account
         if ($user->account_id !== Auth::user()->account_id) {
             abort(403);
+        }
+
+        // Prevent viewing system users
+        if ($user->isSystemUser()) {
+            return back()->withErrors(['error' => 'Sistem istifadəçilərini görüntüləmək mümkün deyil.']);
         }
 
         return Inertia::render('Users/Show', [
@@ -139,13 +150,18 @@ class UserController extends Controller
     public function edit(User $user)
     {
         Gate::authorize('edit-account-data');
-        
+
         if (!Auth::user()->hasRole(['account_owner', 'admin'])) {
             abort(403);
         }
 
         if ($user->account_id !== Auth::user()->account_id) {
             abort(403);
+        }
+
+        // Prevent editing system users
+        if ($user->isSystemUser()) {
+            return back()->withErrors(['error' => 'Sistem istifadəçilərini redaktə etmək mümkün deyil.']);
         }
 
         $branches = \App\Models\Branch::where('account_id', Auth::user()->account_id)
@@ -170,6 +186,11 @@ class UserController extends Controller
 
         if ($user->account_id !== Auth::user()->account_id) {
             abort(403);
+        }
+
+        // Prevent updating system users
+        if ($user->isSystemUser()) {
+            return back()->withErrors(['error' => 'Sistem istifadəçilərini redaktə etmək mümkün deyil.']);
         }
 
         // Prevent changing the role of account_owner
@@ -208,7 +229,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         Gate::authorize('delete-account-data');
-        
+
         if (!Auth::user()->hasRole(['account_owner', 'admin'])) {
             abort(403);
         }
@@ -225,6 +246,11 @@ class UserController extends Controller
         // Prevent deleting account owner
         if ($user->role === 'account_owner') {
             return back()->withErrors(['error' => 'Hesab sahibini silə bilməzsiniz.']);
+        }
+
+        // Prevent deleting system users
+        if ($user->isSystemUser()) {
+            return back()->withErrors(['error' => 'Sistem istifadəçilərini silə bilməzsiniz.']);
         }
 
         $user->delete();

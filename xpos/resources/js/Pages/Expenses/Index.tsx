@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import { __ } from '@/utils/translations';
 import { 
     CurrencyDollarIcon,
     CalendarIcon,

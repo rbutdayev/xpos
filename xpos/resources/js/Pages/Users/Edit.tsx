@@ -151,7 +151,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="role" value="Rol *" />
+                                        <InputLabel htmlFor="role" value="Sistem Rolu *" />
                                         {isAccountOwner ? (
                                             <>
                                                 <div className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-md shadow-sm text-gray-700 font-medium">
@@ -171,7 +171,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     required
                                                 >
-                                                    <option value="">Rol seçin...</option>
+                                                    <option value="">Sistem rolu seçin...</option>
                                                     {(roleOptions || []).map((role) => (
                                                         <option key={role.value} value={role.value}>
                                                             {role.label}
@@ -179,6 +179,9 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                                     ))}
                                                 </select>
                                                 <InputError message={errors.role} className="mt-2" />
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir
+                                                </p>
                                             </>
                                         )}
                                     </div>
@@ -231,16 +234,19 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="position" value="Vəzifə" />
+                                        <InputLabel htmlFor="position" value="Vəzifə (İş yeri)" />
                                         <TextInput
                                             id="position"
                                             name="position"
                                             value={data.position}
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('position', e.target.value)}
-                                            placeholder="Mexanik, Kassir, və s."
+                                            placeholder="Məsələn: Baş Mexanik, Satış Meneceri"
                                         />
                                         <InputError message={errors.position} className="mt-2" />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            İşçinin konkret vəzifəsi (məsələn: Baş Kassir, Anbar İşçisi)
+                                        </p>
                                     </div>
 
                                     <div>
@@ -343,6 +349,8 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-blue-900 mb-2">Məlumat</h3>
                         <ul className="text-sm text-blue-700 space-y-1">
+                            <li>• <strong>Sistem Rolu:</strong> İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir (məsələn: Admin, Kassir)</li>
+                            <li>• <strong>Vəzifə:</strong> İşçinin konkret iş yerindəki vəzifəsi (məsələn: Baş Mexanik, Satış Meneceri)</li>
                             <li>• Şifrə sahəsini boş buraxsanız, mövcud şifrə dəyişməyəcək</li>
                             <li>• Satış işçisi rolunu seçərsəniz, filial təyin etmək məcburidir</li>
                             <li>• Qeyri-aktiv istifadəçilər sistema giriş edə bilməzlər</li>

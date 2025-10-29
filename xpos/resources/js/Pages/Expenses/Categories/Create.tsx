@@ -5,7 +5,6 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import { __ } from '@/utils/translations';
 
 interface ParentCategory {
     category_id: number;

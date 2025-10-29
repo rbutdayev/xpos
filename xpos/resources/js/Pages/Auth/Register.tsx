@@ -23,7 +23,7 @@ export default function Register() {
 
     return (
         <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gradient-to-br from-blue-50 to-indigo-100">
-            <Head title="Qeydiyyat - ONYX E-SERVİS" />
+            <Head title="Qeydiyyat - xPOS" />
 
             <div className="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-2xl overflow-hidden sm:rounded-lg border border-gray-200">
                 {/* Logo and Title */}
@@ -33,7 +33,7 @@ export default function Register() {
                             <span className="text-white font-bold text-2xl">O</span>
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">ONYX E-SERVİS</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">xPOS</h1>
                     <p className="text-sm text-gray-600">Hesab yaradın</p>
                 </div>
 
@@ -144,7 +144,7 @@ export default function Register() {
 
                 {/* Footer */}
                 <div className="mt-8 text-center text-xs text-gray-500">
-                    <p>&copy; 2025 ONYX E-SERVİS. Bütün hüquqlar qorunur.</p>
+                    <p>&copy; 2025 xPOS. Bütün hüquqlar qorunur.</p>
                 </div>
             </div>
         </div>

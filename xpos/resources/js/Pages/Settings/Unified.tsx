@@ -1,21 +1,24 @@
-import { Head, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     BuildingOffice2Icon,
     ShoppingBagIcon,
     BellIcon,
     CogIcon,
+    ComputerDesktopIcon,
 } from '@heroicons/react/24/outline';
 import { AdminLayout } from '@/Components/Admin';
 
-// Import tab components (we'll create lightweight versions)
+// Import tab components
 import CompanyTab from './Tabs/CompanyTab';
+import POSTab from './Tabs/POSTab';
 import ShopTab from './Tabs/ShopTab';
 import NotificationsTab from './Tabs/NotificationsTab';
 
 interface Props {
     company: any;
     system_settings: any;
+    pos_settings: any;
     shop_settings: any;
     sms: any;
     telegram: any;
@@ -27,6 +30,7 @@ interface Props {
 export default function UnifiedSettings({
     company,
     system_settings,
+    pos_settings,
     shop_settings,
     sms,
     telegram,
@@ -49,6 +53,12 @@ export default function UnifiedSettings({
             name: 'Şirkət',
             icon: BuildingOffice2Icon,
             description: 'Şirkət məlumatları və sistem parametrləri',
+        },
+        {
+            id: 'pos',
+            name: 'POS',
+            icon: ComputerDesktopIcon,
+            description: 'POS və çap parametrləri',
         },
         {
             id: 'shop',
@@ -134,6 +144,10 @@ export default function UnifiedSettings({
                                 company={company}
                                 settings={system_settings}
                             />
+                        )}
+
+                        {activeTab === 'pos' && (
+                            <POSTab settings={pos_settings} />
                         )}
 
                         {activeTab === 'shop' && (

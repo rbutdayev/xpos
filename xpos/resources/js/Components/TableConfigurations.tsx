@@ -26,8 +26,20 @@ import {
     PlusIcon
 } from '@heroicons/react/24/outline';
 import { Column, Filter, Action } from './SharedDataTable';
-import { __ } from '@/utils/translations';
 import { formatQuantityWithUnit } from '@/utils/formatters';
+
+// Role translations
+const roleTranslations: Record<string, string> = {
+    'account_owner': 'Hesab sahibi',
+    'admin': 'Administrator',
+    'branch_manager': 'Filial müdiri',
+    'warehouse_manager': 'Anbar müdiri',
+    'sales_staff': 'Satış işçisi',
+    'cashier': 'Kassir',
+    'accountant': 'Mühasib',
+    'tailor': 'Dərzi',
+    'support_user': 'Dəstək istifadəçisi',
+};
 import { Customer, Vehicle, ServiceRecord, Product, Supplier, Employee, Branch, GoodsReceipt } from '@/types';
 
 // Branch Table Configuration
@@ -732,7 +744,7 @@ export const employeeTableConfig = {
                             {employee.name}
                         </div>
                         <div className="text-sm text-gray-500">
-                            {employee.position || (employee.role ? __('app.' + employee.role) : '')}
+                            {employee.position || (employee.role ? roleTranslations[employee.role] || employee.role : '')}
                         </div>
                     </div>
                 </div>
@@ -2144,13 +2156,13 @@ export const usersTableConfig = {
     actions: [
         {
             label: 'Bax',
-            href: (user: any) => `/users/${user.id}`,
+            href: (user: any) => route('users.show', user.id),
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'primary'
         },
         {
             label: 'Düzəliş',
-            href: (user: any) => `/users/${user.id}/edit`,
+            href: (user: any) => route('users.edit', user.id),
             icon: <PencilIcon className="w-4 h-4" />,
             variant: 'secondary'
         },
@@ -2162,7 +2174,7 @@ export const usersTableConfig = {
             onClick: (user: any) => {
                 if (confirm('Bu istifadəçini silmək istədiyinizdən əminsiniz?')) {
                     // This will be handled by the parent component
-                    window.location.href = `/users/${user.id}`;
+                    window.location.href = route('users.show', user.id);
                 }
             }
         }

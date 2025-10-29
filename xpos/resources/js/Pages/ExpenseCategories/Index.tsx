@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import { __ } from '@/utils/translations';
 import { 
     PlusIcon,
     ClipboardDocumentListIcon,
@@ -237,13 +236,13 @@ export default function Index({ categories, types, filters }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={__('app.expense_categories')} />
+            <Head title="Xərc kateqoriyaları" />
 
             <div className="py-6">
                 <div className="mx-auto sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-semibold text-gray-900">
-                            {__('app.expense_categories')}
+                            Xərc kateqoriyaları
                         </h1>
                         <Link
                             href="/expense-categories/create"

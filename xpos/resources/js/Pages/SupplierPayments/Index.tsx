@@ -3,7 +3,6 @@ import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
-import { __ } from '@/utils/translations';
 import { 
     TruckIcon,
     EyeIcon,
@@ -149,7 +148,7 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
                 </div>
             }
         >
-            <Head title={__('Təchizatçı Ödənişləri')} />
+            <Head title="Təchizatçı Ödənişləri" />
 
             <div className="py-12">
                 <div className="w-full">

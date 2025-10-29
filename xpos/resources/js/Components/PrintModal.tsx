@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon, PrinterIcon } from '@heroicons/react/24/outline';
-import { __ } from '@/utils/translations';
+import toast from 'react-hot-toast';
 
 interface PrintTemplate {
     template_id: number;
@@ -17,15 +16,17 @@ interface PrintModalProps {
     resourceType: 'service-record' | 'sale' | 'customer-item';
     resourceId: number;
     title: string;
+    autoTrigger?: boolean; // Auto-trigger printing when modal opens
 }
 
-export default function PrintModal({ isOpen, onClose, resourceType, resourceId, title }: PrintModalProps) {
+export default function PrintModal({ isOpen, onClose, resourceType, resourceId, title, autoTrigger = false }: PrintModalProps) {
     const [templates, setTemplates] = useState<PrintTemplate[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
     const [previewContent, setPreviewContent] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const [showPreview, setShowPreview] = useState(false);
+    const [autoTriggered, setAutoTriggered] = useState(false);
 
     // Helper to get correct URL path based on resource type
     const getResourcePath = () => {
@@ -44,6 +45,7 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
     useEffect(() => {
         if (isOpen) {
             fetchPrintOptions();
+            setAutoTriggered(false); // Reset auto-trigger flag
         }
     }, [isOpen, resourceType, resourceId]);
 
@@ -53,16 +55,44 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
 
         try {
             const resourcePath = getResourcePath();
-            const response = await fetch(`/${resourcePath}/${resourceId}/print-options`);
+            const response = await fetch(`/${resourcePath}/${resourceId}/print-options`, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch print options: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response');
+            }
+
             const data = await response.json();
-            
+
             setTemplates(data.templates || []);
-            
+
             // Auto-select default template
             const defaultTemplate = data.templates?.find((t: PrintTemplate) => t.is_default);
-            if (defaultTemplate) setSelectedTemplate(defaultTemplate.template_id);
+            if (defaultTemplate) {
+                setSelectedTemplate(defaultTemplate.template_id);
+
+                // Auto-trigger printing if enabled and not already triggered
+                if (autoTrigger && !autoTriggered) {
+                    setAutoTriggered(true);
+                    toast.loading('Çap hazırlanır...', { id: 'auto-print' });
+                    // Small delay to ensure template is set
+                    setTimeout(() => {
+                        handlePrintWithTemplate(defaultTemplate.template_id);
+                    }, 300);
+                }
+            }
         } catch (err) {
-            setError('Print seçimlərini yükləyərkən xəta baş verdi.');
+            const errorMessage = err instanceof Error ? err.message : 'Print seçimlərini yükləyərkən xəta baş verdi.';
+            setError(errorMessage);
             console.error('Error fetching print options:', err);
         } finally {
             setLoading(false);
@@ -80,19 +110,33 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
 
         try {
             const resourcePath = getResourcePath();
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            if (!csrfToken) {
+                throw new Error('CSRF token not found. Please refresh the page.');
+            }
+
             const response = await fetch(`/${resourcePath}/${resourceId}/print`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     template_id: selectedTemplate,
                 }),
             });
 
+            // Check if response is actually JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response. Status: ' + response.status);
+            }
+
             const data = await response.json();
-            
+
             if (data.success) {
                 setPreviewContent(data.content);
                 setShowPreview(true);
@@ -100,8 +144,143 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
                 setError(data.message || 'Önizləmə yaradılarkən xəta baş verdi.');
             }
         } catch (err) {
-            setError('Önizləmə yaradılarkən xəta baş verdi.');
+            const errorMessage = err instanceof Error ? err.message : 'Önizləmə yaradılarkən xəta baş verdi.';
+            setError(errorMessage);
             console.error('Error generating preview:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePrintWithTemplate = async (templateId: number) => {
+        setLoading(true);
+        setError('');
+
+        try {
+            const resourcePath = getResourcePath();
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            if (!csrfToken) {
+                throw new Error('CSRF token not found. Please refresh the page.');
+            }
+
+            const response = await fetch(`/${resourcePath}/${resourceId}/print`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    template_id: templateId,
+                }),
+            });
+
+            // Check if response is actually JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response. Status: ' + response.status + '. Please refresh the page and try again.');
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                try {
+                    // Use hidden iframe instead of popup (bypasses popup blockers)
+                    const printContent = data.content;
+
+                    // Remove existing print iframe if any
+                    const existingFrame = document.getElementById('print-iframe');
+                    if (existingFrame) {
+                        existingFrame.remove();
+                    }
+
+                    // Create hidden iframe
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'print-iframe';
+                    iframe.style.position = 'fixed';
+                    iframe.style.right = '0';
+                    iframe.style.bottom = '0';
+                    iframe.style.width = '0';
+                    iframe.style.height = '0';
+                    iframe.style.border = '0';
+                    document.body.appendChild(iframe);
+
+                    const iframeDoc = iframe.contentWindow?.document;
+                    if (iframeDoc) {
+                        iframeDoc.open();
+                        iframeDoc.write(`
+                            <html>
+                                <head>
+                                    <title>Qəbz Çapı</title>
+                                    <style>
+                                        body {
+                                            font-family: 'Courier New', monospace;
+                                            font-size: 12px;
+                                            margin: 20px;
+                                            line-height: 1.2;
+                                        }
+                                        pre {
+                                            white-space: pre-wrap;
+                                            word-wrap: break-word;
+                                            margin: 0;
+                                        }
+                                        @media print {
+                                            body { margin: 0; }
+                                            @page {
+                                                size: 80mm auto;
+                                                margin: 2mm;
+                                            }
+                                        }
+                                    </style>
+                                </head>
+                                <body>
+                                    <pre>${printContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                                </body>
+                            </html>
+                        `);
+                        iframeDoc.close();
+
+                        // Trigger print after content loads
+                        iframe.onload = () => {
+                            setTimeout(() => {
+                                iframe.contentWindow?.print();
+
+                                // Show success toast
+                                toast.success('Çap göndərildi!', { id: 'auto-print', duration: 3000 });
+
+                                // Remove iframe after printing
+                                setTimeout(() => {
+                                    iframe.remove();
+                                }, 1000);
+                            }, 100);
+                        };
+
+                        // Close modal after a short delay for auto-print
+                        if (autoTrigger) {
+                            setTimeout(() => {
+                                onClose();
+                            }, 1500);
+                        } else {
+                            onClose();
+                        }
+                    }
+                } catch (printErr) {
+                    console.error('Print error:', printErr);
+                    const errorMessage = printErr instanceof Error ? printErr.message : 'Unknown error';
+                    setError('Çap zamanı xəta baş verdi: ' + errorMessage);
+                    toast.error('Çap xətası: ' + errorMessage, { id: 'auto-print' });
+                }
+            } else {
+                setError(data.message || 'Çap yaradılarkən xəta baş verdi.');
+                toast.error(data.message || 'Çap yaradılarkən xəta baş verdi.', { id: 'auto-print' });
+            }
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Çap göndərilərkən xəta baş verdi.';
+            setError(errorMessage);
+            toast.error(errorMessage, { id: 'auto-print' });
+            console.error('Error sending print:', err);
         } finally {
             setLoading(false);
         }
@@ -112,91 +291,7 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
             setError('Şablon seçin.');
             return;
         }
-
-        setLoading(true);
-        setError('');
-
-        try {
-            const resourcePath = getResourcePath();
-            const response = await fetch(`/${resourcePath}/${resourceId}/print`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({
-                    template_id: selectedTemplate,
-                }),
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                try {
-                    // Open print dialog with the content
-                    const printContent = data.content;
-                    const printWindow = window.open('', '_blank', 'width=400,height=600');
-                    
-                    if (printWindow) {
-                        printWindow.document.write(`
-                            <html>
-                                <head>
-                                    <title>Qəbz Çapı</title>
-                                    <style>
-                                        body { 
-                                            font-family: 'Courier New', monospace; 
-                                            font-size: 12px; 
-                                            margin: 20px;
-                                            line-height: 1.2;
-                                        }
-                                        pre { 
-                                            white-space: pre-wrap; 
-                                            word-wrap: break-word;
-                                            margin: 0;
-                                        }
-                                        @media print {
-                                            body { margin: 0; }
-                                            @page { 
-                                                size: 80mm auto; 
-                                                margin: 2mm; 
-                                            }
-                                        }
-                                    </style>
-                                </head>
-                                <body>
-                                    <pre>${printContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-                                    <script>
-                                        window.onload = function() {
-                                            setTimeout(function() {
-                                                window.print();
-                                                setTimeout(function() {
-                                                    window.close();
-                                                }, 1000);
-                                            }, 500);
-                                        };
-                                    </script>
-                                </body>
-                            </html>
-                        `);
-                        printWindow.document.close();
-                        onClose();
-                    } else {
-                        // Fallback if popup is blocked
-                        setError('Popup bloklandı. Brauzerin popup ayarlarını yoxlayın və yenidən cəhd edin.');
-                    }
-                } catch (printErr) {
-                    console.error('Print window error:', printErr);
-                    setError('Çap pəncərəsi açılarkən xəta baş verdi. Brauzerin popup ayarlarını yoxlayın.');
-                }
-            } else {
-                setError(data.message || 'Çap yaradılarkən xəta baş verdi.');
-            }
-        } catch (err) {
-            setError('Çap göndərilərkən xəta baş verdi.');
-            console.error('Error sending print:', err);
-        } finally {
-            setLoading(false);
-        }
+        await handlePrintWithTemplate(selectedTemplate);
     };
 
     if (!isOpen) return null;

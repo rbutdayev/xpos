@@ -1,7 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { TagIcon, FolderIcon, CheckCircleIcon, XCircleIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { __ } from '@/utils/translations';
 
 interface ExpenseCategory {
     category_id: number;

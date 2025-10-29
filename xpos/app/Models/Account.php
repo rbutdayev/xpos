@@ -28,6 +28,7 @@ class Account extends Model
         'shop_sms_customer_notifications',
         'shop_customer_sms_template',
         'notification_settings',
+        'auto_print_receipt',
     ];
 
     protected $casts = [
@@ -38,6 +39,7 @@ class Account extends Model
         'shop_sms_merchant_notifications' => 'boolean',
         'shop_sms_customer_notifications' => 'boolean',
         'notification_settings' => 'array',
+        'auto_print_receipt' => 'boolean',
     ];
 
     public function users(): HasMany

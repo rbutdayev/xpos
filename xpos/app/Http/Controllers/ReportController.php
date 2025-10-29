@@ -34,29 +34,36 @@ class ReportController extends Controller
         // Get all available report types
         $reportTypes = [
             [
+                'id' => 'end_of_day',
+                'name' => 'Günlük Qapanış Hesabatı',
+                'description' => 'Günlük satış, ödəniş və kassa məlumatları',
+                'icon' => 'CalendarIcon',
+                'color' => 'red'
+            ],
+            [
                 'id' => 'sales',
-                'name' => __('app.sales_report'),
+                'name' => 'Satış Hesabatı',
                 'description' => 'Satış məlumatları və gəlir hesabatı',
                 'icon' => 'CurrencyDollarIcon',
                 'color' => 'blue'
             ],
             [
                 'id' => 'inventory',
-                'name' => __('app.inventory_report'),
+                'name' => 'Anbar Hesabatı',
                 'description' => 'Anbar məlumatları və stok vəziyyəti',
                 'icon' => 'CubeIcon',
                 'color' => 'green'
             ],
             [
                 'id' => 'financial',
-                'name' => __('app.financial_report'),
+                'name' => 'Maliyyə Hesabatı',
                 'description' => 'Maliyyə hesabatı və xərclər',
                 'icon' => 'ChartBarIcon',
                 'color' => 'purple'
             ],
             [
                 'id' => 'customer',
-                'name' => __('app.customer_report'),
+                'name' => 'Müştəri Hesabatı',
                 'description' => 'Müştəri məlumatları və aktivlik',
                 'icon' => 'UserIcon',
                 'color' => 'indigo'
@@ -83,7 +90,7 @@ class ReportController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:sales,inventory,financial,customer,service',
+            'type' => 'required|in:sales,inventory,financial,customer,service,end_of_day',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
             'format' => 'nullable|in:table,excel,pdf'
@@ -92,11 +99,14 @@ class ReportController extends Controller
         $user = Auth::user();
         $account = $user->account;
         $type = $request->type;
-        $dateFrom = Carbon::parse($request->date_from);
-        $dateTo = Carbon::parse($request->date_to);
+        $dateFrom = Carbon::parse($request->date_from)->startOfDay();
+        $dateTo = Carbon::parse($request->date_to)->endOfDay();
         $format = $request->format ?? 'table';
 
         switch ($type) {
+            case 'end_of_day':
+                $data = $this->generateEndOfDayReport($account, $dateFrom, $dateTo);
+                break;
             case 'sales':
                 $data = $this->generateSalesReport($account, $dateFrom, $dateTo);
                 break;
@@ -182,6 +192,78 @@ class ReportController extends Controller
             fwrite($file, "\xEF\xBB\xBF");
             
             switch ($type) {
+                case 'end_of_day':
+                    // Header
+                    fputcsv($file, ['GÜNLÜK QAPANIŞ HESABATI']);
+                    fputcsv($file, []);
+
+                    // Summary section
+                    fputcsv($file, ['ÜMUMI MƏLUMAT']);
+                    fputcsv($file, ['Satış Sayı', $data['summary']['total_sales']]);
+                    fputcsv($file, ['Ümumi Gəlir', number_format($data['summary']['total_revenue'], 2)]);
+                    fputcsv($file, ['Endirim', number_format($data['summary']['total_discount'], 2)]);
+                    fputcsv($file, ['Vergi', number_format($data['summary']['total_tax'], 2)]);
+                    fputcsv($file, ['Orta Çek', number_format($data['summary']['average_transaction'], 2)]);
+                    fputcsv($file, ['Satılan Məhsul', $data['summary']['total_items_sold']]);
+                    fputcsv($file, []);
+
+                    // Payment methods section
+                    fputcsv($file, ['ÖDƏMƏ ÜSULLARI']);
+                    fputcsv($file, ['Üsul', 'Məbləğ']);
+                    foreach ($data['summary']['payment_methods'] as $method => $amount) {
+                        $methodName = match($method) {
+                            'nağd' => 'Nağd',
+                            'kart' => 'Kart',
+                            'köçürmə' => 'Köçürmə',
+                            default => $method
+                        };
+                        fputcsv($file, [$methodName, number_format($amount, 2)]);
+                    }
+                    fputcsv($file, []);
+
+                    // Hourly breakdown section
+                    if (!empty($data['hourly_breakdown'])) {
+                        fputcsv($file, ['SAATLIQ SATIŞLAR']);
+                        fputcsv($file, ['Saat', 'Satış Sayı', 'Gəlir']);
+                        foreach ($data['hourly_breakdown'] as $hour) {
+                            fputcsv($file, [
+                                $hour['hour'],
+                                $hour['transactions'],
+                                number_format($hour['revenue'], 2)
+                            ]);
+                        }
+                        fputcsv($file, []);
+                    }
+
+                    // Employee sales section
+                    if (!empty($data['employee_sales'])) {
+                        fputcsv($file, ['İŞÇİ SATIŞ MƏLUMATLARı']);
+                        fputcsv($file, ['İşçi Adı', 'Satış Sayı', 'Gəlir', 'Satılan Məhsul']);
+                        foreach ($data['employee_sales'] as $employee) {
+                            fputcsv($file, [
+                                $employee['name'],
+                                $employee['transactions'],
+                                number_format($employee['revenue'], 2),
+                                $employee['items_sold']
+                            ]);
+                        }
+                        fputcsv($file, []);
+                    }
+
+                    // Top products section
+                    if (!empty($data['top_products'])) {
+                        fputcsv($file, ['ÇOX SATILAN MƏHSULLAR']);
+                        fputcsv($file, ['Məhsul Adı', 'SKU', 'Miqdar', 'Gəlir']);
+                        foreach ($data['top_products'] as $product) {
+                            fputcsv($file, [
+                                $product['name'],
+                                $product['sku'],
+                                $product['quantity'],
+                                number_format($product['revenue'], 2)
+                            ]);
+                        }
+                    }
+                    break;
                 case 'inventory':
                     fputcsv($file, [
                         'Məhsul Adı',
@@ -357,10 +439,11 @@ class ReportController extends Controller
             ->first();
 
         $types = [
-            'sales' => __('app.sales_report'),
-            'inventory' => __('app.inventory_report'),
-            'financial' => __('app.financial_report'),
-            'customer' => __('app.customer_report'),
+            'end_of_day' => 'Günlük Qapanış Hesabatı',
+            'sales' => 'Satış Hesabatı',
+            'inventory' => 'Anbar Hesabatı',
+            'financial' => 'Maliyyə Hesabatı',
+            'customer' => 'Müştəri Hesabatı',
             'service' => 'Servis Hesabatı'
         ];
 
@@ -682,6 +765,121 @@ class ReportController extends Controller
             'summary' => $summary,
             'services' => $serviceData,
             'type' => 'service'
+        ];
+    }
+
+    private function generateEndOfDayReport($account, $dateFrom, $dateTo)
+    {
+        // Get all sales for the period
+        $sales = Sale::where('account_id', $account->id)
+            ->countable()
+            ->whereBetween('sale_date', [$dateFrom, $dateTo])
+            ->with(['payments', 'user', 'items'])
+            ->get();
+
+        // Calculate payment method breakdown
+        $paymentMethods = [
+            'nağd' => 0,
+            'kart' => 0,
+            'köçürmə' => 0,
+        ];
+
+        foreach ($sales as $sale) {
+            foreach ($sale->payments as $payment) {
+                if (isset($paymentMethods[$payment->method])) {
+                    $paymentMethods[$payment->method] += $payment->amount;
+                } else {
+                    $paymentMethods[$payment->method] = $payment->amount;
+                }
+            }
+        }
+
+        // Calculate hourly breakdown
+        $hourlyBreakdown = [];
+        for ($hour = 0; $hour < 24; $hour++) {
+            $hourlyBreakdown[$hour] = [
+                'hour' => str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00',
+                'transactions' => 0,
+                'revenue' => 0
+            ];
+        }
+
+        foreach ($sales as $sale) {
+            $hour = (int) $sale->sale_date->format('H');
+            $hourlyBreakdown[$hour]['transactions']++;
+            $hourlyBreakdown[$hour]['revenue'] += $sale->total;
+        }
+
+        // Filter out hours with no activity
+        $hourlyBreakdown = array_values(array_filter($hourlyBreakdown, function($item) {
+            return $item['transactions'] > 0;
+        }));
+
+        // Calculate employee breakdown
+        $employeeSales = [];
+        foreach ($sales as $sale) {
+            $userId = $sale->user_id ?? 'unknown';
+            $userName = $sale->user->name ?? 'Bilinmir';
+
+            if (!isset($employeeSales[$userId])) {
+                $employeeSales[$userId] = [
+                    'name' => $userName,
+                    'transactions' => 0,
+                    'revenue' => 0,
+                    'items_sold' => 0
+                ];
+            }
+
+            $employeeSales[$userId]['transactions']++;
+            $employeeSales[$userId]['revenue'] += $sale->total;
+            $employeeSales[$userId]['items_sold'] += $sale->items->sum('quantity');
+        }
+
+        // Get top selling products for the period
+        $topProducts = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->where('sales.account_id', $account->id)
+            ->whereBetween('sales.sale_date', [$dateFrom, $dateTo])
+            ->select(
+                'products.name',
+                'products.sku',
+                DB::raw('SUM(sale_items.quantity) as total_quantity'),
+                DB::raw('SUM(sale_items.total) as total_revenue')
+            )
+            ->groupBy('products.id', 'products.name', 'products.sku')
+            ->orderByDesc('total_quantity')
+            ->limit(10)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'name' => $item->name,
+                    'sku' => $item->sku,
+                    'quantity' => $item->total_quantity,
+                    'revenue' => $item->total_revenue
+                ];
+            });
+
+        // Summary calculations
+        $summary = [
+            'total_sales' => $sales->count(),
+            'total_revenue' => $sales->sum('total'),
+            'total_discount' => $sales->sum('discount_amount'),
+            'total_tax' => $sales->sum('tax_amount'),
+            'average_transaction' => $sales->count() > 0 ? $sales->sum('total') / $sales->count() : 0,
+            'total_items_sold' => $sales->sum(function($sale) {
+                return $sale->items->sum('quantity');
+            }),
+            'payment_methods' => $paymentMethods,
+            'cash_expected' => $paymentMethods['nağd'] ?? 0,
+        ];
+
+        return [
+            'summary' => $summary,
+            'hourly_breakdown' => $hourlyBreakdown,
+            'employee_sales' => array_values($employeeSales),
+            'top_products' => $topProducts->toArray(),
+            'type' => 'end_of_day'
         ];
     }
 

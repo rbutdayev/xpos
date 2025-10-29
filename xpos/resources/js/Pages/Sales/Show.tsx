@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import React, { useEffect } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrintModal from '@/Components/PrintModal';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -63,6 +63,25 @@ interface SalesShowProps extends PageProps {
 
 export default function Show({ auth, sale }: SalesShowProps) {
     const [showPrintModal, setShowPrintModal] = React.useState(false);
+    const { flash } = usePage<any>().props;
+
+    // Auto-print detection
+    useEffect(() => {
+        console.log('Flash data:', flash);
+        console.log('Auto print enabled:', flash?.auto_print);
+        console.log('Print sale ID:', flash?.print_sale_id);
+        console.log('Current sale ID:', sale.sale_id);
+
+        if (flash?.auto_print && flash?.print_sale_id === sale.sale_id) {
+            console.log('Auto-print triggered!');
+            // Small delay to ensure page is fully loaded
+            setTimeout(() => {
+                setShowPrintModal(true);
+            }, 500);
+        } else {
+            console.log('Auto-print NOT triggered');
+        }
+    }, [flash, sale.sale_id]);
 
     const getStatusColor = (status: string) => {
         const colors = {
@@ -434,6 +453,7 @@ export default function Show({ auth, sale }: SalesShowProps) {
                 resourceType="sale"
                 resourceId={sale.sale_id}
                 title={`Satış: ${sale.sale_number}`}
+                autoTrigger={flash?.auto_print && flash?.print_sale_id === sale.sale_id}
             />
         </AuthenticatedLayout>
     );

@@ -207,12 +207,20 @@ class Sale extends Model
     {
         $prefix = 'SAT';
         $date = now()->format('Ymd');
-        $lastSale = static::where('account_id', $accountId)
-            ->whereDate('created_at', today())
-            ->orderBy('sale_id', 'desc')
-            ->first();
 
-        $sequence = $lastSale ? ((int) substr($lastSale->sale_number, -3)) + 1 : 1;
+        // Use a raw SQL query with FOR UPDATE to atomically get and lock the max sequence
+        // This prevents race conditions when multiple sales are created simultaneously
+        // The lock is scoped to the specific account_id and date, ensuring tenant isolation
+        $result = \DB::select(
+            "SELECT COALESCE(MAX(CAST(SUBSTRING(sale_number, 12) AS UNSIGNED)), 0) as max_sequence
+             FROM sales
+             WHERE account_id = ?
+             AND sale_number LIKE ?
+             FOR UPDATE",
+            [$accountId, $prefix . $date . '%']
+        );
+
+        $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
         return $prefix . $date . str_pad($sequence, 3, '0', STR_PAD_LEFT);
     }

@@ -37,6 +37,11 @@ class UnifiedSettingsController extends Controller
         // Company/System Settings
         $systemSettings = $this->getSystemSettings($company);
 
+        // POS Settings
+        $posSettings = [
+            'auto_print_receipt' => $account->auto_print_receipt,
+        ];
+
         // Shop Settings
         $shopSettings = [
             'shop_enabled' => $account->shop_enabled,
@@ -65,6 +70,9 @@ class UnifiedSettingsController extends Controller
             // Company/Şirkət Tab
             'company' => $company,
             'system_settings' => $systemSettings,
+
+            // POS Tab
+            'pos_settings' => $posSettings,
 
             // Mağaza Tab
             'shop_settings' => $shopSettings,
@@ -183,6 +191,23 @@ class UnifiedSettingsController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Şirkət parametrləri yeniləndi');
+    }
+
+    /**
+     * Update POS settings
+     */
+    public function updatePOS(Request $request)
+    {
+        $validated = $request->validate([
+            'auto_print_receipt' => 'nullable|boolean',
+        ]);
+
+        $account = $request->user()->account;
+        $account->update([
+            'auto_print_receipt' => $validated['auto_print_receipt'] ?? false,
+        ]);
+
+        return redirect()->back()->with('success', 'POS parametrləri yeniləndi');
     }
 
     /**

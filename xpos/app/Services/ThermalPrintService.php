@@ -82,11 +82,13 @@ class ThermalPrintService
         // Generate items list
         $itemsContent = '';
         foreach ($serviceRecord->serviceItems as $item) {
-            $itemName = $item->product ? $item->product->name : 
+            $itemName = $item->product ? $item->product->name :
                        ($item->service ? $item->service->name : $item->item_name);
+
+            // Format: Item name on first line, quantity x price = total on second line
+            $itemsContent .= mb_substr($itemName, 0, 30) . "\n";
             $itemsContent .= sprintf(
-                "%-20s %3.1fx%6.2f %8.2f\n",
-                mb_substr($itemName, 0, 20),
+                "  %.1fx%.2f = %.2f\n",
                 $item->quantity,
                 $item->unit_price,
                 $item->total_price
@@ -162,9 +164,10 @@ class ThermalPrintService
         // Generate items list
         $itemsContent = '';
         foreach ($sale->items as $item) {
+            // Format: Item name on first line, quantity x price = total on second line
+            $itemsContent .= mb_substr($item->product->name, 0, 30) . "\n";
             $itemsContent .= sprintf(
-                "%-20s %3.1fx%6.2f %8.2f\n",
-                mb_substr($item->product->name, 0, 20),
+                "  %.1fx%.2f = %.2f\n",
                 $item->quantity,
                 $item->unit_price,
                 $item->total
@@ -257,11 +260,8 @@ class ThermalPrintService
         $servicesSummary = '';
         if ($item->tailorServices && $item->tailorServices->count() > 0) {
             foreach ($item->tailorServices as $service) {
-                $servicesSummary .= sprintf(
-                    "%-20s %8.2f ₼\n",
-                    mb_substr($service->service_number, 0, 20),
-                    $service->total_cost
-                );
+                $servicesSummary .= mb_substr($service->service_number, 0, 30) . "\n";
+                $servicesSummary .= sprintf("  %.2f ₼\n", $service->total_cost);
             }
         } else {
             $servicesSummary = "Hələ xidmət yoxdur\n";
@@ -335,7 +335,25 @@ class ThermalPrintService
                 . str_repeat('-', 32);
         $content .= $footer;
 
+        // Add left padding (margin) to all lines - approximately 10-15% for thermal paper
+        $content = $this->addLeftMargin($content, 3);
+
         return $content;
+    }
+
+    /**
+     * Add left margin/padding to all lines
+     */
+    private function addLeftMargin(string $content, int $spaces = 3): string
+    {
+        $lines = explode("\n", $content);
+        $padding = str_repeat(' ', $spaces);
+
+        $paddedLines = array_map(function($line) use ($padding) {
+            return $padding . $line;
+        }, $lines);
+
+        return implode("\n", $paddedLines);
     }
 
     /**

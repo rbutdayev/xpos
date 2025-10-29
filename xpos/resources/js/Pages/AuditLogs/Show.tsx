@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { __ } from '@/utils/translations';
 import { 
     ArrowLeftIcon, 
     ClockIcon, 

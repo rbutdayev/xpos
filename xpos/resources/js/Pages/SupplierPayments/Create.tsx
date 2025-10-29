@@ -6,7 +6,6 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import { __ } from '@/utils/translations';
 import { TruckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { GoodsReceipt, SupplierCredit } from '@/types';
 

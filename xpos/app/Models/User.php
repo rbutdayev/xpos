@@ -107,7 +107,16 @@ class User extends Authenticatable
         if (is_string($roles)) {
             $roles = [$roles];
         }
-        
+
         return in_array($this->role, $roles);
+    }
+
+    /**
+     * Check if this user is a system user (e.g., Online Shop user)
+     * System users cannot be edited, deleted, or viewed
+     */
+    public function isSystemUser(): bool
+    {
+        return $this->email === 'online-shop@system.local';
     }
 }

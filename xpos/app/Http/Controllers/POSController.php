@@ -14,6 +14,7 @@ use App\Models\ProductStock;
 use App\Models\StockMovement;
 use App\Models\NegativeStockAlert;
 use App\Models\Warehouse;
+use App\Services\ThermalPrintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -264,7 +265,32 @@ class POSController extends Controller
 
             \Log::info('Sale transaction completed successfully', ['sale_id' => $sale->sale_id]);
 
-            return redirect()->route('sales.show', $sale->sale_id)->with('success', 'Satış uğurla tamamlandı. Qaimə #' . $sale->sale_number);
+            // Check if auto-print is enabled
+            $account = Auth::user()->account;
+            $autoPrint = $account->auto_print_receipt ?? false;
+
+            // Check if request is from Touch POS - stay on POS page, don't redirect
+            $referrer = $request->header('referer');
+            $isTouchPOS = (
+                ($referrer && str_contains($referrer, '/pos/touch')) ||
+                $request->header('X-Touch-POS') ||
+                $request->header('X-Inertia-Partial-Component') === 'TouchPOS/Index'
+            );
+
+            if ($isTouchPOS) {
+                return redirect()->route('pos.touch')
+                    ->with('success', 'Satış uğurla tamamlandı. Qaimə #' . $sale->sale_number)
+                    ->with('sale_completed', true)
+                    ->with('sale_id', $sale->sale_id)
+                    ->with('sale_number', $sale->sale_number)
+                    ->with('auto_print', $autoPrint);
+            }
+
+            // For regular POS, redirect to sales detail page
+            return redirect()->route('sales.show', $sale->sale_id)
+                ->with('success', 'Satış uğurla tamamlandı. Qaimə #' . $sale->sale_number)
+                ->with('auto_print', $autoPrint)
+                ->with('print_sale_id', $sale->sale_id);
         } catch (\Exception $e) {
             \Log::error('POS Sale creation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             

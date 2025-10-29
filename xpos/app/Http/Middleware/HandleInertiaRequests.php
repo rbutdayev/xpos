@@ -51,10 +51,18 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user ? $user->load('branch') : null,
             ],
-            'warehouses' => $user ? 
+            'warehouses' => $user ?
                 $this->getWarehousesForUser($user) : [],
             'selectedWarehouse' => $selectedWarehouseId,
-            'translations' => trans('app'),
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'auto_print' => $request->session()->get('auto_print'),
+                'print_sale_id' => $request->session()->get('print_sale_id'),
+                'sale_completed' => $request->session()->get('sale_completed'),
+                'sale_id' => $request->session()->get('sale_id'),
+                'sale_number' => $request->session()->get('sale_number'),
+            ],
         ];
     }
 

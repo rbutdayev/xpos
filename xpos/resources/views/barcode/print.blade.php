@@ -217,7 +217,7 @@
         
         <div class="print-info">
             <p>Çap edilmə tarixi: {{ $generated_at }}</p>
-            <p>Bu sənəd ONYX E-SERVİS sistemi tərəfindən avtomatik olaraq yaradılmışdır.</p>
+            <p>Bu sənəd xPOS sistemi tərəfindən avtomatik olaraq yaradılmışdır.</p>
         </div>
     </div>
     

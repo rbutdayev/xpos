@@ -5,8 +5,10 @@ import TouchCart from './components/TouchCart';
 import TouchHeader from './components/TouchHeader';
 import TouchPayment from './components/TouchPayment';
 import ProductSearchSection from '../POS/components/ProductSearchSection';
+import PrintModal from '@/Components/PrintModal';
 import { useCart } from '../POS/hooks/useCart';
 import { useSearch } from '../POS/hooks/useSearch';
+import toast from 'react-hot-toast';
 
 interface TouchPOSProps extends PageProps {
   customers: Customer[];
@@ -51,6 +53,13 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
   const [numberPadValue, setNumberPadValue] = useState('');
   const [numberPadTargetIndex, setNumberPadTargetIndex] = useState<number | null>(null); // cart item index
 
+  // Print modal state
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [lastSaleId, setLastSaleId] = useState<number | null>(null);
+  const [lastSaleNumber, setLastSaleNumber] = useState<string>('');
+
+  const { flash } = usePage<any>().props;
+
   // Product search using exact same logic as POS (only products, no services)
   const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch(formData.branch_id);
 
@@ -67,6 +76,26 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
       setFormData((prev) => ({ ...prev, paid_amount: 0, credit_amount: grandTotal }));
     }
   }, [formData.payment_status, grandTotal]);
+
+  // Handle sale completion and auto-print
+  useEffect(() => {
+    if (flash?.sale_completed && flash?.sale_id) {
+      // Show success toast
+      toast.success(flash.success || `Satış uğurla tamamlandı! Qaimə #${flash.sale_number}`, {
+        duration: 4000,
+        position: 'top-center',
+      });
+
+      // Store sale info for printing
+      setLastSaleId(flash.sale_id);
+      setLastSaleNumber(flash.sale_number || '');
+
+      // Always show print modal after sale (auto-print will trigger automatically if enabled)
+      setTimeout(() => {
+        setShowPrintModal(true);
+      }, 500);
+    }
+  }, [flash]);
 
   const handleSubmit = () => {
     setProcessing(true);
@@ -103,6 +132,8 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
     };
 
     router.post('/pos/sale', submitData, {
+      preserveScroll: true,
+      preserveState: false,
       onSuccess: () => {
         setCart([]);
         setFormData((prev) => ({
@@ -172,19 +203,36 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
           </div>
 
           {/* Right Side - Payment Only */}
-          <div className="w-96 bg-white border-l border-gray-200">
-            <TouchPayment
-              processing={processing}
-              subtotal={subtotal}
-              taxAmount={taxAmount}
-              discountAmount={discountAmount}
-              grandTotal={grandTotal}
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              errors={errors}
-              cartCount={cart.length}
-            />
+          <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+            {/* Print Last Receipt Button (if sale was just completed) */}
+            {lastSaleId && (
+              <div className="p-4 bg-green-50 border-b border-green-200">
+                <button
+                  onClick={() => setShowPrintModal(true)}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Qəbzi Çap Et #{lastSaleNumber}
+                </button>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-auto">
+              <TouchPayment
+                processing={processing}
+                subtotal={subtotal}
+                taxAmount={taxAmount}
+                discountAmount={discountAmount}
+                grandTotal={grandTotal}
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                errors={errors}
+                cartCount={cart.length}
+              />
+            </div>
           </div>
         </div>
 
@@ -197,6 +245,18 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
           </div>
         )}
       </div>
+
+      {/* Print Modal */}
+      {lastSaleId && (
+        <PrintModal
+          isOpen={showPrintModal}
+          onClose={() => setShowPrintModal(false)}
+          resourceType="sale"
+          resourceId={lastSaleId}
+          title={`Satış: ${lastSaleNumber}`}
+          autoTrigger={flash?.auto_print}
+        />
+      )}
     </>
   );
 }

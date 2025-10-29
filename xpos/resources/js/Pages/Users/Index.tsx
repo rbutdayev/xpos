@@ -79,6 +79,10 @@ export default function Index({ users, filters }: Props) {
     };
 
     const handleDeleteAction = (user: User) => {
+        if ((user as any).is_system_user) {
+            alert('Sistem istifadəçilərini silə bilməzsiniz!');
+            return;
+        }
         if (user.role === 'account_owner') {
             alert('Hesab sahibini silmək mümkün deyil!');
             return;
@@ -101,12 +105,19 @@ export default function Index({ users, filters }: Props) {
         }))
     };
 
-    // Configure actions with delete handler
+    // Configure actions with delete handler and conditional visibility
     const actionsWithHandlers = tableConfig.users.actions.map(action => {
         if (action.label === 'Sil') {
             return {
                 ...action,
-                onClick: handleDeleteAction
+                onClick: handleDeleteAction,
+                condition: (user: any) => !user.is_system_user && user.role !== 'account_owner' && user.id !== auth.user.id
+            };
+        }
+        if (action.label === 'Düzəliş et' || action.label === 'Görüntülə') {
+            return {
+                ...action,
+                condition: (user: any) => !user.is_system_user
             };
         }
         return action;
@@ -181,7 +192,11 @@ export default function Index({ users, filters }: Props) {
                         )
                     }}
 
-                    rowClassName={(user) => user.is_current_user ? 'bg-blue-50' : ''}
+                    rowClassName={(user) => {
+                        if ((user as any).is_system_user) return 'bg-gray-100 opacity-60';
+                        if (user.is_current_user) return 'bg-blue-50';
+                        return '';
+                    }}
                     className="space-y-6"
                     fullWidth={true}
                 />

@@ -444,9 +444,10 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/receipt-templates/create-default', [ReceiptTemplateController::class, 'createDefault'])->name('receipt-templates.create-default');
     Route::resource('receipt-templates', ReceiptTemplateController::class);
     
-    // Unified Settings (Company, Shop, Notifications)
+    // Unified Settings (Company, Shop, POS, Notifications)
     Route::get('/settings', [App\Http\Controllers\UnifiedSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/company', [App\Http\Controllers\UnifiedSettingsController::class, 'updateCompany'])->name('settings.company.update');
+    Route::post('/settings/pos', [App\Http\Controllers\UnifiedSettingsController::class, 'updatePOS'])->name('settings.pos.update');
     Route::post('/settings/shop', [App\Http\Controllers\UnifiedSettingsController::class, 'updateShop'])->name('settings.shop.update');
     Route::post('/settings/notifications', [App\Http\Controllers\UnifiedSettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
     Route::post('/settings/sms', [App\Http\Controllers\UnifiedSettingsController::class, 'updateSms'])->name('settings.sms.update');
