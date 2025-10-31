@@ -17,6 +17,7 @@ export default function Edit({ customer }: Props) {
         phone: customer.phone || '',
         email: customer.email || '',
         address: customer.address || '',
+        birthday: customer.birthday || '',
         customer_type: customer.customer_type,
         tax_number: customer.tax_number || '',
         notes: customer.notes || '',
@@ -125,6 +126,22 @@ export default function Edit({ customer }: Props) {
                                 <InputError message={errors.email} className="mt-2" />
                             </div>
 
+                            {/* Birthday (only for individual) */}
+                            {data.customer_type === 'individual' && (
+                                <div>
+                                    <InputLabel htmlFor="birthday" value="Doğum tarixi" />
+                                    <TextInput
+                                        id="birthday"
+                                        type="date"
+                                        name="birthday"
+                                        value={data.birthday}
+                                        className="mt-1 block w-full"
+                                        onChange={(e) => setData('birthday', e.target.value)}
+                                    />
+                                    <InputError message={errors.birthday} className="mt-2" />
+                                </div>
+                            )}
+
                             {/* Tax Number (only for corporate) */}
                             {data.customer_type === 'corporate' && (
                                 <div>
@@ -213,12 +230,12 @@ export default function Edit({ customer }: Props) {
                                 </div>
                             </div>
                             <div>
-                                <span className="text-gray-500">Nəqliyyat vasitələri:</span>
-                                <div className="font-medium">{customer.active_vehicles_count || 0}</div>
+                                <span className="text-gray-500">Aktiv məhsullar:</span>
+                                <div className="font-medium">{customer.active_customerItems_count || 0}</div>
                             </div>
                             <div>
                                 <span className="text-gray-500">Ümumi servislər:</span>
-                                <div className="font-medium">{customer.total_service_records || 0}</div>
+                                <div className="font-medium">{customer.total_tailor_services || 0}</div>
                             </div>
                             {customer.last_service_date && (
                                 <div>
@@ -228,15 +245,23 @@ export default function Edit({ customer }: Props) {
                                     </div>
                                 </div>
                             )}
+                            {customer.has_pending_credits && (
+                                <div>
+                                    <span className="text-gray-500">Borc məbləği:</span>
+                                    <div className="font-medium text-red-600">
+                                        {customer.total_credit_amount?.toFixed(2) || '0.00'} AZN
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Warning for service records */}
-                    {(customer.total_service_records || 0) > 0 && (
+                    {(customer.total_tailor_services || 0) > 0 && (
                         <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                             <h3 className="text-sm font-medium text-yellow-900 mb-2">Diqqət</h3>
                             <p className="text-sm text-yellow-700">
-                                Bu müştərinin {customer.total_service_records} servis qeydi mövcuddur. 
+                                Bu müştərinin {customer.total_tailor_services} servis qeydi mövcuddur.
                                 Müştərini silmək istəyirsinizsə, əvvəlcə bütün servis qeydlərini silməlisiniz.
                             </p>
                         </div>

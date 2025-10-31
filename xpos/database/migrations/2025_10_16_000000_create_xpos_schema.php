@@ -571,6 +571,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->text('address')->nullable();
+            $table->date('birthday')->nullable();
             $table->enum('customer_type', ['individual', 'corporate'])->default('individual');
             $table->string('tax_number')->nullable();
             $table->text('notes')->nullable();

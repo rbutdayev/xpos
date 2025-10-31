@@ -15,6 +15,9 @@ interface CustomersIndexProps extends PageProps {
         search?: string;
         type?: string;
         status?: string;
+        credit_status?: string;
+        has_services?: string;
+        birthday_month?: string;
     };
 }
 
@@ -157,6 +160,52 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
             ],
             value: localFilters.status || '',
             onChange: (value: string) => handleFilter('status', value),
+        },
+        {
+            key: 'credit_status',
+            label: 'Borc vəziyyəti',
+            type: 'dropdown',
+            options: [
+                { value: '', label: 'Hamısı' },
+                { value: 'with_debt', label: 'Borclu müştərilər' },
+                { value: 'no_debt', label: 'Borcu olmayan' },
+            ],
+            value: localFilters.credit_status || '',
+            onChange: (value: string) => handleFilter('credit_status', value),
+        },
+        {
+            key: 'has_services',
+            label: 'Servis tarixçəsi',
+            type: 'dropdown',
+            options: [
+                { value: '', label: 'Hamısı' },
+                { value: 'yes', label: 'Servisi olan' },
+                { value: 'no', label: 'Servisi olmayan' },
+            ],
+            value: localFilters.has_services || '',
+            onChange: (value: string) => handleFilter('has_services', value),
+        },
+        {
+            key: 'birthday_month',
+            label: 'Doğum ayı',
+            type: 'dropdown',
+            options: [
+                { value: '', label: 'Bütün aylar' },
+                { value: '1', label: 'Yanvar' },
+                { value: '2', label: 'Fevral' },
+                { value: '3', label: 'Mart' },
+                { value: '4', label: 'Aprel' },
+                { value: '5', label: 'May' },
+                { value: '6', label: 'İyun' },
+                { value: '7', label: 'İyul' },
+                { value: '8', label: 'Avqust' },
+                { value: '9', label: 'Sentyabr' },
+                { value: '10', label: 'Oktyabr' },
+                { value: '11', label: 'Noyabr' },
+                { value: '12', label: 'Dekabr' },
+            ],
+            value: localFilters.birthday_month || '',
+            onChange: (value: string) => handleFilter('birthday_month', value),
         },
     ];
 

@@ -22,7 +22,8 @@ class CustomerController extends Controller
     {
         Gate::authorize('access-account-data');
 
-        $query = Customer::where('account_id', Auth::user()->account_id);
+        $query = Customer::where('account_id', Auth::user()->account_id)
+            ->withCount(['tailorServices', 'customerItems']);
 
         // Search
         if ($request->filled('search')) {
@@ -43,13 +44,56 @@ class CustomerController extends Controller
             }
         }
 
+        // Filter by credit status
+        if ($request->filled('credit_status')) {
+            if ($request->credit_status === 'with_debt') {
+                $query->where(function ($q) {
+                    // Check for pending credits in customer_credits table
+                    $q->whereHas('credits', function ($creditQuery) {
+                        $creditQuery->where('type', 'credit')
+                            ->whereIn('status', ['pending', 'partial'])
+                            ->where('remaining_amount', '>', 0);
+                    })
+                    // OR check for unpaid tailor services
+                    ->orWhereHas('tailorServices', function ($serviceQuery) {
+                        $serviceQuery->whereIn('payment_status', ['unpaid', 'partial', 'credit'])
+                            ->where('credit_amount', '>', 0);
+                    });
+                });
+            } elseif ($request->credit_status === 'no_debt') {
+                $query->whereDoesntHave('credits', function ($creditQuery) {
+                    $creditQuery->where('type', 'credit')
+                        ->whereIn('status', ['pending', 'partial'])
+                        ->where('remaining_amount', '>', 0);
+                })
+                ->whereDoesntHave('tailorServices', function ($serviceQuery) {
+                    $serviceQuery->whereIn('payment_status', ['unpaid', 'partial', 'credit'])
+                        ->where('credit_amount', '>', 0);
+                });
+            }
+        }
+
+        // Filter by service history
+        if ($request->filled('has_services')) {
+            if ($request->has_services === 'yes') {
+                $query->has('tailorServices');
+            } elseif ($request->has_services === 'no') {
+                $query->doesntHave('tailorServices');
+            }
+        }
+
+        // Filter by birthday month
+        if ($request->filled('birthday_month')) {
+            $query->whereMonth('birthday', $request->birthday_month);
+        }
+
         $customers = $query->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('Customers/Index', [
             'customers' => $customers,
-            'filters' => $request->only(['search', 'type', 'status']),
+            'filters' => $request->only(['search', 'type', 'status', 'credit_status', 'has_services', 'birthday_month']),
         ]);
     }
 
@@ -84,6 +128,7 @@ class CustomerController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:1000',
+            'birthday' => 'nullable|date',
             'customer_type' => 'required|in:individual,corporate',
             'tax_number' => 'nullable|string|max:50|unique:customers,tax_number,NULL,id,account_id,' . Auth::user()->account_id,
             'notes' => 'nullable|string|max:1000',
@@ -170,6 +215,7 @@ class CustomerController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:1000',
+            'birthday' => 'nullable|date',
             'customer_type' => 'required|in:individual,corporate',
             'tax_number' => [
                 'nullable',

@@ -13,6 +13,7 @@ export default function Create() {
         phone: '',
         email: '',
         address: '',
+        birthday: '',
         customer_type: 'individual',
         tax_number: '',
         notes: '',
@@ -118,6 +119,22 @@ export default function Create() {
                                 />
                                 <InputError message={errors.email} className="mt-2" />
                             </div>
+
+                            {/* Birthday (only for individual) */}
+                            {data.customer_type === 'individual' && (
+                                <div>
+                                    <InputLabel htmlFor="birthday" value="Doğum tarixi" />
+                                    <TextInput
+                                        id="birthday"
+                                        type="date"
+                                        name="birthday"
+                                        value={data.birthday}
+                                        className="mt-1 block w-full"
+                                        onChange={(e) => setData('birthday', e.target.value)}
+                                    />
+                                    <InputError message={errors.birthday} className="mt-2" />
+                                </div>
+                            )}
 
                             {/* Tax Number (only for corporate) */}
                             {data.customer_type === 'corporate' && (

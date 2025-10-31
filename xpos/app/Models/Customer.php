@@ -20,6 +20,7 @@ class Customer extends Model
         'phone',
         'email',
         'address',
+        'birthday',
         'customer_type',
         'tax_number',
         'notes',

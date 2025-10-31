@@ -367,6 +367,7 @@ export interface Customer {
     phone?: string;
     email?: string;
     address?: string;
+    birthday?: string;
     customer_type: 'individual' | 'corporate';
     tax_number?: string;
     notes?: string;
@@ -596,6 +597,7 @@ export interface CustomerFormData {
     phone: string;
     email: string;
     address: string;
+    birthday: string;
     customer_type: 'individual' | 'corporate';
     tax_number: string;
     notes: string;
