@@ -54,7 +54,7 @@ export default function Index({ auth, customers, branches }: POSIndexProps) {
   const [selectedProductForVariant, setSelectedProductForVariant] = useState<Product | null>(null);
 
   // Product search using debounced + abortable fetch
-  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch(formData.branch_id);
+  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching, searchImmediate } = useSearch(formData.branch_id);
 
   // Calculate totals
   const taxAmount = formData.tax_amount;
@@ -200,6 +200,7 @@ export default function Index({ auth, customers, branches }: POSIndexProps) {
                   results={searchResults}
                   onSelect={handleProductSelect}
                   branchId={formData.branch_id}
+                  searchImmediate={searchImmediate}
                 />
 
                 {/* Cart Items */}

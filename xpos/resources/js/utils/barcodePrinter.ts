@@ -436,11 +436,7 @@ export async function printBarcode(barcode: string, barcodeType: string = 'EAN-1
 
     await sendToPrinter(tslpCommands, barcode.trim(), barcodeType);
     
-    // Show success message
-    if (typeof window !== 'undefined') {
-      // You might want to replace this with a toast notification
-      console.log('Barkod çap edildi');
-    }
+    // Print successful
   } catch (error) {
     console.error('Barcode printing error:', error);
     throw error;
@@ -473,16 +469,6 @@ export function initBarcodePrinter(): void {
   // Add global function for easy access
   (window as any).printBarcode = printBarcode;
   (window as any).checkPrinterCompatibility = checkPrinterCompatibility;
-  
-  // Check and log printer compatibility
-  const compatibility = checkPrinterCompatibility();
-  console.log('Barcode printer compatibility:', compatibility);
-  
-  if (!compatibility.webUSB && !compatibility.webSerial) {
-    console.info('Bu brauzerdə direkt printer bağlantısı dəstəklənmir. Əlavə çap metodları istifadə ediləcək.');
-  } else {
-    console.info('Direkt printer bağlantısı mövcuddur. İstifadə edilə bilər:', compatibility.methods);
-  }
 }
 
 // Auto-initialize when module is loaded

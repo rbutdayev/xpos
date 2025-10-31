@@ -2,6 +2,8 @@ import React from 'react';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import { Product } from '@/types';
+import { CameraIcon } from '@heroicons/react/24/outline';
+import BarcodeScanner from '@/Components/BarcodeScanner';
 
 interface Props {
   query: string;
@@ -11,16 +13,43 @@ interface Props {
   onSelect: (item: Product) => void;
   mode?: 'sale';
   branchId?: string;
+  searchImmediate?: (query: string) => void;
 }
 
-function ProductSearchSection({ query, setQuery, loading, results, onSelect, mode = 'sale', branchId }: Props) {
+function ProductSearchSection({ query, setQuery, loading, results, onSelect, mode = 'sale', branchId, searchImmediate }: Props) {
   const isBranchSelected = branchId && branchId.trim() !== '';
+  const [waitingForEnter, setWaitingForEnter] = React.useState(false);
+  const [showScanner, setShowScanner] = React.useState(false);
+
+  // Auto-select when results arrive after pressing Enter
+  React.useEffect(() => {
+    if (waitingForEnter && !loading && results.length === 1) {
+      const product = results[0];
+      const stockQuantity = 'filtered_stock' in product ? (product as any).filtered_stock : product?.total_stock;
+      const hasStockIssue = product && stockQuantity !== undefined && stockQuantity <= 0 && !product.allow_negative_stock;
+
+      if (!hasStockIssue) {
+        onSelect(product);
+        setQuery('');
+      }
+      setWaitingForEnter(false);
+    }
+  }, [waitingForEnter, loading, results, onSelect, setQuery]);
+
+  // Handle barcode scan from camera
+  const handleScan = (code: string) => {
+    if (searchImmediate && isBranchSelected) {
+      setQuery(code);
+      searchImmediate(code);
+      setWaitingForEnter(true);
+    }
+  };
 
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6">
       <div className="p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Məhsul Axtarışı</h3>
-        
+
         {!isBranchSelected && (
           <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
             <p className="text-amber-700 text-sm">
@@ -28,23 +57,48 @@ function ProductSearchSection({ query, setQuery, loading, results, onSelect, mod
             </p>
           </div>
         )}
-        
+
         <div className="relative">
-          <InputLabel htmlFor="itemSearch" value="Axtarış" />
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <InputLabel htmlFor="itemSearch" value="Axtarış (Barkod və ya ad)" />
+            </div>
+            {isBranchSelected && (
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="mt-5 rounded-md bg-indigo-600 p-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                title="Kamera ilə skan et"
+              >
+                <CameraIcon className="h-5 w-5" />
+              </button>
+            )}
+          </div>
           <TextInput
             id="itemSearch"
             value={query}
             onChange={(e) => isBranchSelected ? setQuery(e.target.value) : null}
+            onPaste={(e) => {
+              // When barcode is pasted, trigger immediate search
+              if (isBranchSelected && searchImmediate) {
+                const pastedText = e.clipboardData.getData('text');
+                if (pastedText.trim()) {
+                  // Small delay to let the onChange update the query
+                  setTimeout(() => {
+                    searchImmediate(pastedText.trim());
+                    setWaitingForEnter(true);
+                  }, 10);
+                }
+              }
+            }}
             onKeyDown={(e) => {
               // Prevent Enter key from submitting the form when scanning barcodes
               if (e.key === 'Enter') {
                 e.preventDefault();
 
-                // If there's exactly one search result, select it automatically
+                // If already have 1 result, select it immediately
                 if (results.length === 1) {
                   const product = results[0];
-
-                  // Check if item can be selected (same logic as in render)
                   const stockQuantity = 'filtered_stock' in product ? (product as any).filtered_stock : product?.total_stock;
                   const hasStockIssue = product && stockQuantity !== undefined && stockQuantity <= 0 && !product.allow_negative_stock;
 
@@ -52,11 +106,15 @@ function ProductSearchSection({ query, setQuery, loading, results, onSelect, mod
                     onSelect(product);
                     setQuery('');
                   }
+                } else if (query.trim() && searchImmediate && isBranchSelected) {
+                  // Trigger immediate search and wait for results
+                  searchImmediate(query);
+                  setWaitingForEnter(true);
                 }
               }
             }}
             className={`mt-1 block w-full ${!isBranchSelected ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            placeholder={isBranchSelected ? "Məhsul adı, kodu..." : "Əvvəlcə filial seçin"}
+            placeholder={isBranchSelected ? "Məhsul adı, kodu və ya barkod..." : "Əvvəlcə filial seçin"}
             disabled={!isBranchSelected}
           />
           {loading && isBranchSelected && (
@@ -124,6 +182,13 @@ function ProductSearchSection({ query, setQuery, loading, results, onSelect, mod
           )}
         </div>
       </div>
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScan={handleScan}
+      />
     </div>
   );
 }

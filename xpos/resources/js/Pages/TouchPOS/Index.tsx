@@ -61,7 +61,7 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
   const { flash } = usePage<any>().props;
 
   // Product search using exact same logic as POS (only products, no services)
-  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching } = useSearch(formData.branch_id);
+  const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching, searchImmediate } = useSearch(formData.branch_id);
 
   // Calculate totals
   const taxAmount = formData.tax_amount;
@@ -191,6 +191,7 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
                 setItemSearch('');
               }}
               branchId={formData.branch_id}
+              searchImmediate={searchImmediate}
             />
             
             {/* Cart Items */}
