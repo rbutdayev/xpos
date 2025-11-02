@@ -38,6 +38,18 @@ class XPOSSeeder extends Seeder
     {
         echo "🚀 Starting XPOS Seeder...\n\n";
 
+        // Check if test data already exists to prevent duplicates
+        $existingAccountA = Account::where('email', 'boutique-a@example.com')->first();
+        $existingAccountB = Account::where('email', 'fashion-b@example.com')->first();
+
+        if ($existingAccountA || $existingAccountB) {
+            echo "⚠️  Test data already exists! Skipping seeder to prevent duplicates.\n";
+            echo "   - Account A: " . ($existingAccountA ? "EXISTS" : "Missing") . "\n";
+            echo "   - Account B: " . ($existingAccountB ? "EXISTS" : "Missing") . "\n";
+            echo "\n✅ Seeder completed (skipped duplicate creation)\n";
+            return;
+        }
+
         // Create Account A
         echo "📦 Creating Account A...\n";
         $accountA = $this->createAccount('Boutique Shop A', 'boutique-a@example.com', '+994501111111');

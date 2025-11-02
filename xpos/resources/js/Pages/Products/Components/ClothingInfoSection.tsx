@@ -69,8 +69,6 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
     return null;
   }
 
-  console.log('ClothingInfoSection rendering - data.type:', data.type, 'data:', data);
-
   return (
     <div className="bg-white shadow-sm rounded-lg overflow-hidden">
       <div className="p-6 border-b border-gray-200">

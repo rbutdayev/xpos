@@ -15,6 +15,7 @@ class Payment extends Model
 
     protected $fillable = [
         'sale_id',
+        'rental_id',
         'method',
         'amount',
         'transaction_id',
@@ -33,6 +34,11 @@ class Payment extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class, 'sale_id', 'sale_id');
+    }
+
+    public function rental(): BelongsTo
+    {
+        return $this->belongsTo(Rental::class, 'rental_id', 'id');
     }
 
     public function scopeCash(Builder $query): Builder

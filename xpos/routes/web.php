@@ -39,6 +39,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\SmsController;
+use App\Http\Controllers\RentalTemplateController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -510,6 +511,77 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/send-all', [SmsController::class, 'sendAll'])->name('send-all');
         Route::get('/logs', [SmsController::class, 'logs'])->name('logs');
         Route::post('/test', [SmsController::class, 'test'])->name('test');
+    });
+
+    // Rental Management
+    Route::prefix('rentals')->name('rentals.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\RentalController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\RentalController::class, 'store'])->name('store');
+        Route::get('/create', [\App\Http\Controllers\RentalController::class, 'create'])->name('create');
+        Route::get('/calendar', [\App\Http\Controllers\RentalController::class, 'calendar'])->name('calendar');
+        Route::get('/due-today', [\App\Http\Controllers\RentalController::class, 'dueToday'])->name('due-today');
+        Route::get('/overdue', [\App\Http\Controllers\RentalController::class, 'overdue'])->name('overdue');
+        Route::post('/check-overdue', [\App\Http\Controllers\RentalController::class, 'checkOverdue'])->name('check-overdue');
+        Route::get('/statistics', [\App\Http\Controllers\RentalController::class, 'statistics'])->name('statistics');
+        Route::get('/checklist/{category}', [\App\Http\Controllers\RentalController::class, 'getDefaultChecklist'])->name('checklist');
+        Route::post('/search-barcode', [\App\Http\Controllers\RentalController::class, 'searchByBarcode'])->name('search-barcode');
+        Route::post('/check-availability', [\App\Http\Controllers\RentalController::class, 'checkAvailability'])->name('check-availability');
+        Route::get('/{rental}/edit', [\App\Http\Controllers\RentalController::class, 'edit'])->name('edit');
+        Route::get('/{rental}', [\App\Http\Controllers\RentalController::class, 'show'])->name('show');
+        Route::put('/{rental}', [\App\Http\Controllers\RentalController::class, 'update'])->name('update');
+        Route::delete('/{rental}', [\App\Http\Controllers\RentalController::class, 'destroy'])->name('destroy');
+        Route::get('/{rental}/return', [\App\Http\Controllers\RentalController::class, 'showReturnPage'])->name('return.show');
+        Route::post('/{rental}/return', [\App\Http\Controllers\RentalController::class, 'processReturn'])->name('return');
+        Route::post('/{rental}/extend', [\App\Http\Controllers\RentalController::class, 'extend'])->name('extend');
+        Route::post('/{rental}/cancel', [\App\Http\Controllers\RentalController::class, 'cancel'])->name('cancel');
+        Route::post('/{rental}/add-payment', [\App\Http\Controllers\RentalController::class, 'addPayment'])->name('add-payment');
+        Route::get('/{rental}/agreement/pdf', [\App\Http\Controllers\RentalController::class, 'downloadAgreementPdf'])->name('agreement.pdf');
+    });
+
+    // Rental Inventory Management
+    Route::prefix('rental-inventory')->name('rental-inventory.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\RentalInventoryController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\RentalInventoryController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\RentalInventoryController::class, 'store'])->name('store');
+        Route::get('/available', [\App\Http\Controllers\RentalInventoryController::class, 'getAvailable'])->name('available');
+        Route::get('/calendar/bookings', [\App\Http\Controllers\RentalInventoryController::class, 'getAllBookings'])->name('calendar.bookings');
+        Route::get('/{inventory}', [\App\Http\Controllers\RentalInventoryController::class, 'show'])->name('show');
+        Route::get('/{inventory}/bookings', [\App\Http\Controllers\RentalInventoryController::class, 'getBookings'])->name('bookings');
+        Route::get('/{inventory}/edit', [\App\Http\Controllers\RentalInventoryController::class, 'edit'])->name('edit');
+        Route::put('/{inventory}', [\App\Http\Controllers\RentalInventoryController::class, 'update'])->name('update');
+        Route::delete('/{inventory}', [\App\Http\Controllers\RentalInventoryController::class, 'destroy'])->name('destroy');
+        Route::post('/{inventory}/maintenance/schedule', [\App\Http\Controllers\RentalInventoryController::class, 'scheduleMaintenance'])->name('maintenance.schedule');
+        Route::post('/{inventory}/maintenance/complete', [\App\Http\Controllers\RentalInventoryController::class, 'completeMaintenance'])->name('maintenance.complete');
+        Route::post('/{inventory}/mark-damaged', [\App\Http\Controllers\RentalInventoryController::class, 'markAsDamaged'])->name('mark-damaged');
+    });
+
+    // Rental Categories Management
+    Route::prefix('rental-categories')->name('rental-categories.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\RentalCategoryController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\RentalCategoryController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\RentalCategoryController::class, 'store'])->name('store');
+        Route::get('/active', [\App\Http\Controllers\RentalCategoryController::class, 'getActive'])->name('active');
+        Route::post('/reorder', [\App\Http\Controllers\RentalCategoryController::class, 'reorder'])->name('reorder');
+        Route::get('/{rentalCategory}', [\App\Http\Controllers\RentalCategoryController::class, 'show'])->name('show');
+        Route::get('/{rentalCategory}/edit', [\App\Http\Controllers\RentalCategoryController::class, 'edit'])->name('edit');
+        Route::put('/{rentalCategory}', [\App\Http\Controllers\RentalCategoryController::class, 'update'])->name('update');
+        Route::delete('/{rentalCategory}', [\App\Http\Controllers\RentalCategoryController::class, 'destroy'])->name('destroy');
+        Route::post('/{rentalCategory}/toggle-status', [\App\Http\Controllers\RentalCategoryController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // Rental Agreement Templates Management
+    Route::prefix('rental-templates')->name('rental-templates.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\RentalTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\RentalTemplateController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\RentalTemplateController::class, 'store'])->name('store');
+        Route::get('/{rentalTemplate}', [\App\Http\Controllers\RentalTemplateController::class, 'show'])->name('show');
+        Route::get('/{rentalTemplate}/edit', [\App\Http\Controllers\RentalTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{rentalTemplate}', [\App\Http\Controllers\RentalTemplateController::class, 'update'])->name('update');
+        Route::delete('/{rentalTemplate}', [\App\Http\Controllers\RentalTemplateController::class, 'destroy'])->name('destroy');
+        Route::post('/{rentalTemplate}/toggle-status', [\App\Http\Controllers\RentalTemplateController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{rentalTemplate}/set-default', [\App\Http\Controllers\RentalTemplateController::class, 'setDefault'])->name('set-default');
+        Route::get('/{rentalTemplate}/preview', [\App\Http\Controllers\RentalTemplateController::class, 'preview'])->name('preview');
+        Route::post('/{rentalTemplate}/duplicate', [\App\Http\Controllers\RentalTemplateController::class, 'duplicate'])->name('duplicate');
     });
 
     // Redirect legacy/misspelled stock routes

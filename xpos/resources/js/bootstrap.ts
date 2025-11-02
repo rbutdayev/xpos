@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { router } from '@inertiajs/react';
+
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -24,6 +26,11 @@ if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.us
         }
     });
 }
+
+// Refresh CSRF token after Inertia page loads (e.g., after login when session regenerates)
+router.on('finish', () => {
+    setCSRFToken();
+});
 
 // Add axios interceptor to handle 419 errors gracefully
 window.axios.interceptors.response.use(

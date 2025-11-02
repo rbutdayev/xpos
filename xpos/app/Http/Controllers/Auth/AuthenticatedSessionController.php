@@ -33,12 +33,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect super admins to their dedicated dashboard
-        if (Auth::user()->isSuperAdmin()) {
-            return redirect()->intended(route('superadmin.dashboard', absolute: false));
+        // Determine redirect route
+        $redirectRoute = Auth::user()->isSuperAdmin()
+            ? route('superadmin.dashboard', absolute: false)
+            : route('dashboard', absolute: false);
+
+        // Force a full page reload to refresh CSRF token in meta tag
+        // This prevents "page expired" errors when switching between accounts
+        $response = redirect()->intended($redirectRoute);
+
+        // For Inertia requests, force a full page reload
+        if ($request->header('X-Inertia')) {
+            $response->header('X-Inertia-Location', $redirectRoute);
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return $response;
     }
 
     /**

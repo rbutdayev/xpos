@@ -37,7 +37,9 @@ import {
     PaperAirplaneIcon,
     MegaphoneIcon,
     ShoppingBagIcon,
-    DocumentTextIcon
+    DocumentTextIcon,
+    ClockIcon,
+    CalendarIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -101,13 +103,20 @@ export default function Authenticated({
                 openMenus.push('Xidmətlər');
             }
         }
-        
-        if (currentRoute?.includes('stock-movements') || 
+
+        if (currentRoute?.includes('rentals') ||
+            currentRoute?.includes('rental-templates') ||
+            currentRoute?.includes('rental-inventory') ||
+            currentRoute?.includes('rental-categories')) {
+            openMenus.push('Kirayələr');
+        }
+
+        if (currentRoute?.includes('stock-movements') ||
             currentRoute?.includes('goods-receipts') ||
-            currentRoute?.includes('warehouse-transfers') || 
-            currentRoute?.includes('product-returns') || 
+            currentRoute?.includes('warehouse-transfers') ||
+            currentRoute?.includes('product-returns') ||
             currentRoute?.includes('alerts') ||
-            currentRoute?.includes('inventory')) {
+            (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory'))) {
             openMenus.push('Stok İdarəetməsi');
         }
         
@@ -193,14 +202,32 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Anbar İdarəetməsi',
-                    icon: CubeIcon,
+                    name: 'Kirayələr',
+                    icon: ClockIcon,
                     children: [
                         {
-                            name: 'Məhsullar',
-                            href: '/products',
+                            name: 'İcarə Siyahısı',
+                            href: '/rentals',
+                            icon: ClockIcon,
+                            current: route().current('rentals.*') && !route().current('rental-templates.*') && !route().current('rental-categories.*') && !route().current('rentals.calendar')
+                        },
+                        {
+                            name: 'Təqvim',
+                            href: '/rentals/calendar',
+                            icon: CalendarIcon,
+                            current: route().current('rentals.calendar')
+                        },
+                        {
+                            name: 'İcarə İnventarı',
+                            href: '/rental-inventory',
                             icon: CubeIcon,
-                            current: route().current('products.*')
+                            current: route().current('rental-inventory.*')
+                        },
+                        {
+                            name: 'İcarə Kateqoriyaları',
+                            href: '/rental-categories',
+                            icon: TagIcon,
+                            current: route().current('rental-categories.*')
                         }
                     ]
                 },
@@ -275,64 +302,58 @@ export default function Authenticated({
                             current: route().current('sms.send-page')
                         }
                     ]
+                },
+                {
+                    name: 'Anbar İdarəetməsi',
+                    icon: CubeIcon,
+                    children: [
+                        {
+                            name: 'Məhsullar',
+                            href: '/products',
+                            icon: CubeIcon,
+                            current: route().current('products.*')
+                        }
+                    ]
                 }
             ];
         }
 
-        // Full navigation for other roles
+        // Full navigation for other roles - Ordered by usage frequency
         return [
             ...baseNavigation,
         {
-            name: 'Şirkət',
-            icon: BuildingOffice2Icon,
+            name: 'Kirayələr',
+            icon: ClockIcon,
             children: [
                 {
-                    name: 'Şirkət Məlumatları',
-                    href: '/companies',
-                    icon: BuildingOffice2Icon,
-                    current: route().current('companies.*') || route().current('settings.*')
+                    name: 'İcarə Siyahısı',
+                    href: '/rentals',
+                    icon: ClockIcon,
+                    current: route().current('rentals.*') && !route().current('rental-templates.*') && !route().current('rental-categories.*') && !route().current('rentals.calendar')
                 },
                 {
-                    name: 'Filiallar',
-                    href: '/branches',
-                    icon: BuildingOffice2Icon,
-                    current: route().current('branches.*')
+                    name: 'Təqvim',
+                    href: '/rentals/calendar',
+                    icon: CalendarIcon,
+                    current: route().current('rentals.calendar')
                 },
                 {
-                    name: 'İstifadəçilər',
-                    href: '/users',
-                    icon: UsersIcon,
-                    current: route().current('users.*')
-                },
-                {
-                    name: 'Anbarlar',
-                    href: '/warehouses',
-                    icon: HomeModernIcon,
-                    current: route().current('warehouses.*')
-                }
-            ]
-        },
-        {
-            name: 'Anbar İdarəetməsi',
-            icon: CubeIcon,
-            children: [
-                {
-                    name: 'Məhsullar',
-                    href: '/products',
+                    name: 'İcarə İnventarı',
+                    href: '/rental-inventory',
                     icon: CubeIcon,
-                    current: route().current('products.*')
+                    current: route().current('rental-inventory.*')
                 },
                 {
-                    name: 'Təchizatçılar',
-                    href: '/suppliers',
-                    icon: TruckIcon,
-                    current: route().current('suppliers.*')
-                },
-                {
-                    name: 'Kateqoriyalar',
-                    href: '/categories',
+                    name: 'İcarə Kateqoriyaları',
+                    href: '/rental-categories',
                     icon: TagIcon,
-                    current: route().current('categories.*')
+                    current: route().current('rental-categories.*')
+                },
+                {
+                    name: 'Müqavilə Şablonları',
+                    href: '/rental-templates',
+                    icon: DocumentTextIcon,
+                    current: route().current('rental-templates.*')
                 }
             ]
         },
@@ -385,6 +406,54 @@ export default function Authenticated({
             ]
         },
         {
+            name: 'Satış və Marketinq',
+            icon: MegaphoneIcon,
+            children: [
+                {
+                    name: 'Satışlar',
+                    href: '/sales',
+                    icon: ShoppingCartIcon,
+                    current: route().current('sales.*') && !route().current('sales.online')
+                },
+                {
+                    name: 'Online Sifarişlər',
+                    href: '/online-orders',
+                    icon: ShoppingBagIcon,
+                    current: route().current('online-orders.*')
+                },
+                {
+                    name: 'SMS Göndər',
+                    href: '/sms/send-sms',
+                    icon: PaperAirplaneIcon,
+                    current: route().current('sms.send-page')
+                }
+            ]
+        },
+        {
+            name: 'Anbar İdarəetməsi',
+            icon: CubeIcon,
+            children: [
+                {
+                    name: 'Məhsullar',
+                    href: '/products',
+                    icon: CubeIcon,
+                    current: route().current('products.*')
+                },
+                {
+                    name: 'Təchizatçılar',
+                    href: '/suppliers',
+                    icon: TruckIcon,
+                    current: route().current('suppliers.*')
+                },
+                {
+                    name: 'Kateqoriyalar',
+                    href: '/categories',
+                    icon: TagIcon,
+                    current: route().current('categories.*')
+                }
+            ]
+        },
+        {
             name: 'Stok İdarəetməsi',
             icon: ArrowsRightLeftIcon,
             children: [
@@ -423,30 +492,6 @@ export default function Authenticated({
                     href: '/alerts',
                     icon: ExclamationTriangleIcon,
                     current: route().current('alerts.*')
-                }
-            ]
-        },
-        {
-            name: 'Satış və Marketinq',
-            icon: MegaphoneIcon,
-            children: [
-                {
-                    name: 'Satışlar',
-                    href: '/sales',
-                    icon: ShoppingCartIcon,
-                    current: route().current('sales.*') && !route().current('sales.online')
-                },
-                {
-                    name: 'Online Sifarişlər',
-                    href: '/online-orders',
-                    icon: ShoppingBagIcon,
-                    current: route().current('online-orders.*')
-                },
-                {
-                    name: 'SMS Göndər',
-                    href: '/sms/send-sms',
-                    icon: PaperAirplaneIcon,
-                    current: route().current('sms.send-page')
                 }
             ]
         },
@@ -501,6 +546,36 @@ export default function Authenticated({
                     href: '/telegram/logs',
                     icon: ClipboardDocumentListIcon,
                     current: route().current('telegram.logs')
+                }
+            ]
+        },
+        {
+            name: 'Şirkət',
+            icon: BuildingOffice2Icon,
+            children: [
+                {
+                    name: 'Şirkət Məlumatları',
+                    href: '/companies',
+                    icon: BuildingOffice2Icon,
+                    current: route().current('companies.*') || route().current('settings.*')
+                },
+                {
+                    name: 'Filiallar',
+                    href: '/branches',
+                    icon: BuildingOffice2Icon,
+                    current: route().current('branches.*')
+                },
+                {
+                    name: 'İstifadəçilər',
+                    href: '/users',
+                    icon: UsersIcon,
+                    current: route().current('users.*')
+                },
+                {
+                    name: 'Anbarlar',
+                    href: '/warehouses',
+                    icon: HomeModernIcon,
+                    current: route().current('warehouses.*')
                 }
             ]
         },

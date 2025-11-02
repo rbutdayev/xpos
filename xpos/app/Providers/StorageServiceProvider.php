@@ -55,12 +55,30 @@ class StorageServiceProvider extends ServiceProvider
                         'throw' => false,
                     ]
                 ]);
+                return;
             }
         } catch (\Exception $e) {
-            // If database is not available or settings don't exist, 
-            // fall back to local storage for development
             \Log::warning('Could not load storage settings from database: ' . $e->getMessage());
-            
+        }
+
+        // Fallback to .env Azure configuration if database settings don't exist
+        $envConnectionString = env('AZURE_STORAGE_CONNECTION_STRING');
+        $envContainer = env('AZURE_STORAGE_CONTAINER', 'xpos');
+
+        if ($envConnectionString) {
+            config([
+                'filesystems.disks.documents' => [
+                    'driver' => 'azure',
+                    'connection_string' => $envConnectionString,
+                    'container' => $envContainer,
+                    'prefix' => '',
+                    'throw' => false,
+                ]
+            ]);
+        } else {
+            // Final fallback to local storage for development
+            \Log::warning('No Azure credentials found in database or .env, using local storage');
+
             config([
                 'filesystems.disks.documents' => [
                     'driver' => 'local',

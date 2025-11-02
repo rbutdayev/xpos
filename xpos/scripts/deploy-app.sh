@@ -148,15 +148,18 @@ print_status "Deploying application..."
 sudo mkdir -p \$APP_PATH
 cd \$APP_PATH
 
-# Remove old files (keep storage and .env if they exist)
+# Remove old files (keep storage, .env, and .seeded marker if they exist)
 if [ -f ".env" ]; then
     sudo cp .env /tmp/.env.backup
 fi
 if [ -d "storage" ]; then
     sudo cp -r storage /tmp/storage.backup
 fi
+if [ -f ".seeded" ]; then
+    sudo cp .seeded /tmp/.seeded.backup
+fi
 
-# Clear application directory
+# Clear application directory (except storage)
 sudo find \$APP_PATH -mindepth 1 -maxdepth 1 ! -name 'storage' -exec rm -rf {} +
 
 # Extract new application
@@ -170,6 +173,11 @@ sudo rm -rf \$APP_PATH/bootstrap/cache/*
 if [ -d "/tmp/storage.backup" ]; then
     sudo rm -rf \$APP_PATH/storage
     sudo mv /tmp/storage.backup \$APP_PATH/storage
+fi
+
+# Restore .seeded marker if it was backed up
+if [ -f "/tmp/.seeded.backup" ]; then
+    sudo mv /tmp/.seeded.backup \$APP_PATH/.seeded
 fi
 
 # Set permissions

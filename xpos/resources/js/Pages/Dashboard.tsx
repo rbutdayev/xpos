@@ -17,8 +17,9 @@ import {
     ArrowTrendingUpIcon,
     ArrowTrendingDownIcon,
     BanknotesIcon,
-    ClipboardDocumentListIcon,
     BeakerIcon,
+    CalendarDaysIcon,
+    ClockIcon,
 } from '@heroicons/react/24/outline';
 import {
     ArrowUpIcon,
@@ -148,6 +149,14 @@ interface CreditsData {
     active_credit_customers_count: number;
 }
 
+interface RentalData {
+    active_rentals_count: number;
+    monthly_rental_revenue: number;
+    pending_returns_count: number;
+    overdue_rentals_count: number;
+    total_rentals_this_month: number;
+}
+
 interface DashboardProps extends PageProps {
     stats?: DashboardStats;
     sales_chart_data?: SalesData[];
@@ -157,6 +166,7 @@ interface DashboardProps extends PageProps {
     financial_data?: FinancialData;
     payment_methods_data?: PaymentMethodsData;
     credits_data?: CreditsData;
+    rental_data?: RentalData;
     selectedWarehouse?: { id: number; name: string; type: string } | null;
     warehouseContext?: 'all' | 'specific';
 }
@@ -317,6 +327,13 @@ export default function Dashboard({
         total_credits_this_month: 0,
         total_paid_this_month: 0,
         active_credit_customers_count: 0,
+    },
+    rental_data = {
+        active_rentals_count: 0,
+        monthly_rental_revenue: 0,
+        pending_returns_count: 0,
+        overdue_rentals_count: 0,
+        total_rentals_this_month: 0,
     },
     selectedWarehouse,
     warehouseContext = 'all',
@@ -512,35 +529,35 @@ export default function Dashboard({
                             />
                         </div>
 
-                        {/* Inventory Overview */}
+                        {/* Rental Services Overview */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <ModernKPICard
-                                title="Stok Dəyəri (Alış)"
-                                value={formatCurrency(stats.total_stock_value_cost || 0)}
+                                title="Aktiv İcarələr"
+                                value={rental_data.active_rentals_count}
                                 icon={<CubeIcon className="h-8 w-8" />}
                                 color="blue"
-                                subtitle="Alış qiymətinə görə"
+                                subtitle="Hazırda icarədə"
                             />
                             <ModernKPICard
-                                title="Potensial Gəlir"
-                                value={formatCurrency(stats.total_stock_value_sale || 0)}
+                                title="Bu Ay İcarə Gəliri"
+                                value={formatCurrency(rental_data.monthly_rental_revenue)}
                                 icon={<CurrencyDollarIcon className="h-8 w-8" />}
                                 color="teal"
-                                subtitle="Satış qiymətinə görə"
+                                subtitle={`${rental_data.total_rentals_this_month} icarə`}
                             />
                             <ModernKPICard
-                                title="Potensial Mənfəət"
-                                value={formatCurrency(stats.potential_profit || 0)}
-                                icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
-                                color="green"
-                                subtitle={`${stats.total_stock_value_cost! > 0 ? ((stats.potential_profit! / stats.total_stock_value_cost!) * 100).toFixed(1) : 0}% marja`}
+                                title="Gözlənilən Qaytarmalar"
+                                value={rental_data.pending_returns_count}
+                                icon={<CalendarDaysIcon className="h-8 w-8" />}
+                                color="orange"
+                                subtitle="3 gün ərzində"
                             />
                             <ModernKPICard
-                                title="Ümumi Məhsullar"
-                                value={stats.products_count}
-                                icon={<ClipboardDocumentListIcon className="h-8 w-8" />}
-                                color="indigo"
-                                subtitle={`${stats.active_customers} aktiv müştəri`}
+                                title="Gecikmiş İcarələr"
+                                value={rental_data.overdue_rentals_count}
+                                icon={<ClockIcon className="h-8 w-8" />}
+                                color="red"
+                                subtitle="Diqqət tələb edir"
                             />
                         </div>
 

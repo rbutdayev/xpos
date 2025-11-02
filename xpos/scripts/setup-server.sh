@@ -143,8 +143,8 @@ print_status "Configuring PHP..."
 # Update PHP settings for production
 sudo sed -i 's/max_execution_time = 30/max_execution_time = 300/' /etc/php/8.3/fpm/php.ini
 sudo sed -i 's/memory_limit = 128M/memory_limit = 512M/' /etc/php/8.3/fpm/php.ini
-sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 64M/' /etc/php/8.3/fpm/php.ini
-sudo sed -i 's/post_max_size = 8M/post_max_size = 64M/' /etc/php/8.3/fpm/php.ini
+sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 128M/' /etc/php/8.3/fpm/php.ini
+sudo sed -i 's/post_max_size = 8M/post_max_size = 128M/' /etc/php/8.3/fpm/php.ini
 
 sudo systemctl restart php8.3-fpm
 sudo systemctl enable php8.3-fpm
@@ -174,6 +174,9 @@ server {
     index index.html index.htm index.php;
 
     charset utf-8;
+
+    # Allow large file uploads (for rental photos, etc.)
+    client_max_body_size 128M;
 
     # Fix for large headers/cookies (prevents 502 Bad Gateway)
     fastcgi_buffer_size 128k;
