@@ -75,6 +75,10 @@ class PrinterConfigController extends Controller
             'ip_address' => 'nullable|ip',
             'port' => 'nullable|integer|min:1|max:65535',
             'settings' => 'nullable|array',
+            'settings.label_size_preset' => 'nullable|string|in:3x2,50x30,4x6,2x1,4x3,custom',
+            'settings.custom_label_width' => 'nullable|integer|min:20|max:200',
+            'settings.custom_label_height' => 'nullable|integer|min:10|max:300',
+            'settings.custom_label_gap' => 'nullable|integer|min:0|max:50',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
         ]);
@@ -140,6 +144,10 @@ class PrinterConfigController extends Controller
             'ip_address' => 'nullable|ip',
             'port' => 'nullable|integer|min:1|max:65535',
             'settings' => 'nullable|array',
+            'settings.label_size_preset' => 'nullable|string|in:3x2,50x30,4x6,2x1,4x3,custom',
+            'settings.custom_label_width' => 'nullable|integer|min:20|max:200',
+            'settings.custom_label_height' => 'nullable|integer|min:10|max:300',
+            'settings.custom_label_gap' => 'nullable|integer|min:0|max:50',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
         ]);
@@ -190,6 +198,42 @@ class PrinterConfigController extends Controller
             'success' => true,
             'message' => __('app.test_print_sent'),
             'content' => $testContent,
+        ]);
+    }
+
+    /**
+     * Get label settings for barcode printing
+     * Returns the default printer's label configuration or system defaults
+     */
+    public function getLabelSettings(Request $request)
+    {
+        $branchId = $request->user()->branch_id ?? null;
+        $accountId = $request->user()->account_id;
+
+        // Try to get the default printer for the user's branch
+        $printerConfig = PrinterConfig::where('account_id', $accountId)
+            ->where('is_active', true)
+            ->when($branchId, function ($query) use ($branchId) {
+                return $query->where('branch_id', $branchId)->where('is_default', true);
+            })
+            ->first();
+
+        // If no default printer found for branch, get any active thermal printer
+        if (!$printerConfig) {
+            $printerConfig = PrinterConfig::where('account_id', $accountId)
+                ->where('is_active', true)
+                ->where('printer_type', 'thermal')
+                ->first();
+        }
+
+        // Extract label settings or use defaults
+        $settings = $printerConfig->settings ?? [];
+
+        return response()->json([
+            'label_size_preset' => $settings['label_size_preset'] ?? '3x2',
+            'custom_label_width' => $settings['custom_label_width'] ?? 76,
+            'custom_label_height' => $settings['custom_label_height'] ?? 51,
+            'custom_label_gap' => $settings['custom_label_gap'] ?? 20,
         ]);
     }
 }

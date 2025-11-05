@@ -29,8 +29,8 @@ export default function BarcodeDisplay({
         }
 
         try {
-            // Use the new print function with default 3x2 inch labels
-            await printBarcode(productId, barcode, barcodeType, '3x2', 1);
+            // Print using configured printer settings (automatically fetches from backend)
+            await printBarcode(productId, barcode, barcodeType);
         } catch (error) {
             console.error('Print error:', error);
             alert('Çap zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');

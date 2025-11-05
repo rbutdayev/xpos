@@ -515,13 +515,51 @@ async function printViaDialog(options: PrintOptions): Promise<void> {
 }
 
 /**
+ * Fetch label settings from printer configuration
+ */
+async function fetchLabelSettings(): Promise<{
+  labelSize: string;
+  customWidth?: number;
+  customHeight?: number;
+  customGap?: number;
+}> {
+  try {
+    const response = await fetch('/printer-configs/label-settings', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to fetch printer settings, using defaults');
+      return { labelSize: '3x2' };
+    }
+
+    const data = await response.json();
+
+    return {
+      labelSize: data.label_size_preset || '3x2',
+      customWidth: data.custom_label_width,
+      customHeight: data.custom_label_height,
+      customGap: data.custom_label_gap
+    };
+  } catch (error) {
+    console.warn('Error fetching printer settings:', error);
+    return { labelSize: '3x2' }; // Fallback to default
+  }
+}
+
+/**
  * Main function to print barcode
+ * Automatically fetches label size from printer configuration
  */
 export async function printBarcode(
   productId: number,
   barcode: string,
   barcodeType: string = 'Code-128',
-  labelSize: string = '3x2',
+  labelSize?: string,  // Optional - will fetch from settings if not provided
   copies: number = 1
 ): Promise<void> {
   if (!barcode || barcode.trim() === '') {
@@ -533,11 +571,30 @@ export async function printBarcode(
   }
 
   try {
+    // Fetch printer settings if label size not explicitly provided
+    let finalLabelSize = labelSize;
+    let customSize;
+
+    if (!finalLabelSize) {
+      const settings = await fetchLabelSettings();
+      finalLabelSize = settings.labelSize;
+
+      // If custom size is configured, use it
+      if (finalLabelSize === 'custom' && settings.customWidth && settings.customHeight) {
+        customSize = {
+          width: settings.customWidth,
+          height: settings.customHeight,
+          gap: settings.customGap || 2
+        };
+      }
+    }
+
     const options: PrintOptions = {
       productId,
       barcode: barcode.trim(),
       barcodeType,
-      labelSize,
+      labelSize: finalLabelSize || '3x2',
+      customSize,
       copies
     };
 
