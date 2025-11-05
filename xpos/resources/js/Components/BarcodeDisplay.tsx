@@ -1,4 +1,5 @@
 import React from 'react';
+import { printBarcode } from '../utils/barcodePrinter';
 
 interface BarcodeDisplayProps {
     productId?: number;
@@ -9,10 +10,10 @@ interface BarcodeDisplayProps {
     imageClassName?: string;
 }
 
-export default function BarcodeDisplay({ 
-    productId, 
-    barcode, 
-    barcodeType,
+export default function BarcodeDisplay({
+    productId,
+    barcode,
+    barcodeType = 'Code-128',
     showActions = true,
     className = "",
     imageClassName = ""
@@ -21,9 +22,18 @@ export default function BarcodeDisplay({
         return null;
     }
 
-    const handlePrint = () => {
-        if (productId) {
-            window.open(`/barcodes/${productId}/print`, '_blank');
+    const handlePrint = async () => {
+        if (!productId) {
+            alert('Məhsul ID-si tapılmadı. Məhsulu əvvəlcə yadda saxlayın.');
+            return;
+        }
+
+        try {
+            // Use the new print function with default 3x2 inch labels
+            await printBarcode(productId, barcode, barcodeType, '3x2', 1);
+        } catch (error) {
+            console.error('Print error:', error);
+            alert('Çap zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
         }
     };
 
