@@ -461,7 +461,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Thermal Printing Management
     Route::get('/printer-configs/search', [PrinterConfigController::class, 'search'])->name('printer-configs.search');
     Route::get('/printer-configs/label-settings', [PrinterConfigController::class, 'getLabelSettings'])->name('printer-configs.label-settings');
-    Route::post('/printer-configs/{printerConfig}/test', [PrinterConfigController::class, 'testPrint'])->name('printer-configs.test');
+    Route::post('/printer-configs/{printer_config}/test', [PrinterConfigController::class, 'testPrint'])->name('printer-configs.test');
     Route::resource('printer-configs', PrinterConfigController::class);
     
     Route::get('/receipt-templates/search', [ReceiptTemplateController::class, 'search'])->name('receipt-templates.search');
