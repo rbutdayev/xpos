@@ -194,11 +194,7 @@ class PrinterConfigController extends Controller
         $testContent .= str_repeat("-", 32) . "\n";
         $testContent .= "Test completed successfully!\n";
 
-        return response()->json([
-            'success' => true,
-            'message' => __('app.test_print_sent'),
-            'content' => $testContent,
-        ]);
+        return back()->with('success', 'Test çap əmri göndərildi. Printer: ' . $printer_config->name);
     }
 
     /**
