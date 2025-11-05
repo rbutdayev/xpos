@@ -14,6 +14,7 @@ interface PrinterConfig {
     id: number;
     name: string;
     printer_type: string;
+    connection_type: string;
     ip_address: string;
     port: number;
     paper_size: string;
@@ -27,6 +28,10 @@ interface PrinterConfig {
         margin_bottom: number;
         margin_left: number;
         margin_right: number;
+    };
+    branch?: {
+        id: number;
+        name: string;
     };
     created_at: string;
     updated_at: string;
@@ -273,35 +278,66 @@ export default function Show({ printerConfig }: Props) {
                                     <WifiIcon className="w-5 h-5 mr-2 text-gray-400" />
                                     Bağlantı Məlumatları
                                 </h3>
-                                
+
                                 <dl className="space-y-4">
                                     <div>
-                                        <dt className="text-sm font-medium text-gray-500">IP Ünvanı</dt>
-                                        <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
-                                            {printerConfig.ip_address}
+                                        <dt className="text-sm font-medium text-gray-500">Bağlantı Növü</dt>
+                                        <dd className="mt-1 text-sm text-gray-900 font-medium bg-gray-50 px-3 py-2 rounded">
+                                            {printerConfig.connection_type === 'usb' && 'USB'}
+                                            {printerConfig.connection_type === 'bluetooth' && 'Bluetooth'}
+                                            {printerConfig.connection_type === 'serial' && 'Serial'}
+                                            {printerConfig.connection_type === 'network' && 'Şəbəkə'}
                                         </dd>
                                     </div>
-                                    
-                                    <div>
-                                        <dt className="text-sm font-medium text-gray-500">Port</dt>
-                                        <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
-                                            {printerConfig.port}
-                                        </dd>
-                                    </div>
-                                    
-                                    <div>
-                                        <dt className="text-sm font-medium text-gray-500">Bağlantı Vaxtı</dt>
-                                        <dd className="mt-1 text-sm text-gray-900">
-                                            {printerConfig.connection_timeout}ms
-                                        </dd>
-                                    </div>
-                                    
-                                    <div>
-                                        <dt className="text-sm font-medium text-gray-500">Tam Ünvan</dt>
-                                        <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded break-all">
-                                            {printerConfig.ip_address}:{printerConfig.port}
-                                        </dd>
-                                    </div>
+
+                                    {printerConfig.connection_type === 'network' && printerConfig.ip_address && (
+                                        <>
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">IP Ünvanı</dt>
+                                                <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                                    {printerConfig.ip_address}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">Port</dt>
+                                                <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                                    {printerConfig.port}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">Tam Ünvan</dt>
+                                                <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded break-all">
+                                                    {printerConfig.ip_address}:{printerConfig.port}
+                                                </dd>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {printerConfig.connection_type === 'usb' && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                            <p className="text-sm text-blue-800">
+                                                USB printer - brauzerdə çap zamanı USB cihaz seçilməlidir
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {printerConfig.connection_type === 'bluetooth' && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                            <p className="text-sm text-blue-800">
+                                                Bluetooth printer - brauzerdə çap zamanı Bluetooth cihaz seçilməlidir
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {printerConfig.connection_type === 'serial' && (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                                            <p className="text-sm text-blue-800">
+                                                Serial (COM port) printer - brauzerdə çap zamanı serial port seçilməlidir
+                                            </p>
+                                        </div>
+                                    )}
                                 </dl>
 
                                 {printerConfig.is_default && (
