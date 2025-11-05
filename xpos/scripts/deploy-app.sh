@@ -13,6 +13,11 @@
 # - Fixed SSL certificate installation (try both domain and www)
 # - Improved nginx configuration validation before SSL setup
 # - Better error handling and fallback for SSL setup
+#
+# Updates (2025-11-02):
+# - Added automatic Redis configuration enforcement on deployment
+# - Ensures CACHE_STORE, QUEUE_CONNECTION, SESSION_DRIVER use Redis
+# - Sets REDIS_CLIENT=predis for compatibility
 
 set -e  # Exit on any error
 
@@ -247,6 +252,26 @@ else
         exit 1
     fi
 fi
+
+# Ensure Redis configuration is applied (overrides old database settings)
+print_status "Ensuring Redis configuration..."
+sudo sed -i 's/^CACHE_STORE=.*/CACHE_STORE=redis/' .env
+sudo sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=redis/' .env
+sudo sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=redis/' .env
+
+# Add or update REDIS_CLIENT setting
+if grep -q "^REDIS_CLIENT=" .env; then
+    sudo sed -i 's/^REDIS_CLIENT=.*/REDIS_CLIENT=predis/' .env
+else
+    # Add REDIS_CLIENT before REDIS_HOST if it exists
+    if grep -q "^REDIS_HOST=" .env; then
+        sudo sed -i '/^REDIS_HOST=/i REDIS_CLIENT=predis' .env
+    else
+        # Otherwise append to end of file
+        echo "REDIS_CLIENT=predis" | sudo tee -a .env > /dev/null
+    fi
+fi
+print_success "Redis configuration applied"
 
 # Verify critical production settings
 print_status "Verifying production environment settings..."

@@ -14,6 +14,10 @@
 # - Fixed supervisor config file creation using tee
 # - Fixed nginx symlink creation (cleanup old symlinks first)
 # - Improved error handling and idempotency
+#
+# Updates (2025-11-02):
+# - Added Redis memory limit configuration (512MB with allkeys-lru policy)
+# - Configured persistent Redis settings in redis.conf
 
 set -e  # Exit on any error
 
@@ -285,6 +289,30 @@ print_status "Configuring services..."
 # Configure Redis
 sudo systemctl enable redis-server
 sudo systemctl start redis-server
+
+# Configure Redis memory limits
+print_status "Configuring Redis memory limits..."
+# Set max memory to 512MB with LRU eviction policy
+redis-cli config set maxmemory 512mb
+redis-cli config set maxmemory-policy allkeys-lru
+
+# Make Redis configuration persistent
+if [ -f /etc/redis/redis.conf ]; then
+    # Update or add maxmemory settings
+    sudo sed -i 's/^# maxmemory .*/maxmemory 512mb/' /etc/redis/redis.conf
+    sudo sed -i 's/^maxmemory .*/maxmemory 512mb/' /etc/redis/redis.conf
+    sudo sed -i 's/^# maxmemory-policy .*/maxmemory-policy allkeys-lru/' /etc/redis/redis.conf
+    sudo sed -i 's/^maxmemory-policy .*/maxmemory-policy allkeys-lru/' /etc/redis/redis.conf
+
+    # Add settings if they don't exist
+    if ! grep -q "^maxmemory" /etc/redis/redis.conf; then
+        echo "maxmemory 512mb" | sudo tee -a /etc/redis/redis.conf > /dev/null
+    fi
+    if ! grep -q "^maxmemory-policy" /etc/redis/redis.conf; then
+        echo "maxmemory-policy allkeys-lru" | sudo tee -a /etc/redis/redis.conf > /dev/null
+    fi
+    print_success "Redis memory limit set to 512MB"
+fi
 
 # Enable all services
 sudo systemctl enable nginx
