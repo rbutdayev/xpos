@@ -41,37 +41,39 @@ class BarcodeService
     }
 
     /**
-     * Generate unique barcode based on global sequence
-     * To ensure global uniqueness, we use the maximum sequence number across all accounts
+     * Generate unique barcode based on account-specific sequence
+     * Ensures barcode uniqueness within the account scope (multi-tenant isolation)
      */
     public function generateUniqueBarcode(int $accountId, string $type = 'EAN13'): string
     {
         // Normalize type for database storage
         $normalizedType = $this->normalizeType($type);
 
-        // Get or create sequence for this account
-        $sequence = BarcodeSequence::firstOrCreate(
-            ['account_id' => $accountId, 'format' => $normalizedType],
-            ['prefix' => $this->getDefaultPrefix($normalizedType), 'current_number' => 1]
-        );
+        // Use database transaction with locking to prevent race conditions
+        return \DB::transaction(function () use ($accountId, $normalizedType) {
+            // Get or create sequence for this account with row-level lock
+            $sequence = BarcodeSequence::where('account_id', $accountId)
+                ->where('format', $normalizedType)
+                ->lockForUpdate()
+                ->first();
 
-        // Ensure sequence starts from the global maximum to prevent conflicts
-        $maxSequenceNumber = BarcodeSequence::where('format', $normalizedType)
-            ->where('prefix', $sequence->prefix)
-            ->max('current_number');
+            if (!$sequence) {
+                $sequence = BarcodeSequence::create([
+                    'account_id' => $accountId,
+                    'format' => $normalizedType,
+                    'prefix' => $this->getDefaultPrefix($normalizedType),
+                    'current_number' => 1
+                ]);
+            }
 
-        if ($sequence->current_number < $maxSequenceNumber) {
-            $sequence->current_number = $maxSequenceNumber;
-            $sequence->save();
-        }
+            // Generate unique barcode within this account
+            do {
+                $barcode = $this->buildBarcode($sequence, $normalizedType);
+                $sequence->increment('current_number');
+            } while ($this->barcodeExistsInAccount($barcode, $accountId));
 
-        // Generate unique barcode
-        do {
-            $barcode = $this->buildBarcode($sequence, $normalizedType);
-            $sequence->increment('current_number');
-        } while ($this->barcodeExists($barcode));
-
-        return $barcode;
+            return $barcode;
+        });
     }
 
     /**
@@ -261,10 +263,15 @@ class BarcodeService
         };
     }
 
-    private function barcodeExists(string $barcode): bool
+    /**
+     * Check if barcode exists within the specified account
+     * Supports multi-tenant barcode isolation
+     */
+    private function barcodeExistsInAccount(string $barcode, int $accountId): bool
     {
-        // Check for global barcode uniqueness (matches database constraint)
+        // Check for barcode uniqueness within account scope
         return Product::where('barcode', $barcode)
+            ->where('account_id', $accountId)
             ->exists();
     }
 }

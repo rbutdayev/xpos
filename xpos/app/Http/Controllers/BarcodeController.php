@@ -179,8 +179,9 @@ class BarcodeController extends Controller
                 'type' => 'required|string|in:EAN13,EAN8,UPCA,UPCE,CODE128,CODE39,CODABAR,ITF14',
             ]);
 
-            // Check if barcode is already used by another product
+            // Check if barcode is already used by another product in THIS account
             $existingProduct = Product::where('barcode', $validated['barcode'])
+                ->where('account_id', auth()->user()->account_id)
                 ->first();
 
             if ($existingProduct) {
