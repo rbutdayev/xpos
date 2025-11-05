@@ -100,6 +100,19 @@ export default function Edit({ printerConfig, branches }: Props) {
          { value: 'custom', label: 'Fərdi ölçü', description: 'Öz ölçünüzü daxil edin' }
      ];
 
+     // Gap values for each preset (matching barcodePrinter.ts)
+     const presetGaps: Record<string, number> = {
+         '3x2': 20,
+         '50x30': 2,
+         '4x6': 3,
+         '2x1': 2,
+         '4x3': 3,
+     };
+
+     const getGapForPreset = (preset: string): number => {
+         return presetGaps[preset] || 20;
+     };
+
     return (
         <AuthenticatedLayout>
             <Head title={`${printerConfig.name} - Redaktə Et`} />
@@ -407,7 +420,7 @@ export default function Edit({ printerConfig, branches }: Props) {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Aralıq/Gap (mm)
+                                                Aralıq/Gap (mm) *
                                             </label>
                                             <input
                                                 type="number"
@@ -422,6 +435,29 @@ export default function Edit({ printerConfig, branches }: Props) {
                                                 Etiketlər arasındakı boşluq
                                             </p>
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Gap Information - Always visible */}
+                                {data.settings.label_size_preset !== 'custom' && (
+                                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Aralıq/Gap (mm)
+                                        </label>
+                                        <div className="flex items-center space-x-3">
+                                            <input
+                                                type="text"
+                                                value={getGapForPreset(data.settings.label_size_preset || '3x2')}
+                                                readOnly
+                                                className="w-24 rounded-md border-gray-300 bg-gray-100 shadow-sm text-gray-600 cursor-not-allowed"
+                                            />
+                                            <span className="text-sm text-gray-600">
+                                                (Bu ölçü üçün avtomatik təyin olunub)
+                                            </span>
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            ℹ️ Fərdi gap təyin etmək üçün "Fərdi ölçü" seçin
+                                        </p>
                                     </div>
                                 )}
 
