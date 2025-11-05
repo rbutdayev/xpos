@@ -8,6 +8,7 @@ interface PrinterConfig {
     id: number;
     name: string;
     printer_type: string;
+    connection_type: string;
     ip_address: string;
     port: number;
     paper_size: string;
@@ -63,8 +64,12 @@ export default function Index({ printerConfigs, filters }: Props) {
     const handleTestPrint = (printer: PrinterConfig) => {
         router.post(`/printer-configs/${printer.id}/test`, {}, {
             preserveState: true,
-            onSuccess: () => {
-                // Handle success
+            onSuccess: (page: any) => {
+                const response = page.props.flash?.success || 'Test çap göndərildi';
+                alert(`✓ ${printer.name}\n\n${response}`);
+            },
+            onError: (errors: any) => {
+                alert(`✗ Xəta\n\n${errors.message || 'Test çap göndərilə bilmədi'}`);
             }
         });
     };
@@ -103,11 +108,19 @@ export default function Index({ printerConfigs, filters }: Props) {
             )
         },
         {
-            key: 'ip_address',
-            label: 'IP Ünvanı',
-            render: (item: PrinterConfig) => (
-                <span className="text-sm text-gray-900 font-mono">{item.ip_address}:{item.port}</span>
-            )
+            key: 'connection',
+            label: 'Bağlantı',
+            render: (item: PrinterConfig) => {
+                if (item.connection_type === 'network' && item.ip_address) {
+                    return <span className="text-sm text-gray-900 font-mono">{item.ip_address}:{item.port}</span>;
+                }
+                const connectionLabels: Record<string, string> = {
+                    'usb': 'USB',
+                    'bluetooth': 'Bluetooth',
+                    'serial': 'Serial'
+                };
+                return <span className="text-sm text-gray-900">{connectionLabels[item.connection_type] || item.connection_type}</span>;
+            }
         },
         {
             key: 'paper_size',
