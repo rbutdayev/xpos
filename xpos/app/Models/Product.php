@@ -342,6 +342,68 @@ class Product extends Model
     {
         parent::boot();
 
-        // Add any product-specific boot logic here
+        // Clear barcode image cache when barcode changes
+        static::updating(function ($product) {
+            if ($product->isDirty('barcode') || $product->isDirty('barcode_type')) {
+                // Get original barcode value
+                $originalBarcode = $product->getOriginal('barcode');
+
+                if ($originalBarcode) {
+                    // Clear all cached images for this barcode
+                    self::clearBarcodeImageCache($originalBarcode);
+                }
+
+                // Also clear cache for new barcode if it exists
+                if ($product->barcode && $product->barcode !== $originalBarcode) {
+                    self::clearBarcodeImageCache($product->barcode);
+                }
+            }
+        });
+
+        // Clear barcode image cache when product is deleted
+        static::deleting(function ($product) {
+            if ($product->barcode) {
+                self::clearBarcodeImageCache($product->barcode);
+            }
+        });
+    }
+
+    /**
+     * Clear all cached images for a barcode
+     */
+    private static function clearBarcodeImageCache(string $barcode): void
+    {
+        // Clear all possible combinations of format, width, height for this barcode
+        $formats = ['png', 'svg'];
+        $widths = range(1, 10);
+        $heights = range(10, 200);
+
+        // Clear common sizes (most likely to be cached)
+        $commonSizes = [
+            ['png', 2, 30],   // Default size
+            ['png', 3, 60],   // Print size
+            ['png', 3, 80],   // Large size
+            ['svg', 2, 30],
+            ['svg', 3, 60],
+            ['svg', 3, 80],
+        ];
+
+        foreach ($commonSizes as [$format, $width, $height]) {
+            $cacheKey = "barcode_image:{$barcode}:{$format}:{$width}:{$height}";
+            \Cache::forget($cacheKey);
+        }
+
+        // Optional: Clear all possible combinations (use with caution on large systems)
+        // This is commented out for performance reasons, but can be enabled if needed
+        /*
+        foreach ($formats as $format) {
+            foreach ($widths as $width) {
+                foreach ($heights as $height) {
+                    $cacheKey = "barcode_image:{$barcode}:{$format}:{$width}:{$height}";
+                    \Cache::forget($cacheKey);
+                }
+            }
+        }
+        */
     }
 }
