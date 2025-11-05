@@ -60,7 +60,7 @@ export default function Edit({ printerConfig, branches }: Props) {
             label_size_preset: printerConfig.settings?.label_size_preset || '3x2',
             custom_label_width: printerConfig.settings?.custom_label_width || 76,
             custom_label_height: printerConfig.settings?.custom_label_height || 51,
-            custom_label_gap: printerConfig.settings?.custom_label_gap || 20
+            custom_label_gap: printerConfig.settings?.custom_label_gap || 5
         },
         is_default: printerConfig.is_default,
         is_active: printerConfig.is_active,
@@ -93,24 +93,24 @@ export default function Edit({ printerConfig, branches }: Props) {
 
      const labelSizePresets = [
          { value: '3x2', label: '3×2 düym (76×51mm) - Standart', description: 'Ən çox istifadə olunan ölçü' },
-         { value: '50x30', label: '50×30mm - Kiçik', description: 'Kiçik məhsul etiketləri üçün' },
-         { value: '4x6', label: '4×6 düym (102×152mm) - Göndərmə', description: 'Logistika etiketləri' },
+         { value: '50x30', label: '50×30mm - Kiçik', description: 'Kiçik məhsul etiketləri' },
          { value: '2x1', label: '2×1 düym (51×25mm) - Çox kiçik', description: 'Qiymət etiketləri' },
-         { value: '4x3', label: '4×3 düym (102×76mm) - Böyük', description: 'Böyük məhsul etiketləri' },
+         { value: '60x40', label: '60×40mm - Orta', description: 'Orta məhsul etiketləri' },
+         { value: '70x50', label: '70×50mm - Böyük', description: 'Böyük məhsul etiketləri (80mm printer üçün maks)' },
          { value: 'custom', label: 'Fərdi ölçü', description: 'Öz ölçünüzü daxil edin' }
      ];
 
      // Gap values for each preset (matching barcodePrinter.ts)
      const presetGaps: Record<string, number> = {
-         '3x2': 20,
+         '3x2': 5,
          '50x30': 2,
-         '4x6': 3,
-         '2x1': 2,
-         '4x3': 3,
+         '2x1': 3,
+         '60x40': 3,
+         '70x50': 4,
      };
 
      const getGapForPreset = (preset: string): number => {
-         return presetGaps[preset] || 20;
+         return presetGaps[preset] || 5;
      };
 
     return (

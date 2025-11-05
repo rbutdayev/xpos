@@ -31,7 +31,7 @@ const LABEL_PRESETS: Record<string, LabelSize> = {
     name: '3x2 inch',
     width: 76,   // 3 inches = 76.2mm
     height: 51,  // 2 inches = 50.8mm
-    gap: 20,     // 0.8 inch = 20.32mm
+    gap: 5,      // 0.2 inch = 5mm (tested and verified)
     description: 'Standard product label (3" x 2")'
   },
   '50x30': {
@@ -39,28 +39,28 @@ const LABEL_PRESETS: Record<string, LabelSize> = {
     width: 50,
     height: 30,
     gap: 2,
-    description: 'Small product label (XP-350B default)'
-  },
-  '4x6': {
-    name: '4x6 inch',
-    width: 102,  // 4 inches
-    height: 152, // 6 inches
-    gap: 3,
-    description: 'Shipping label (4" x 6")'
+    description: 'Small product label'
   },
   '2x1': {
     name: '2x1 inch',
     width: 51,   // 2 inches
     height: 25,  // 1 inch
-    gap: 2,
+    gap: 3,
     description: 'Small price label (2" x 1")'
   },
-  '4x3': {
-    name: '4x3 inch',
-    width: 102,  // 4 inches
-    height: 76,  // 3 inches
+  '60x40': {
+    name: '60x40mm',
+    width: 60,
+    height: 40,
     gap: 3,
-    description: 'Large product label (4" x 3")'
+    description: 'Medium product label'
+  },
+  '70x50': {
+    name: '70x50mm',
+    width: 70,
+    height: 50,
+    gap: 4,
+    description: 'Large product label (max for 80mm printer)'
   }
 };
 
