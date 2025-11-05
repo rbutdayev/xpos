@@ -28,6 +28,10 @@ interface PrinterConfig {
         margin_bottom: number;
         margin_left: number;
         margin_right: number;
+        label_size_preset?: string;
+        custom_label_width?: number;
+        custom_label_height?: number;
+        custom_label_gap?: number;
     };
     branch?: {
         id: number;
@@ -268,6 +272,74 @@ export default function Show({ printerConfig }: Props) {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Barcode Label Settings */}
+                        {printerConfig.settings.label_size_preset && (
+                            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-6">
+                                <div className="p-6">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Barkod Etiket Parametrləri</h3>
+
+                                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <dt className="text-sm font-medium text-gray-500">Etiket Ölçüsü</dt>
+                                            <dd className="mt-1 text-sm text-gray-900">
+                                                {printerConfig.settings.label_size_preset === '3x2' && '3×2 düym (76×51mm) - Standart'}
+                                                {printerConfig.settings.label_size_preset === '50x30' && '50×30mm - Kiçik'}
+                                                {printerConfig.settings.label_size_preset === '2x1' && '2×1 düym (51×25mm) - Çox kiçik'}
+                                                {printerConfig.settings.label_size_preset === '60x40' && '60×40mm - Orta'}
+                                                {printerConfig.settings.label_size_preset === '70x50' && '70×50mm - Böyük'}
+                                                {printerConfig.settings.label_size_preset === 'custom' && 'Fərdi ölçü'}
+                                            </dd>
+                                        </div>
+
+                                        {printerConfig.settings.label_size_preset === 'custom' && (
+                                            <>
+                                                <div>
+                                                    <dt className="text-sm font-medium text-gray-500">En (mm)</dt>
+                                                    <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                                        {printerConfig.settings.custom_label_width}mm
+                                                    </dd>
+                                                </div>
+
+                                                <div>
+                                                    <dt className="text-sm font-medium text-gray-500">Hündürlük (mm)</dt>
+                                                    <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                                        {printerConfig.settings.custom_label_height}mm
+                                                    </dd>
+                                                </div>
+
+                                                <div>
+                                                    <dt className="text-sm font-medium text-gray-500">Aralıq/Gap (mm)</dt>
+                                                    <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                                        {printerConfig.settings.custom_label_gap}mm
+                                                    </dd>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {printerConfig.settings.label_size_preset !== 'custom' && (
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">Aralıq/Gap (mm)</dt>
+                                                <dd className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                                                    {printerConfig.settings.label_size_preset === '3x2' && '5mm'}
+                                                    {printerConfig.settings.label_size_preset === '50x30' && '2mm'}
+                                                    {printerConfig.settings.label_size_preset === '2x1' && '3mm'}
+                                                    {printerConfig.settings.label_size_preset === '60x40' && '3mm'}
+                                                    {printerConfig.settings.label_size_preset === '70x50' && '4mm'}
+                                                    <span className="ml-2 text-xs text-gray-500">(avtomatik)</span>
+                                                </dd>
+                                            </div>
+                                        )}
+                                    </dl>
+
+                                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                        <p className="text-sm text-yellow-800">
+                                            ⚠️ Gap (aralıq) düzgün təyin etmək çox vacibdir - yanlış gap etiketlərin düzgün çıxmamasına səbəb olar
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Connection Information */}
