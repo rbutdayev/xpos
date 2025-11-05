@@ -43,7 +43,7 @@ export default function Create({ branches }: Props) {
         name: '',
         printer_type: 'thermal',
         paper_size: '80mm',
-        connection_type: 'network',
+        connection_type: 'usb',
         ip_address: '',
         port: 9100,
         connection_timeout: 5000,
@@ -194,7 +194,6 @@ export default function Create({ branches }: Props) {
                                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     required
                                 >
-                                    <option value="network">Şəbəkə</option>
                                     <option value="usb">USB</option>
                                     <option value="bluetooth">Bluetooth</option>
                                     <option value="serial">Serial</option>
@@ -208,77 +207,80 @@ export default function Create({ branches }: Props) {
                         {/* Connection Settings */}
                         <div className="border-t pt-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Bağlantı Parametrləri</h3>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        IP Ünvanı *
-                                    </label>
-                                     <input
-                                         type="text"
-                                         value={data.ip_address}
-                                         onChange={e => setData('ip_address', e.target.value)}
-                                         className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                         placeholder="192.168.1.100"
-                                         pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-                                         required
-                                     />
-                                    {errors.ip_address && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.ip_address}</p>
-                                    )}
-                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Port *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={data.port}
-                                        onChange={e => setData('port', parseInt(e.target.value))}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                        min="1"
-                                        max="65535"
-                                        required
-                                    />
-                                    {errors.port && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.port}</p>
-                                    )}
+                            {/* USB Connection */}
+                            {data.connection_type === 'usb' && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-3">
+                                            <h4 className="text-sm font-medium text-blue-800">USB Bağlantısı</h4>
+                                            <p className="mt-1 text-sm text-blue-700">
+                                                USB printeri kompüterinizə qoşun. Sistem avtomatik olaraq USB cihazlarını aşkar edəcək.
+                                                Çap zamanı brauzerdən USB cihaz seçməlisiniz.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Kağız Ölçüsü
-                                    </label>
-                                    <select
-                                        value={data.paper_size}
-                                        onChange={e => setData('paper_size', e.target.value)}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    >
-                                        {paperSizes.map(size => (
-                                            <option key={size.value} value={size.value}>
-                                                {size.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                            {/* Bluetooth Connection */}
+                            {data.connection_type === 'bluetooth' && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-3">
+                                            <h4 className="text-sm font-medium text-blue-800">Bluetooth Bağlantısı</h4>
+                                            <p className="mt-1 text-sm text-blue-700">
+                                                Bluetooth printeri cihazınızla əvvəlcədən cütləşdirin. Çap zamanı brauzerdən Bluetooth cihaz seçməlisiniz.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Bağlantı Vaxtı (ms)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={data.connection_timeout}
-                                        onChange={e => setData('connection_timeout', parseInt(e.target.value))}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                        min="1000"
-                                        max="30000"
-                                        step="1000"
-                                    />
+                            {/* Serial Connection */}
+                            {data.connection_type === 'serial' && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div className="flex items-start">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div className="ml-3">
+                                            <h4 className="text-sm font-medium text-blue-800">Serial Port Bağlantısı</h4>
+                                            <p className="mt-1 text-sm text-blue-700">
+                                                Serial printeri kompüterinizə qoşun (COM port). Çap zamanı brauzerdən serial port seçməlisiniz.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
+
+                            <div className="mt-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Kağız Ölçüsü
+                                </label>
+                                <select
+                                    value={data.paper_size}
+                                    onChange={e => setData('paper_size', e.target.value)}
+                                    className="w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                    {paperSizes.map(size => (
+                                        <option key={size.value} value={size.value}>
+                                            {size.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
