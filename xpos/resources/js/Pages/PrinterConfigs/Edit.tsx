@@ -172,47 +172,6 @@ export default function Edit({ printerConfig, branches }: Props) {
                         <div className="border-t pt-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Bağlantı Parametrləri</h3>
 
-                            {/* Network Connection */}
-                            {data.connection_type === 'network' && (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            IP Ünvanı *
-                                        </label>
-                                         <input
-                                             type="text"
-                                             value={data.ip_address}
-                                             onChange={e => setData('ip_address', e.target.value)}
-                                             className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                             placeholder="192.168.1.100"
-                                             pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-                                             required
-                                         />
-                                        {errors.ip_address && (
-                                            <p className="mt-1 text-sm text-red-600">{errors.ip_address}</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Port *
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={data.port}
-                                            onChange={e => setData('port', parseInt(e.target.value))}
-                                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                            min="1"
-                                            max="65535"
-                                            required
-                                        />
-                                        {errors.port && (
-                                            <p className="mt-1 text-sm text-red-600">{errors.port}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* USB Connection */}
                             {data.connection_type === 'usb' && (
                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -271,40 +230,21 @@ export default function Edit({ printerConfig, branches }: Props) {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Kağız Ölçüsü
-                                    </label>
-                                    <select
-                                        value={data.paper_size}
-                                        onChange={e => setData('paper_size', e.target.value)}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    >
-                                        {paperSizes.map(size => (
-                                            <option key={size.value} value={size.value}>
-                                                {size.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {data.connection_type === 'network' && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Bağlantı Vaxtı (ms)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={data.connection_timeout}
-                                            onChange={e => setData('connection_timeout', parseInt(e.target.value))}
-                                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                            min="1000"
-                                            max="30000"
-                                            step="1000"
-                                        />
-                                    </div>
-                                )}
+                            <div className="mt-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Kağız Ölçüsü
+                                </label>
+                                <select
+                                    value={data.paper_size}
+                                    onChange={e => setData('paper_size', e.target.value)}
+                                    className="w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                    {paperSizes.map(size => (
+                                        <option key={size.value} value={size.value}>
+                                            {size.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
