@@ -583,13 +583,12 @@ export default function Authenticated({
             name: 'Sistem',
             icon: CogIcon,
             children: [
-                // Disabled - using standard PC printing instead
-                // {
-                //     name: 'Printer Konfiqurasiyası',
-                //     href: '/printer-configs',
-                //     icon: PrinterIcon,
-                //     current: route().current('printer-configs.*')
-                // },
+                {
+                    name: 'Printer Konfiqurasiyası',
+                    href: '/printer-configs',
+                    icon: PrinterIcon,
+                    current: route().current('printer-configs.*')
+                },
                 {
                     name: 'Qəbz Şablonları',
                     href: '/receipt-templates',
