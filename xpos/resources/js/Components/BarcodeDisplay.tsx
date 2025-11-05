@@ -1,5 +1,5 @@
-import React from 'react';
-import { printBarcode } from '../utils/barcodePrinter';
+import React, { useState } from 'react';
+import BarcodePrintModal from './BarcodePrintModal';
 
 interface BarcodeDisplayProps {
     productId?: number;
@@ -8,6 +8,7 @@ interface BarcodeDisplayProps {
     showActions?: boolean;
     className?: string;
     imageClassName?: string;
+    productName?: string;
 }
 
 export default function BarcodeDisplay({
@@ -16,31 +17,26 @@ export default function BarcodeDisplay({
     barcodeType = 'Code-128',
     showActions = true,
     className = "",
-    imageClassName = ""
+    imageClassName = "",
+    productName = "Unknown Product"
 }: BarcodeDisplayProps) {
+    const [showPrintModal, setShowPrintModal] = useState(false);
     if (!barcode) {
         return null;
     }
 
-    const handlePrint = async () => {
+    const handlePrint = () => {
         if (!productId) {
             alert('Məhsul ID-si tapılmadı. Məhsulu əvvəlcə yadda saxlayın.');
             return;
         }
-
-        try {
-            // Print using configured printer settings (automatically fetches from backend)
-            await printBarcode(productId, barcode, barcodeType);
-        } catch (error) {
-            console.error('Print error:', error);
-            alert('Çap zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
-        }
+        setShowPrintModal(true);
     };
 
     const handleDownload = () => {
         if (productId) {
             const link = document.createElement('a');
-            link.href = `/barcodes/${productId}?format=png&width=3&height=60`;
+            link.href = route('barcodes.show', { product: productId, format: 'png', width: 3, height: 60 });
             link.download = `barcode-${barcode}.png`;
             link.click();
         }
@@ -57,52 +53,65 @@ export default function BarcodeDisplay({
     };
 
     return (
-        <div className={`p-3 bg-white border border-gray-200 rounded-lg ${className}`}>
-            <div className="text-xs text-gray-600 mb-2">
-                Barkod {productId ? 'görünüşü' : 'önizləmə'}:
-                {barcodeType && (
-                    <span className="ml-2 text-blue-600 font-medium">({barcodeType})</span>
+        <>
+            <div className={`p-3 bg-white border border-gray-200 rounded-lg ${className}`}>
+                <div className="text-xs text-gray-600 mb-2">
+                    Barkod {productId ? 'görünüşü' : 'önizləmə'}:
+                    {barcodeType && (
+                        <span className="ml-2 text-blue-600 font-medium">({barcodeType})</span>
+                    )}
+                </div>
+                
+                <img 
+                    src={productId 
+                        ? route('barcodes.show', { product: productId, format: 'png', width: 2, height: 50 })
+                        : generatePreviewSvg()
+                    }
+                    alt={`Barkod: ${barcode}`}
+                    className={`max-w-full h-auto border border-gray-200 rounded p-1 ${imageClassName}`}
+                    style={{ maxWidth: '200px' }}
+                />
+                
+                <div className="mt-1 text-xs text-gray-700 font-mono">
+                    {barcode}
+                </div>
+                
+                {!productId && (
+                    <div className="mt-1 text-xs text-gray-500">
+                        * Həqiqi barkod şəkli məhsul yaradıldıqdan sonra əlçatan olacaq
+                    </div>
+                )}
+                
+                {productId && showActions && (
+                    <div className="mt-2 flex space-x-2">
+                        <button
+                            type="button"
+                            onClick={handlePrint}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        >
+                            Çap et
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDownload}
+                            className="text-xs text-green-600 hover:text-green-800 underline"
+                        >
+                            Yüklə
+                        </button>
+                    </div>
                 )}
             </div>
             
-            <img 
-                src={productId 
-                    ? `/barcodes/${productId}?format=png&width=2&height=50` 
-                    : generatePreviewSvg()
-                }
-                alt={`Barkod: ${barcode}`}
-                className={`max-w-full h-auto border border-gray-200 rounded p-1 ${imageClassName}`}
-                style={{ maxWidth: '200px' }}
-            />
-            
-            <div className="mt-1 text-xs text-gray-700 font-mono">
-                {barcode}
-            </div>
-            
-            {!productId && (
-                <div className="mt-1 text-xs text-gray-500">
-                    * Həqiqi barkod şəkli məhsul yaradıldıqdan sonra əlçatan olacaq
-                </div>
+            {productId && (
+                <BarcodePrintModal
+                    isOpen={showPrintModal}
+                    onClose={() => setShowPrintModal(false)}
+                    productId={productId}
+                    barcode={barcode}
+                    productName={productName}
+                    barcodeType={barcodeType}
+                />
             )}
-            
-            {productId && showActions && (
-                <div className="mt-2 flex space-x-2">
-                    <button
-                        type="button"
-                        onClick={handlePrint}
-                        className="text-xs text-blue-600 hover:text-blue-800 underline"
-                    >
-                        Çap et
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleDownload}
-                        className="text-xs text-green-600 hover:text-green-800 underline"
-                    >
-                        Yüklə
-                    </button>
-                </div>
-            )}
-        </div>
+        </>
     );
 }

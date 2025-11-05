@@ -180,7 +180,8 @@ function generateTSPLCommands(options: PrintOptions): string {
  */
 function generateBarcodeImageUrl(productId: number, format: string = 'png'): string {
   // Use own backend API instead of external service
-  return `/barcodes/${productId}?format=${format}&width=3&height=80`;
+  // Use the ziggy route helper to generate the proper URL
+  return route('barcodes.show', { product: productId, format: format, width: 3, height: 80 });
 }
 
 /**
@@ -355,9 +356,19 @@ async function printViaWebSerial(commands: string): Promise<void> {
 }
 
 /**
- * Print via system dialog with clean barcode layout
+ * Print via system dialog with clean barcode layout (fallback method)
  */
 async function printViaSystemDialog(options: PrintOptions): Promise<void> {
+  // Try to use the Laravel print route first (no popup blocker issues)
+  try {
+    const printUrl = route('barcodes.print', { product: options.productId });
+    window.open(printUrl + '?autoprint=1', '_blank');
+    return;
+  } catch (error) {
+    console.warn('Failed to use Laravel print route, falling back to popup method');
+  }
+
+  // Fallback to popup method
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     throw new Error('Pop-up blocker aktiv. Zəhmət olmasa pop-up-ları bu sayt üçün aktivləşdirin.');

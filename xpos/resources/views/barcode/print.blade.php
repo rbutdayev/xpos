@@ -12,12 +12,33 @@
             }
             
             @page {
-                margin: 0.5in;
-                size: A4;
+                margin: 5mm;
+                size: 60mm 40mm; /* Optimized for barcode labels */
             }
             
             .no-print {
                 display: none !important;
+            }
+            
+            .print-container {
+                transform: scale(1);
+                width: 50mm;
+                height: 30mm;
+                padding: 2mm;
+                margin: 0;
+                border: none;
+            }
+            
+            .header {
+                display: none; /* Hide header in print */
+            }
+            
+            .product-info {
+                display: none; /* Hide product info in print to save space */
+            }
+            
+            .print-info {
+                display: none; /* Hide print info in print */
             }
         }
         
@@ -110,6 +131,46 @@
             font-size: 14px;
             color: #666;
             margin-bottom: 10px;
+        }
+        
+        /* Print-specific barcode section styling */
+        @media print {
+            .barcode-section {
+                width: 48mm;
+                height: 28mm;
+                margin: 0;
+                padding: 1mm;
+                background: white;
+                border: 1px solid #000;
+                border-radius: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .barcode-image {
+                margin: 1mm 0;
+            }
+            
+            .barcode-image img {
+                max-width: 45mm;
+                max-height: 20mm;
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .barcode-text {
+                font-size: 8px;
+                margin: 1mm 0;
+                letter-spacing: 0.5px;
+            }
+            
+            .barcode-type {
+                font-size: 6px;
+                margin: 0;
+            }
         }
         
         .print-info {
