@@ -27,19 +27,35 @@ export default function BarcodeDisplay({
 
     const handlePrint = () => {
         if (!productId) {
-            alert('Məhsul ID-si tapılmadı. Məhsulu əvvəlcə yadda saxlayın.');
+            // For unsaved products, use direct barcode printing
+            const printUrl = route('barcodes.print-direct', { 
+                barcode: barcode,
+                name: productName,
+                type: barcodeType,
+                autoprint: '1'
+            });
+            window.open(printUrl, '_blank');
             return;
         }
         setShowPrintModal(true);
     };
 
     const handleDownload = () => {
+        const link = document.createElement('a');
         if (productId) {
-            const link = document.createElement('a');
             link.href = route('barcodes.show', { product: productId, format: 'png', width: 3, height: 60 });
-            link.download = `barcode-${barcode}.png`;
-            link.click();
+        } else {
+            // For unsaved products, use direct barcode image
+            link.href = route('barcodes.show-image', { 
+                barcode: barcode, 
+                type: barcodeType,
+                format: 'png', 
+                width: 3, 
+                height: 60 
+            });
         }
+        link.download = `barcode-${barcode}.png`;
+        link.click();
     };
 
     // Generate preview SVG for when we don't have product ID yet
@@ -65,7 +81,7 @@ export default function BarcodeDisplay({
                 <img 
                     src={productId 
                         ? route('barcodes.show', { product: productId, format: 'png', width: 2, height: 50 })
-                        : generatePreviewSvg()
+                        : route('barcodes.show-image', { barcode: barcode, type: barcodeType, format: 'png', width: 2, height: 50 })
                     }
                     alt={`Barkod: ${barcode}`}
                     className={`max-w-full h-auto border border-gray-200 rounded p-1 ${imageClassName}`}
@@ -76,13 +92,7 @@ export default function BarcodeDisplay({
                     {barcode}
                 </div>
                 
-                {!productId && (
-                    <div className="mt-1 text-xs text-gray-500">
-                        * Həqiqi barkod şəkli məhsul yaradıldıqdan sonra əlçatan olacaq
-                    </div>
-                )}
-                
-                {productId && showActions && (
+                {showActions && (
                     <div className="mt-2 flex space-x-2">
                         <button
                             type="button"
@@ -102,7 +112,7 @@ export default function BarcodeDisplay({
                 )}
             </div>
             
-            {productId && (
+            {productId && showPrintModal && (
                 <BarcodePrintModal
                     isOpen={showPrintModal}
                     onClose={() => setShowPrintModal(false)}

@@ -228,11 +228,34 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     });
 
     // Barcode Management
-    Route::get('/barcodes/{product}', [BarcodeController::class, 'show'])->name('barcodes.show');
-    Route::get('/barcodes/{product}/print', [BarcodeController::class, 'print'])->name('barcodes.print');
-    Route::post('/barcodes/{product}/generate', [BarcodeController::class, 'generate'])->name('barcodes.generate');
-    Route::post('/barcodes/validate', [BarcodeController::class, 'validateBarcode'])->name('barcodes.validate');
     Route::get('/barcodes/types', [BarcodeController::class, 'types'])->name('barcodes.types');
+    Route::post('/barcodes/validate', [BarcodeController::class, 'validateBarcode'])->name('barcodes.validate');
+    // Direct barcode printing for generated barcodes (doesn't require saved product)
+    Route::get('/barcodes/print-direct/{barcode}', [BarcodeController::class, 'printDirect'])->name('barcodes.print-direct');
+    Route::get('/barcodes/image/{barcode}', [BarcodeController::class, 'showImage'])->name('barcodes.show-image');
+    // Use prefix to avoid route conflicts
+    Route::get('/barcodes/print-by-value/{barcode}', [BarcodeController::class, 'printByBarcode'])->name('barcodes.print-by-barcode');
+    
+    // Legacy redirect for old barcode print URLs that look like barcodes instead of product IDs
+    Route::get('/barcodes/{barcode}/print', function($barcode) {
+        // If it looks like a barcode (longer than typical product ID), redirect to new route
+        if (strlen($barcode) > 8 || (strlen($barcode) > 6 && !is_numeric($barcode))) {
+            return redirect()->route('barcodes.print-by-barcode', ['barcode' => $barcode] + request()->query());
+        }
+        // Otherwise, treat as product ID and continue to product print route
+        try {
+            $product = \App\Models\Product::where('id', $barcode)
+                ->where('account_id', auth()->user()->account_id)
+                ->firstOrFail();
+            return app(\App\Http\Controllers\BarcodeController::class)->print($product);
+        } catch (\Exception $e) {
+            abort(404, 'Product not found');
+        }
+    })->where('barcode', '[A-Za-z0-9\-]+');
+    
+    Route::get('/barcodes/{product}', [BarcodeController::class, 'show'])->name('barcodes.show')->where('product', '[0-9]+');
+    Route::get('/barcodes/{product}/print', [BarcodeController::class, 'print'])->name('barcodes.print')->where('product', '[0-9]+');
+    Route::post('/barcodes/{product}/generate', [BarcodeController::class, 'generate'])->name('barcodes.generate');
     Route::delete('/barcodes/{product}/cache', [BarcodeController::class, 'clearCache'])->name('barcodes.clear-cache');
     
     // Document Management

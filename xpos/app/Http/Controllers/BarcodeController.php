@@ -135,6 +135,178 @@ class BarcodeController extends Controller
     }
 
     /**
+     * Generate barcode image directly without requiring a saved product
+     */
+    public function showImage(string $barcode, Request $request)
+    {
+        $format = $request->get('format', 'png');
+        $barcodeType = $request->get('type', 'EAN13');
+        $width = (int) $request->get('width', 2);
+        $height = (int) $request->get('height', 30);
+
+        // Validate parameters
+        if ($width < 1 || $width > 10) {
+            return response()->json(['error' => 'Width must be between 1 and 10'], 400);
+        }
+
+        if ($height < 10 || $height > 200) {
+            return response()->json(['error' => 'Height must be between 10 and 200'], 400);
+        }
+
+        if (!in_array($format, ['png', 'svg'])) {
+            return response()->json(['error' => 'Format must be either png or svg'], 400);
+        }
+
+        try {
+            // Validate barcode format
+            if (!$this->barcodeService->validateBarcode($barcode, $barcodeType)) {
+                return response()->json(['error' => 'Invalid barcode format'], 400);
+            }
+
+            // Generate cache key
+            $cacheKey = "direct_barcode_image:{$barcode}:{$barcodeType}:{$format}:{$width}:{$height}";
+
+            // Cache for 1 hour (temporary barcodes don't need long caching)
+            $cacheDuration = 60; // 1 hour in minutes
+
+            // Try to get from cache, or generate and cache
+            $barcodeData = Cache::remember($cacheKey, $cacheDuration, function () use ($barcode, $barcodeType, $format, $width, $height) {
+                if ($format === 'svg') {
+                    return [
+                        'content' => $this->barcodeService->generateSVG(
+                            $barcode,
+                            $barcodeType,
+                            $width,
+                            $height
+                        ),
+                        'type' => 'image/svg+xml',
+                        'encoded' => false
+                    ];
+                } else {
+                    return [
+                        'content' => $this->barcodeService->generatePNG(
+                            $barcode,
+                            $barcodeType,
+                            $width,
+                            $height
+                        ),
+                        'type' => 'image/png',
+                        'encoded' => true // Base64 encoded
+                    ];
+                }
+            });
+
+            // Decode if necessary
+            $content = $barcodeData['encoded'] ? base64_decode($barcodeData['content']) : $barcodeData['content'];
+
+            // Generate ETag for HTTP caching
+            $etag = md5($content);
+
+            // Check if client has cached version
+            $clientEtag = $request->header('If-None-Match');
+            if ($clientEtag === '"' . $etag . '"') {
+                return response('', 304)
+                    ->header('ETag', '"' . $etag . '"')
+                    ->header('Cache-Control', 'public, max-age=3600'); // 1 hour
+            }
+
+            // Return image with caching headers
+            return response($content)
+                ->header('Content-Type', $barcodeData['type'])
+                ->header('Cache-Control', 'public, max-age=3600') // 1 hour for direct barcodes
+                ->header('ETag', '"' . $etag . '"')
+                ->header('X-Cache-Status', Cache::has($cacheKey) ? 'HIT' : 'MISS');
+
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => 'Invalid barcode data: ' . $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            \Log::error('Direct barcode image generation failed', [
+                'barcode' => $barcode,
+                'type' => $barcodeType,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Failed to generate barcode image'], 500);
+        }
+    }
+
+    /**
+     * Print barcode directly without requiring a saved product
+     * Useful for printing barcodes during product creation workflow
+     */
+    public function printDirect(string $barcode, Request $request)
+    {
+        try {
+            $barcodeType = $request->get('type', 'EAN13');
+            $productName = $request->get('name', 'Product');
+            
+            // Validate barcode format
+            if (!$this->barcodeService->validateBarcode($barcode, $barcodeType)) {
+                abort(400, __('Invalid barcode format'));
+            }
+
+            // Generate barcode image URL for this barcode
+            $barcodeImageUrl = route('barcodes.show-image', [
+                'barcode' => $barcode,
+                'type' => $barcodeType,
+                'format' => 'png',
+                'width' => 3,
+                'height' => 60
+            ]);
+
+            $printData = [
+                'barcode' => $barcode,
+                'barcode_type' => $barcodeType,
+                'product_name' => $productName,
+                'barcode_url' => $barcodeImageUrl,
+                'generated_at' => now()->format('d.m.Y H:i'),
+            ];
+
+            return view('barcode.print-direct', $printData);
+        } catch (\Exception $e) {
+            \Log::error('Direct barcode print failed', [
+                'barcode' => $barcode,
+                'error' => $e->getMessage(),
+            ]);
+            abort(500, __('Failed to generate barcode print page. Please try again.'));
+        }
+    }
+
+    /**
+     * Show printable barcode page by barcode value
+     */
+    public function printByBarcode(string $barcode)
+    {
+        try {
+            // Find product by barcode within user's account
+            $product = Product::where('barcode', $barcode)
+                ->where('account_id', auth()->user()->account_id)
+                ->first();
+
+            if (!$product) {
+                // Log for debugging
+                \Log::info('Product not found for barcode print', [
+                    'barcode' => $barcode,
+                    'account_id' => auth()->user()->account_id ?? 'not authenticated',
+                    'total_products_with_barcode' => Product::where('barcode', $barcode)->count()
+                ]);
+                
+                abort(404, __('Product with barcode :barcode not found', ['barcode' => $barcode]));
+            }
+
+            Gate::authorize('access-account-data', $product);
+
+            return $this->print($product);
+        } catch (\Exception $e) {
+            \Log::error('Barcode print by barcode failed', [
+                'barcode' => $barcode,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            abort(500, __('Failed to load barcode print page. Please try again.'));
+        }
+    }
+
+    /**
      * Show printable barcode page
      */
     public function print(Product $product)

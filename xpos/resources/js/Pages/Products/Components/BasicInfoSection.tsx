@@ -165,7 +165,16 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
               </SecondaryButton>
             )}
             {data.barcode && (
-              <SecondaryButton type="button" onClick={() => window.printBarcode && window.printBarcode(data.barcode, 'EAN-13')}>
+              <SecondaryButton type="button" onClick={() => {
+                // For unsaved products, use direct barcode printing
+                const printUrl = route('barcodes.print-direct', { 
+                  barcode: data.barcode,
+                  name: data.name || 'Məhsul',
+                  type: 'EAN13',
+                  autoprint: '1'
+                });
+                window.open(printUrl, '_blank');
+              }}>
                 Çap et
               </SecondaryButton>
             )}

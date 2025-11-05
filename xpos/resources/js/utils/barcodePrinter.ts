@@ -12,7 +12,7 @@ interface LabelSize {
 }
 
 interface PrintOptions {
-  productId: number;
+  productId?: number; // Optional - for direct barcode printing without saved product
   barcode: string;
   barcodeType: string;
   labelSize?: string; // Preset name: '3x2', '50x30', '4x6', etc.
@@ -178,10 +178,15 @@ function generateTSPLCommands(options: PrintOptions): string {
 /**
  * Generate barcode image URL using own backend
  */
-function generateBarcodeImageUrl(productId: number, format: string = 'png'): string {
+function generateBarcodeImageUrl(productId: number | undefined, barcode: string, barcodeType: string, format: string = 'png'): string {
   // Use own backend API instead of external service
   // Use the ziggy route helper to generate the proper URL
-  return route('barcodes.show', { product: productId, format: format, width: 3, height: 80 });
+  if (productId) {
+    return route('barcodes.show', { product: productId, format: format, width: 3, height: 80 });
+  } else {
+    // For direct barcode generation without product
+    return route('barcodes.show-image', { barcode: barcode, type: barcodeType, format: format, width: 3, height: 80 });
+  }
 }
 
 /**
@@ -361,9 +366,21 @@ async function printViaWebSerial(commands: string): Promise<void> {
 async function printViaSystemDialog(options: PrintOptions): Promise<void> {
   // Try to use the Laravel print route first (no popup blocker issues)
   try {
-    const printUrl = route('barcodes.print', { product: options.productId });
-    window.open(printUrl + '?autoprint=1', '_blank');
-    return;
+    if (options.productId) {
+      const printUrl = route('barcodes.print', { product: options.productId, autoprint: '1' });
+      window.open(printUrl, '_blank');
+      return;
+    } else {
+      // For direct barcode printing (no product ID)
+      const printUrl = route('barcodes.print-direct', { 
+        barcode: options.barcode,
+        name: 'Məhsul',
+        type: options.barcodeType,
+        autoprint: '1'
+      });
+      window.open(printUrl, '_blank');
+      return;
+    }
   } catch (error) {
     console.warn('Failed to use Laravel print route, falling back to popup method');
   }
@@ -375,7 +392,7 @@ async function printViaSystemDialog(options: PrintOptions): Promise<void> {
   }
 
   const label = getLabelDimensions(options);
-  const barcodeImageUrl = generateBarcodeImageUrl(options.productId, 'png');
+  const barcodeImageUrl = generateBarcodeImageUrl(options.productId, options.barcode, options.barcodeType, 'png');
 
   printWindow.document.write(`
     <html>
@@ -456,7 +473,7 @@ async function printViaDialog(options: PrintOptions): Promise<void> {
   }
 
   const label = getLabelDimensions(options);
-  const barcodeImageUrl = generateBarcodeImageUrl(options.productId, 'png');
+  const barcodeImageUrl = generateBarcodeImageUrl(options.productId, options.barcode, options.barcodeType, 'png');
 
   printWindow.document.write(`
     <html>
@@ -567,18 +584,26 @@ async function fetchLabelSettings(): Promise<{
  * Automatically fetches label size from printer configuration
  */
 export async function printBarcode(
-  productId: number,
-  barcode: string,
+  productIdOrBarcode: number | string,
+  barcodeOrType?: string,
   barcodeType: string = 'Code-128',
   labelSize?: string,  // Optional - will fetch from settings if not provided
   copies: number = 1
 ): Promise<void> {
-  if (!barcode || barcode.trim() === '') {
-    throw new Error('Barkod məlumatı tapılmadı');
+  let productId: number | undefined;
+  let barcode: string;
+  
+  // Handle both old signature (productId, barcode, type) and new signature (barcode, type)
+  if (typeof productIdOrBarcode === 'number') {
+    productId = productIdOrBarcode;
+    barcode = barcodeOrType || '';
+  } else {
+    barcode = productIdOrBarcode;
+    barcodeType = barcodeOrType || barcodeType;
   }
 
-  if (!productId) {
-    throw new Error('Məhsul ID-si tələb olunur');
+  if (!barcode || barcode.trim() === '') {
+    throw new Error('Barkod məlumatı tapılmadı');
   }
 
   try {
@@ -620,20 +645,37 @@ export async function printBarcode(
  * Print barcode with custom label size
  */
 export async function printBarcodeCustomSize(
-  productId: number,
-  barcode: string,
-  barcodeType: string,
-  width: number,
-  height: number,
+  productIdOrBarcode: number | string,
+  barcodeOrType: string,
+  barcodeTypeOrWidth: string | number,
+  widthOrHeight?: number,
+  heightOrGap?: number,
   gap: number = 2,
   copies: number = 1
 ): Promise<void> {
-  if (!barcode || barcode.trim() === '') {
-    throw new Error('Barkod məlumatı tapılmadı');
+  let productId: number | undefined;
+  let barcode: string;
+  let barcodeType: string;
+  let width: number;
+  let height: number;
+  
+  // Handle both old signature (productId, barcode, type, width, height) and new signature (barcode, type, width, height)
+  if (typeof productIdOrBarcode === 'number') {
+    productId = productIdOrBarcode;
+    barcode = barcodeOrType;
+    barcodeType = barcodeTypeOrWidth as string;
+    width = widthOrHeight as number;
+    height = heightOrGap as number;
+  } else {
+    barcode = productIdOrBarcode;
+    barcodeType = barcodeOrType;
+    width = barcodeTypeOrWidth as number;
+    height = widthOrHeight as number;
+    gap = heightOrGap || gap;
   }
 
-  if (!productId) {
-    throw new Error('Məhsul ID-si tələb olunur');
+  if (!barcode || barcode.trim() === '') {
+    throw new Error('Barkod məlumatı tapılmadı');
   }
 
   try {
