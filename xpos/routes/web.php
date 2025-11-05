@@ -233,6 +233,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/barcodes/{product}/generate', [BarcodeController::class, 'generate'])->name('barcodes.generate');
     Route::post('/barcodes/validate', [BarcodeController::class, 'validateBarcode'])->name('barcodes.validate');
     Route::get('/barcodes/types', [BarcodeController::class, 'types'])->name('barcodes.types');
+    Route::delete('/barcodes/{product}/cache', [BarcodeController::class, 'clearCache'])->name('barcodes.clear-cache');
     
     // Document Management
     Route::get('/products/{product}/documents', [DocumentController::class, 'index'])->name('documents.index');
@@ -436,6 +437,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Thermal Printing Management
     Route::get('/printer-configs/search', [PrinterConfigController::class, 'search'])->name('printer-configs.search');
+    Route::get('/printer-configs/label-settings', [PrinterConfigController::class, 'getLabelSettings'])->name('printer-configs.label-settings');
     Route::post('/printer-configs/{printerConfig}/test', [PrinterConfigController::class, 'testPrint'])->name('printer-configs.test');
     Route::resource('printer-configs', PrinterConfigController::class);
     

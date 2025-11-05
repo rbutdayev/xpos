@@ -80,11 +80,10 @@ export default function Authenticated({
         const openMenus: string[] = ['dashboard']; // Always show dashboard
         
         // Check which section the current route belongs to and open that menu
-        if (currentRoute?.includes('companies') || 
-            currentRoute?.includes('branches') || 
-            currentRoute?.includes('users') || 
-            currentRoute?.includes('warehouses') ||
-            currentRoute?.includes('settings')) {
+        if (currentRoute?.includes('companies') ||
+            currentRoute?.includes('branches') ||
+            currentRoute?.includes('users') ||
+            currentRoute?.includes('warehouses')) {
             openMenus.push('Şirkət');
         }
         
@@ -141,8 +140,9 @@ export default function Authenticated({
             openMenus.push('Hesabatlar');
         }
         
-        if (currentRoute?.includes('receipt-templates') || 
-            currentRoute?.includes('settings') || 
+        if (currentRoute?.includes('receipt-templates') ||
+            currentRoute?.includes('printer-configs') ||
+            currentRoute?.includes('settings') ||
             currentRoute?.includes('audit-logs')) {
             openMenus.push('Sistem');
         }
@@ -557,7 +557,7 @@ export default function Authenticated({
                     name: 'Şirkət Məlumatları',
                     href: '/companies',
                     icon: BuildingOffice2Icon,
-                    current: route().current('companies.*') || route().current('settings.*')
+                    current: route().current('companies.*')
                 },
                 {
                     name: 'Filiallar',
@@ -583,13 +583,12 @@ export default function Authenticated({
             name: 'Sistem',
             icon: CogIcon,
             children: [
-                // Disabled - using standard PC printing instead
-                // {
-                //     name: 'Printer Konfiqurasiyası',
-                //     href: '/printer-configs',
-                //     icon: PrinterIcon,
-                //     current: route().current('printer-configs.*')
-                // },
+                {
+                    name: 'Printer Konfiqurasiyası',
+                    href: '/printer-configs',
+                    icon: PrinterIcon,
+                    current: route().current('printer-configs.*')
+                },
                 {
                     name: 'Qəbz Şablonları',
                     href: '/receipt-templates',

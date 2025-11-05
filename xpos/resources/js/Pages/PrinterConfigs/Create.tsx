@@ -18,6 +18,11 @@ interface FormData {
         margin_bottom?: number;
         margin_left?: number;
         margin_right?: number;
+        // Barcode label settings
+        label_size_preset?: string;
+        custom_label_width?: number;
+        custom_label_height?: number;
+        custom_label_gap?: number;
     };
     is_default: boolean;
     is_active: boolean;
@@ -48,7 +53,12 @@ export default function Create({ branches }: Props) {
             margin_top: 0,
             margin_bottom: 0,
             margin_left: 0,
-            margin_right: 0
+            margin_right: 0,
+            // Barcode label settings defaults
+            label_size_preset: '3x2',  // Most common size
+            custom_label_width: 76,
+            custom_label_height: 51,
+            custom_label_gap: 20
         },
         is_default: false,
         is_active: true,
@@ -77,6 +87,15 @@ export default function Create({ branches }: Props) {
          { value: 'UTF-8', label: 'UTF-8' },
          { value: 'CP1254', label: 'CP1254 (Türk)' },
          { value: 'ISO-8859-9', label: 'ISO-8859-9' }
+     ];
+
+     const labelSizePresets = [
+         { value: '3x2', label: '3×2 düym (76×51mm) - Standart', description: 'Ən çox istifadə olunan ölçü' },
+         { value: '50x30', label: '50×30mm - Kiçik', description: 'Kiçik məhsul etiketləri üçün' },
+         { value: '4x6', label: '4×6 düym (102×152mm) - Göndərmə', description: 'Logistika etiketləri' },
+         { value: '2x1', label: '2×1 düym (51×25mm) - Çox kiçik', description: 'Qiymət etiketləri' },
+         { value: '4x3', label: '4×3 düym (102×76mm) - Böyük', description: 'Böyük məhsul etiketləri' },
+         { value: 'custom', label: 'Fərdi ölçü', description: 'Öz ölçünüzü daxil edin' }
      ];
 
     return (
@@ -356,6 +375,97 @@ export default function Create({ branches }: Props) {
                                         min="0"
                                         max="50"
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Barcode Label Settings */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Barkod Etiket Parametrləri</h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Bu parametrlər yalnız barkod çapı üçün istifadə olunur. Qəbz çapı üçün yuxarıdakı "Kağız Ölçüsü" istifadə olunur.
+                            </p>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Etiket Ölçüsü
+                                    </label>
+                                    <select
+                                        value={data.settings.label_size_preset}
+                                        onChange={e => setData('settings', { ...data.settings, label_size_preset: e.target.value })}
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    >
+                                        {labelSizePresets.map(preset => (
+                                            <option key={preset.value} value={preset.value}>
+                                                {preset.label} - {preset.description}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Standart etiket ölçüsü 3×2 düym (76×51mm) təvsiyə olunur
+                                    </p>
+                                </div>
+
+                                {data.settings.label_size_preset === 'custom' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                En (mm) *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={data.settings.custom_label_width}
+                                                onChange={e => setData('settings', { ...data.settings, custom_label_width: parseInt(e.target.value) || 0 })}
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                min="20"
+                                                max="200"
+                                                placeholder="76"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Hündürlük (mm) *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={data.settings.custom_label_height}
+                                                onChange={e => setData('settings', { ...data.settings, custom_label_height: parseInt(e.target.value) || 0 })}
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                min="10"
+                                                max="300"
+                                                placeholder="51"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Aralıq/Gap (mm)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={data.settings.custom_label_gap}
+                                                onChange={e => setData('settings', { ...data.settings, custom_label_gap: parseInt(e.target.value) || 0 })}
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                min="0"
+                                                max="50"
+                                                placeholder="20"
+                                            />
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Etiketlər arasındakı boşluq
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <h4 className="text-sm font-medium text-yellow-800 mb-2">💡 Məsləhət</h4>
+                                    <ul className="text-sm text-yellow-700 space-y-1 list-disc list-inside">
+                                        <li>3×2 düym (0.8 düym gap) ən çox istifadə olunan ölçüdür</li>
+                                        <li>Printerinizdə olan etiket rulonunun ölçüsünü ölçün</li>
+                                        <li>Gap (aralıq) düzgün təyin etmək çox vacibdir - yanlış gap etiketlərin düzgün çıxmamasına səbəb olar</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
