@@ -60,7 +60,7 @@ export default function Edit({ printerConfig, branches }: Props) {
             label_size_preset: printerConfig.settings?.label_size_preset || '3x2',
             custom_label_width: printerConfig.settings?.custom_label_width || 76,
             custom_label_height: printerConfig.settings?.custom_label_height || 51,
-            custom_label_gap: printerConfig.settings?.custom_label_gap || 20
+            custom_label_gap: printerConfig.settings?.custom_label_gap || 5
         },
         is_default: printerConfig.is_default,
         is_active: printerConfig.is_active,
@@ -93,12 +93,25 @@ export default function Edit({ printerConfig, branches }: Props) {
 
      const labelSizePresets = [
          { value: '3x2', label: '3×2 düym (76×51mm) - Standart', description: 'Ən çox istifadə olunan ölçü' },
-         { value: '50x30', label: '50×30mm - Kiçik', description: 'Kiçik məhsul etiketləri üçün' },
-         { value: '4x6', label: '4×6 düym (102×152mm) - Göndərmə', description: 'Logistika etiketləri' },
+         { value: '50x30', label: '50×30mm - Kiçik', description: 'Kiçik məhsul etiketləri' },
          { value: '2x1', label: '2×1 düym (51×25mm) - Çox kiçik', description: 'Qiymət etiketləri' },
-         { value: '4x3', label: '4×3 düym (102×76mm) - Böyük', description: 'Böyük məhsul etiketləri' },
+         { value: '60x40', label: '60×40mm - Orta', description: 'Orta məhsul etiketləri' },
+         { value: '70x50', label: '70×50mm - Böyük', description: 'Böyük məhsul etiketləri (80mm printer üçün maks)' },
          { value: 'custom', label: 'Fərdi ölçü', description: 'Öz ölçünüzü daxil edin' }
      ];
+
+     // Gap values for each preset (matching barcodePrinter.ts)
+     const presetGaps: Record<string, number> = {
+         '3x2': 5,
+         '50x30': 2,
+         '2x1': 3,
+         '60x40': 3,
+         '70x50': 4,
+     };
+
+     const getGapForPreset = (preset: string): number => {
+         return presetGaps[preset] || 5;
+     };
 
     return (
         <AuthenticatedLayout>
@@ -407,7 +420,7 @@ export default function Edit({ printerConfig, branches }: Props) {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Aralıq/Gap (mm)
+                                                Aralıq/Gap (mm) *
                                             </label>
                                             <input
                                                 type="number"
@@ -422,6 +435,29 @@ export default function Edit({ printerConfig, branches }: Props) {
                                                 Etiketlər arasındakı boşluq
                                             </p>
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Gap Information - Always visible */}
+                                {data.settings.label_size_preset !== 'custom' && (
+                                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Aralıq/Gap (mm)
+                                        </label>
+                                        <div className="flex items-center space-x-3">
+                                            <input
+                                                type="text"
+                                                value={getGapForPreset(data.settings.label_size_preset || '3x2')}
+                                                readOnly
+                                                className="w-24 rounded-md border-gray-300 bg-gray-100 shadow-sm text-gray-600 cursor-not-allowed"
+                                            />
+                                            <span className="text-sm text-gray-600">
+                                                (Bu ölçü üçün avtomatik təyin olunub)
+                                            </span>
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            ℹ️ Fərdi gap təyin etmək üçün "Fərdi ölçü" seçin
+                                        </p>
                                     </div>
                                 )}
 
