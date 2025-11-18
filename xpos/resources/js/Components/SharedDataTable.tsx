@@ -25,6 +25,8 @@ export interface Column {
     headerClassName?: string;
     width?: string;
     align?: 'left' | 'center' | 'right';
+    hideOnMobile?: boolean; // Hide this column on mobile devices
+    mobileLabel?: string; // Alternative label for mobile detail view
 }
 
 export interface FilterOption {
@@ -141,6 +143,11 @@ interface SharedDataTableProps {
     hidePagination?: boolean;
     hideFilters?: boolean;
     hidePerPageSelect?: boolean;
+
+    // Mobile-specific features
+    mobileClickable?: boolean; // Make rows clickable on mobile
+    onMobileRowClick?: (item: any) => void; // Handler for mobile row clicks
+    hideMobileActions?: boolean; // Hide action buttons on mobile (default: true)
 }
 
 export default function SharedDataTable({
@@ -189,11 +196,28 @@ export default function SharedDataTable({
     hideSearch = false,
     hidePagination = false,
     hideFilters = false,
-    hidePerPageSelect = false
+    hidePerPageSelect = false,
+
+    mobileClickable = false,
+    onMobileRowClick,
+    hideMobileActions = true
 }: SharedDataTableProps) {
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set());
     const [showFilters, setShowFilters] = useState(false);
+    const [mobileDetailItem, setMobileDetailItem] = useState<any>(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile screen size
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // md breakpoint
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Selection handlers
     const handleSelectAll = (checked: boolean) => {
@@ -222,6 +246,22 @@ export default function SharedDataTable({
         }
         setExpandedRows(newExpanded);
     };
+
+    // Mobile row click handler
+    const handleMobileRowClick = (item: any) => {
+        if (isMobile && mobileClickable) {
+            if (onMobileRowClick) {
+                onMobileRowClick(item);
+            } else {
+                setMobileDetailItem(item);
+            }
+        }
+    };
+
+    // Filter columns based on mobile visibility
+    const visibleColumns = isMobile
+        ? columns.filter(col => !col.hideOnMobile)
+        : columns;
 
     const getAlignmentClass = (align?: string) => {
         switch (align) {
@@ -431,11 +471,11 @@ export default function SharedDataTable({
                 {data.data.length > 0 ? (
                     <>
                         <div className="overflow-x-auto border border-gray-200 rounded-lg w-full">
-                            <table className={`w-full min-w-[1200px] divide-y divide-gray-200 ${tableClassName}`}>
+                            <table className={`w-full ${!isMobile ? 'min-w-[1200px]' : ''} divide-y divide-gray-200 ${tableClassName}`}>
                                 <thead className={`bg-gray-50 ${sticky ? 'sticky top-0 z-10' : ''}`}>
                                     <tr>
                                         {/* Selection Column */}
-                                        {selectable && (
+                                        {selectable && !isMobile && (
                                             <th className="px-8 py-6 w-4">
                                                 <input
                                                     type="checkbox"
@@ -445,14 +485,14 @@ export default function SharedDataTable({
                                                 />
                                             </th>
                                         )}
-                                        
+
                                         {/* Expand Column */}
-                                        {expandable && (
+                                        {expandable && !isMobile && (
                                             <th className="px-8 py-6 w-4"></th>
                                         )}
 
                                         {/* Data Columns */}
-                                        {columns.map((column) => (
+                                        {visibleColumns.map((column) => (
                                             <th 
                                                 key={column.key}
                                                 className={`px-3 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider ${getAlignmentClass(column.align)} ${column.headerClassName || ''} border-r border-gray-200 last:border-r-0`}
@@ -483,7 +523,7 @@ export default function SharedDataTable({
                                         ))}
 
                                         {/* Actions Column */}
-                                        {actions.length > 0 && (
+                                        {actions.length > 0 && !(isMobile && hideMobileActions) && (
                                             <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                                                 Əməliyyatlar
                                             </th>
@@ -499,9 +539,12 @@ export default function SharedDataTable({
                                         
                                         return (
                                             <React.Fragment key={itemId || index}>
-                                                <tr className={`hover:bg-blue-50 transition-colors duration-150 ${customRowClass}`}>
+                                                <tr
+                                                    className={`hover:bg-blue-50 transition-colors duration-150 ${customRowClass} ${isMobile && mobileClickable ? 'cursor-pointer' : ''}`}
+                                                    onClick={() => handleMobileRowClick(item)}
+                                                >
                                                     {/* Selection */}
-                                                     {selectable && (
+                                                     {selectable && !isMobile && (
                                                         <td className="px-3 py-3 whitespace-nowrap w-12 border-r border-gray-100">
                                                             <input
                                                                 type="checkbox"
@@ -511,9 +554,9 @@ export default function SharedDataTable({
                                                             />
                                                         </td>
                                                     )}
-                                                    
+
                                                     {/* Expand */}
-                                                     {expandable && (
+                                                     {expandable && !isMobile && (
                                                         <td className="px-3 py-3 whitespace-nowrap w-10 border-r border-gray-100">
                                                             <button
                                                                 onClick={() => handleToggleExpand(itemId)}
@@ -529,7 +572,7 @@ export default function SharedDataTable({
                                                     )}
 
                                                     {/* Data */}
-                                                    {columns.map((column) => (
+                                                    {visibleColumns.map((column) => (
                                                          <td 
                                                             key={column.key}
                                                             className={`px-3 ${dense ? 'py-2' : 'py-3'} text-sm ${getAlignmentClass(column.align)} ${column.className || ''} border-r border-gray-100 last:border-r-0`}
@@ -544,7 +587,7 @@ export default function SharedDataTable({
                                                     ))}
 
                                                     {/* Actions */}
-                                                     {actions.length > 0 && (
+                                                     {actions.length > 0 && !(isMobile && hideMobileActions) && (
                                                         <td className="px-3 py-3 whitespace-nowrap text-center text-sm font-medium w-32">
                                                             <div className="flex justify-center items-center gap-2">
                                                                 {actions.map((action, actionIndex) => {
@@ -602,9 +645,9 @@ export default function SharedDataTable({
                                                 </tr>
                                                 
                                                 {/* Expanded Content */}
-                                                {expandable && isExpanded && expandedContent && (
+                                                {expandable && isExpanded && expandedContent && !isMobile && (
                                                     <tr>
-                                                         <td colSpan={columns.length + (selectable ? 1 : 0) + (expandable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="px-8 py-7 bg-gray-50">
+                                                         <td colSpan={visibleColumns.length + (selectable && !isMobile ? 1 : 0) + (expandable && !isMobile ? 1 : 0) + (actions.length > 0 && !(isMobile && hideMobileActions) ? 1 : 0)} className="px-8 py-7 bg-gray-50">
                                                             {expandedContent(item)}
                                                         </td>
                                                     </tr>
@@ -645,6 +688,118 @@ export default function SharedDataTable({
                     </div>
                 )}
             </div>
+
+            {/* Mobile Detail Modal */}
+            {isMobile && mobileDetailItem && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50" onClick={() => setMobileDetailItem(null)}>
+                    <div className="relative top-20 mx-auto p-5 border w-11/12 shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Ətraflı məlumat
+                            </h3>
+                            <button
+                                onClick={() => setMobileDetailItem(null)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <XMarkIcon className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body - Display all columns */}
+                        <div className="mt-4 space-y-3">
+                            {columns.map((column) => {
+                                const value = column.render
+                                    ? column.render(mobileDetailItem)
+                                    : mobileDetailItem[column.key];
+
+                                return (
+                                    <div key={column.key} className="border-b border-gray-100 pb-3">
+                                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                                            {column.mobileLabel || column.label}
+                                        </label>
+                                        <div className="text-base text-gray-900">
+                                            {value || '-'}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Modal Actions */}
+                        {actions.length > 0 && (
+                            <div className="mt-6 pt-4 border-t border-gray-200">
+                                <div className="flex flex-col gap-2">
+                                    {actions.map((action, actionIndex) => {
+                                        if (action.condition && !action.condition(mobileDetailItem)) {
+                                            return null;
+                                        }
+
+                                        const itemId = mobileDetailItem[idField];
+
+                                        if (action.href) {
+                                            const href = typeof action.href === 'function'
+                                                ? action.href(mobileDetailItem)
+                                                : action.href.replace(':id', itemId);
+
+                                            return (
+                                                <Link
+                                                    key={actionIndex}
+                                                    href={href}
+                                                    className={`${getActionVariantClass(action.variant)} justify-center ${action.className || ''}`}
+                                                >
+                                                    {action.icon ? (
+                                                        <span className="mr-2">{action.icon}</span>
+                                                    ) : (
+                                                        <>
+                                                            {action.variant === 'view' && <EyeIcon className="w-4 h-4 mr-2" />}
+                                                            {action.variant === 'edit' && <PencilIcon className="w-4 h-4 mr-2" />}
+                                                            {action.variant === 'delete' && <TrashIcon className="w-4 h-4 mr-2" />}
+                                                        </>
+                                                    )}
+                                                    {action.label}
+                                                </Link>
+                                            );
+                                        }
+
+                                        return (
+                                            <button
+                                                key={actionIndex}
+                                                onClick={() => {
+                                                    action.onClick && action.onClick(mobileDetailItem);
+                                                    setMobileDetailItem(null);
+                                                }}
+                                                className={`${getActionVariantClass(action.variant)} justify-center ${action.className || ''}`}
+                                            >
+                                                {action.icon ? (
+                                                    <span className="mr-2">{action.icon}</span>
+                                                ) : (
+                                                    <>
+                                                        {action.variant === 'view' && <EyeIcon className="w-4 h-4 mr-2" />}
+                                                        {action.variant === 'edit' && <PencilIcon className="w-4 h-4 mr-2" />}
+                                                        {action.variant === 'delete' && <TrashIcon className="w-4 h-4 mr-2" />}
+                                                    </>
+                                                )}
+                                                {action.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Close Button */}
+                        <div className="mt-6">
+                            <button
+                                onClick={() => setMobileDetailItem(null)}
+                                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                            >
+                                Bağla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

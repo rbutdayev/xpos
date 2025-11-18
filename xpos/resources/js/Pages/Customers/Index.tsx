@@ -53,11 +53,12 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
         {
             key: 'name',
             label: 'Müştəri',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (customer: Customer) => (
                 <div className="flex items-center">
                     <div>
-                        <Link 
+                        <Link
                             href={route('customers.show', customer.id)}
                             className="text-blue-600 hover:text-blue-800 font-medium"
                         >
@@ -78,6 +79,7 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
         {
             key: 'contact',
             label: 'Əlaqə məlumatları',
+            mobileLabel: 'Telefon / Email',
             render: (customer: Customer) => (
                 <div>
                     {customer.phone && (
@@ -99,6 +101,7 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
         {
             key: 'credit_status',
             label: 'Borc vəziyyəti',
+            hideOnMobile: true, // Hide on mobile - less critical information
             render: (customer: Customer) => (
                 <div className="space-y-1">
                     {customer.has_pending_credits ? (
@@ -126,8 +129,8 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
             sortable: true,
             render: (customer: Customer) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    customer.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                    customer.is_active
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
                     {customer.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
@@ -274,6 +277,8 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
                             onSearchChange={(search: string) => handleSearch(search)}
                             onSort={(field: string) => handleSort(field, 'asc')}
                             fullWidth={true}
+                            mobileClickable={true}
+                            hideMobileActions={true}
                         />
                     </div>
                 </div>
