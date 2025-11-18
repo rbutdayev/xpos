@@ -125,6 +125,10 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                         createButton={{ label: 'Yeni Mal Qəbulu', href: route('goods-receipts.create') }}
                         dense={true}
                         fullWidth={true}
+
+                        mobileClickable={true}
+
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

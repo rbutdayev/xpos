@@ -94,6 +94,8 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
         {
             key: 'item_details',
             label: 'Məhsul məlumatları',
+            mobileLabel: 'Məhsul',
+            hideOnMobile: true,
             render: (item: CustomerItem) => (
                 <div>
                     <div className="text-sm font-medium text-gray-900">
@@ -117,6 +119,8 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
         {
             key: 'services_count',
             label: 'Xidmət tarixçəsi',
+            mobileLabel: 'Xidmət',
+            hideOnMobile: true,
             render: (item: CustomerItem) => {
                 const count = item.tailor_services?.length || 0;
                 return (
@@ -268,6 +272,8 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
                             onSearchChange={(search: string) => handleSearch(search)}
                             onSort={(field: string) => handleSort(field, 'asc')}
                             fullWidth={true}
+                            mobileClickable={true}
+                            hideMobileActions={true}
                         />
                     </div>
                 </div>

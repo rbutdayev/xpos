@@ -168,6 +168,10 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
                             description: tableConfig.supplierPayments.emptyStateDescription
                         }}
                         fullWidth={true}
+
+                        mobileClickable={true}
+
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

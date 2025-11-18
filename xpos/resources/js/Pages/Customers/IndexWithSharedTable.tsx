@@ -42,6 +42,7 @@ export default function Index({ customers, filters }: Props) {
         {
             key: 'name',
             label: 'Müştəri',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (customer: Customer) => (
                 <div className="flex items-center">
@@ -66,6 +67,8 @@ export default function Index({ customers, filters }: Props) {
         {
             key: 'contact',
             label: 'Əlaqə məlumatları',
+            mobileLabel: 'Telefon',
+            hideOnMobile: true,
             render: (customer: Customer) => (
                 <div className="text-sm">
                     {customer.phone && (
@@ -89,8 +92,10 @@ export default function Index({ customers, filters }: Props) {
         {
             key: 'vehicles_count',
             label: 'Nəqliyyat vasitələri',
+            mobileLabel: 'Nəqliyyat',
             sortable: true,
             align: 'center',
+            hideOnMobile: true,
             render: (customer: Customer) => (
                 <div className="text-center">
                     <div className="text-sm font-medium text-gray-900">
@@ -108,6 +113,7 @@ export default function Index({ customers, filters }: Props) {
             label: 'Son servis',
             sortable: true,
             align: 'center',
+            hideOnMobile: true,
             render: (customer: Customer) => (
                 <div className="text-sm text-gray-900">
                     {customer.last_service_date ? (
@@ -126,8 +132,8 @@ export default function Index({ customers, filters }: Props) {
             align: 'center',
             render: (customer: Customer) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    customer.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                    customer.is_active
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
                     {customer.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
@@ -270,26 +276,26 @@ export default function Index({ customers, filters }: Props) {
                         data={customers}
                         columns={columns}
                         actions={actions}
-                        
+
                         // Search & Filter
                         searchValue={search}
                         onSearchChange={setSearch}
                         searchPlaceholder="Müştəri axtar (ad, telefon, email)..."
                         filters={tableFilters}
-                        
+
                         // Sorting
                         onSort={handleSort}
                         sortField={filters.sort_field}
                         sortDirection={filters.sort_direction as 'asc' | 'desc'}
-                        
+
                         // Pagination
                         onPerPageChange={handlePerPageChange}
-                        
+
                         // Actions
                         onSearch={handleSearch}
                         onReset={handleReset}
                         onRefresh={handleRefresh}
-                        
+
                         // UI Configuration
                         title="Müştərilər"
                         subtitle={`${customers.total} müştəri qeydiyyatda`}
@@ -297,7 +303,7 @@ export default function Index({ customers, filters }: Props) {
                             label: "Müştəri əlavə et",
                             href: "/customers/create"
                         }}
-                        
+
                         // Empty state
                         emptyState={{
                             icon: <UserIcon className="w-12 h-12" />,
@@ -313,16 +319,20 @@ export default function Index({ customers, filters }: Props) {
                                 </Link>
                             )
                         }}
-                        
+
                         // Advanced features
                         selectable={false}
                         sticky={true}
                         dense={false}
-                        
+
                         // Row customization
-                        rowClassName={(customer: Customer) => 
+                        rowClassName={(customer: Customer) =>
                             customer.is_active ? '' : 'opacity-60'
                         }
+
+                        // Mobile responsiveness
+                        mobileClickable={true}
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

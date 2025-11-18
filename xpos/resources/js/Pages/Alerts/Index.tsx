@@ -66,6 +66,8 @@ export default function Index({ alerts }: Props) {
                                     description: tableConfig.alerts.emptyStateDescription
                                 }}
                                 fullWidth={true}
+                                mobileClickable={true}
+                                hideMobileActions={true}
                             />
                         </div>
                     </div>

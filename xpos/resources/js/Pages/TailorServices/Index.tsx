@@ -356,6 +356,10 @@ export default function Index({ services, filters, branches, stats, serviceType 
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
                             fullWidth={true}
+
+                            mobileClickable={true}
+
+                            hideMobileActions={true}
                         />
                     </div>
                 </div>

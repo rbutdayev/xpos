@@ -318,6 +318,10 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                         onSearchChange={(search: string) => handleSearchInput(search)}
                         onSort={(field: string) => handleSort(field, 'asc')}
                         fullWidth={true}
+
+                        mobileClickable={true}
+
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

@@ -360,6 +360,10 @@ export default function Index({ products, categories, warehouses, filters, selec
                         description: 'Başlamaq üçün yeni məhsul əlavə edin.'
                     }}
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

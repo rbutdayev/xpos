@@ -263,6 +263,10 @@ export default function Index({ receiptTemplates, filters }: Props) {
                         )
                     }}
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

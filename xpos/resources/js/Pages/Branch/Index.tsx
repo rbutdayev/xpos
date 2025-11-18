@@ -153,6 +153,8 @@ export default function Index({ branches, filters }: Props) {
 
                     className="space-y-6"
                     fullWidth={true}
+                    mobileClickable={true}
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

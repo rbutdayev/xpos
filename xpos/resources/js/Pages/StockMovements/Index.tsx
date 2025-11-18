@@ -187,6 +187,10 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
                         }}
                         idField="movement_id"
                         fullWidth={true}
+
+                        mobileClickable={true}
+
+                        hideMobileActions={true}
                     />
                 </div>
             </div>
