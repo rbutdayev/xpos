@@ -38,6 +38,13 @@ class PrinterConfig extends Model
         'port' => 'integer',
     ];
 
+    protected $appends = ['id'];
+
+    public function getIdAttribute()
+    {
+        return $this->config_id;
+    }
+
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'account_id');

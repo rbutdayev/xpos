@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageProps, User } from '@/types';
+import { formatChartDate } from '@/utils/dateFormatters';
 import {
     CubeIcon,
     UserIcon,
@@ -344,10 +345,7 @@ export default function Dashboard({
 
     // Prepare chart data for sales
     const salesChartConfig = {
-        labels: sales_chart_data.map((d) => {
-            const date = new Date(d.date);
-            return date.toLocaleDateString('az-AZ', { day: '2-digit', month: 'short' });
-        }),
+        labels: sales_chart_data.map((d) => formatChartDate(d.date)),
         datasets: [
             {
                 label: 'Gəlir',

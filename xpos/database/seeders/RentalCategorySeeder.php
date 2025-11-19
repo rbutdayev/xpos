@@ -71,6 +71,15 @@ class RentalCategorySeeder extends Seeder
                 'description_en' => 'For jewelry rentals',
                 'sort_order' => 5,
             ],
+            [
+                'name_az' => 'Avtomobil',
+                'name_en' => 'Automobile',
+                'slug' => 'automobile',
+                'color' => '#6366F1',
+                'description_az' => 'Avtomobil və nəqliyyat vasitələrinin icarəsi üçün',
+                'description_en' => 'For automobile and vehicle rentals',
+                'sort_order' => 6,
+            ],
         ];
 
         foreach ($categories as $categoryData) {

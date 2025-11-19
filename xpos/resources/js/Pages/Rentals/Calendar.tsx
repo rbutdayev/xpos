@@ -7,6 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import axios from 'axios';
 import { CalendarIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { azLocale, monthNames } from '@/utils/fullcalendar-az-locale';
 
 interface Branch {
     id: number;
@@ -254,12 +255,37 @@ export default function Calendar({ branches, categories }: Props) {
                             eventClick={handleEventClick}
                             eventDisplay="block"
                             displayEventTime={false}
-                            locale="az"
-                            buttonText={{
-                                today: 'Bu gün',
-                                month: 'Ay',
-                                week: 'Həftə',
-                                list: 'Siyahı'
+                            locale="az-AZ"
+                            titleFormat={function(date) {
+                                const month = monthNames[date.date.month];
+                                const year = date.date.year;
+                                return `${month} ${year}`;
+                            }}
+                            dayHeaderFormat={{ weekday: 'short' }}
+                            views={{
+                                listWeek: {
+                                    titleFormat: function(date) {
+                                        const month = monthNames[date.date.month];
+                                        const year = date.date.year;
+                                        const day = date.date.day;
+                                        return `${day} ${month} ${year}`;
+                                    }
+                                },
+                                dayGridMonth: {
+                                    titleFormat: function(date) {
+                                        const month = monthNames[date.date.month];
+                                        const year = date.date.year;
+                                        return `${month} ${year}`;
+                                    }
+                                },
+                                dayGridWeek: {
+                                    titleFormat: function(date) {
+                                        const month = monthNames[date.date.month];
+                                        const year = date.date.year;
+                                        const day = date.date.day;
+                                        return `${day} ${month} ${year}`;
+                                    }
+                                }
                             }}
                         />
                     </div>

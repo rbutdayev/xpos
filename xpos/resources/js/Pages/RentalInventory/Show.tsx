@@ -24,8 +24,8 @@ interface Branch {
 interface Rental {
     id: number;
     rental_number: string;
-    start_date: string;
-    end_date: string;
+    rental_start_date: string;
+    rental_end_date: string;
     status: string;
 }
 
@@ -304,11 +304,11 @@ export default function Show({ inventoryItem }: Props) {
                                     </p>
                                     <p>
                                         <span className="text-blue-700">Başlama:</span>{' '}
-                                        {formatDate(inventoryItem.current_rental.start_date)}
+                                        {formatDate(inventoryItem.current_rental.rental_start_date)}
                                     </p>
                                     <p>
                                         <span className="text-blue-700">Bitmə:</span>{' '}
-                                        {formatDate(inventoryItem.current_rental.end_date)}
+                                        {formatDate(inventoryItem.current_rental.rental_end_date)}
                                     </p>
                                 </div>
                             </div>

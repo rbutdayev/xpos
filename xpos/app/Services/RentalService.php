@@ -23,7 +23,42 @@ class RentalService
             $customer = Customer::where('account_id', $data['account_id'])
                 ->findOrFail($data['customer_id']);
 
-            // Create rental
+            // FIRST: Check availability of all inventory items BEFORE creating rental
+            $startDate = Carbon::parse($data['rental_start_date']);
+            $endDate = Carbon::parse($data['rental_end_date']);
+            $usedInventoryIds = [];
+            
+            foreach ($data['items'] as $itemData) {
+                if ($itemData['rental_inventory_id'] ?? null) {
+                    $inventoryId = $itemData['rental_inventory_id'];
+                    
+                    // Check for duplicate inventory items in the same rental
+                    if (in_array($inventoryId, $usedInventoryIds)) {
+                        throw new \Exception("Eyni inventar elementi bir kirayədə yalnız bir dəfə istifadə edilə bilər.");
+                    }
+                    $usedInventoryIds[] = $inventoryId;
+                    
+                    $inventory = RentalInventory::where('account_id', $data['account_id'])
+                        ->where('id', $inventoryId)
+                        ->first();
+                        
+                    if (!$inventory) {
+                        throw new \Exception("İnventar elementi tapılmadı və ya sizin hesabınıza aid deyil.");
+                    }
+
+                    if ($inventory->account_id !== $data['account_id']) {
+                        throw new \Exception("İnventar elementi başqa hesaba aiddir.");
+                    }
+
+                    // Use centralized availability check with detailed status
+                    $availabilityStatus = $inventory->getAvailabilityStatus($startDate, $endDate);
+                    if (!$availabilityStatus['is_available']) {
+                        throw new \Exception($availabilityStatus['message']);
+                    }
+                }
+            }
+
+            // SECOND: Create rental only after all availability checks pass
             $rental = Rental::create([
                 'account_id' => $data['account_id'],
                 'customer_id' => $data['customer_id'],
@@ -78,18 +113,11 @@ class RentalService
                 $totalPrice += $itemTotal;
                 // No per-item deposit for now (all deposit is in collateral)
 
-                // If specific inventory item, mark as rented
+                // If specific inventory item, mark as rented (availability already checked)
                 if ($itemData['rental_inventory_id'] ?? null) {
                     $inventory = RentalInventory::where('account_id', $data['account_id'])
-                        ->findOrFail($itemData['rental_inventory_id']);
-
-                    // Check if available for date range
-                    if (!$inventory->isAvailableForDateRange(
-                        Carbon::parse($data['rental_start_date']),
-                        Carbon::parse($data['rental_end_date'])
-                    )) {
-                        throw new \Exception("Inventory item {$inventory->inventory_number} is not available for the selected dates.");
-                    }
+                        ->where('id', $itemData['rental_inventory_id'])
+                        ->firstOrFail();
 
                     $inventory->markAsRented($rental->id);
                 }

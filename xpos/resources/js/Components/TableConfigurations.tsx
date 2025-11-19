@@ -27,6 +27,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Column, Filter, Action } from './SharedDataTable';
 import { formatQuantityWithUnit } from '@/utils/formatters';
+import { formatFullDateTime } from '@/utils/dateFormatters';
 
 // Role translations
 const roleTranslations: Record<string, string> = {
@@ -1858,13 +1859,7 @@ export const reportsTableConfig = {
             sortable: true,
             render: (report: any) => (
                 <div className="text-sm text-gray-900">
-                    {new Date(report.generated_at).toLocaleDateString('az-AZ', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
+                    {formatFullDateTime(report.generated_at)}
                 </div>
             ),
             width: '150px'
@@ -2890,6 +2885,126 @@ export const reportViewConfig = {
                 render: (item: any) => (
                     <div className="text-sm text-gray-700">{item.status}</div>
                 )
+            }
+        ] as Column[]
+    },
+
+    rental: {
+        columns: [
+            {
+                key: 'rental_number',
+                label: 'Kirayə Nömrəsi',
+                sortable: true,
+                render: (item: any) => (
+                    <div className="text-sm font-medium text-gray-900">{item.rental_number}</div>
+                )
+            },
+            {
+                key: 'customer_name',
+                label: 'Müştəri',
+                sortable: true,
+                render: (item: any) => (
+                    <div className="text-sm text-gray-700">{item.customer_name}</div>
+                )
+            },
+            {
+                key: 'branch_name',
+                label: 'Filial',
+                sortable: true,
+                render: (item: any) => (
+                    <div className="text-sm text-gray-700">{item.branch_name}</div>
+                )
+            },
+            {
+                key: 'start_date',
+                label: 'Başlanğıc',
+                sortable: true,
+                render: (item: any) => (
+                    <div className="text-sm text-gray-700">
+                        {new Date(item.start_date).toLocaleDateString('az-AZ')}
+                    </div>
+                )
+            },
+            {
+                key: 'end_date',
+                label: 'Bitmə',
+                sortable: true,
+                render: (item: any) => (
+                    <div className="text-sm text-gray-700">
+                        {new Date(item.end_date).toLocaleDateString('az-AZ')}
+                    </div>
+                )
+            },
+            {
+                key: 'items',
+                label: 'Kirayə Elementləri',
+                render: (item: any) => {
+                    const formatCurrency = (amount: number) => new Intl.NumberFormat('az-AZ', { style: 'currency', currency: 'AZN' }).format(amount);
+                    const formatNumber = (num: number) => new Intl.NumberFormat('az-AZ').format(num);
+
+                    if (!item.items?.length) {
+                        return <span className="text-gray-400 italic text-sm">Elementlər yoxdur</span>;
+                    }
+                    return (
+                        <div className="space-y-1">
+                            {item.items.map((rentalItem: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center bg-gray-50 rounded px-3 py-2">
+                                    <div className="flex-1">
+                                        <div className="font-medium text-gray-900 text-sm">{rentalItem.product_name}</div>
+                                    </div>
+                                    <div className="flex items-center space-x-3 text-sm">
+                                        <span className="text-gray-600">{formatNumber(rentalItem.quantity)} ədəd</span>
+                                        <span className="text-gray-600">{formatCurrency(rentalItem.daily_rate)}/gün</span>
+                                        <span className="font-medium text-gray-900">{formatCurrency(rentalItem.total_cost)}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+            },
+            {
+                key: 'total_cost',
+                label: 'Cəmi',
+                sortable: true,
+                render: (item: any) => {
+                    const formatCurrency = (amount: number) => new Intl.NumberFormat('az-AZ', { style: 'currency', currency: 'AZN' }).format(amount);
+                    return <div className="text-sm font-medium text-gray-900">{formatCurrency(item.total_cost)}</div>;
+                }
+            },
+            {
+                key: 'credit_amount',
+                label: 'Kredit',
+                sortable: true,
+                render: (item: any) => {
+                    const formatCurrency = (amount: number) => new Intl.NumberFormat('az-AZ', { style: 'currency', currency: 'AZN' }).format(amount);
+                    const hasCredit = item.credit_amount > 0;
+                    return (
+                        <div className={`text-sm font-medium ${hasCredit ? 'text-red-600' : 'text-green-600'}`}>
+                            {formatCurrency(item.credit_amount)}
+                        </div>
+                    );
+                }
+            },
+            {
+                key: 'status',
+                label: 'Status',
+                sortable: true,
+                render: (item: any) => {
+                    const badges: { [key: string]: { label: string; className: string } } = {
+                        'reserved': { label: 'Rezerv', className: 'bg-blue-100 text-blue-800' },
+                        'active': { label: 'Aktiv', className: 'bg-green-100 text-green-800' },
+                        'overdue': { label: 'Gecikmiş', className: 'bg-red-100 text-red-800' },
+                        'returned': { label: 'Qaytarıldı', className: 'bg-gray-100 text-gray-800' },
+                        'cancelled': { label: 'Ləğv edildi', className: 'bg-yellow-100 text-yellow-800' }
+                    };
+                    const badge = badges[item.status] || badges.reserved;
+                    return (
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badge.className}`}>
+                            {badge.label}
+                        </span>
+                    );
+                }
             }
         ] as Column[]
     }

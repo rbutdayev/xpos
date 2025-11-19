@@ -174,6 +174,77 @@ class RentalInventory extends Model
     }
 
     // Availability Methods
+    
+    /**
+     * Check if inventory item can be rented for a date range
+     * This is the CENTRALIZED availability check method - use this everywhere
+     */
+    public function canBeRentedForDateRange(\DateTime $startDate, \DateTime $endDate, ?int $excludeRentalId = null): bool
+    {
+        // Only block items that are permanently unavailable or inactive
+        $blockingStatuses = ['damaged', 'maintenance', 'retired'];
+        if (in_array($this->status, $blockingStatuses) || !$this->is_active) {
+            return false;
+        }
+
+        // Check if item has a future availability date
+        if ($this->available_from && $this->available_from->gt($startDate)) {
+            return false;
+        }
+
+        // Check if already rented during this period
+        return !$this->hasOverlappingRental($startDate, $endDate, $excludeRentalId);
+    }
+    
+    /**
+     * Get availability status with detailed message
+     * Returns array with is_available, status, and message
+     */
+    public function getAvailabilityStatus(\DateTime $startDate, \DateTime $endDate, ?int $excludeRentalId = null): array
+    {
+        // Check if item is permanently blocked
+        $blockingStatuses = ['damaged', 'maintenance', 'retired'];
+        if (in_array($this->status, $blockingStatuses)) {
+            return [
+                'is_available' => false,
+                'current_status' => $this->status,
+                'message' => "İnventar elementi mövcud deyil. Status: {$this->status}"
+            ];
+        }
+        
+        if (!$this->is_active) {
+            return [
+                'is_available' => false,
+                'current_status' => 'inactive',
+                'message' => "İnventar elementi deaktivdir."
+            ];
+        }
+
+        // Check if item has a future availability date
+        if ($this->available_from && $this->available_from->gt($startDate)) {
+            return [
+                'is_available' => false,
+                'current_status' => $this->status,
+                'message' => "İnventar elementi {$this->available_from->format('Y-m-d')} tarixindən mövcud olacaq."
+            ];
+        }
+
+        // Check for overlapping rentals
+        if ($this->hasOverlappingRental($startDate, $endDate, $excludeRentalId)) {
+            return [
+                'is_available' => false,
+                'current_status' => $this->status,
+                'message' => "İnventar elementi seçilmiş tarixlər üçün artıq rezerv edilib."
+            ];
+        }
+
+        return [
+            'is_available' => true,
+            'current_status' => $this->status,
+            'message' => "İnventar elementi seçilmiş tarixlər üçün mövcuddur."
+        ];
+    }
+
     public function isAvailableForDate(\DateTime $date): bool
     {
         if (!$this->isAvailable()) {
@@ -187,30 +258,36 @@ class RentalInventory extends Model
         return true;
     }
 
-    public function isAvailableForDateRange(\DateTime $startDate, \DateTime $endDate): bool
+    public function isAvailableForDateRange(\DateTime $startDate, \DateTime $endDate, ?int $excludeRentalId = null): bool
     {
-        if (!$this->isAvailable()) {
-            return false;
-        }
-
-        if ($this->available_from && $this->available_from->gt($startDate)) {
-            return false;
-        }
-
-        // Check if already rented during this period
-        return !$this->hasOverlappingRental($startDate, $endDate);
+        // Use the centralized availability check
+        return $this->canBeRentedForDateRange($startDate, $endDate, $excludeRentalId);
     }
 
-    public function hasOverlappingRental(\DateTime $startDate, \DateTime $endDate): bool
+    public function hasOverlappingRental(\DateTime $startDate, \DateTime $endDate, ?int $excludeRentalId = null): bool
     {
-        return Rental::where('account_id', $this->account_id)
+        // Ensure we have a valid account_id
+        if (!$this->account_id) {
+            throw new \Exception("Inventory item has no account_id set");
+        }
+        
+        $query = Rental::withoutGlobalScope('account')
+            ->where('account_id', $this->account_id)
             ->whereHas('items', function($query) {
-                $query->where('rental_inventory_id', $this->id);
+                $query->withoutGlobalScope('account')
+                      ->where('rental_inventory_id', $this->id)
+                      ->where('account_id', $this->account_id);
             })
             ->whereIn('status', ['reserved', 'active', 'overdue'])
-            ->where('rental_start_date', '<=', $endDate)
-            ->where('rental_end_date', '>=', $startDate)
-            ->exists();
+            ->where('rental_start_date', '<', $endDate)  // Changed from <= to < (exclusive end date)
+            ->where('rental_end_date', '>', $startDate); // Changed from >= to > (exclusive start date)
+            
+        // Exclude the current rental if specified (for transaction isolation)
+        if ($excludeRentalId) {
+            $query->where('id', '!=', $excludeRentalId);
+        }
+            
+        return $query->exists();
     }
 
     // Pricing Methods
@@ -300,20 +377,22 @@ class RentalInventory extends Model
 
     public static function generateInventoryNumber(int $accountId): string
     {
-        $prefix = 'INV';
+        // Include account ID in prefix to ensure uniqueness across accounts
+        $prefix = 'INV' . $accountId . '-';
         $date = now()->format('Ym');
+        $fullPrefix = $prefix . $date;
 
         $result = \DB::select(
-            "SELECT COALESCE(MAX(CAST(SUBSTRING(inventory_number, 9) AS UNSIGNED)), 0) as max_sequence
+            "SELECT COALESCE(MAX(CAST(SUBSTRING(inventory_number, LENGTH(?) + 1) AS UNSIGNED)), 0) as max_sequence
              FROM rental_inventory
              WHERE account_id = ?
              AND inventory_number LIKE ?
              FOR UPDATE",
-            [$accountId, $prefix . $date . '%']
+            [$fullPrefix, $accountId, $fullPrefix . '%']
         );
 
         $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
-        return $prefix . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $fullPrefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

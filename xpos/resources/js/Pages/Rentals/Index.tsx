@@ -1,8 +1,9 @@
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { PlusIcon, ClockIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 
 interface Rental {
     id: number;
@@ -29,6 +30,15 @@ interface Rental {
     days_overdue: number;
     collateral_type: string;
     collateral_type_label: string;
+    items: Array<{
+        id: number;
+        product_name: string;
+        quantity: number;
+        product?: {
+            name: string;
+            sku?: string;
+        };
+    }>;
 }
 
 interface Props {
@@ -55,6 +65,17 @@ export default function Index({ rentals, filters }: Props) {
     const [searchValue, setSearchValue] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [paymentStatusFilter, setPaymentStatusFilter] = useState(filters.payment_status || '');
+    const { flash } = usePage<any>().props as { flash?: { success?: string; error?: string } };
+
+    // Show flash messages as toasts
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
 
     const handleSearch = () => {
         router.get(route('rentals.index'), {
@@ -150,40 +171,74 @@ export default function Index({ rentals, filters }: Props) {
         },
         {
             key: 'customer',
-            label: 'Müştəri',
+            label: 'Müştəri / Məhsul',
             sortable: false,
-            render: (rental: Rental) => (
-                <div>
-                    <div className="font-medium text-gray-900">{rental.customer.name}</div>
-                    <div className="text-sm text-gray-500">{rental.customer.phone}</div>
-                </div>
-            )
+            render: (rental: Rental) => {
+                const firstProduct = rental.items?.[0];
+                const productName = firstProduct?.product?.name || firstProduct?.product_name || '';
+                const truncatedProduct = productName.length > 20 ? productName.substring(0, 20) + '...' : productName;
+                const hasMultipleItems = rental.items && rental.items.length > 1;
+                
+                return (
+                    <div>
+                        <div className="font-medium text-gray-900 text-sm">{rental.customer.name}</div>
+                        <div className="text-xs text-blue-600 font-medium">
+                            {truncatedProduct}
+                            {hasMultipleItems && (
+                                <span className="ml-1 text-gray-500">(+{rental.items.length - 1})</span>
+                            )}
+                        </div>
+                    </div>
+                )
+            }
         },
         {
             key: 'rental_dates',
             label: 'Kirayə Müddəti',
             sortable: false,
-            render: (rental: Rental) => (
-                <div className="text-sm">
-                    <div>{rental.rental_start_date}</div>
-                    <div className="text-gray-500">→ {rental.rental_end_date}</div>
-                    {rental.is_overdue && (
-                        <div className="text-red-600 font-medium mt-1">
-                            {rental.days_overdue} gün gecikmiş
-                        </div>
-                    )}
-                </div>
-            )
+            render: (rental: Rental) => {
+                const startDate = new Date(rental.rental_start_date);
+                const endDate = new Date(rental.rental_end_date);
+                const timeDiff = endDate.getTime() - startDate.getTime();
+                const dayCount = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // +1 to include both start and end days
+                
+                return (
+                    <div className="text-sm">
+                        <div className="font-medium text-blue-600">{dayCount} gün</div>
+                        <div className="text-xs text-gray-600">{rental.rental_start_date}</div>
+                        <div className="text-xs text-gray-500">→ {rental.rental_end_date}</div>
+                    </div>
+                )
+            }
         },
         {
             key: 'status',
-            label: 'Status',
+            label: 'Status / Gecikmə',
             sortable: true,
-            render: (rental: Rental) => (
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(rental.status)}`}>
-                    {rental.status_label}
-                </span>
-            )
+            render: (rental: Rental) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const endDate = new Date(rental.rental_end_date);
+                endDate.setHours(0, 0, 0, 0);
+                
+                const isOverdue = today > endDate && rental.status !== 'returned' && rental.status !== 'completed' && rental.status !== 'cancelled';
+                
+                return (
+                    <div className="space-y-1">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(rental.status)}`}>
+                            {rental.status_label}
+                        </span>
+                        {isOverdue && (
+                            <div className="flex items-center text-xs">
+                                <ClockIcon className="h-3 w-3 text-red-600 mr-1" />
+                                <span className="font-medium text-red-600">
+                                    {Math.ceil((today.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24))} gün gecikmiş
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )
+            }
         },
         {
             key: 'payment_status',
@@ -198,16 +253,6 @@ export default function Index({ rentals, filters }: Props) {
                         {Number(rental.total_cost || 0).toFixed(2)} AZN
                     </div>
                 </div>
-            )
-        },
-        {
-            key: 'collateral_type',
-            label: 'Girov',
-            sortable: false,
-            render: (rental: Rental) => (
-                <span className="text-sm text-gray-700">
-                    {rental.collateral_type_label}
-                </span>
             )
         },
         {

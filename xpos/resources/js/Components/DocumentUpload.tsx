@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { formatFullDateTime } from '@/utils/dateFormatters';
 
 interface DocumentData {
     id: number;
@@ -71,13 +72,7 @@ export default function DocumentUpload({
     };
 
     const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleDateString('az-AZ', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return formatFullDateTime(dateString);
     };
 
     const handleDrag = (e: React.DragEvent) => {

@@ -4,32 +4,16 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\RentalAgreementTemplate;
-use App\Models\Account;
 
-class RentalAgreementTemplateSeeder extends Seeder
+class MasterRentalAgreementTemplateSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        // First, create master templates
         $this->createMasterTemplates();
-
-        // Get all accounts to create templates for each (for existing accounts)
-        $accounts = Account::all();
-
-        foreach ($accounts as $account) {
-            // Check if account already has templates
-            $existingTemplates = RentalAgreementTemplate::where('account_id', $account->id)->count();
-            
-            if ($existingTemplates === 0) {
-                // Copy master templates to this account
-                RentalAgreementTemplate::copyMasterTemplatesToAccount($account->id);
-            }
-        }
-
-        $this->command->info('Rental agreement templates created successfully!');
+        $this->command->info('Master rental agreement templates created successfully!');
     }
 
     private function createMasterTemplates(): void
@@ -160,110 +144,6 @@ class RentalAgreementTemplateSeeder extends Seeder
             ]
         );
     }
-
-    private function createTemplatesForAccount(int $accountId): void
-    {
-        // General Template
-        RentalAgreementTemplate::updateOrCreate(
-            [
-                'account_id' => $accountId,
-                'rental_category' => 'general',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'Ümumi İcarə Müqaviləsi',
-                'terms_and_conditions_az' => $this->getGeneralTermsAz(),
-                'terms_and_conditions_en' => $this->getGeneralTermsEn(),
-                'damage_liability_terms_az' => $this->getGeneralDamageTermsAz(),
-                'damage_liability_terms_en' => $this->getGeneralDamageTermsEn(),
-                'condition_checklist' => $this->getGeneralChecklist(),
-                'is_active' => true,
-                'require_photos' => true,
-                'min_photos' => 2,
-            ]
-        );
-
-        // Clothing Template
-        RentalAgreementTemplate::updateOrCreate(
-            [
-                'account_id' => $accountId,
-                'rental_category' => 'clothing',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'Paltar İcarəsi Müqaviləsi',
-                'terms_and_conditions_az' => $this->getClothingTermsAz(),
-                'terms_and_conditions_en' => $this->getClothingTermsEn(),
-                'damage_liability_terms_az' => $this->getClothingDamageTermsAz(),
-                'damage_liability_terms_en' => $this->getClothingDamageTermsEn(),
-                'condition_checklist' => $this->getClothingChecklist(),
-                'is_active' => true,
-                'require_photos' => true,
-                'min_photos' => 2,
-            ]
-        );
-
-        // Electronics Template
-        RentalAgreementTemplate::updateOrCreate(
-            [
-                'account_id' => $accountId,
-                'rental_category' => 'electronics',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'Elektronika İcarəsi Müqaviləsi',
-                'terms_and_conditions_az' => $this->getElectronicsTermsAz(),
-                'terms_and_conditions_en' => $this->getElectronicsTermsEn(),
-                'damage_liability_terms_az' => $this->getElectronicsDamageTermsAz(),
-                'damage_liability_terms_en' => $this->getElectronicsDamageTermsEn(),
-                'condition_checklist' => $this->getElectronicsChecklist(),
-                'is_active' => true,
-                'require_photos' => true,
-                'min_photos' => 4,
-            ]
-        );
-
-        // Home Appliances Template
-        RentalAgreementTemplate::updateOrCreate(
-            [
-                'account_id' => $accountId,
-                'rental_category' => 'home_appliances',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'Ev Texnikası İcarəsi Müqaviləsi',
-                'terms_and_conditions_az' => $this->getHomeAppliancesTermsAz(),
-                'terms_and_conditions_en' => $this->getHomeAppliancesTermsEn(),
-                'damage_liability_terms_az' => $this->getHomeAppliancesDamageTermsAz(),
-                'damage_liability_terms_en' => $this->getHomeAppliancesDamageTermsEn(),
-                'condition_checklist' => $this->getHomeAppliancesChecklist(),
-                'is_active' => true,
-                'require_photos' => true,
-                'min_photos' => 3,
-            ]
-        );
-
-        // Jewelry Template
-        RentalAgreementTemplate::updateOrCreate(
-            [
-                'account_id' => $accountId,
-                'rental_category' => 'jewelry',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'Zərgərlik İcarəsi Müqaviləsi',
-                'terms_and_conditions_az' => $this->getJewelryTermsAz(),
-                'terms_and_conditions_en' => $this->getJewelryTermsEn(),
-                'damage_liability_terms_az' => $this->getJewelryDamageTermsAz(),
-                'damage_liability_terms_en' => $this->getJewelryDamageTermsEn(),
-                'condition_checklist' => $this->getJewelryChecklist(),
-                'is_active' => true,
-                'require_photos' => true,
-                'min_photos' => 4,
-            ]
-        );
-    }
-
     // ===== GENERAL TEMPLATES =====
 
     private function getGeneralTermsAz(): string

@@ -206,6 +206,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/products/search-parent', [ProductController::class, 'searchParentProducts'])->name('products.search-parent');
     Route::post('/products/{product}/calculate-price', [ProductController::class, 'calculatePrice'])->name('products.calculate-price');
     Route::post('/products/generate-barcode', [ProductController::class, 'generateBarcode'])->name('products.generate-barcode');
+    Route::get('/products/bulk-create', [ProductController::class, 'bulkCreate'])->name('products.bulk-create');
+    Route::post('/products/bulk-store', [ProductController::class, 'bulkStore'])->name('products.bulk-store');
     Route::resource('products', ProductController::class);
 
     // Product Variants
@@ -324,6 +326,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Customer Management
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::post('/customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quick-store');
     Route::resource('customers', CustomerController::class);
 
     // Customer Items Management (clothing, fabrics for tailor services)

@@ -80,6 +80,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
 
     const { data, setData: setDataOriginal, post, put, processing, errors } = useForm(formData);
     const setData = setDataOriginal as any;
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     // Search products via API
     useEffect(() => {
@@ -134,7 +135,10 @@ export default function Form({ inventoryItem, products = [], branches, categorie
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        setSubmitError(null); // Clear any previous errors
 
+        console.log('Submitting form with data:', data);
+        
         // Validate that a product is selected for new inventory
         if (!isEditing && !data.product_id) {
             alert('Zəhmət olmasa məhsul seçin');
@@ -154,9 +158,59 @@ export default function Form({ inventoryItem, products = [], branches, categorie
         }
 
         if (isEditing && inventoryItem) {
-            put(`/rental-inventory/${inventoryItem.id}`);
+            put(`/rental-inventory/${inventoryItem.id}`, {
+                onSuccess: () => {
+                    console.log('Form updated successfully');
+                    // Redirect to inventory list after successful update
+                    router.get('/rental-inventory');
+                },
+                onError: (errors) => {
+                    console.error('Form update errors:', errors);
+                    
+                    // Handle different error types for updates too
+                    if (errors.general) {
+                        alert(`Xəta: ${errors.general}`);
+                    } else if (Object.keys(errors).length > 0) {
+                        const errorMessages = Object.entries(errors)
+                            .map(([field, message]) => `${field}: ${message}`)
+                            .join('\n');
+                        alert(`Validasiya xətaları:\n${errorMessages}`);
+                    } else {
+                        alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+                    }
+                }
+            });
         } else {
-            post('/rental-inventory');
+            post('/rental-inventory', {
+                onError: (errors) => {
+                    console.error('Form submission errors:', errors);
+                    
+                    // Handle different error types
+                    let errorMessage = '';
+                    if (errors.general) {
+                        // General application error (like database constraints)
+                        errorMessage = errors.general;
+                    } else if (Object.keys(errors).length > 0) {
+                        // Validation errors
+                        const errorMessages = Object.entries(errors)
+                            .map(([field, message]) => `${field}: ${message}`)
+                            .join(', ');
+                        errorMessage = `Validasiya xətaları: ${errorMessages}`;
+                    } else {
+                        // Fallback for unknown errors
+                        errorMessage = 'Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.';
+                    }
+                    
+                    setSubmitError(errorMessage);
+                    alert(`Xəta: ${errorMessage}`); // Still show alert for immediate attention
+                },
+                onSuccess: () => {
+                    console.log('Form submitted successfully');
+                    setSubmitError(null); // Clear any errors on success
+                    // Redirect to inventory list after successful creation
+                    router.get('/rental-inventory');
+                }
+            });
         }
     };
 
@@ -186,6 +240,21 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                         </div>
                     </div>
                 </div>
+
+                {/* Display validation errors */}
+                {(Object.keys(errors).length > 0 || submitError) && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
+                        <div className="font-semibold mb-1">Xətalar:</div>
+                        <ul className="list-disc pl-5">
+                            {submitError && (
+                                <li>{submitError}</li>
+                            )}
+                            {Object.entries(errors).map(([field, message]) => (
+                                <li key={field}><strong>{field}:</strong> {message}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <form onSubmit={submit} className="space-y-6">
                     {/* Basic Information */}

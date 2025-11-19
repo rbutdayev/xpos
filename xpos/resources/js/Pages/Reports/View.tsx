@@ -33,7 +33,8 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
             'inventory': 'Anbar hesabatı',
             'financial': 'Maliyyə hesabatı',
             'customer': 'Müştəri hesabatı',
-            'service': 'Servis Hesabatı'
+            'service': 'Servis Hesabatı',
+            'rental': 'Kirayə Hesabatı'
         };
         return titles[type] || 'Hesabat';
     };
@@ -181,6 +182,27 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                         </div>
                     </div>
                 );
+            case 'rental':
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="bg-blue-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-blue-600">Cəmi Kirayələr</h3>
+                            <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_rentals)}</p>
+                        </div>
+                        <div className="bg-green-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-green-600">Aktiv Kirayələr</h3>
+                            <p className="text-2xl font-bold text-green-900">{formatNumber(data.summary.active_rentals)}</p>
+                        </div>
+                        <div className="bg-purple-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-purple-600">Cəmi Gəlir</h3>
+                            <p className="text-2xl font-bold text-purple-900">{formatCurrency(data.summary.total_rental_revenue || 0)}</p>
+                        </div>
+                        <div className="bg-yellow-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-yellow-600">Gecikmiş</h3>
+                            <p className="text-2xl font-bold text-yellow-900">{formatNumber(data.summary.overdue_rentals)}</p>
+                        </div>
+                    </div>
+                );
             default:
                 return null;
         }
@@ -199,6 +221,8 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return data.customers || [];
             case 'service':
                 return data.services || [];
+            case 'rental':
+                return data.rentals || [];
             default:
                 return [];
         }

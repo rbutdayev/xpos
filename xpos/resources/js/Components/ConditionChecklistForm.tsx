@@ -4,11 +4,14 @@ interface ChecklistItem {
     id: string;
     label_az: string;
     label_en: string;
-    type: 'boolean' | 'select' | 'text' | 'textarea';
+    type: 'boolean' | 'select' | 'text' | 'textarea' | 'number';
     options_az?: string[];
     options_en?: string[];
     required?: boolean;
     critical?: boolean;
+    min?: number;
+    max?: number;
+    step?: number;
 }
 
 interface ConditionChecklistFormProps {
@@ -110,6 +113,26 @@ export default function ConditionChecklistForm({
                         <input
                             type="text"
                             value={value || ''}
+                            onChange={(e) => handleChange(item.id, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required={item.required}
+                        />
+                    </div>
+                );
+
+            case 'number':
+                return (
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900">
+                            {label}
+                            {item.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <input
+                            type="number"
+                            value={value || ''}
+                            min={item.min}
+                            max={item.max}
+                            step={item.step || 1}
                             onChange={(e) => handleChange(item.id, e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required={item.required}

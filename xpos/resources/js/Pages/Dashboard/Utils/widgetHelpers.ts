@@ -1,4 +1,5 @@
 // Widget helper utilities
+import { formatAzerbaijaniDate } from '@/utils/dateFormatters';
 
 export const getKPIColorClasses = (color: string) => {
     const colorMap = {
@@ -120,10 +121,7 @@ export const formatWidgetData = (data: any, widgetType: string) => {
         case 'chart':
             return data.map((item: any) => ({
                 ...item,
-                formattedDate: new Date(item.date).toLocaleDateString('az-AZ', {
-                    month: 'short',
-                    day: 'numeric'
-                })
+                formattedDate: formatAzerbaijaniDate(item.date, 'short')
             }));
             
         default:

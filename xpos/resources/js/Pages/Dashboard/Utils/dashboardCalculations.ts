@@ -1,4 +1,5 @@
 // Dashboard calculation utilities
+import { formatAzerbaijaniDate, formatFullDateTime } from '@/utils/dateFormatters';
 
 export const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('az-AZ', {
@@ -9,19 +10,11 @@ export const formatCurrency = (amount: number) => {
 };
 
 export const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('az-AZ', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    return formatFullDateTime(dateString);
 };
 
 export const formatShortDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('az-AZ', {
-        month: 'short',
-        day: 'numeric'
-    });
+    return formatAzerbaijaniDate(dateString, 'short');
 };
 
 export const calculatePercentageChange = (current: number, previous: number): number => {

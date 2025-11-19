@@ -465,25 +465,37 @@ class RentalController extends Controller
     /**
      * Remove the specified rental
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id)
     {
         $accountId = auth()->user()->account_id;
 
         $rental = Rental::where('account_id', $accountId)->findOrFail($id);
 
         if (!$rental->isCancelled()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Yalnız ləğv edilmiş kirayələr silinə bilər.',
-            ], 400);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Yalnız ləğv edilmiş kirayələr silinə bilər.',
+                ], 400);
+            }
+
+            return redirect()
+                ->back()
+                ->with('error', 'Yalnız ləğv edilmiş kirayələr silinə bilər.');
         }
 
         $rental->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Kirayə uğurla silindi.',
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kirayə uğurla silindi.',
+            ]);
+        }
+
+        return redirect()
+            ->route('rentals.index')
+            ->with('success', 'Kirayə uğurla silindi.');
     }
 
     /**
@@ -875,111 +887,140 @@ class RentalController extends Controller
 
         // Check rental inventory item availability
         if ($request->filled('rental_inventory_id')) {
+            // CRITICAL: Always ensure account isolation
             $inventoryItem = \App\Models\RentalInventory::where('account_id', $accountId)
                 ->where('id', $request->rental_inventory_id)
                 ->first();
 
-            if ($inventoryItem) {
-                $isAvailable = $inventoryItem->isAvailableForDateRange($startDate, $endDate);
+            if (!$inventoryItem) {
+                $availability['is_available'] = false;
+                $availability['current_status'] = 'not_found';
+                $availability['message'] = 'İnventar elementi tapılmadı və ya sizin hesabınıza aid deyil.';
+            } else {
+                // Verify account_id matches (extra security check)
+                if ($inventoryItem->account_id !== $accountId) {
+                    $availability['is_available'] = false;
+                    $availability['current_status'] = 'access_denied';
+                    $availability['message'] = 'İnventar elementi başqa hesaba aiddir.';
+                } else {
+                    // Use centralized availability check with detailed status
+                    $availabilityStatus = $inventoryItem->getAvailabilityStatus($startDate, $endDate);
+                    $availability['is_available'] = $availabilityStatus['is_available'];
+                    $availability['current_status'] = $availabilityStatus['current_status'];
+                    $availability['message'] = $availabilityStatus['message'];
 
-                // Get all bookings for this inventory item
-                $bookings = \App\Models\Rental::where('account_id', $accountId)
-                    ->whereHas('items', function($query) use ($request) {
-                        $query->where('rental_inventory_id', $request->rental_inventory_id);
-                    })
-                    ->whereIn('status', ['reserved', 'active', 'overdue'])
-                    ->with(['customer', 'items'])
-                    ->orderBy('rental_start_date')
-                    ->get()
-                    ->map(function($rental) {
-                        return [
-                            'rental_id' => $rental->id,
-                            'rental_number' => $rental->rental_number,
-                            'customer_name' => $rental->customer->name,
-                            'start_date' => $rental->rental_start_date->format('Y-m-d'),
-                            'end_date' => $rental->rental_end_date->format('Y-m-d'),
-                            'status' => $rental->status,
-                        ];
-                    });
+                    // Get all bookings for this inventory item (with account isolation)
+                    $bookings = \App\Models\Rental::where('account_id', $accountId)
+                        ->whereHas('items', function($query) use ($request, $accountId) {
+                            $query->where('account_id', $accountId) // Ensure rental_items are also account-scoped
+                                  ->where('rental_inventory_id', $request->rental_inventory_id);
+                        })
+                        ->whereIn('status', ['reserved', 'active', 'overdue'])
+                        ->with(['customer', 'items'])
+                        ->orderBy('rental_start_date')
+                        ->get()
+                        ->map(function($rental) {
+                            return [
+                                'rental_id' => $rental->id,
+                                'rental_number' => $rental->rental_number,
+                                'customer_name' => $rental->customer->name,
+                                'start_date' => $rental->rental_start_date->format('Y-m-d'),
+                                'end_date' => $rental->rental_end_date->format('Y-m-d'),
+                                'status' => $rental->status,
+                            ];
+                        });
 
-                $availability['is_available'] = $isAvailable;
-                $availability['bookings'] = $bookings;
-                $availability['available_quantity'] = $isAvailable ? 1 : 0;
-                $availability['current_status'] = $inventoryItem->status;
-                $availability['message'] = $isAvailable
-                    ? 'İnventar elementi seçilmiş tarixlər üçün mövcuddur.'
-                    : 'İnventar elementi seçilmiş tarixlər üçün artıq rezerv edilib.';
+                    $availability['bookings'] = $bookings;
+                    $availability['available_quantity'] = $availability['is_available'] ? 1 : 0;
+                }
             }
         }
 
         // Check product availability
         if ($request->filled('product_id')) {
+            // CRITICAL: Always ensure account isolation
             $product = \App\Models\Product::where('account_id', $accountId)
                 ->where('id', $request->product_id)
-                ->with(['stocks' => function ($query) use ($request) {
-                    $query->whereHas('warehouse.branches', function ($q) use ($request) {
-                        $q->where('branches.id', $request->branch_id);
-                    });
+                ->with(['stocks' => function ($query) use ($request, $accountId) {
+                    $query->where('account_id', $accountId) // Ensure stocks are account-scoped
+                          ->whereHas('warehouse.branches', function ($q) use ($request, $accountId) {
+                              $q->where('branches.id', $request->branch_id)
+                                ->where('branches.account_id', $accountId); // Ensure branches are account-scoped
+                          });
                 }])
                 ->first();
 
-            if ($product) {
-                $totalStock = $product->stocks->sum('quantity');
+            if (!$product) {
+                $availability['is_available'] = false;
+                $availability['current_status'] = 'not_found';
+                $availability['message'] = 'Məhsul tapılmadı və ya sizin hesabınıza aid deyil.';
+            } else {
+                // Verify account_id matches (extra security check)
+                if ($product->account_id !== $accountId) {
+                    $availability['is_available'] = false;
+                    $availability['current_status'] = 'access_denied';
+                    $availability['message'] = 'Məhsul başqa hesaba aiddir.';
+                } else {
+                    $totalStock = $product->stocks->sum('quantity');
 
-                // Count how many of this product are currently rented for the date range
-                $rentedQuantity = \App\Models\RentalItem::whereHas('rental', function($query) use ($accountId, $startDate, $endDate) {
-                        $query->where('account_id', $accountId)
-                              ->whereIn('status', ['reserved', 'active', 'overdue'])
-                              ->where(function($q) use ($startDate, $endDate) {
-                                  $q->whereBetween('rental_start_date', [$startDate, $endDate])
-                                    ->orWhereBetween('rental_end_date', [$startDate, $endDate])
-                                    ->orWhere(function($subQ) use ($startDate, $endDate) {
-                                        $subQ->where('rental_start_date', '<=', $startDate)
-                                             ->where('rental_end_date', '>=', $endDate);
-                                    });
-                              });
-                    })
-                    ->where('product_id', $request->product_id)
-                    ->whereNull('rental_inventory_id') // Only count product rentals, not inventory rentals
-                    ->sum('quantity');
+                    // Count how many of this product are currently rented for the date range (with account isolation)
+                    $rentedQuantity = \App\Models\RentalItem::where('account_id', $accountId) // Ensure rental_items are account-scoped
+                        ->whereHas('rental', function($query) use ($accountId, $startDate, $endDate) {
+                                $query->where('account_id', $accountId)
+                                      ->whereIn('status', ['reserved', 'active', 'overdue'])
+                                      ->where(function($q) use ($startDate, $endDate) {
+                                          $q->whereBetween('rental_start_date', [$startDate, $endDate])
+                                            ->orWhereBetween('rental_end_date', [$startDate, $endDate])
+                                            ->orWhere(function($subQ) use ($startDate, $endDate) {
+                                                $subQ->where('rental_start_date', '<=', $startDate)
+                                                     ->where('rental_end_date', '>=', $endDate);
+                                            });
+                                      });
+                            })
+                            ->where('product_id', $request->product_id)
+                            ->whereNull('rental_inventory_id') // Only count product rentals, not inventory rentals
+                            ->sum('quantity');
 
-                $availableQuantity = $totalStock - $rentedQuantity;
-                $isAvailable = $availableQuantity > 0 || $product->allow_negative_stock;
+                    $availableQuantity = $totalStock - $rentedQuantity;
+                    $isAvailable = $availableQuantity > 0 || $product->allow_negative_stock;
 
-                // Get all bookings for this product
-                $bookings = \App\Models\Rental::where('account_id', $accountId)
-                    ->whereHas('items', function($query) use ($request) {
-                        $query->where('product_id', $request->product_id)
-                              ->whereNull('rental_inventory_id');
-                    })
-                    ->whereIn('status', ['reserved', 'active', 'overdue'])
-                    ->with(['customer', 'items' => function($query) use ($request) {
-                        $query->where('product_id', $request->product_id);
-                    }])
-                    ->orderBy('rental_start_date')
-                    ->get()
-                    ->map(function($rental) {
-                        $quantity = $rental->items->sum('quantity');
-                        return [
-                            'rental_id' => $rental->id,
-                            'rental_number' => $rental->rental_number,
-                            'customer_name' => $rental->customer->name,
-                            'start_date' => $rental->rental_start_date->format('Y-m-d'),
-                            'end_date' => $rental->rental_end_date->format('Y-m-d'),
-                            'quantity' => $quantity,
-                            'status' => $rental->status,
-                        ];
-                    });
+                    // Get all bookings for this product (with account isolation)
+                    $bookings = \App\Models\Rental::where('account_id', $accountId)
+                        ->whereHas('items', function($query) use ($request, $accountId) {
+                            $query->where('account_id', $accountId) // Ensure rental_items are account-scoped
+                                  ->where('product_id', $request->product_id)
+                                  ->whereNull('rental_inventory_id');
+                        })
+                        ->whereIn('status', ['reserved', 'active', 'overdue'])
+                        ->with(['customer', 'items' => function($query) use ($request, $accountId) {
+                            $query->where('account_id', $accountId)
+                                  ->where('product_id', $request->product_id);
+                        }])
+                        ->orderBy('rental_start_date')
+                        ->get()
+                        ->map(function($rental) {
+                            $quantity = $rental->items->sum('quantity');
+                            return [
+                                'rental_id' => $rental->id,
+                                'rental_number' => $rental->rental_number,
+                                'customer_name' => $rental->customer->name,
+                                'start_date' => $rental->rental_start_date->format('Y-m-d'),
+                                'end_date' => $rental->rental_end_date->format('Y-m-d'),
+                                'quantity' => $quantity,
+                                'status' => $rental->status,
+                            ];
+                        });
 
-                $availability['is_available'] = $isAvailable;
-                $availability['bookings'] = $bookings;
-                $availability['available_quantity'] = max(0, $availableQuantity);
-                $availability['total_stock'] = $totalStock;
-                $availability['rented_quantity'] = $rentedQuantity;
-                $availability['allow_negative_stock'] = $product->allow_negative_stock;
-                $availability['message'] = $isAvailable
-                    ? "Məhsul seçilmiş tarixlər üçün mövcuddur. Mövcud miqdar: {$availableQuantity}"
-                    : 'Məhsul seçilmiş tarixlər üçün kifayət qədər stokda yoxdur.';
+                    $availability['is_available'] = $isAvailable;
+                    $availability['bookings'] = $bookings;
+                    $availability['available_quantity'] = max(0, $availableQuantity);
+                    $availability['total_stock'] = $totalStock;
+                    $availability['rented_quantity'] = $rentedQuantity;
+                    $availability['allow_negative_stock'] = $product->allow_negative_stock;
+                    $availability['message'] = $isAvailable
+                        ? "Məhsul seçilmiş tarixlər üçün mövcuddur. Mövcud miqdar: {$availableQuantity}"
+                        : 'Məhsul seçilmiş tarixlər üçün kifayət qədər stokda yoxdur.';
+                }
             }
         }
 

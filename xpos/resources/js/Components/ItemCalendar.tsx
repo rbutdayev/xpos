@@ -3,6 +3,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import axios from 'axios';
+import { azLocale, monthNames } from '@/utils/fullcalendar-az-locale';
 
 interface CalendarEvent {
     id: string;
@@ -85,11 +86,61 @@ export default function ItemCalendar({ inventoryId, height = '600px' }: ItemCale
                         center: 'title',
                         right: 'dayGridMonth,dayGridWeek'
                     }}
+                    locale="az-AZ"
+                    titleFormat={function(date) {
+                        const month = monthNames[date.date.month];
+                        const year = date.date.year;
+                        return `${month} ${year}`;
+                    }}
+                    dayHeaderFormat={{ weekday: 'short' }}
+                    views={{
+                        dayGridMonth: {
+                            titleFormat: function(date) {
+                                const month = monthNames[date.date.month];
+                                const year = date.date.year;
+                                return `${month} ${year}`;
+                            }
+                        },
+                        dayGridWeek: {
+                            titleFormat: function(date) {
+                                const month = monthNames[date.date.month];
+                                const year = date.date.year;
+                                const day = date.date.day;
+                                return `${day} ${month} ${year}`;
+                            }
+                        }
+                    }}
                     eventClick={handleEventClick}
                     eventDisplay="block"
                     displayEventTime={false}
                     eventTextColor="#ffffff"
                 />
+            </div>
+
+            {/* Stats */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white shadow-sm rounded-lg p-4">
+                    <p className="text-sm text-gray-600">Ümumi Kirayələr</p>
+                    <p className="text-2xl font-bold text-gray-900">{events.length}</p>
+                </div>
+                <div className="bg-green-50 shadow-sm rounded-lg p-4">
+                    <p className="text-sm text-green-700">Aktiv</p>
+                    <p className="text-2xl font-bold text-green-900">
+                        {events.filter(e => e.status === 'active').length}
+                    </p>
+                </div>
+                <div className="bg-red-50 shadow-sm rounded-lg p-4">
+                    <p className="text-sm text-red-700">Gecikmiş</p>
+                    <p className="text-2xl font-bold text-red-900">
+                        {events.filter(e => e.status === 'overdue').length}
+                    </p>
+                </div>
+                <div className="bg-blue-50 shadow-sm rounded-lg p-4">
+                    <p className="text-sm text-blue-700">Tamamlanmış</p>
+                    <p className="text-2xl font-bold text-blue-900">
+                        {events.filter(e => e.status === 'completed' || e.status === 'returned').length}
+                    </p>
+                </div>
             </div>
 
             {/* Event Details Modal */}

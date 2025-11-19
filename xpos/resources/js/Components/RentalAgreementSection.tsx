@@ -141,6 +141,7 @@ export default function RentalAgreementSection({
                             <h3 className="text-lg font-medium text-gray-900 mb-4">
                                 VƏZİYYƏT YOXLAMASI
                             </h3>
+                            
                             <ConditionChecklistForm
                                 checklist={template.condition_checklist}
                                 values={checklistValues}
@@ -173,6 +174,62 @@ export default function RentalAgreementSection({
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Əlavə qeydlər (məsələn: Arxa tərəfdə kiçik cızıq var)"
                             />
+                        </div>
+
+                        {/* Status Check */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 className="text-sm font-medium text-gray-900 mb-3">VƏZİYYƏT YOXLAMASI</h4>
+                            <div className="space-y-2">
+                                {/* Required Fields Check */}
+                                {template.condition_checklist.filter(item => item.required).map((field) => (
+                                    <div key={field.id} className="flex items-center">
+                                        {checklistValues[field.id] !== undefined && checklistValues[field.id] !== null && checklistValues[field.id] !== '' ? (
+                                            <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                        ) : (
+                                            <div className="h-4 w-4 border-2 border-red-500 rounded-full mr-2"></div>
+                                        )}
+                                        <span className={`text-sm ${
+                                            checklistValues[field.id] !== undefined && checklistValues[field.id] !== null && checklistValues[field.id] !== ''
+                                                ? 'text-green-700' 
+                                                : 'text-red-700'
+                                        }`}>
+                                            {field.label_az}: {
+                                                checklistValues[field.id] !== undefined && checklistValues[field.id] !== null && checklistValues[field.id] !== ''
+                                                    ? `✓ (${typeof checklistValues[field.id] === 'boolean' ? (checklistValues[field.id] ? 'Bəli' : 'Xeyr') : checklistValues[field.id]})`
+                                                    : '✗ Doldurulmalıdır'
+                                            }
+                                        </span>
+                                    </div>
+                                ))}
+                                
+                                {/* Photos Check */}
+                                {template.require_photos && (
+                                    <div className="flex items-center">
+                                        {isPhotosComplete() ? (
+                                            <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                        ) : (
+                                            <div className="h-4 w-4 border-2 border-red-500 rounded-full mr-2"></div>
+                                        )}
+                                        <span className={`text-sm ${isPhotosComplete() ? 'text-green-700' : 'text-red-700'}`}>
+                                            Şəkillər: {isPhotosComplete() ? `✓ (${photos.length}/${template.min_photos})` : `✗ Minimum ${template.min_photos} şəkil tələb olunur (mövcud: ${photos.length})`}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Overall Status */}
+                                <div className="pt-2 border-t border-gray-300">
+                                    <div className="flex items-center">
+                                        {canProceedToSignature() ? (
+                                            <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                                        ) : (
+                                            <div className="h-5 w-5 border-2 border-red-500 rounded-full mr-2"></div>
+                                        )}
+                                        <span className={`text-sm font-medium ${canProceedToSignature() ? 'text-green-700' : 'text-red-700'}`}>
+                                            {canProceedToSignature() ? 'Hazır! İmza addımına keçə bilərsiniz' : 'Bütün tələb olunan sahələri doldurun'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Actions */}
@@ -264,6 +321,50 @@ export default function RentalAgreementSection({
                                     width={400}
                                     height={200}
                                 />
+                            </div>
+                        </div>
+
+                        {/* Signature Status Check */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 className="text-sm font-medium text-gray-900 mb-3">İMZA VƏZİYYƏT YOXLAMASI</h4>
+                            <div className="space-y-2">
+                                {/* Terms Acceptance */}
+                                <div className="flex items-center">
+                                    {termsAccepted ? (
+                                        <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                    ) : (
+                                        <div className="h-4 w-4 border-2 border-red-500 rounded-full mr-2"></div>
+                                    )}
+                                    <span className={`text-sm ${termsAccepted ? 'text-green-700' : 'text-red-700'}`}>
+                                        Şərtlərin qəbulu: {termsAccepted ? '✓ Qəbul edildi' : '✗ Şərtləri qəbul edin'}
+                                    </span>
+                                </div>
+
+                                {/* Customer Signature */}
+                                <div className="flex items-center">
+                                    {customerSignature ? (
+                                        <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                    ) : (
+                                        <div className="h-4 w-4 border-2 border-red-500 rounded-full mr-2"></div>
+                                    )}
+                                    <span className={`text-sm ${customerSignature ? 'text-green-700' : 'text-red-700'}`}>
+                                        Müştəri imzası: {customerSignature ? '✓ İmzalandı' : '✗ İmza tələb olunur'}
+                                    </span>
+                                </div>
+
+                                {/* Overall Status */}
+                                <div className="pt-2 border-t border-gray-300">
+                                    <div className="flex items-center">
+                                        {customerSignature && termsAccepted ? (
+                                            <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                                        ) : (
+                                            <div className="h-5 w-5 border-2 border-red-500 rounded-full mr-2"></div>
+                                        )}
+                                        <span className={`text-sm font-medium ${customerSignature && termsAccepted ? 'text-green-700' : 'text-red-700'}`}>
+                                            {customerSignature && termsAccepted ? 'Hazır! İşçi təsdiqi addımına keçə bilərsiniz' : 'Şərtləri qəbul edin və imzalayın'}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -1,7 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, FormEvent, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PlusIcon, TrashIcon, CameraIcon, XMarkIcon, CheckCircleIcon, ExclamationCircleIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, CameraIcon, XMarkIcon, CheckCircleIcon, ExclamationCircleIcon, ArrowRightIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import BarcodeScanner from '@/Components/BarcodeScanner';
 import RentalAgreementSection from '@/Components/RentalAgreementSection';
 import PhotoUpload from '@/Components/PhotoUpload';
@@ -118,6 +118,14 @@ export default function Create({ customers, branches, templates, categories = []
     const [processing, setProcessing] = useState(false);
     const [customerSearchTerm, setCustomerSearchTerm] = useState('');
     const [showCustomerResults, setShowCustomerResults] = useState(false);
+    const [showQuickCustomerForm, setShowQuickCustomerForm] = useState(false);
+    const [quickCustomerData, setQuickCustomerData] = useState({
+        name: '',
+        phone: '',
+        birthday: '',
+    });
+    const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
+    const [searchedCustomers, setSearchedCustomers] = useState<Customer[]>([]);
     const [itemAvailability, setItemAvailability] = useState<Record<number, any>>({});
 
     // Barcode scanner state
@@ -127,14 +135,17 @@ export default function Create({ customers, branches, templates, categories = []
     const [inventorySearchResults, setInventorySearchResults] = useState<InventoryItem[]>([]);
     const [isSearchingInventory, setIsSearchingInventory] = useState(false);
     const [searchTimeoutId, setSearchTimeoutId] = useState<NodeJS.Timeout | null>(null);
+    const [customerSearchTimeoutId, setCustomerSearchTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-    // Filter customers based on search term
-    const filteredCustomers = customers.filter(
-        (customer) =>
-            customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-            customer.phone.includes(customerSearchTerm) ||
-            (customer.email && customer.email.toLowerCase().includes(customerSearchTerm.toLowerCase()))
-    );
+    // Use searched customers if available, otherwise filter pre-loaded customers
+    const filteredCustomers = customerSearchTerm.trim().length >= 2 
+        ? searchedCustomers 
+        : customers.filter(
+            (customer) =>
+                customer.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                customer.phone.includes(customerSearchTerm) ||
+                (customer.email && customer.email.toLowerCase().includes(customerSearchTerm.toLowerCase()))
+        );
 
     // Reset flash message visibility when flash changes
     useEffect(() => {
@@ -143,14 +154,17 @@ export default function Create({ customers, branches, templates, categories = []
         }
     }, [flash]);
 
-    // Cleanup search timeout on unmount
+    // Cleanup search timeouts on unmount
     useEffect(() => {
         return () => {
             if (searchTimeoutId) {
                 clearTimeout(searchTimeoutId);
             }
+            if (customerSearchTimeoutId) {
+                clearTimeout(customerSearchTimeoutId);
+            }
         };
-    }, [searchTimeoutId]);
+    }, [searchTimeoutId, customerSearchTimeoutId]);
 
     // Reset form function
     const resetForm = () => {
@@ -261,16 +275,38 @@ export default function Create({ customers, branches, templates, categories = []
     const handleItemChange = (index: number, field: keyof RentalItem, value: string | number) => {
         setItems((prev) => {
             const newItems = [...prev];
-            newItems[index] = {
-                ...newItems[index],
-                [field]: value,
-            };
-
-            // Recalculate total if unit_price or duration changed
-            if (field === 'unit_price' || field === 'duration') {
-                const unitPrice = field === 'unit_price' ? value as string : newItems[index].unit_price;
-                const duration = field === 'duration' ? value as number : newItems[index].duration;
-                newItems[index].total_price = calculateItemTotal(unitPrice, duration);
+            
+            // Update price when rate_type changes based on inventory item's rates
+            if (field === 'rate_type' && newItems[index].inventoryItem) {
+                const inventoryItem = newItems[index].inventoryItem;
+                let newPrice = '0';
+                
+                if (value === 'daily' && inventoryItem.daily_rate !== null && inventoryItem.daily_rate !== undefined) {
+                    newPrice = inventoryItem.daily_rate.toString();
+                } else if (value === 'weekly' && inventoryItem.weekly_rate !== null && inventoryItem.weekly_rate !== undefined) {
+                    newPrice = inventoryItem.weekly_rate.toString();
+                } else if (value === 'monthly' && inventoryItem.monthly_rate !== null && inventoryItem.monthly_rate !== undefined) {
+                    newPrice = inventoryItem.monthly_rate.toString();
+                }
+                
+                newItems[index] = {
+                    ...newItems[index],
+                    rate_type: value as 'daily' | 'weekly' | 'monthly',
+                    unit_price: newPrice,
+                    total_price: calculateItemTotal(newPrice, newItems[index].duration)
+                };
+            } else {
+                newItems[index] = {
+                    ...newItems[index],
+                    [field]: value,
+                };
+                
+                // Recalculate total if unit_price or duration changed
+                if (field === 'unit_price' || field === 'duration') {
+                    const unitPrice = field === 'unit_price' ? value as string : newItems[index].unit_price;
+                    const duration = field === 'duration' ? value as number : newItems[index].duration;
+                    newItems[index].total_price = calculateItemTotal(unitPrice, duration);
+                }
             }
 
             return newItems;
@@ -315,16 +351,30 @@ export default function Create({ customers, branches, templates, categories = []
     const handleInventorySelect = (index: number, inventoryItem: InventoryItem) => {
         setItems((prev) => {
             const newItems = [...prev];
-            // Determine the default rate based on available rates
-            let defaultRateType: 'daily' | 'weekly' | 'monthly' = 'daily';
-            let defaultRate = inventoryItem.daily_rate || 0;
+            // Keep the current rate_type if it's already set and the inventory item has that rate
+            // Otherwise, default to the first available rate type
+            let defaultRateType: 'daily' | 'weekly' | 'monthly' = newItems[index].rate_type || 'daily';
+            let defaultRate = 0;
 
-            if (inventoryItem.weekly_rate) {
-                defaultRateType = 'weekly';
+            // Check if the current rate type is available for this inventory item
+            if (defaultRateType === 'daily' && inventoryItem.daily_rate) {
+                defaultRate = inventoryItem.daily_rate;
+            } else if (defaultRateType === 'weekly' && inventoryItem.weekly_rate) {
                 defaultRate = inventoryItem.weekly_rate;
-            } else if (inventoryItem.monthly_rate) {
-                defaultRateType = 'monthly';
+            } else if (defaultRateType === 'monthly' && inventoryItem.monthly_rate) {
                 defaultRate = inventoryItem.monthly_rate;
+            } else {
+                // Current rate type not available, choose first available
+                if (inventoryItem.daily_rate) {
+                    defaultRateType = 'daily';
+                    defaultRate = inventoryItem.daily_rate;
+                } else if (inventoryItem.weekly_rate) {
+                    defaultRateType = 'weekly';
+                    defaultRate = inventoryItem.weekly_rate;
+                } else if (inventoryItem.monthly_rate) {
+                    defaultRateType = 'monthly';
+                    defaultRate = inventoryItem.monthly_rate;
+                }
             }
 
             newItems[index] = {
@@ -506,6 +556,93 @@ export default function Create({ customers, branches, templates, categories = []
         }));
         setCustomerSearchTerm('');
         setShowCustomerResults(false);
+        setSearchedCustomers([]); // Clear search results
+    };
+
+    const searchCustomers = async (query: string) => {
+        if (!query || query.trim().length < 2) {
+            setSearchedCustomers([]);
+            return;
+        }
+
+        setIsSearchingCustomers(true);
+
+        try {
+            const response = await fetch(route('customers.search') + `?q=${encodeURIComponent(query)}`);
+            const customers = await response.json();
+            
+            if (Array.isArray(customers)) {
+                setSearchedCustomers(customers);
+            } else {
+                setSearchedCustomers([]);
+            }
+        } catch (error) {
+            console.error('Customer search error:', error);
+            setSearchedCustomers([]);
+        } finally {
+            setIsSearchingCustomers(false);
+        }
+    };
+
+    const handleCustomerSearchChange = (query: string) => {
+        setCustomerSearchTerm(query);
+        setShowCustomerResults(true);
+
+        // Clear previous timeout
+        if (customerSearchTimeoutId) {
+            clearTimeout(customerSearchTimeoutId);
+        }
+
+        // Set new timeout for debounced search
+        if (query.trim().length >= 2) {
+            const timeoutId = setTimeout(() => {
+                searchCustomers(query);
+            }, 300);
+            setCustomerSearchTimeoutId(timeoutId);
+        } else {
+            setSearchedCustomers([]);
+        }
+    };
+
+    const handleQuickCustomerCreate = async () => {
+        if (!quickCustomerData.name.trim() || !quickCustomerData.phone.trim()) {
+            alert('Ad və telefon nömrəsi tələb olunur');
+            return;
+        }
+
+        try {
+            const response = await fetch(route('customers.quick-store'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    name: quickCustomerData.name,
+                    phone: quickCustomerData.phone,
+                    birthday: quickCustomerData.birthday || null,
+                    customer_type: 'individual',
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const newCustomer = data.customer;
+                // Add to searched customers array so it appears in search results
+                setSearchedCustomers(prev => [newCustomer, ...prev]);
+                handleCustomerSelect(newCustomer);
+                setShowQuickCustomerForm(false);
+                setQuickCustomerData({ name: '', phone: '', birthday: '' });
+                // Show success message
+                alert('Müştəri uğurla yaradıldı!');
+            } else {
+                alert(data.message || 'Müştəri yaradılarkən xəta baş verdi');
+            }
+        } catch (error) {
+            console.error('Quick customer creation error:', error);
+            alert('Müştəri yaradılarkən xəta baş verdi');
+        }
     };
 
     const handleProceedToAgreement = () => {
@@ -521,6 +658,16 @@ export default function Create({ customers, branches, templates, categories = []
         );
         if (!allItemsComplete) {
             alert('Bütün inventar elementləri tam doldurulmalıdır');
+            return;
+        }
+
+        // Check if all items are available
+        const hasUnavailableItems = items.some((item, index) => {
+            const availability = itemAvailability[index];
+            return availability && !availability.is_available;
+        });
+        if (hasUnavailableItems) {
+            alert('Bəzi inventar elementləri mövcud deyil. Zəhmət olmasa yalnız mövcud olan elementləri seçin.');
             return;
         }
 
@@ -682,39 +829,141 @@ export default function Create({ customers, branches, templates, categories = []
                                 </label>
 
                                 {!selectedCustomer ? (
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={customerSearchTerm}
-                                            onChange={(e) => {
-                                                setCustomerSearchTerm(e.target.value);
-                                                setShowCustomerResults(true);
-                                            }}
-                                            onFocus={() => setShowCustomerResults(true)}
-                                            onBlur={() => {
-                                                // Delay hiding results to allow click
-                                                setTimeout(() => setShowCustomerResults(false), 200);
-                                            }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="Müştəri adı, telefon və ya email ilə axtar..."
-                                        />
+                                    <div className="space-y-3">
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={customerSearchTerm}
+                                                onChange={(e) => handleCustomerSearchChange(e.target.value)}
+                                                onFocus={() => setShowCustomerResults(true)}
+                                                onBlur={() => {
+                                                    // Delay hiding results to allow click
+                                                    setTimeout(() => setShowCustomerResults(false), 200);
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Müştəri adı, telefon və ya email ilə axtar..."
+                                            />
+                                            {isSearchingCustomers && customerSearchTerm.length >= 2 && (
+                                                <div className="absolute right-3 top-2.5 text-xs text-gray-400">Axtarılır...</div>
+                                            )}
 
-                                        {/* Search Results */}
-                                        {showCustomerResults && customerSearchTerm && filteredCustomers.length > 0 && (
-                                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                                                {filteredCustomers.map((customer) => (
-                                                    <div
-                                                        key={customer.id}
-                                                        onClick={() => handleCustomerSelect(customer)}
-                                                        className="p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                                            {/* Search Results */}
+                                            {showCustomerResults && customerSearchTerm && filteredCustomers.length > 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                                    {filteredCustomers.map((customer) => (
+                                                        <div
+                                                            key={customer.id}
+                                                            onClick={() => handleCustomerSelect(customer)}
+                                                            className="p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                                                        >
+                                                            <div className="font-medium text-gray-900">{customer.name}</div>
+                                                            <div className="text-sm text-gray-500">{customer.phone}</div>
+                                                            {customer.email && (
+                                                                <div className="text-sm text-gray-500">{customer.email}</div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* No results found message */}
+                                            {showCustomerResults && customerSearchTerm && filteredCustomers.length === 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-3">
+                                                    <div className="text-gray-500 text-center">Müştəri tapılmadı</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Quick Customer Creation Button */}
+                                        <div className="flex items-center justify-center">
+                                            <div className="text-sm text-gray-500">və ya</div>
+                                        </div>
+                                        
+                                        {!showQuickCustomerForm ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowQuickCustomerForm(true)}
+                                                className="w-full flex items-center justify-center px-3 py-2 border-2 border-dashed border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:border-blue-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <UserPlusIcon className="h-4 w-4 mr-2" />
+                                                Yeni müştəri yarat
+                                            </button>
+                                        ) : (
+                                            <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h4 className="text-sm font-medium text-blue-900">Yeni Müştəri</h4>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setShowQuickCustomerForm(false);
+                                                            setQuickCustomerData({ name: '', phone: '', birthday: '' });
+                                                        }}
+                                                        className="text-blue-600 hover:text-blue-800"
                                                     >
-                                                        <div className="font-medium text-gray-900">{customer.name}</div>
-                                                        <div className="text-sm text-gray-500">{customer.phone}</div>
-                                                        {customer.email && (
-                                                            <div className="text-sm text-gray-500">{customer.email}</div>
-                                                        )}
+                                                        <XMarkIcon className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                                                            Ad <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={quickCustomerData.name}
+                                                            onChange={(e) => setQuickCustomerData(prev => ({ ...prev, name: e.target.value }))}
+                                                            className="w-full px-2 py-1.5 text-sm border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                            placeholder="Müştəri adı"
+                                                        />
                                                     </div>
-                                                ))}
+                                                    
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                                                            Telefon <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="tel"
+                                                            value={quickCustomerData.phone}
+                                                            onChange={(e) => setQuickCustomerData(prev => ({ ...prev, phone: e.target.value }))}
+                                                            className="w-full px-2 py-1.5 text-sm border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                            placeholder="Telefon nömrəsi"
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                                                            Doğum günü
+                                                        </label>
+                                                        <input
+                                                            type="date"
+                                                            value={quickCustomerData.birthday}
+                                                            onChange={(e) => setQuickCustomerData(prev => ({ ...prev, birthday: e.target.value }))}
+                                                            className="w-full px-2 py-1.5 text-sm border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div className="flex space-x-2 pt-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleQuickCustomerCreate}
+                                                            disabled={!quickCustomerData.name.trim() || !quickCustomerData.phone.trim()}
+                                                            className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            Yarat
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setShowQuickCustomerForm(false);
+                                                                setQuickCustomerData({ name: '', phone: '', birthday: '' });
+                                                            }}
+                                                            className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50"
+                                                        >
+                                                            Ləğv et
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -732,6 +981,8 @@ export default function Create({ customers, branches, templates, categories = []
                                             onClick={() => {
                                                 setSelectedCustomer(null);
                                                 setFormData((prev) => ({ ...prev, customer_id: '' }));
+                                                setCustomerSearchTerm('');
+                                                setSearchedCustomers([]);
                                             }}
                                             className="text-red-600 hover:text-red-700"
                                         >
@@ -1358,6 +1609,129 @@ export default function Create({ customers, branches, templates, categories = []
                         </div>
                     )}
 
+                    {/* Form Validation Status */}
+                    <div className="bg-white shadow-sm rounded-lg p-6">
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">FORM VƏZİYYƏT YOXLAMASI</h2>
+                        <div className="space-y-3">
+                            {/* Customer Check */}
+                            <div className="flex items-center">
+                                {formData.customer_id ? (
+                                    <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                                ) : (
+                                    <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+                                )}
+                                <span className={formData.customer_id ? 'text-green-700' : 'text-red-700'}>
+                                    Müştəri seçildi: {formData.customer_id ? '✓' : '✗ Müştəri seçin'}
+                                </span>
+                            </div>
+
+                            {/* Branch Check */}
+                            <div className="flex items-center">
+                                {formData.branch_id ? (
+                                    <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                                ) : (
+                                    <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+                                )}
+                                <span className={formData.branch_id ? 'text-green-700' : 'text-red-700'}>
+                                    Filial seçildi: {formData.branch_id ? '✓' : '✗ Filial seçin'}
+                                </span>
+                            </div>
+
+                            {/* Start Date Check */}
+                            <div className="flex items-center">
+                                {formData.rental_start_date ? (
+                                    <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                                ) : (
+                                    <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+                                )}
+                                <span className={formData.rental_start_date ? 'text-green-700' : 'text-red-700'}>
+                                    Başlama tarixi: {formData.rental_start_date ? '✓' : '✗ Tarix seçin'}
+                                </span>
+                            </div>
+
+                            {/* Items Check */}
+                            <div className="flex items-center">
+                                {items.length > 0 ? (
+                                    <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                                ) : (
+                                    <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+                                )}
+                                <span className={items.length > 0 ? 'text-green-700' : 'text-red-700'}>
+                                    Məhsullar əlavə edildi: {items.length > 0 ? `✓ (${items.length} ədəd)` : '✗ Məhsul əlavə edin'}
+                                </span>
+                            </div>
+
+                            {/* Individual Item Checks */}
+                            {items.map((item, index) => (
+                                <div key={index} className="ml-6 space-y-2">
+                                    <div className="text-sm font-medium text-gray-700">Məhsul {index + 1}:</div>
+                                    
+                                    {/* Inventory Selection */}
+                                    <div className="flex items-center ml-4">
+                                        {item.rental_inventory_id ? (
+                                            <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                        ) : (
+                                            <ExclamationCircleIcon className="h-4 w-4 text-red-500 mr-2" />
+                                        )}
+                                        <span className={`text-sm ${item.rental_inventory_id ? 'text-green-600' : 'text-red-600'}`}>
+                                            İnventar: {item.rental_inventory_id ? '✓' : '✗ İnventar seçin'}
+                                        </span>
+                                    </div>
+
+                                    {/* Unit Price */}
+                                    <div className="flex items-center ml-4">
+                                        {item.unit_price ? (
+                                            <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                        ) : (
+                                            <ExclamationCircleIcon className="h-4 w-4 text-red-500 mr-2" />
+                                        )}
+                                        <span className={`text-sm ${item.unit_price ? 'text-green-600' : 'text-red-600'}`}>
+                                            Qiymət: {item.unit_price ? `✓ (${item.unit_price} AZN)` : '✗ Qiymət daxil edin'}
+                                        </span>
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div className="flex items-center ml-4">
+                                        {item.duration > 0 ? (
+                                            <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                        ) : (
+                                            <ExclamationCircleIcon className="h-4 w-4 text-red-500 mr-2" />
+                                        )}
+                                        <span className={`text-sm ${item.duration > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            Müddət: {item.duration > 0 ? `✓ (${item.duration} ${item.rate_type === 'daily' ? 'gün' : item.rate_type === 'weekly' ? 'həftə' : 'ay'})` : '✗ Müddət daxil edin'}
+                                        </span>
+                                    </div>
+
+                                    {/* Availability Status */}
+                                    {item.rental_inventory_id && (
+                                        <div className="flex items-center ml-4">
+                                            {itemAvailability[index] ? (
+                                                itemAvailability[index].is_available ? (
+                                                    <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                                ) : (
+                                                    <ExclamationCircleIcon className="h-4 w-4 text-red-500 mr-2" />
+                                                )
+                                            ) : (
+                                                <div className="h-4 w-4 mr-2 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                                            )}
+                                            <span className={`text-sm ${
+                                                itemAvailability[index] 
+                                                    ? itemAvailability[index].is_available ? 'text-green-600' : 'text-red-600'
+                                                    : 'text-yellow-600'
+                                            }`}>
+                                                Mövcudluq: {
+                                                    itemAvailability[index] 
+                                                        ? itemAvailability[index].is_available ? '✓ Mövcud' : '✗ Mövcud deyil'
+                                                        : '⏳ Yoxlanılır...'
+                                                }
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Form Actions */}
                     <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
                         <button
@@ -1370,7 +1744,17 @@ export default function Create({ customers, branches, templates, categories = []
                         </button>
                         <button
                             type="submit"
-                            disabled={processing}
+                            disabled={processing || 
+                                !formData.customer_id || 
+                                !formData.branch_id || 
+                                !formData.rental_start_date || 
+                                items.length === 0 ||
+                                !items.every(item => item.rental_inventory_id && item.unit_price && item.duration) ||
+                                items.some((item, index) => {
+                                    const availability = itemAvailability[index];
+                                    return availability && !availability.is_available;
+                                })
+                            }
                             className="w-full sm:w-auto inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                         >
                             {processing ? 'Yaradılır...' : (

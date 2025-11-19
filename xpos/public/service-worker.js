@@ -54,6 +54,12 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(event.request.url);
+  
+  // Skip chrome-extension and other non-standard protocols
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   // Don't cache API requests, dynamic data, or shop product pages
   // These should always fetch fresh data from the network
@@ -77,8 +83,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Only cache successful responses
-        if (response.status === 200) {
+        // Only cache successful responses from http/https protocols
+        // Skip chrome-extension:// and other non-standard protocols
+        if (response.status === 200 && 
+            (url.protocol === 'http:' || url.protocol === 'https:')) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
             .then((cache) => {

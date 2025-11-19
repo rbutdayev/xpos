@@ -112,6 +112,41 @@ class CustomerController extends Controller
         return response()->json($customers);
     }
 
+    public function quickStore(Request $request)
+    {
+        Gate::authorize('create-account-data');
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'birthday' => 'nullable|date',
+            'customer_type' => 'in:individual,corporate',
+        ]);
+
+        $validated['account_id'] = Auth::user()->account_id;
+        $validated['customer_type'] = $validated['customer_type'] ?? 'individual';
+
+        try {
+            $customer = Customer::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Müştəri uğurla yaradıldı.',
+                'customer' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->phone,
+                    'email' => $customer->email,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Müştəri yaradılarkən xəta baş verdi: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
     public function create()
     {
         Gate::authorize('create-account-data');

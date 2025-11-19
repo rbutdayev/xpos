@@ -10,7 +10,8 @@ import {
     CalendarIcon,
     WrenchScrewdriverIcon,
     PlusIcon,
-    ClockIcon
+    ClockIcon,
+    HomeIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
@@ -57,7 +58,9 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
             'ChartBarIcon': ChartBarIcon,
             'UserIcon': UserIcon,
             'WrenchScrewdriverIcon': WrenchScrewdriverIcon,
-            'DocumentTextIcon': DocumentTextIcon
+            'DocumentTextIcon': DocumentTextIcon,
+            'CalendarIcon': CalendarIcon,
+            'HomeIcon': HomeIcon
         };
         const IconComponent = iconMap[iconName] || DocumentTextIcon;
         return <IconComponent className="h-8 w-8" />;
@@ -70,7 +73,8 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
             'purple': 'bg-purple-500',
             'indigo': 'bg-indigo-500',
             'yellow': 'bg-yellow-500',
-            'red': 'bg-red-500'
+            'red': 'bg-red-500',
+            'teal': 'bg-teal-500'
         };
         return colorMap[color] || 'bg-gray-500';
     };

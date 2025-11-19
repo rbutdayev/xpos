@@ -27,6 +27,7 @@ class RentalAgreementTemplate extends Model
         'require_photos',
         'min_photos',
         'notes',
+        'is_master_template',
     ];
 
     protected function casts(): array
@@ -37,6 +38,7 @@ class RentalAgreementTemplate extends Model
             'is_default' => 'boolean',
             'require_photos' => 'boolean',
             'min_photos' => 'integer',
+            'is_master_template' => 'boolean',
         ];
     }
 
@@ -62,6 +64,16 @@ class RentalAgreementTemplate extends Model
         return $query->where('rental_category', $category);
     }
 
+    public function scopeMasterTemplates(Builder $query): Builder
+    {
+        return $query->where('is_master_template', true)->whereNull('account_id');
+    }
+
+    public function scopeAccountTemplates(Builder $query): Builder
+    {
+        return $query->where('is_master_template', false)->whereNotNull('account_id');
+    }
+
     // Status Methods
     public function isActive(): bool
     {
@@ -76,6 +88,11 @@ class RentalAgreementTemplate extends Model
     public function requiresPhotos(): bool
     {
         return $this->require_photos;
+    }
+
+    public function isMasterTemplate(): bool
+    {
+        return $this->is_master_template;
     }
 
     // Template Methods
@@ -189,6 +206,59 @@ class RentalAgreementTemplate extends Model
             ->orderBy('is_default', 'desc')
             ->orderBy('name')
             ->get();
+    }
+
+    /**
+     * Copy master templates to a new account
+     */
+    public static function copyMasterTemplatesToAccount(int $accountId): void
+    {
+        $masterTemplates = static::withoutGlobalScope('account')
+            ->masterTemplates()
+            ->active()
+            ->get();
+
+        foreach ($masterTemplates as $masterTemplate) {
+            static::create([
+                'account_id' => $accountId,
+                'name' => $masterTemplate->name,
+                'rental_category' => $masterTemplate->rental_category,
+                'terms_and_conditions_az' => $masterTemplate->terms_and_conditions_az,
+                'terms_and_conditions_en' => $masterTemplate->terms_and_conditions_en,
+                'damage_liability_terms_az' => $masterTemplate->damage_liability_terms_az,
+                'damage_liability_terms_en' => $masterTemplate->damage_liability_terms_en,
+                'condition_checklist' => $masterTemplate->condition_checklist,
+                'is_active' => true,
+                'is_default' => $masterTemplate->is_default,
+                'require_photos' => $masterTemplate->require_photos,
+                'min_photos' => $masterTemplate->min_photos,
+                'notes' => $masterTemplate->notes,
+                'is_master_template' => false,
+            ]);
+        }
+    }
+
+    /**
+     * Create a copy of this template for an account
+     */
+    public function copyToAccount(int $accountId): self
+    {
+        return static::create([
+            'account_id' => $accountId,
+            'name' => $this->name,
+            'rental_category' => $this->rental_category,
+            'terms_and_conditions_az' => $this->terms_and_conditions_az,
+            'terms_and_conditions_en' => $this->terms_and_conditions_en,
+            'damage_liability_terms_az' => $this->damage_liability_terms_az,
+            'damage_liability_terms_en' => $this->damage_liability_terms_en,
+            'condition_checklist' => $this->condition_checklist,
+            'is_active' => true,
+            'is_default' => $this->is_default,
+            'require_photos' => $this->require_photos,
+            'min_photos' => $this->min_photos,
+            'notes' => $this->notes,
+            'is_master_template' => false,
+        ]);
     }
 
     // Boot method

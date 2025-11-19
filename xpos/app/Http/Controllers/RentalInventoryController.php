@@ -154,6 +154,9 @@ class RentalInventoryController extends Controller
         try {
             // Use transaction to ensure stock deduction and inventory creation happen together
             $inventory = DB::transaction(function () use ($validated, $accountId) {
+                // Ensure account_id is set
+                $validated['account_id'] = $accountId;
+                
                 // Check stock availability
                 $product = Product::where('account_id', $accountId)->findOrFail($validated['product_id']);
                 $totalStock = ProductStock::where('product_id', $product->id)
@@ -171,10 +174,12 @@ class RentalInventoryController extends Controller
                     throw new \Exception("Filial üçün anbara giriş tapılmadı. Anbara giriş təyin edin və ya əsas anbar yaradın.");
                 }
 
-                // Create the inventory item
+                // Create the inventory item with explicit status
                 $inventory = RentalInventory::create(array_merge($validated, [
                     'stock_deducted' => true,
                     'stock_warehouse_id' => $warehouse->id,
+                    'status' => 'available', // Ensure status is explicitly set
+                    'is_active' => true,     // Ensure item is active
                 ]));
 
                 // Deduct stock from warehouse
@@ -196,15 +201,15 @@ class RentalInventoryController extends Controller
             return redirect()->route('rental-inventory.index')
                 ->with('success', 'İnventar elementi uğurla yaradıldı və stokdan çıxarıldı.');
         } catch (\Exception $e) {
-            // Return JSON for API requests
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ], 400);
+            // For Inertia.js requests (which want JSON), return errors properly
+            if ($request->wantsJson() || $request->header('X-Inertia')) {
+                // Return validation errors in the format Inertia expects
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['general' => $e->getMessage()]);
             }
 
-            // Return redirect for web requests with error message
+            // Return redirect for regular web requests
             return redirect()->back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -457,10 +462,12 @@ class RentalInventoryController extends Controller
         $inventory = RentalInventory::where('account_id', $accountId)->findOrFail($id);
 
         // Get all rental items for this inventory with their rental details
+        // Only show active, reserved, and overdue rentals in calendar
         $bookings = \App\Models\RentalItem::where('rental_inventory_id', $id)
             ->with(['rental.customer', 'rental.branch'])
             ->whereHas('rental', function ($query) use ($accountId) {
-                $query->where('account_id', $accountId);
+                $query->where('account_id', $accountId)
+                      ->whereIn('status', ['active', 'reserved', 'overdue']);
             })
             ->get()
             ->map(function ($rentalItem) {
@@ -513,6 +520,9 @@ class RentalInventoryController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        } else {
+            // By default, only show active, reserved, and overdue rentals in calendar
+            $query->whereIn('status', ['active', 'reserved', 'overdue']);
         }
 
         $rentals = $query->get()->map(function ($rental) {

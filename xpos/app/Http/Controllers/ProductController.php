@@ -216,6 +216,32 @@ class ProductController extends Controller
         ]);
     }
 
+    public function bulkCreate()
+    {
+        // Salesmen cannot create products
+        if (Auth::user()->role === 'sales_staff') {
+            abort(403, 'Satış əməkdaşları məhsul yarada bilməz.');
+        }
+        
+        Gate::authorize('manage-products');
+        
+        $categories = Category::where('account_id', Auth::user()->account_id)
+            ->where('is_service', false)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+            
+        $warehouses = Warehouse::where('account_id', Auth::user()->account_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+        
+        return Inertia::render('Products/BulkCreate', [
+            'categories' => $categories,
+            'warehouses' => $warehouses
+        ]);
+    }
+
     public function store(Request $request)
     {
         // Salesmen cannot create products
@@ -374,6 +400,142 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')
                         ->with('success', __('app.saved_successfully'));
+    }
+
+    public function bulkStore(Request $request)
+    {
+        // Salesmen cannot create products
+        if (Auth::user()->role === 'sales_staff') {
+            abort(403, 'Satış əməkdaşları məhsul yarada bilməz.');
+        }
+        
+        Gate::authorize('manage-products');
+        
+        $request->validate([
+            'category_id' => 'required|exists:categories,id,account_id,' . Auth::user()->account_id,
+            'sale_price' => 'required|numeric|min:0',
+            'purchase_price' => 'required|numeric|min:0',
+            'unit' => 'required|string|max:20',
+            'products' => 'required|array|min:1|max:50',
+            'products.*.name' => 'required|string|max:255',
+            'products.*.sku' => 'nullable|string|max:100',
+            'products.*.barcode' => 'nullable|string|max:100',
+            'products.*.size' => 'nullable|string|max:50',
+            'products.*.color' => 'nullable|string|max:100',
+            'products.*.color_code' => 'nullable|string|max:7',
+            'products.*.initial_quantity' => 'nullable|numeric|min:0',
+            'products.*.warehouse_id' => 'nullable|exists:warehouses,id,account_id,' . Auth::user()->account_id,
+        ]);
+
+        $products = [];
+        $user = Auth::user();
+        $accountId = $user->account_id;
+
+        DB::transaction(function () use ($request, &$products, $accountId) {
+            foreach ($request->products as $productData) {
+                // Prepare product data
+                $data = [
+                    'account_id' => $accountId,
+                    'name' => $productData['name'],
+                    'category_id' => $request->category_id,
+                    'type' => 'product',
+                    'sale_price' => $request->sale_price,
+                    'purchase_price' => $request->purchase_price,
+                    'unit' => $request->unit,
+                    'base_unit' => $request->unit,
+                    'packaging_quantity' => 1,
+                    'allow_negative_stock' => false,
+                    'has_custom_barcode' => !empty($productData['barcode']),
+                    'is_active' => true,
+                ];
+
+                // Add optional fields
+                if (!empty($productData['sku'])) {
+                    $data['sku'] = $productData['sku'];
+                }
+
+                // Handle barcode
+                if (!empty($productData['barcode'])) {
+                    // Check for duplicate barcode within account
+                    $existingProduct = Product::where('account_id', $accountId)
+                        ->where('barcode', $productData['barcode'])
+                        ->first();
+                    
+                    if ($existingProduct) {
+                        throw new \Exception("Barcode '{$productData['barcode']}' already exists for product '{$existingProduct->name}'");
+                    }
+                    
+                    $data['barcode'] = $productData['barcode'];
+                    $data['barcode_type'] = 'EAN-13';
+                    $data['has_custom_barcode'] = true;
+                } else {
+                    // Generate unique barcode using EAN-13 (matching existing system)
+                    $data['barcode'] = $this->barcodeService->generateUniqueBarcode($accountId, 'EAN13');
+                    $data['barcode_type'] = 'EAN-13';
+                    $data['has_custom_barcode'] = false;
+                }
+
+                // Add clothing attributes if provided
+                $attributes = [];
+                if (!empty($productData['size'])) {
+                    $attributes['size'] = $productData['size'];
+                }
+                if (!empty($productData['color'])) {
+                    $attributes['color'] = $productData['color'];
+                }
+                if (!empty($productData['color_code'])) {
+                    $attributes['color_code'] = $productData['color_code'];
+                }
+                if (!empty($attributes)) {
+                    $data['attributes'] = $attributes;
+                }
+
+                // Check for duplicate SKU within account if provided
+                if (!empty($data['sku'])) {
+                    $existingSku = Product::where('account_id', $accountId)
+                        ->where('sku', $data['sku'])
+                        ->first();
+                    
+                    if ($existingSku) {
+                        throw new \Exception("SKU '{$data['sku']}' already exists for product '{$existingSku->name}'");
+                    }
+                }
+
+                $product = Product::create($data);
+                
+                // Create initial stock if this product has warehouse and quantity
+                if (!empty($productData['warehouse_id']) && 
+                    !empty($productData['initial_quantity']) && 
+                    $productData['initial_quantity'] > 0) {
+                    
+                    $product->stock()->create([
+                        'warehouse_id' => $productData['warehouse_id'],
+                        'quantity' => $productData['initial_quantity'],
+                        'min_level' => 0,
+                        'location' => null,
+                    ]);
+
+                    // Create stock history entry
+                    $product->stockHistory()->create([
+                        'warehouse_id' => $productData['warehouse_id'],
+                        'quantity_before' => 0,
+                        'quantity_change' => $productData['initial_quantity'],
+                        'quantity_after' => $productData['initial_quantity'],
+                        'type' => 'daxil_olma',
+                        'reference_type' => 'initial',
+                        'user_id' => Auth::id(),
+                        'notes' => 'İlkin stok - Toplu yaratma',
+                        'occurred_at' => now(),
+                    ]);
+                }
+                
+                $products[] = $product;
+            }
+        });
+
+        $count = count($products);
+        return redirect()->route('products.index')
+                        ->with('success', "{$count} məhsul uğurla yaradıldı");
     }
 
     public function show(Product $product)

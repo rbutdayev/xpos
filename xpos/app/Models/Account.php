@@ -288,4 +288,17 @@ class Account extends Model
     {
         return $this->getNotificationSetting("{$event}.enabled", false);
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($account) {
+            // Create default rental categories for new account
+            \App\Models\RentalCategory::createDefaultCategoriesForAccount($account->id);
+            
+            // Copy master rental agreement templates to new account
+            \App\Models\RentalAgreementTemplate::copyMasterTemplatesToAccount($account->id);
+        });
+    }
 }

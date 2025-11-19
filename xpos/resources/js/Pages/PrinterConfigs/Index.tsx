@@ -6,6 +6,7 @@ import { PlusIcon, EyeIcon, PencilIcon, TrashIcon, PrinterIcon } from '@heroicon
 
 interface PrinterConfig {
     id: number;
+    config_id: number;
     name: string;
     printer_type: string;
     connection_type: string;

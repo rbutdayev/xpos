@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface PrinterConfig {
     id: number;
+    config_id: number;
     branch_id: number;
     name: string;
     printer_type: string;

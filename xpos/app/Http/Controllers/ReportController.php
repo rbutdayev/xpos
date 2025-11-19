@@ -74,6 +74,13 @@ class ReportController extends Controller
                 'description' => 'Servis qeydləri və performans',
                 'icon' => 'WrenchScrewdriverIcon',
                 'color' => 'yellow'
+            ],
+            [
+                'id' => 'rental',
+                'name' => 'Kirayə Hesabatı',
+                'description' => 'Kirayə məlumatları və performans',
+                'icon' => 'HomeIcon',
+                'color' => 'teal'
             ]
         ];
 
@@ -90,7 +97,7 @@ class ReportController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:sales,inventory,financial,customer,service,end_of_day',
+            'type' => 'required|in:sales,inventory,financial,customer,service,end_of_day,rental',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
             'format' => 'nullable|in:table,excel,pdf'
@@ -121,6 +128,9 @@ class ReportController extends Controller
                 break;
             case 'service':
                 $data = $this->generateServiceReport($account, $dateFrom, $dateTo);
+                break;
+            case 'rental':
+                $data = $this->generateRentalReport($account, $dateFrom, $dateTo);
                 break;
             default:
                 abort(404);
@@ -391,6 +401,46 @@ class ReportController extends Controller
                         ]);
                     }
                     break;
+                case 'rental':
+                    fputcsv($file, ['Kirayə Nömrəsi', 'Müştəri', 'Filial', 'Başlanğıc Tarixi', 'Bitmə Tarixi', 'Məhsul/İnventar', 'Miqdar', 'Vahid Qiyməti', 'Cəmi Məbləğ', 'Ödənilən', 'Kredit', 'Status', 'Ödəniş Statusu']);
+                    foreach ($data['rentals'] as $item) {
+                        if (!empty($item['items'])) {
+                            foreach ($item['items'] as $rentalItem) {
+                                fputcsv($file, [
+                                    $item['rental_number'],
+                                    $item['customer_name'],
+                                    $item['branch_name'],
+                                    $item['start_date'],
+                                    $item['end_date'],
+                                    $rentalItem['product_name'],
+                                    $rentalItem['quantity'],
+                                    $rentalItem['unit_price'],
+                                    $item['total_cost'],
+                                    $item['paid_amount'],
+                                    $item['credit_amount'],
+                                    $this->translateStatus($item['status']),
+                                    $this->translateStatus($item['payment_status'])
+                                ]);
+                            }
+                        } else {
+                            fputcsv($file, [
+                                $item['rental_number'],
+                                $item['customer_name'],
+                                $item['branch_name'],
+                                $item['start_date'],
+                                $item['end_date'],
+                                'Məhsul məlumatı yoxdur',
+                                '',
+                                '',
+                                $item['total_cost'],
+                                $item['paid_amount'],
+                                $item['credit_amount'],
+                                $this->translateStatus($item['status']),
+                                $this->translateStatus($item['payment_status'])
+                            ]);
+                        }
+                    }
+                    break;
             }
             
             fclose($file);
@@ -444,7 +494,8 @@ class ReportController extends Controller
             'inventory' => 'Anbar Hesabatı',
             'financial' => 'Maliyyə Hesabatı',
             'customer' => 'Müştəri Hesabatı',
-            'service' => 'Servis Hesabatı'
+            'service' => 'Servis Hesabatı',
+            'rental' => 'Kirayə Hesabatı'
         ];
 
         return [
@@ -452,6 +503,63 @@ class ReportController extends Controller
             'this_month_reports' => $thisMonthReports,
             'most_used_report' => $mostUsedReport ? ($types[$mostUsedReport->type] ?? $mostUsedReport->type) : 'N/A',
             'last_generated' => $lastGenerated ? $lastGenerated->created_at->format('d.m.Y H:i') : 'N/A'
+        ];
+    }
+
+    private function generateRentalReport($account, $dateFrom, $dateTo)
+    {
+        // Use Rental model instead of ServiceRecord
+        $rentals = \App\Models\Rental::where('account_id', $account->id)
+            ->whereBetween('rental_start_date', [$dateFrom, $dateTo])
+            ->with(['customer', 'branch', 'items.product', 'items.rentalInventory'])
+            ->get();
+
+        $summary = [
+            'total_rentals' => $rentals->count(),
+            'active_rentals' => $rentals->where('status', 'active')->count(),
+            'completed_rentals' => $rentals->where('status', 'returned')->count(),
+            'overdue_rentals' => $rentals->where('status', 'overdue')->count(),
+            'cancelled_rentals' => $rentals->where('status', 'cancelled')->count(),
+            'total_rental_revenue' => $rentals->sum('total_cost'),
+            'total_paid_amount' => $rentals->sum('paid_amount'),
+            'total_outstanding' => $rentals->sum('credit_amount'),
+            'average_rental_value' => $rentals->avg('total_cost'),
+        ];
+
+        $rentalData = $rentals->map(function ($rental) {
+            return [
+                'rental_number' => $rental->rental_number,
+                'customer_name' => $rental->customer->name ?? 'Naməlum',
+                'branch_name' => $rental->branch->name ?? 'Naməlum',
+                'start_date' => $rental->rental_start_date->format('Y-m-d'),
+                'end_date' => $rental->rental_end_date->format('Y-m-d'),
+                'total_cost' => $rental->total_cost,
+                'paid_amount' => $rental->paid_amount,
+                'credit_amount' => $rental->credit_amount,
+                'status' => $rental->status,
+                'payment_status' => $rental->payment_status,
+                'items' => $rental->items->map(function ($item) {
+                    $productName = $item->product->name ?? 'Naməlum Məhsul';
+                    
+                    // If it's an inventory item, add inventory number
+                    if ($item->rentalInventory) {
+                        $productName .= " (İnv: {$item->rentalInventory->inventory_number})";
+                    }
+
+                    return [
+                        'product_name' => $productName,
+                        'quantity' => $item->quantity,
+                        'daily_rate' => $item->unit_price,
+                        'total_cost' => $item->total_price,
+                    ];
+                })->toArray()
+            ];
+        });
+
+        return [
+            'summary' => $summary,
+            'rentals' => $rentalData,
+            'type' => 'rental'
         ];
     }
 
@@ -906,6 +1014,15 @@ class ReportController extends Controller
             'completed' => 'Tamamlandı',
             'pending' => 'Gözləmədə',
             'cancelled' => 'Ləğv edildi',
+            // Rental statuses
+            'reserved' => 'Rezerv edildi',
+            'active' => 'Aktiv',
+            'overdue' => 'Gecikmiş',
+            'returned' => 'Qaytarıldı',
+            // Payment statuses
+            'unpaid' => 'Ödənilməyib',
+            'partial' => 'Qismən ödənildi',
+            'paid' => 'Ödənildi',
             default => $status
         };
     }

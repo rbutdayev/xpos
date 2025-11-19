@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Product, Category } from '@/types';
 import { 
@@ -11,7 +11,8 @@ import {
     TagIcon,
     HomeModernIcon,
     CheckCircleIcon,
-    ExclamationTriangleIcon
+    ExclamationTriangleIcon,
+    QueueListIcon
 } from '@heroicons/react/24/outline';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { productTableConfig } from '@/Components/TableConfigurations';
@@ -339,6 +340,35 @@ export default function Index({ products, categories, warehouses, filters, selec
                     </div>
                 )}
 
+                {/* Custom Header with Create Buttons */}
+                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                    <div className="p-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-900">Məhsul Kataloqu</h2>
+                            </div>
+                            {currentUser.role !== 'sales_staff' && (
+                                <div className="flex gap-3">
+                                    <Link
+                                        href="/products/bulk-create"
+                                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <QueueListIcon className="w-4 h-4 mr-2" />
+                                        Toplu Məhsul Yaratma
+                                    </Link>
+                                    <Link
+                                        href="/products/create"
+                                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <PlusIcon className="w-4 h-4 mr-2" />
+                                        Yeni Məhsul
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <SharedDataTable
                     data={products}
                     columns={customTableConfig.columns}
@@ -349,11 +379,6 @@ export default function Index({ products, categories, warehouses, filters, selec
                     filters={tableFilters}
                     onSearch={handleSearch}
                     onReset={handleReset}
-                    title="Məhsul Kataloqu"
-                    createButton={currentUser.role !== 'sales_staff' ? {
-                        label: 'Yeni Məhsul',
-                        href: '/products/create'
-                    } : undefined}
                     emptyState={{
                         icon: <CubeIcon className="w-12 h-12" />,
                         title: 'Heç bir məhsul tapılmadı',
