@@ -90,8 +90,8 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight text-gray-800">
                         Yeni Təchizatçı Ödənişi
                     </h2>
                     <Link
@@ -106,9 +106,9 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts 
             <Head title="Yeni Təchizatçı Ödənişi" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="p-6 space-y-6">
+                        <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Goods Receipt Selector */}
                             {unpaidGoodsReceipts && unpaidGoodsReceipts.length > 0 && (
                                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -141,7 +141,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts 
                                     ) : (
                                         <div className="relative">
                                             <div className="relative">
-                                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                                                 <input
                                                     type="text"
                                                     value={goodsReceiptSearch}
@@ -343,15 +343,15 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts 
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex items-center justify-between pt-4">
-                                <SecondaryButton>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4">
+                                <SecondaryButton className="w-full sm:w-auto">
                                     <Link href="/supplier-payments">
                                         Ləğv et
                                     </Link>
                                 </SecondaryButton>
 
                                 <PrimaryButton
-                                    className="ms-4"
+                                    className="w-full sm:w-auto"
                                     disabled={processing}
                                 >
                                     {processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}

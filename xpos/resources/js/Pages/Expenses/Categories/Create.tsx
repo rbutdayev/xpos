@@ -41,11 +41,11 @@ export default function Create({ parentCategories, types }: Props) {
             <Head title="Yeni xərc kateqoriyası" />
 
             <div className="py-6">
-                <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-2xl font-semibold text-gray-900">
+                        <div className="p-4 sm:p-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                                     Yeni xərc kateqoriyası
                                 </h1>
                                 <Link
@@ -132,15 +132,15 @@ export default function Create({ parentCategories, types }: Props) {
                                 </div>
 
                                 {/* Submit Buttons */}
-                                <div className="flex items-center justify-between pt-4">
-                                    <SecondaryButton>
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4">
+                                    <SecondaryButton className="w-full sm:w-auto">
                                         <Link href="/expense-categories">
                                             Ləğv et
                                         </Link>
                                     </SecondaryButton>
 
                                     <PrimaryButton
-                                        className="ms-4"
+                                        className="w-full sm:w-auto"
                                         disabled={processing}
                                     >
                                         {processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}

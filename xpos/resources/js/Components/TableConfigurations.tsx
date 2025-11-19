@@ -516,6 +516,7 @@ export const productTableConfig = {
         {
             key: 'product_info',
             label: 'Məhsul',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (product: Product) => (
                 <div className="flex items-center">
@@ -540,6 +541,8 @@ export const productTableConfig = {
         {
             key: 'category',
             label: 'Kateqoriya',
+            mobileLabel: 'Kateqoriya',
+            hideOnMobile: true,
             render: (product: Product) => (
                 <div className="text-sm">
                     <TagIcon className="w-4 h-4 inline mr-1 text-gray-400" />
@@ -551,6 +554,7 @@ export const productTableConfig = {
         {
             key: 'stock_info',
             label: 'Anbar məlumatları',
+            mobileLabel: 'Stok',
             align: 'center',
             render: (product: Product) => (
                 <div className="text-center">
@@ -567,6 +571,8 @@ export const productTableConfig = {
         {
             key: 'pricing',
             label: 'Qiymətlər',
+            mobileLabel: 'Qiymət',
+            hideOnMobile: true,
             align: 'right',
             render: (product: Product) => (
                 <div className="text-sm text-right">
@@ -583,6 +589,7 @@ export const productTableConfig = {
         {
             key: 'type',
             label: 'Növ',
+            mobileLabel: 'Növ',
             align: 'center',
             render: (product: Product) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -604,6 +611,7 @@ export const supplierTableConfig = {
         {
             key: 'supplier_info',
             label: 'Təchizatçı',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (supplier: Supplier) => (
                 <div className="flex items-center">
@@ -628,6 +636,8 @@ export const supplierTableConfig = {
         {
             key: 'contact',
             label: 'Əlaqə məlumatları',
+            mobileLabel: 'Əlaqə',
+            hideOnMobile: true,
             render: (supplier: Supplier) => (
                 <div className="text-sm">
                     {supplier.phone && (
@@ -651,6 +661,7 @@ export const supplierTableConfig = {
         {
             key: 'products_count',
             label: 'Məhsullar',
+            mobileLabel: 'Məhsul',
             sortable: true,
             align: 'center',
             render: (supplier: Supplier) => (
@@ -665,6 +676,8 @@ export const supplierTableConfig = {
         {
             key: 'payment_terms_days',
             label: 'Ödəniş şərtləri',
+            mobileLabel: 'Ödəniş',
+            hideOnMobile: true,
             align: 'center',
             render: (supplier: Supplier) => (
                 <div className="text-sm text-gray-900">

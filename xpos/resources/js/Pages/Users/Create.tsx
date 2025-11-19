@@ -71,9 +71,9 @@ export default function Create({ roleOptions, branches }: Props) {
             <Head title="Yeni İstifadəçi" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="p-6 space-y-6">
+                        <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Personal Information */}
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -304,13 +304,13 @@ export default function Create({ roleOptions, branches }: Props) {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-                                <Link href="/users">
-                                    <SecondaryButton type="button">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
+                                <Link href="/users" className="w-full sm:w-auto">
+                                    <SecondaryButton type="button" className="w-full sm:w-auto">
                                         Ləğv et
                                     </SecondaryButton>
                                 </Link>
-                                <PrimaryButton disabled={processing}>
+                                <PrimaryButton disabled={processing} className="w-full sm:w-auto">
                                     {processing ? 'Yadda saxlanır...' : 'İstifadəçi yarat'}
                                 </PrimaryButton>
                             </div>

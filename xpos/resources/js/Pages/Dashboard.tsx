@@ -205,19 +205,19 @@ const QuickActionButton = ({ href, icon, title, color, description }: { href: st
     return (
         <Link
             href={href}
-            className={`${colorClasses[color]} text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2`}
+            className={`${colorClasses[color]} text-white rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2`}
         >
-            <div className="flex items-start space-x-4">
+            <div className="flex items-start space-x-3 sm:space-x-4">
                 <div className="flex-shrink-0">
-                    <div className="p-3 bg-white/20 rounded-lg">
+                    <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
                         {icon}
                     </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-xl font-semibold">{title}</p>
-                    <p className="mt-1 text-sm text-white/80">{description}</p>
+                    <p className="text-lg sm:text-xl font-semibold truncate">{title}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-white/80 line-clamp-2">{description}</p>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 hidden sm:block">
                     <PlusIcon className="h-6 w-6" />
                 </div>
             </div>
@@ -248,31 +248,31 @@ const ModernKPICard = ({ title, value, icon, color, trend, subtitle }: { title: 
     };
 
     return (
-        <div className={`${colorClasses[color]} rounded-xl shadow-lg p-6 relative overflow-hidden`}>
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full"></div>
-            <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-20 h-20 bg-white/10 rounded-full"></div>
+        <div className={`${colorClasses[color]} rounded-xl shadow-lg p-4 sm:p-6 relative overflow-hidden`}>
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 sm:w-24 h-20 sm:h-24 bg-white/10 rounded-full"></div>
+            <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-16 sm:w-20 h-16 sm:h-20 bg-white/10 rounded-full"></div>
 
             <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-white/20 rounded-lg">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
                         {icon}
                     </div>
                     {trend && (
-                        <div className={`flex items-center space-x-1 text-sm font-medium ${trend.isPositive ? 'text-white' : 'text-white/90'}`}>
+                        <div className={`flex items-center space-x-1 text-xs sm:text-sm font-medium ${trend.isPositive ? 'text-white' : 'text-white/90'}`}>
                             {trend.isPositive ? (
-                                <ArrowUpIcon className="h-4 w-4" />
+                                <ArrowUpIcon className="h-3 sm:h-4 w-3 sm:w-4" />
                             ) : (
-                                <ArrowDownIcon className="h-4 w-4" />
+                                <ArrowDownIcon className="h-3 sm:h-4 w-3 sm:w-4" />
                             )}
                             <span>{trend.value}%</span>
                         </div>
                     )}
                 </div>
                 <div>
-                    <p className="text-sm font-medium text-white/80">{title}</p>
-                    <p className="mt-2 text-3xl font-bold">{value}</p>
+                    <p className="text-xs sm:text-sm font-medium text-white/80 truncate">{title}</p>
+                    <p className="mt-1 sm:mt-2 text-xl sm:text-3xl font-bold truncate">{value}</p>
                     {subtitle && (
-                        <p className="mt-1 text-sm text-white/70">{subtitle}</p>
+                        <p className="mt-1 text-xs sm:text-sm text-white/70 truncate">{subtitle}</p>
                     )}
                 </div>
             </div>
@@ -407,11 +407,11 @@ export default function Dashboard({
         <AuthenticatedLayout>
             <Head title="İdarə Paneli" />
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 {/* Modern Header */}
-                <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-700 rounded-2xl shadow-xl p-8 text-white">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <div className="mb-6 md:mb-0">
+                <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-700 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 text-white overflow-hidden">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div className="mb-4 lg:mb-0">
                             <h1 className="text-4xl font-bold mb-2">xPOS</h1>
                             <p className="text-blue-100 text-lg">Satış İdarəetmə Sistemi</p>
 
@@ -436,14 +436,14 @@ export default function Dashboard({
                         </div>
 
                         {/* Time Display */}
-                        <div className="text-center">
-                            <div className="text-5xl font-bold">
+                        <div className="text-center lg:text-right">
+                            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold">
                                 {new Date().toLocaleTimeString('az-AZ', {
                                     hour: '2-digit',
                                     minute: '2-digit',
                                 })}
                             </div>
-                            <div className="text-blue-100 mt-1">
+                            <div className="text-blue-100 mt-1 text-sm sm:text-base">
                                 {new Date().toLocaleDateString('az-AZ', {
                                     day: 'numeric',
                                     month: 'long',
@@ -455,7 +455,7 @@ export default function Dashboard({
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <QuickActionButton
                         href={route('pos.index')}
                         icon={<ShoppingCartIcon className="h-8 w-8" />}
@@ -490,7 +490,7 @@ export default function Dashboard({
                 {!isSalesman ? (
                     <>
                         {/* Financial Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                             <ModernKPICard
                                 title="Bu Ay Gəlir"
                                 value={formatCurrency(financial_data.monthly_revenue)}
@@ -530,7 +530,7 @@ export default function Dashboard({
                         </div>
 
                         {/* Rental Services Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                             <ModernKPICard
                                 title="Aktiv İcarələr"
                                 value={rental_data.active_rentals_count}
@@ -563,15 +563,15 @@ export default function Dashboard({
 
                         {/* Stock by Unit Breakdown */}
                         {stats.stock_by_unit && stats.stock_by_unit.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-lg p-6">
+                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                                     Vahid üzrə Stok Bölgüsü
                                 </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                                     {stats.stock_by_unit.map((item, index) => (
                                         <div
                                             key={index}
-                                            className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200"
+                                            className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 sm:p-4 border border-gray-200"
                                         >
                                             <div className="flex items-center justify-center mb-2">
                                                 <BeakerIcon className="h-6 w-6 text-blue-600" />
@@ -597,11 +597,11 @@ export default function Dashboard({
                         )}
 
                         {/* Credits Statistics */}
-                        <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">
                                 Borc Statistikaları
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                                 <ModernKPICard
                                     title="Ümumi Borc"
                                     value={formatCurrency(credits_data.total_outstanding)}
@@ -638,7 +638,7 @@ export default function Dashboard({
                             stats.out_of_stock_count! > 0 ||
                             stats.negative_stock_count! > 0 ||
                             stats.pending_services > 0) && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                                 {stats.low_stock_count! > 0 && (
                                     <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4">
                                         <div className="flex items-center">
@@ -705,7 +705,7 @@ export default function Dashboard({
                         {/* Charts Section */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Sales Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+                            <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900">
                                         Son 10 Gün Satış Statistikası
@@ -718,7 +718,7 @@ export default function Dashboard({
                             </div>
 
                             {/* Payment Methods */}
-                            <div className="bg-white rounded-xl shadow-lg p-6">
+                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900">
                                         Ödəniş Üsulları
@@ -754,7 +754,7 @@ export default function Dashboard({
                         {/* Top Products and Low Stock */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Top Products */}
-                            <div className="bg-white rounded-xl shadow-lg p-6">
+                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900">
                                         Ən Çox Satılan Məhsullar
@@ -805,7 +805,7 @@ export default function Dashboard({
                             </div>
 
                             {/* Low Stock Products */}
-                            <div className="bg-white rounded-xl shadow-lg p-6">
+                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-semibold text-gray-900">
                                         Az Stoklu Məhsullar
@@ -871,7 +871,7 @@ export default function Dashboard({
                         </div>
 
                         {/* Recent Sales */}
-                        <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-semibold text-gray-900">Son Satışlar</h3>
                                 <Link
@@ -881,65 +881,77 @@ export default function Dashboard({
                                     Hamısını gör
                                 </Link>
                             </div>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Müştəri
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Tarix
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Məhsul Sayı
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Məbləğ
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {recent_sales.length === 0 ? (
+                            <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:mx-0">
+                                <div className="inline-block min-w-full align-middle px-4 sm:px-6 lg:px-0">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
                                             <tr>
-                                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                                                    Hələ ki satış yoxdur
-                                                </td>
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Müştəri
+                                                </th>
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                                    Tarix
+                                                </th>
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                                    Məhsul Sayı
+                                                </th>
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Məbləğ
+                                                </th>
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Status
+                                                </th>
                                             </tr>
-                                        ) : (
-                                            recent_sales.map((sale) => (
-                                                <tr key={sale.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {sale.customer_name || 'Anonim'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {new Date(sale.sale_date).toLocaleDateString('az-AZ')}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {sale.items_count} məhsul
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {formatCurrency(sale.total_amount)}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span
-                                                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                                                sale.status === 'completed'
-                                                                    ? 'bg-green-100 text-green-800'
-                                                                    : 'bg-gray-100 text-gray-800'
-                                                            }`}
-                                                        >
-                                                            {sale.status === 'completed' ? 'Tamamlandı' : sale.status}
-                                                        </span>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {recent_sales.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-3 sm:px-6 py-4 text-center text-gray-500">
+                                                        Hələ ki satış yoxdur
                                                     </td>
                                                 </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
+                                            ) : (
+                                                recent_sales.map((sale) => (
+                                                    <tr key={sale.id} className="hover:bg-gray-50">
+                                                        <td className="px-3 sm:px-6 py-4 text-sm text-gray-900">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium">{sale.customer_name || 'Anonim'}</span>
+                                                                <span className="text-xs text-gray-500 sm:hidden">
+                                                                    {new Date(sale.sale_date).toLocaleDateString('az-AZ')}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                                                            {new Date(sale.sale_date).toLocaleDateString('az-AZ')}
+                                                        </td>
+                                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                                                            {sale.items_count} məhsul
+                                                        </td>
+                                                        <td className="px-3 sm:px-6 py-4 text-sm font-medium text-gray-900">
+                                                            <div className="flex flex-col">
+                                                                <span>{formatCurrency(sale.total_amount)}</span>
+                                                                <span className="text-xs text-gray-500 md:hidden">
+                                                                    {sale.items_count} məhsul
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                                                            <span
+                                                                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                                                    sale.status === 'completed'
+                                                                        ? 'bg-green-100 text-green-800'
+                                                                        : 'bg-gray-100 text-gray-800'
+                                                                }`}
+                                                            >
+                                                                {sale.status === 'completed' ? 'Tamamlandı' : sale.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
@@ -947,7 +959,7 @@ export default function Dashboard({
                 ) : (
                     /* Simplified view for sales staff */
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                             <ModernKPICard
                                 title="Müştərilər"
                                 value={stats.customers_count}
@@ -980,11 +992,11 @@ export default function Dashboard({
 
                         {/* Low Stock for Sales Staff */}
                         {low_stock_products.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-lg p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-6">
+                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
                                     Az Stoklu Məhsullar
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {low_stock_products.map((product) => (
                                         <div
                                             key={product.id}

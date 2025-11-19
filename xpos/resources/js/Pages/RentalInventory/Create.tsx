@@ -18,5 +18,9 @@ interface Props {
 }
 
 export default function Create({ branches, categories }: Props) {
-    return <Form branches={branches} categories={categories} />;
+    return (
+        <div className="px-4 sm:px-6 lg:px-8">
+            <Form branches={branches} categories={categories} />
+        </div>
+    );
 }

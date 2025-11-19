@@ -41,9 +41,9 @@ export default function Create() {
             <Head title="Yeni Xərc Kateqoriyası" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="p-6 space-y-6">
+                        <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Category Name */}
                             <div>
                                 <InputLabel htmlFor="name" value="Kateqoriya adı *" />
@@ -76,15 +76,15 @@ export default function Create() {
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex items-center justify-between pt-4">
-                                <SecondaryButton>
-                                    <Link href="/expense-categories">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
+                                <Link href="/expense-categories" className="w-full sm:w-auto">
+                                    <SecondaryButton className="w-full sm:w-auto">
                                         Ləğv et
-                                    </Link>
-                                </SecondaryButton>
+                                    </SecondaryButton>
+                                </Link>
 
                                 <PrimaryButton
-                                    className="ms-4"
+                                    className="w-full sm:w-auto"
                                     disabled={processing}
                                 >
                                     {processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}

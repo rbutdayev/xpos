@@ -112,20 +112,20 @@ export default function Create({ suppliers, warehouses }: Props) {
         <AuthenticatedLayout>
             <Head title="Məhsul İadəsi" />
 
-            <div className="mx-auto py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <div className="md:flex md:items-center md:justify-between mb-6">
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                        <h2 className="text-xl sm:text-2xl font-bold leading-7 text-gray-900">
                             Məhsul İadəsi
                         </h2>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="mt-1 text-sm sm:text-base text-gray-500">
                             Təchizatçıya iadə
                         </p>
                     </div>
                 </div>
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                             {/* Supplier */}
                             <div>
@@ -296,18 +296,18 @@ export default function Create({ suppliers, warehouses }: Props) {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex justify-end space-x-3">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4">
                             <button
                                 type="button"
                                 onClick={() => window.history.back()}
-                                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
+                                className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center justify-center"
                             >
                                 Ləğv et
                             </button>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center disabled:opacity-50"
+                                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center justify-center disabled:opacity-50"
                             >
                                 {processing ? 'Yadda saxlanır...' : 'Qaytarma yarat'}
                             </button>

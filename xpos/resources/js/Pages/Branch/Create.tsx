@@ -30,19 +30,19 @@ export default function Create() {
         <AuthenticatedLayout>
             <Head title="Yeni Filial" />
 
-            <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center mb-2">
-                        <BuildingOffice2Icon className="w-8 h-8 text-blue-600 mr-3" />
-                        <h1 className="text-3xl font-bold text-gray-900">Yeni Filial</h1>
+                        <BuildingOffice2Icon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-3" />
+                        <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Yeni Filial</h1>
                     </div>
-                    <p className="text-gray-600">Yeni filial yaradın və məlumatları doldurUN</p>
+                    <p className="text-sm sm:text-base text-gray-600">Yeni filial yaradın və məlumatları doldurUN</p>
                 </div>
 
                 {/* Form */}
                 <div className="bg-white shadow-sm sm:rounded-lg">
-                    <form onSubmit={submit} className="p-6 space-y-6">
+                    <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                         {/* Basic Information */}
                         <div>
                             <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4">
@@ -176,16 +176,17 @@ export default function Create() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t border-gray-200">
                             <Link
                                 href={route('branches.index')}
+                                className="w-full sm:w-auto"
                             >
-                                <SecondaryButton type="button">
+                                <SecondaryButton type="button" className="w-full sm:w-auto">
                                     Ləğv et
                                 </SecondaryButton>
                             </Link>
                             
-                            <PrimaryButton disabled={processing}>
+                            <PrimaryButton disabled={processing} className="w-full sm:w-auto">
                                 {processing ? 'Saxlanılır...' : 'Filialı Saxla'}
                             </PrimaryButton>
                         </div>

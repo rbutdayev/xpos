@@ -85,22 +85,22 @@ export default function Create({ products: initialProducts, warehouses, movement
         <AuthenticatedLayout>
             <Head title="Stok Hərəkəti Yarat" />
 
-            <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 bg-white border-b border-gray-200">
-                        <div className="flex items-center justify-between mb-6">
+                    <div className="p-4 sm:p-6 bg-white border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                             <div className="flex items-center">
                                 <Link
                                     href={route('stock-movements.index')}
                                     className="mr-4 text-gray-600 hover:text-gray-900"
                                 >
-                                    <ArrowLeftIcon className="w-5 h-5" />
+                                    <ArrowLeftIcon className="w-6 h-6 sm:w-5 sm:h-5" />
                                 </Link>
                                 <div>
-                                    <h2 className="text-2xl font-semibold text-gray-900">
+                                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                                         Stok Hərəkəti Yarat
                                     </h2>
-                                    <p className="text-gray-600">Yeni stok hərəkəti məlumatları</p>
+                                    <p className="text-sm sm:text-base text-gray-600">Yeni stok hərəkəti məlumatları</p>
                                 </div>
                             </div>
                         </div>
@@ -225,14 +225,14 @@ export default function Create({ products: initialProducts, warehouses, movement
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
 
-                            <div className="flex items-center justify-end">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4">
                                 <Link
                                     href={route('stock-movements.index')}
-                                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
+                                    className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-center"
                                 >
                                     Ləğv et
                                 </Link>
-                                <PrimaryButton disabled={processing}>
+                                <PrimaryButton className="w-full sm:w-auto" disabled={processing}>
                                     {processing ? 'Emal edilir...' : 'Hərəkət yarat'}
                                 </PrimaryButton>
                             </div>
