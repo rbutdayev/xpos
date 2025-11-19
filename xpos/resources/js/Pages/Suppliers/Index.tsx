@@ -142,6 +142,10 @@ export default function Index({ suppliers, filters }: Props) {
                         description: 'Başlamaq üçün yeni təchizatçı yaradın.'
                     }}
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
 

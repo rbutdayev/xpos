@@ -162,6 +162,10 @@ export default function Index({ returns }: Props) {
                             description: "Hal-hazırda aktiv xəbərdarlıq yoxdur"
                         }}
                         fullWidth={true}
+
+                        mobileClickable={true}
+
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

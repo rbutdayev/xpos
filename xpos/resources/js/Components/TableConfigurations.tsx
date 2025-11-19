@@ -48,6 +48,7 @@ export const branchTableConfig = {
         {
             key: 'name',
             label: 'Filial adı',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (branch: Branch) => (
                 <div className="flex items-center">
@@ -70,6 +71,8 @@ export const branchTableConfig = {
         {
             key: 'contact_info',
             label: 'Əlaqə məlumatları',
+            mobileLabel: 'Əlaqə',
+            hideOnMobile: true,
             render: (branch: Branch) => (
                 <div className="text-sm space-y-1">
                     {branch.address && (
@@ -97,6 +100,7 @@ export const branchTableConfig = {
         {
             key: 'description',
             label: 'Təsvir',
+            hideOnMobile: true,
             render: (branch: Branch) => (
                 <div className="text-sm text-gray-600 max-w-xs truncate">
                     {branch.description || '-'}
@@ -111,8 +115,8 @@ export const branchTableConfig = {
             align: 'center',
             render: (branch: Branch) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    branch.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                    branch.is_active
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
                     {branch.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
@@ -123,8 +127,10 @@ export const branchTableConfig = {
         {
             key: 'created_at',
             label: 'Yaradılma tarixi',
+            mobileLabel: 'Tarix',
             sortable: true,
             align: 'center',
+            hideOnMobile: true,
             render: (branch: Branch) => (
                 <div className="text-sm text-gray-900">
                     {branch.created_at ? new Date(branch.created_at).toLocaleDateString('az-AZ') : '-'}
@@ -510,6 +516,7 @@ export const productTableConfig = {
         {
             key: 'product_info',
             label: 'Məhsul',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (product: Product) => (
                 <div className="flex items-center">
@@ -534,6 +541,8 @@ export const productTableConfig = {
         {
             key: 'category',
             label: 'Kateqoriya',
+            mobileLabel: 'Kateqoriya',
+            hideOnMobile: true,
             render: (product: Product) => (
                 <div className="text-sm">
                     <TagIcon className="w-4 h-4 inline mr-1 text-gray-400" />
@@ -545,6 +554,7 @@ export const productTableConfig = {
         {
             key: 'stock_info',
             label: 'Anbar məlumatları',
+            mobileLabel: 'Stok',
             align: 'center',
             render: (product: Product) => (
                 <div className="text-center">
@@ -561,6 +571,8 @@ export const productTableConfig = {
         {
             key: 'pricing',
             label: 'Qiymətlər',
+            mobileLabel: 'Qiymət',
+            hideOnMobile: true,
             align: 'right',
             render: (product: Product) => (
                 <div className="text-sm text-right">
@@ -577,6 +589,7 @@ export const productTableConfig = {
         {
             key: 'type',
             label: 'Növ',
+            mobileLabel: 'Növ',
             align: 'center',
             render: (product: Product) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -598,6 +611,7 @@ export const supplierTableConfig = {
         {
             key: 'supplier_info',
             label: 'Təchizatçı',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (supplier: Supplier) => (
                 <div className="flex items-center">
@@ -622,6 +636,8 @@ export const supplierTableConfig = {
         {
             key: 'contact',
             label: 'Əlaqə məlumatları',
+            mobileLabel: 'Əlaqə',
+            hideOnMobile: true,
             render: (supplier: Supplier) => (
                 <div className="text-sm">
                     {supplier.phone && (
@@ -645,6 +661,7 @@ export const supplierTableConfig = {
         {
             key: 'products_count',
             label: 'Məhsullar',
+            mobileLabel: 'Məhsul',
             sortable: true,
             align: 'center',
             render: (supplier: Supplier) => (
@@ -659,6 +676,8 @@ export const supplierTableConfig = {
         {
             key: 'payment_terms_days',
             label: 'Ödəniş şərtləri',
+            mobileLabel: 'Ödəniş',
+            hideOnMobile: true,
             align: 'center',
             render: (supplier: Supplier) => (
                 <div className="text-sm text-gray-900">
@@ -1154,8 +1173,8 @@ export const alertsTableConfig = {
                             {alert.alert_type === 'min_max' ? 'Min/Max Xəbərdarlığı' : 'Mənfi Stok Xəbərdarlığı'}
                         </div>
                         <div className="text-sm text-gray-500 truncate">
-                            {alert.alert_message === 'Product stock is below minimum level' 
-                                ? 'Məhsul stoku minimum səviyyədən aşağıdır' 
+                            {alert.alert_message === 'Product stock is below minimum level'
+                                ? 'Məhsul stoku minimum səviyyədən aşağıdır'
                                 : alert.alert_message === 'Product stock exceeds maximum level'
                                 ? 'Məhsul stoku maksimum səviyyəni aşır'
                                 : alert.alert_message}
@@ -1168,6 +1187,7 @@ export const alertsTableConfig = {
         {
             key: 'product',
             label: 'Məhsul',
+            hideOnMobile: true,
             render: (alert: any) => (
                 <div className="text-sm">
                     <div className="font-medium text-gray-900">
@@ -1185,6 +1205,7 @@ export const alertsTableConfig = {
         {
             key: 'warehouse',
             label: 'Anbar',
+            hideOnMobile: true,
             render: (alert: any) => (
                 <div className="text-sm text-gray-900">
                     {alert.warehouse?.name || '-'}
@@ -1197,6 +1218,7 @@ export const alertsTableConfig = {
             label: 'Tarix',
             sortable: true,
             align: 'center',
+            hideOnMobile: true,
             render: (alert: any) => (
                 <div className="text-sm text-gray-900">
                     {new Date(alert.alert_date).toLocaleDateString('az-AZ')}
@@ -1216,7 +1238,7 @@ export const alertsTableConfig = {
                     resolved: { color: 'text-green-700 bg-green-50 ring-green-600/20', text: 'Həll edilib' }
                 };
                 const config = statusConfig[alert.status as keyof typeof statusConfig] || statusConfig.active;
-                
+
                 return (
                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${config.color}`}>
                         {config.text}
@@ -1937,7 +1959,7 @@ export const auditLogTableConfig = {
             sortable: true,
             render: (auditLog: any) => {
                 const modelName = auditLog.model_type || 'Naməlum';
-                    
+
                 return (
                     <div className="flex items-center">
                         <DocumentTextIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -1959,6 +1981,7 @@ export const auditLogTableConfig = {
         {
             key: 'description',
             label: 'Təsvir',
+            hideOnMobile: true,
             render: (auditLog: any) => (
                 <div className="text-sm text-gray-900">
                     {auditLog.description || '-'}
@@ -1970,6 +1993,7 @@ export const auditLogTableConfig = {
             key: 'user',
             label: 'İstifadəçi',
             sortable: true,
+            hideOnMobile: true,
             render: (auditLog: any) => (
                 <div className="flex items-center">
                     <UserIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -1993,6 +2017,7 @@ export const auditLogTableConfig = {
             label: 'Tarix',
             sortable: true,
             align: 'center' as const,
+            hideOnMobile: true,
             render: (auditLog: any) => (
                 <div className="text-sm text-gray-900">
                     {new Date(auditLog.created_at).toLocaleString('az-AZ', {

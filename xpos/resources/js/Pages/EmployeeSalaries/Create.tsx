@@ -75,8 +75,8 @@ export default function Create({ employees, statuses, months, currentYear, curre
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight text-gray-800">
                         Yeni maaş
                     </h2>
                     <Link
@@ -91,9 +91,9 @@ export default function Create({ employees, statuses, months, currentYear, curre
             <Head title="Yeni maaş" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="p-6 space-y-6">
+                        <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Employee Selection */}
                             <div>
                                 <InputLabel htmlFor="employee_id" value="İşçi *" />
@@ -313,15 +313,15 @@ export default function Create({ employees, statuses, months, currentYear, curre
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex items-center justify-between pt-4">
-                                <SecondaryButton>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4">
+                                <SecondaryButton className="w-full sm:w-auto">
                                     <Link href="/employee-salaries">
                                         Ləğv et
                                     </Link>
                                 </SecondaryButton>
 
                                 <PrimaryButton
-                                    className="ms-4"
+                                    className="w-full sm:w-auto"
                                     disabled={processing}
                                 >
                                     {processing ? 'Yadda saxlanır...' : 'Yadda saxla'}

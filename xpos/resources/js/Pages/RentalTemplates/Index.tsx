@@ -290,6 +290,10 @@ export default function Index({ templates, filters, categories }: Props) {
                         description: 'Başlamaq üçün yeni şablon əlavə edin.',
                     }}
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

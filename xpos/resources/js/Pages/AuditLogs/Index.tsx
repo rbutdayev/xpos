@@ -171,6 +171,8 @@ export default function Index({ auditLogs, users, actions, modelTypes, filters }
                             description: 'Hələlik sistem fəaliyyət qeydi mövcud deyil'
                         }}
                         fullWidth={true}
+                        mobileClickable={true}
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

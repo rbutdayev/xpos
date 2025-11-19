@@ -399,6 +399,10 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                     hideFilters={true}
                                     hidePerPageSelect={true}
                                     className="border-none shadow-none"
+                                mobileClickable={true}
+
+                                hideMobileActions={true}
+
                                 />
                             ) : (
                                 <div className="p-6 text-center py-8">

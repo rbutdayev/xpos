@@ -83,6 +83,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'expense_info',
             label: 'Xərc məlumatları',
+            mobileLabel: 'Xərc',
             sortable: true,
             render: (expense: Expense) => (
                 <div className="flex items-center">
@@ -120,6 +121,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             key: 'expense_date',
             label: 'Tarix',
             sortable: true,
+            hideOnMobile: true,
             render: (expense: Expense) => (
                 <div className="flex items-center text-sm text-gray-900">
                     <CalendarIcon className="w-4 h-4 text-gray-400 mr-2" />
@@ -131,16 +133,18 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'payment_method',
             label: 'Ödəniş üsulu',
+            mobileLabel: 'Ödəniş',
             align: 'center',
+            hideOnMobile: true,
             render: (expense: Expense) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    expense.payment_method === 'nağd' 
-                        ? 'bg-green-100 text-green-800' 
-                        : expense.payment_method === 'kart' 
+                    expense.payment_method === 'nağd'
+                        ? 'bg-green-100 text-green-800'
+                        : expense.payment_method === 'kart'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-purple-100 text-purple-800'
                 }`}>
-                    {expense.payment_method === 'nağd' ? 'Nağd' : 
+                    {expense.payment_method === 'nağd' ? 'Nağd' :
                      expense.payment_method === 'kart' ? 'Kart' : 'Köçürmə'}
                 </span>
             ),
@@ -149,6 +153,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'branch',
             label: 'Filial',
+            hideOnMobile: true,
             render: (expense: Expense) => (
                 <div className="flex items-center text-sm text-gray-900">
                     <BuildingOfficeIcon className="w-4 h-4 text-gray-400 mr-2" />
@@ -161,6 +166,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             key: 'receipt',
             label: 'Qaimə',
             align: 'center',
+            hideOnMobile: true,
             render: (expense: Expense) => (
                 expense.receipt_file_path ? (
                     <a
@@ -313,6 +319,8 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                             icon: <CurrencyDollarIcon className="w-12 h-12 text-gray-400" />
                         }}
                         fullWidth={true}
+                        mobileClickable={true}
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

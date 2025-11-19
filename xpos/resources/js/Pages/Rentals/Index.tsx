@@ -317,6 +317,10 @@ export default function Index({ rentals, filters }: Props) {
 
                     className="space-y-6"
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

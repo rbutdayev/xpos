@@ -167,16 +167,32 @@ export default function Authenticated({
     }, []);
 
     const toggleMenu = (menuName: string) => {
-        setOpenMenus(prev => 
-            prev.includes(menuName) 
-                ? prev.filter(name => name !== menuName)
-                : [...prev, menuName]
-        );
+        setOpenMenus(prev => {
+            if (prev.includes(menuName)) {
+                // Close the menu if it's already open
+                return prev.filter(name => name !== menuName);
+            } else {
+                // Close all other menus at the same level and open this one
+                // Keep 'dashboard' always open
+                const baseMenus = ['Dashboard', 'POS Satış', 'TouchPOS'];
+                const topLevelMenus = navigation.map(item => item.name);
+                
+                // If the clicked menu is a top-level menu, close other top-level menus
+                if (topLevelMenus.includes(menuName)) {
+                    return ['dashboard', menuName];
+                }
+                
+                // Otherwise just toggle normally
+                return [...prev, menuName];
+            }
+        });
     };
 
     // Filter navigation based on user role
     const getNavigationForRole = () => {
-        const baseNavigation: SidebarItem[] = [
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+        
+        const allNavItems: SidebarItem[] = [
             {
                 name: 'Dashboard',
                 href: '/dashboard',
@@ -196,6 +212,11 @@ export default function Authenticated({
                 current: route().current('pos.touch')
             },
         ];
+        
+        // Filter out TouchPOS on mobile
+        const baseNavigation = isMobile 
+            ? allNavItems.filter(item => item.name !== 'TouchPOS')
+            : allNavItems;
 
         // If user is sales_staff, only show Dashboard, Products (read-only), Sales, and Customer Services
         if (user.role === 'sales_staff') {
@@ -705,11 +726,19 @@ export default function Authenticated({
             {/* Sidebar - Premium Light Theme */}
             <div className={`
                 fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-2xl shadow-slate-200/50 transform transition-all duration-300 ease-in-out lg:translate-x-0 border-r border-slate-200
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                ${sidebarCollapsed ? 'w-20' : 'w-72'}
+                ${sidebarOpen ? 'translate-x-0 w-full lg:w-72' : '-translate-x-full'}
+                ${!sidebarOpen && sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'}
             `}>
                 {/* Sidebar header */}
-                <div className="flex h-16 flex-shrink-0 items-center border-b border-slate-200 px-4 justify-between bg-gradient-to-r from-white to-slate-50">
+                <div className="flex h-16 flex-shrink-0 items-center border-b border-slate-200 px-4 justify-between bg-gradient-to-r from-white to-slate-50 relative">
+                    {/* Mobile close button */}
+                    <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="lg:hidden absolute top-3 right-3 p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-all duration-200 z-10"
+                    >
+                        <XMarkIcon className="h-6 w-6" />
+                    </button>
+                    
                     {sidebarCollapsed ? (
                         <button
                             onClick={() => setSidebarCollapsed(false)}

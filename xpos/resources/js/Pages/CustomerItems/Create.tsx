@@ -89,9 +89,9 @@ export default function Create({ customers }: Props) {
             <Head title="Yeni məhsul qəbulu" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="p-6 space-y-6">
+                        <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Service Type Selector */}
                             <div>
                                 <InputLabel htmlFor="service_type" value="Xidmət növü *" />
@@ -198,7 +198,7 @@ export default function Create({ customers }: Props) {
                             <div>
                                 <InputLabel value="Ölçülər" />
                                 <div className="mt-2 space-y-3">
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <TextInput
                                             type="text"
                                             value={measurementKey}
@@ -216,6 +216,7 @@ export default function Create({ customers }: Props) {
                                         <SecondaryButton
                                             type="button"
                                             onClick={addMeasurement}
+                                            className="w-full sm:w-auto"
                                         >
                                             Əlavə et
                                         </SecondaryButton>
@@ -304,16 +305,16 @@ export default function Create({ customers }: Props) {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-                                <SecondaryButton type="button" onClick={() => reset()}>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
+                                <SecondaryButton type="button" onClick={() => reset()} className="w-full sm:w-auto">
                                     Sıfırla
                                 </SecondaryButton>
-                                <Link href={route('customer-items.index')}>
-                                    <SecondaryButton type="button">
+                                <Link href={route('customer-items.index')} className="w-full sm:w-auto">
+                                    <SecondaryButton type="button" className="w-full sm:w-auto">
                                         Ləğv et
                                     </SecondaryButton>
                                 </Link>
-                                <PrimaryButton disabled={processing}>
+                                <PrimaryButton disabled={processing} className="w-full sm:w-auto">
                                     {processing ? 'Yadda saxlanır...' : 'Yadda saxla'}
                                 </PrimaryButton>
                             </div>

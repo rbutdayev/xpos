@@ -60,6 +60,10 @@ export default function Index({ warehouses }: Props) {
                     }}
                     className="space-y-6"
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

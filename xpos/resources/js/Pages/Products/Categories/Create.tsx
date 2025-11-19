@@ -37,17 +37,17 @@ export default function Create({ parentCategories }: Props) {
         <AuthenticatedLayout>
             <Head title="Yeni Kateqoriya" />
 
-            <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
+            <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 bg-white border-b border-gray-200">
-                        <div className="flex items-center mb-6">
+                    <div className="p-4 sm:p-6 bg-white border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                             <Link
                                 href="/categories"
                                 className="mr-4 text-gray-600 hover:text-gray-900"
                             >
-                                <ArrowLeftIcon className="w-5 h-5" />
+                                <ArrowLeftIcon className="w-6 h-6 sm:w-5 sm:h-5" />
                             </Link>
-                            <h2 className="text-2xl font-semibold text-gray-900">
+                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                                 Yeni Kateqoriya
                             </h2>
                         </div>
@@ -169,14 +169,14 @@ export default function Create({ parentCategories }: Props) {
                             </div>
 
                             {/* Submit Buttons */}
-                            <div className="flex items-center justify-end space-x-2 pt-6 border-t border-gray-200">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t border-gray-200">
                                 <Link
                                     href="/categories"
-                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    className="w-full sm:w-auto bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center"
                                 >
                                     Ləğv et
                                 </Link>
-                                <PrimaryButton className="ml-4" disabled={processing}>
+                                <PrimaryButton className="w-full sm:w-auto" disabled={processing}>
                                     {processing ? 'Əlavə edilir...' : 'Kateqoriyanı Əlavə Et'}
                                 </PrimaryButton>
                             </div>

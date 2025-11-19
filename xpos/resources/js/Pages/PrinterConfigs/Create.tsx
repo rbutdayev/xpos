@@ -115,24 +115,24 @@ export default function Create({ branches }: Props) {
         <AuthenticatedLayout>
             <Head title="Yeni Printer Konfiqurasiyası" />
 
-            <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-semibold text-gray-900">
+                    <div className="p-4 sm:p-6 border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                                 Yeni Printer Konfiqurasiyası
                             </h2>
                             <Link
                                 href="/printer-configs"
                                 className="flex items-center text-sm text-gray-600 hover:text-gray-900"
                             >
-                                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                <ArrowLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
                                 Siyahıya Qayıt
                             </Link>
                         </div>
                     </div>
 
-                    <form onSubmit={submit} className="p-6 space-y-6">
+                    <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                         {/* Basic Information */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -543,17 +543,17 @@ export default function Create({ branches }: Props) {
                         </div>
 
                         {/* Form Actions */}
-                        <div className="border-t pt-6 flex justify-end space-x-3">
+                        <div className="border-t pt-6 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
                             <Link
                                 href="/printer-configs"
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 Ləğv Et
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                             >
                                 {processing ? 'Saxlanılır...' : 'Saxla'}
                             </button>

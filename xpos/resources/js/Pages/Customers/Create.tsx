@@ -44,9 +44,9 @@ export default function Create() {
             <Head title="Yeni Müştəri" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit} className="p-6 space-y-6">
+                        <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Customer Name */}
                             <div>
                                 <InputLabel htmlFor="name" value="Müştəri adı *" />
@@ -200,16 +200,16 @@ export default function Create() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-                                <SecondaryButton type="button" onClick={() => reset()}>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
+                                <SecondaryButton type="button" onClick={() => reset()} className="w-full sm:w-auto">
                                     Sıfırla
                                 </SecondaryButton>
-                                <Link href="/customers">
-                                    <SecondaryButton type="button">
+                                <Link href="/customers" className="w-full sm:w-auto">
+                                    <SecondaryButton type="button" className="w-full sm:w-auto">
                                         Ləğv et
                                     </SecondaryButton>
                                 </Link>
-                                <PrimaryButton disabled={processing}>
+                                <PrimaryButton disabled={processing} className="w-full sm:w-auto">
                                     {processing ? 'Yadda saxlanır...' : 'Yadda saxla'}
                                 </PrimaryButton>
                             </div>

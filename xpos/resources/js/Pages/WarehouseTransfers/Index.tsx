@@ -127,6 +127,10 @@ export default function Index({ transfers }: Props) {
                             description: 'Hələ heç bir transfer yoxdur'
                         }}
                         fullWidth={true}
+
+                        mobileClickable={true}
+
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

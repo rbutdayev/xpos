@@ -247,6 +247,10 @@ export default function Index({ printerConfigs, filters }: Props) {
                         )
                     }}
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

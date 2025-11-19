@@ -215,7 +215,7 @@ export default function Index({ products, categories, warehouses, filters, selec
         columns: productTableConfig.columns.map(col => {
             if (col.key === 'stock_info') {
                 return {
-                    ...col,
+                    ...col,  // This preserves ALL original properties including mobileLabel, hideOnMobile
                     label: getCurrentWarehouseName() ? `Stok (${getCurrentWarehouseName()})` : 'Stok məlumatları',
                     render: (product: Product) => {
                         const stockInfo = getProductStock(product);
@@ -245,7 +245,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                 };
             } else if (col.key === 'pricing') {
                 return {
-                    ...col,
+                    ...col,  // This preserves ALL original properties including mobileLabel, hideOnMobile
                     render: (product: Product) => (
                         <div className="text-sm text-right">
                             <div className="text-gray-900">
@@ -260,7 +260,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                     )
                 };
             }
-            return col;
+            return col;  // This preserves ALL original properties for unmodified columns
         })
     };
 
@@ -360,6 +360,10 @@ export default function Index({ products, categories, warehouses, filters, selec
                         description: 'Başlamaq üçün yeni məhsul əlavə edin.'
                     }}
                     fullWidth={true}
+
+                    mobileClickable={true}
+
+                    hideMobileActions={true}
                 />
             </div>
         </AuthenticatedLayout>

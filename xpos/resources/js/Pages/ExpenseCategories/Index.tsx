@@ -56,6 +56,7 @@ export default function Index({ categories, types, filters }: Props) {
         {
             key: 'category_info',
             label: 'Kateqoriya',
+            mobileLabel: 'Ad',
             sortable: true,
             render: (category: ExpenseCategory) => (
                 <div className="flex items-center">
@@ -84,10 +85,11 @@ export default function Index({ categories, types, filters }: Props) {
             label: 'Növ',
             sortable: true,
             align: 'center',
+            hideOnMobile: true,
             render: (category: ExpenseCategory) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    category.type === 'maaş' 
-                        ? 'bg-blue-100 text-blue-800' 
+                    category.type === 'maaş'
+                        ? 'bg-blue-100 text-blue-800'
                         : category.type === 'kommunal'
                         ? 'bg-yellow-100 text-yellow-800'
                         : category.type === 'nəqliyyat'
@@ -102,7 +104,9 @@ export default function Index({ categories, types, filters }: Props) {
         {
             key: 'expense_count',
             label: 'Xərc sayı',
+            mobileLabel: 'Say',
             align: 'center',
+            hideOnMobile: true,
             render: (category: ExpenseCategory) => (
                 <div className="text-sm text-gray-900">
                     {category.expenses?.length || 0}
@@ -116,8 +120,8 @@ export default function Index({ categories, types, filters }: Props) {
             align: 'center',
             render: (category: ExpenseCategory) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    category.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                    category.is_active
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
                     {category.is_active ? 'Aktiv' : 'Deaktiv'}
@@ -272,6 +276,8 @@ export default function Index({ categories, types, filters }: Props) {
                             description: 'İlk kateqoriyanızı əlavə etməklə başlayın.',
                             icon: <TagIcon className="w-12 h-12 text-gray-400" />
                         }}
+                        mobileClickable={true}
+                        hideMobileActions={true}
                     />
                 </div>
             </div>

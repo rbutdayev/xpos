@@ -599,10 +599,10 @@ export default function Create({ customers, branches, templates, categories = []
         <AuthenticatedLayout>
             <Head title="Yeni Kirayə" />
 
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-semibold text-gray-900">Yeni Kirayə</h1>
-                    <p className="mt-1 text-sm text-gray-600">
+                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Yeni Kirayə</h1>
+                    <p className="mt-1 text-sm sm:text-base text-gray-600">
                         {currentStep === 'basic'
                             ? 'Yeni kirayə yaratmaq üçün aşağıdakı məlumatları doldurun'
                             : 'Kirayə müqaviləsini tamamlayın'
@@ -615,7 +615,7 @@ export default function Create({ customers, branches, templates, categories = []
                     <div className="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
+                                <CheckCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" aria-hidden="true" />
                             </div>
                             <div className="ml-3 flex-1">
                                 <p className="text-sm font-medium text-green-800">{flash.success}</p>
@@ -628,7 +628,7 @@ export default function Create({ customers, branches, templates, categories = []
                                         className="inline-flex rounded-md bg-green-50 p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 focus:ring-offset-green-50"
                                     >
                                         <span className="sr-only">Bağla</span>
-                                        <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                                        <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
@@ -640,7 +640,7 @@ export default function Create({ customers, branches, templates, categories = []
                     <div className="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <ExclamationCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                                <ExclamationCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-red-400" aria-hidden="true" />
                             </div>
                             <div className="ml-3 flex-1">
                                 <p className="text-sm font-medium text-red-800">{flash.error}</p>
@@ -653,7 +653,7 @@ export default function Create({ customers, branches, templates, categories = []
                                         className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50"
                                     >
                                         <span className="sr-only">Bağla</span>
-                                        <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                                        <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
@@ -670,10 +670,10 @@ export default function Create({ customers, branches, templates, categories = []
                         onCancel={handleAgreementCancel}
                     />
                 ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                     {/* Basic Information */}
-                    <div className="bg-white shadow-sm rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Əsas Məlumat</h2>
+                    <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">Əsas Məlumat</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Customer */}
                             <div>
@@ -819,15 +819,15 @@ export default function Create({ customers, branches, templates, categories = []
                     </div>
 
                     {/* Rental Items */}
-                    <div className="bg-white shadow-sm rounded-lg p-6">
+                    <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-medium text-gray-900">Kirayə Məhsulları</h2>
+                            <h2 className="text-lg sm:text-xl font-medium text-gray-900">Kirayə Məhsulları</h2>
                             <button
                                 type="button"
                                 onClick={addItem}
                                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                             >
-                                <PlusIcon className="h-4 w-4 mr-1" />
+                                <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
                                 Məhsul Əlavə Et
                             </button>
                         </div>
@@ -867,7 +867,7 @@ export default function Create({ customers, branches, templates, categories = []
                                                         className="rounded-md bg-indigo-600 p-1.5 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         title="Kamera ilə skan et"
                                                     >
-                                                        <CameraIcon className="h-4 w-4" />
+                                                        <CameraIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                                     </button>
                                                 )}
                                             </div>
@@ -987,7 +987,7 @@ export default function Create({ customers, branches, templates, categories = []
                                                         }}
                                                         className="text-red-600 hover:text-red-700"
                                                     >
-                                                        <TrashIcon className="h-5 w-5" />
+                                                        <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                                     </button>
                                                 </div>
                                             )}
@@ -1123,8 +1123,8 @@ export default function Create({ customers, branches, templates, categories = []
                     </div>
 
                     {/* Collateral Information */}
-                    <div className="bg-white shadow-sm rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Girov Məlumatı</h2>
+                    <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">Girov Məlumatı</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Collateral Type */}
                             <div>
@@ -1243,8 +1243,8 @@ export default function Create({ customers, branches, templates, categories = []
                     </div>
 
                     {/* Payment & Status */}
-                    <div className="bg-white shadow-sm rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Ödəniş və Status</h2>
+                    <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">Ödəniş və Status</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -1290,8 +1290,8 @@ export default function Create({ customers, branches, templates, categories = []
                     </div>
 
                     {/* Notes */}
-                    <div className="bg-white shadow-sm rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Qeydlər</h2>
+                    <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">Qeydlər</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1323,8 +1323,8 @@ export default function Create({ customers, branches, templates, categories = []
 
                     {/* Rental Category - For Agreement Template Selection */}
                     {templates && categories && categories.length > 0 && (
-                        <div className="bg-white shadow-sm rounded-lg p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4">Kirayə Kateqoriyası</h2>
+                        <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+                            <h2 className="text-lg sm:text-xl font-medium text-gray-900 mb-4">Kirayə Kateqoriyası</h2>
                             <p className="text-sm text-gray-600 mb-4">
                                 Müqavilə şablonunu müəyyən etmək üçün kirayə kateqoriyasını seçin
                             </p>
@@ -1359,11 +1359,11 @@ export default function Create({ customers, branches, templates, categories = []
                     )}
 
                     {/* Form Actions */}
-                    <div className="flex justify-end space-x-4">
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
                         <button
                             type="button"
                             onClick={() => router.visit(route('rentals.index'))}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                             disabled={processing}
                         >
                             Ləğv et
@@ -1371,13 +1371,13 @@ export default function Create({ customers, branches, templates, categories = []
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                            className="w-full sm:w-auto inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                         >
                             {processing ? 'Yaradılır...' : (
                                 templates && templates[rentalCategory] ? (
                                     <>
                                         Müqaviləyə Keç
-                                        <ArrowRightIcon className="ml-2 h-4 w-4" />
+                                        <ArrowRightIcon className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                                     </>
                                 ) : 'Kirayə Yarat'
                             )}
