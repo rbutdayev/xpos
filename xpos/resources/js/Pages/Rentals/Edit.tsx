@@ -28,8 +28,10 @@ interface RentalItem {
     total_price: number;
     notes: string;
     product?: Product | null;
+    product_name?: string;
+    product_sku?: string;
     searchQuery?: string;
-    [key: string]: string | number | Product | null | undefined;
+    [key: string]: any;
 }
 
 interface AgreementTemplate {
@@ -714,12 +716,12 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                             ) : (
                                                 <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
                                                     <div className="flex-1">
-                                                        <div className="font-medium text-blue-900">{item.product.name}</div>
-                                                        {item.product.sku && (
-                                                            <div className="text-sm text-blue-700">SKU: {item.product.sku}</div>
+                                                        <div className="font-medium text-blue-900">{item.product?.name || item.product_name || 'Silinmiş məhsul'}</div>
+                                                        {(item.product?.sku || item.product_sku) && (
+                                                            <div className="text-sm text-blue-700">SKU: {item.product?.sku || item.product_sku}</div>
                                                         )}
                                                         <div className="text-sm text-blue-700">
-                                                            Qiymət: {(Math.round((Number(item.product.sale_price || 0)) * 100) / 100).toFixed(2)} AZN
+                                                            Qiymət: {(Math.round((Number(item.product?.sale_price || item.unit_price || 0)) * 100) / 100).toFixed(2)} AZN
                                                         </div>
                                                     </div>
                                                     <button

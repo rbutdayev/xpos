@@ -39,7 +39,17 @@ interface InventoryItem {
     inventory_number: string;
     barcode: string | null;
     serial_number: string | null;
-    product: Product;
+    product: Product | null; // Product can be null if deleted
+    product_name: string; // Copied product data
+    product_sku: string | null;
+    product_description: string | null;
+    product_category: string | null;
+    product_brand: string | null;
+    product_model: string | null;
+    product_attributes: any | null;
+    original_product_id: number | null;
+    original_product_deleted_at: string | null;
+    can_return_to_stock: boolean;
     branch: Branch;
     status: string;
     rental_category: string;
@@ -124,7 +134,10 @@ export default function Show({ inventoryItem }: Props) {
                                     {inventoryItem.inventory_number}
                                 </h1>
                                 <p className="text-sm text-gray-600">
-                                    {inventoryItem.product.name}
+                                    {inventoryItem.product_name || inventoryItem.product?.name || 'Silinmiş məhsul'}
+                                    {inventoryItem.original_product_deleted_at && (
+                                        <span className="ml-2 text-xs text-red-600">⚠️</span>
+                                    )}
                                 </p>
                             </div>
                         </div>
@@ -142,74 +155,179 @@ export default function Show({ inventoryItem }: Props) {
                     {/* Main Info */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Basic Information */}
-                        <div className="bg-white shadow-sm rounded-lg p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                                Əsas Məlumat
-                            </h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm text-gray-600">İnventar Nömrəsi</p>
-                                    <p className="text-base font-medium text-gray-900">
-                                        {inventoryItem.inventory_number}
-                                    </p>
-                                </div>
-                                {inventoryItem.barcode && (
-                                    <div>
-                                        <p className="text-sm text-gray-600">Barkod</p>
-                                        <p className="text-base font-medium text-gray-900">
-                                            {inventoryItem.barcode}
+                        <div className="bg-white shadow-lg rounded-xl border border-gray-200 overflow-hidden">
+                            <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4">
+                                <h2 className="text-lg font-bold text-white flex items-center">
+                                    <CubeIcon className="w-5 h-5 mr-2" />
+                                    Əsas Məlumat
+                                </h2>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                {/* Product Name - Featured */}
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                                    <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Məhsul</p>
+                                    <div className="flex items-center">
+                                        <p className="text-xl font-bold text-gray-900">
+                                            {inventoryItem.product_name || inventoryItem.product?.name || 'Silinmiş məhsul'}
                                         </p>
-                                    </div>
-                                )}
-                                {inventoryItem.serial_number && (
-                                    <div>
-                                        <p className="text-sm text-gray-600">Seriya Nömrəsi</p>
-                                        <p className="text-base font-medium text-gray-900">
-                                            {inventoryItem.serial_number}
-                                        </p>
-                                    </div>
-                                )}
-                                <div>
-                                    <p className="text-sm text-gray-600">Məhsul</p>
-                                    <p className="text-base font-medium text-gray-900">
-                                        {inventoryItem.product.name}
-                                        {inventoryItem.product.sku && (
-                                            <span className="text-sm text-gray-500 ml-2">
-                                                ({inventoryItem.product.sku})
+                                        {inventoryItem.original_product_deleted_at && (
+                                            <span className="ml-3 bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-medium" title="Original product deleted">
+                                                Silinmiş ⚠️
                                             </span>
                                         )}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Filial</p>
-                                    <p className="text-base font-medium text-gray-900">
-                                        {inventoryItem.branch.name}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Kateqoriya</p>
-                                    <p className="text-base font-medium text-gray-900">
-                                        {getCategoryLabel(inventoryItem.rental_category)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Status</p>
-                                    <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.className}`}
-                                    >
-                                        {statusInfo.label}
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-600">Aktiv</p>
-                                    {inventoryItem.is_active ? (
-                                        <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                                    ) : (
-                                        <XCircleIcon className="w-5 h-5 text-red-600" />
+                                    </div>
+                                    {(inventoryItem.product_sku || inventoryItem.product?.sku) && (
+                                        <p className="text-sm text-blue-600 mt-1 font-medium">
+                                            SKU: {inventoryItem.product_sku || inventoryItem.product?.sku}
+                                        </p>
                                     )}
+                                </div>
+
+                                {/* Information Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">İnventar №</p>
+                                        <p className="text-lg font-bold text-gray-900">{inventoryItem.inventory_number}</p>
+                                    </div>
+
+                                    {inventoryItem.barcode && (
+                                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Barkod</p>
+                                            <p className="text-lg font-bold text-gray-900 font-mono">{inventoryItem.barcode}</p>
+                                        </div>
+                                    )}
+
+                                    {inventoryItem.serial_number && (
+                                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Seriya №</p>
+                                            <p className="text-lg font-bold text-gray-900 font-mono">{inventoryItem.serial_number}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Filial</p>
+                                        <p className="text-lg font-bold text-gray-900">{inventoryItem.branch.name}</p>
+                                    </div>
+
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Kirayə Kateqoriyası</p>
+                                        <p className="text-lg font-bold text-gray-900">{getCategoryLabel(inventoryItem.rental_category)}</p>
+                                    </div>
+
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Status</p>
+                                        <span className={`inline-flex px-3 py-1 text-sm font-bold rounded-full ${statusInfo.className}`}>
+                                            {statusInfo.label}
+                                        </span>
+                                        <div className="mt-2 flex items-center">
+                                            <span className="text-xs text-gray-500 mr-2">Aktiv:</span>
+                                            {inventoryItem.is_active ? (
+                                                <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                                            ) : (
+                                                <XCircleIcon className="w-4 h-4 text-red-600" />
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Product Details (Clean UI) */}
+                        <div className="bg-white shadow-sm rounded-lg p-6">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                                Məhsul Təfərrüatları
+                            </h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Brand and Model */}
+                                {(inventoryItem.product_brand || inventoryItem.product_model) && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Marka və Model</p>
+                                        <p className="text-base font-medium text-gray-900">
+                                            {[inventoryItem.product_brand, inventoryItem.product_model].filter(Boolean).join(' ')}
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {/* Category */}
+                                {inventoryItem.product_category && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Kateqoriya</p>
+                                        <p className="text-base font-medium text-gray-900">{inventoryItem.product_category}</p>
+                                    </div>
+                                )}
+                                
+                                {/* Size */}
+                                {inventoryItem.product_attributes?.size && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Ölçü</p>
+                                        <p className="text-base font-medium text-gray-900">{inventoryItem.product_attributes.size}</p>
+                                    </div>
+                                )}
+                                
+                                {/* Color */}
+                                {inventoryItem.product_attributes?.color && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Rəng</p>
+                                        <div className="flex items-center">
+                                            {inventoryItem.product_attributes.color_code && (
+                                                <div 
+                                                    className="w-5 h-5 rounded-full border-2 border-gray-300 mr-2"
+                                                    style={{ backgroundColor: inventoryItem.product_attributes.color_code }}
+                                                ></div>
+                                            )}
+                                            <p className="text-base font-medium text-gray-900">{inventoryItem.product_attributes.color}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Material */}
+                                {inventoryItem.product_attributes?.material && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Material</p>
+                                        <p className="text-base font-medium text-gray-900">{inventoryItem.product_attributes.material}</p>
+                                    </div>
+                                )}
+                                
+                                {/* Style */}
+                                {inventoryItem.product_attributes?.style && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Stil</p>
+                                        <p className="text-base font-medium text-gray-900">{inventoryItem.product_attributes.style}</p>
+                                    </div>
+                                )}
+                                
+                                {/* Gender */}
+                                {inventoryItem.product_attributes?.gender && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Cins</p>
+                                        <p className="text-base font-medium text-gray-900">{inventoryItem.product_attributes.gender}</p>
+                                    </div>
+                                )}
+                                
+                                {/* Season */}
+                                {inventoryItem.product_attributes?.season && (
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 mb-1">Mövsüm</p>
+                                        <p className="text-base font-medium text-gray-900">{inventoryItem.product_attributes.season}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Product Description */}
+                        {inventoryItem.product_description && (
+                            <div className="bg-white shadow-sm rounded-lg p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                                    Məhsul Təsviri
+                                </h2>
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                        {inventoryItem.product_description}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Pricing Information */}
                         <div className="bg-white shadow-sm rounded-lg p-6">

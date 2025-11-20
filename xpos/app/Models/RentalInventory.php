@@ -41,6 +41,18 @@ class RentalInventory extends Model
         'replacement_cost',
         'photos',
         'notes',
+        // New product data fields
+        'product_name',
+        'product_sku',
+        'product_description',
+        'product_category',
+        'product_brand',
+        'product_model',
+        'product_attributes',
+        'original_product_id',
+        'original_product_deleted_at',
+        'can_return_to_stock',
+        'return_warehouse_id',
     ];
 
     protected function casts(): array
@@ -58,6 +70,10 @@ class RentalInventory extends Model
             'monthly_rate' => 'decimal:2',
             'replacement_cost' => 'decimal:2',
             'photos' => 'json',
+            // New field casts
+            'product_attributes' => 'json',
+            'original_product_deleted_at' => 'datetime',
+            'can_return_to_stock' => 'boolean',
         ];
     }
 
@@ -65,6 +81,16 @@ class RentalInventory extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function originalProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'original_product_id');
+    }
+
+    public function returnWarehouse(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Warehouse::class, 'return_warehouse_id');
     }
 
     public function branch(): BelongsTo
@@ -394,5 +420,144 @@ class RentalInventory extends Model
         $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
         return $fullPrefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    // New product independence methods
+    
+    /**
+     * Get the display name for this rental inventory item
+     * Uses copied product_name, falling back to original product if needed
+     */
+    public function getDisplayName(): string
+    {
+        return $this->product_name ?? $this->product?->name ?? 'Unnamed Item';
+    }
+
+    /**
+     * Check if the original product still exists and is not deleted
+     */
+    public function hasValidOriginalProduct(): bool
+    {
+        return $this->original_product_id && 
+               !$this->original_product_deleted_at &&
+               $this->originalProduct()->exists();
+    }
+
+    /**
+     * Create rental inventory from a product (copies product data)
+     */
+    public static function createFromProduct(Product $product, array $additionalData = []): self
+    {
+        return self::create(array_merge($additionalData, [
+            'account_id' => $product->account_id,
+            'product_id' => $product->id, // Keep for backwards compatibility during transition
+            'original_product_id' => $product->id,
+            // Copy product data for independence
+            'product_name' => $product->name,
+            'product_sku' => $product->sku,
+            'product_description' => $product->description,
+            'product_category' => $product->category?->name,
+            'product_brand' => $product->brand,
+            'product_model' => $product->model,
+            'product_attributes' => $product->attributes,
+            'can_return_to_stock' => true,
+        ]));
+    }
+
+    /**
+     * Handle when original product is deleted
+     */
+    public static function handleProductDeletion(int $productId): void
+    {
+        self::where('original_product_id', $productId)
+            ->whereNull('original_product_deleted_at')
+            ->update([
+                'original_product_deleted_at' => now(),
+                'can_return_to_stock' => false,
+            ]);
+    }
+
+    /**
+     * Return rental inventory back to stock
+     * Handles cases where original product may not exist
+     */
+    public function returnToStock(): bool
+    {
+        // Option 1: Return to original product if it exists
+        if ($this->hasValidOriginalProduct() && $this->can_return_to_stock) {
+            return $this->returnToOriginalProduct();
+        }
+        
+        // Option 2: Create new product if original was deleted but we can still return
+        if ($this->can_return_to_stock && !$this->hasValidOriginalProduct()) {
+            return $this->createNewProductAndReturn();
+        }
+        
+        // Option 3: Mark as permanently converted to rental
+        $this->markAsPermanentRental();
+        return false;
+    }
+
+    private function returnToOriginalProduct(): bool
+    {
+        $product = $this->originalProduct;
+        $warehouse = $this->returnWarehouse ?? $this->stockWarehouse;
+        
+        if (!$product || !$warehouse) {
+            return false;
+        }
+
+        // Add stock back to warehouse
+        // This would typically use a stock management service
+        // For now, we'll update the stock directly
+        $stock = $product->productStocks()->where('warehouse_id', $warehouse->id)->first();
+        if ($stock) {
+            $stock->increment('quantity', 1);
+        } else {
+            $product->productStocks()->create([
+                'warehouse_id' => $warehouse->id,
+                'quantity' => 1,
+            ]);
+        }
+
+        // Mark this rental inventory as returned to stock
+        $this->update([
+            'status' => 'retired',
+            'is_active' => false,
+            'notes' => ($this->notes ?? '') . "\nReturned to stock: " . now()->format('Y-m-d H:i:s')
+        ]);
+
+        return true;
+    }
+
+    private function createNewProductAndReturn(): bool
+    {
+        // Create new product with rental inventory data
+        $newProduct = Product::create([
+            'account_id' => $this->account_id,
+            'name' => $this->product_name,
+            'sku' => $this->product_sku,
+            'description' => $this->product_description,
+            'brand' => $this->product_brand,
+            'model' => $this->product_model,
+            'attributes' => $this->product_attributes,
+            'type' => 'product',
+            'is_active' => true,
+            'purchase_price' => $this->purchase_price,
+            'sale_price' => $this->replacement_cost ?? $this->purchase_price,
+        ]);
+        
+        // Update rental inventory to point to new product
+        $this->update(['original_product_id' => $newProduct->id]);
+        
+        return $this->returnToOriginalProduct();
+    }
+
+    private function markAsPermanentRental(): void
+    {
+        $this->update([
+            'can_return_to_stock' => false,
+            'notes' => ($this->notes ?? '') . "\nMarked as permanent rental: " . now()->format('Y-m-d H:i:s')
+        ]);
     }
 }

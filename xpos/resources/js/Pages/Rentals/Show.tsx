@@ -49,7 +49,7 @@ interface RentalItem {
         size: string;
         color: string;
         image_url: string;
-    };
+    } | null;
     quantity: number;
     rental_price: number;
     deposit_per_item: number;
@@ -419,40 +419,47 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                         <div className="flex justify-between items-start mb-3">
                                             <div className="flex-1">
                                                 <h3 className="text-base font-medium text-gray-900">
-                                                    {item.product.name}
+                                                    {item.product?.name || 'Silinmiş məhsul'}
                                                 </h3>
-                                                <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-600">
-                                                    {item.product.barcode && (
-                                                        <div>
-                                                            <span className="font-medium">Barkod:</span> {item.product.barcode}
-                                                        </div>
-                                                    )}
-                                                    {item.product.sku && (
-                                                        <div>
-                                                            <span className="font-medium">SKU:</span> {item.product.sku}
-                                                        </div>
-                                                    )}
-                                                    {item.product.size && (
-                                                        <div>
-                                                            <span className="font-medium">Ölçü:</span> {item.product.size}
-                                                        </div>
-                                                    )}
-                                                    {item.product.color && (
-                                                        <div>
-                                                            <span className="font-medium">Rəng:</span> {item.product.color}
-                                                        </div>
-                                                    )}
-                                                    {item.product.brand && (
-                                                        <div>
-                                                            <span className="font-medium">Brend:</span> {item.product.brand}
-                                                        </div>
-                                                    )}
-                                                    {item.product.model && (
-                                                        <div>
-                                                            <span className="font-medium">Model:</span> {item.product.model}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                {!item.product && (
+                                                    <div className="mt-1 text-sm text-red-600">
+                                                        ⚠️ Bu məhsul sistemdən silinib
+                                                    </div>
+                                                )}
+                                                {item.product && (
+                                                    <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                                        {item.product.barcode && (
+                                                            <div>
+                                                                <span className="font-medium">Barkod:</span> {item.product.barcode}
+                                                            </div>
+                                                        )}
+                                                        {item.product.sku && (
+                                                            <div>
+                                                                <span className="font-medium">SKU:</span> {item.product.sku}
+                                                            </div>
+                                                        )}
+                                                        {item.product.size && (
+                                                            <div>
+                                                                <span className="font-medium">Ölçü:</span> {item.product.size}
+                                                            </div>
+                                                        )}
+                                                        {item.product.color && (
+                                                            <div>
+                                                                <span className="font-medium">Rəng:</span> {item.product.color}
+                                                            </div>
+                                                        )}
+                                                        {item.product.brand && (
+                                                            <div>
+                                                                <span className="font-medium">Brend:</span> {item.product.brand}
+                                                            </div>
+                                                        )}
+                                                        {item.product.model && (
+                                                            <div>
+                                                                <span className="font-medium">Model:</span> {item.product.model}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 pt-3 border-t border-gray-200 text-sm">
@@ -484,13 +491,20 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                                 <p className="text-sm text-gray-600 italic">{item.notes}</p>
                                             </div>
                                         )}
-                                        <a
-                                            href={route('products.show', item.product.id)}
-                                            className="inline-flex items-center mt-3 text-sm text-blue-600 hover:text-blue-800"
-                                        >
-                                            <EyeIcon className="h-4 w-4 mr-1" />
-                                            Məhsula bax
-                                        </a>
+                                        {item.product ? (
+                                            <a
+                                                href={route('products.show', item.product.id)}
+                                                className="inline-flex items-center mt-3 text-sm text-blue-600 hover:text-blue-800"
+                                            >
+                                                <EyeIcon className="h-4 w-4 mr-1" />
+                                                Məhsula bax
+                                            </a>
+                                        ) : (
+                                            <span className="inline-flex items-center mt-3 text-sm text-gray-400">
+                                                <EyeIcon className="h-4 w-4 mr-1" />
+                                                Məhsul mövcud deyil
+                                            </span>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -674,7 +688,12 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
 
                                     return (
                                         <div key={item.id} className="mb-4 last:mb-0">
-                                            <div className="text-sm font-medium text-gray-700 mb-2">{item.product.name}</div>
+                                            <div className="text-sm font-medium text-gray-700 mb-2">
+                                                {item.product?.name || 'Silinmiş məhsul'}
+                                                {!item.product && (
+                                                    <span className="ml-2 text-red-600 text-xs">⚠️ məhsul silinib</span>
+                                                )}
+                                            </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                 {Object.entries(conditions).map(([key, value]) => (
                                                     <div key={key} className="flex items-center text-sm">

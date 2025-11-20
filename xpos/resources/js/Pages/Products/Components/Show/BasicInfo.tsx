@@ -64,6 +64,48 @@ export default function BasicInfo({ product }: { product: Product }) {
               <dd className="mt-1 text-sm text-gray-900">{product.unit_price} AZN/{product.base_unit || product.unit}</dd>
             </div>
           )}
+          {(product as any).service_type && (
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Xidmət Növü</dt>
+              <dd className="mt-1 text-sm text-gray-900">{(product as any).service_type}</dd>
+            </div>
+          )}
+          {(product as any).weight && (
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Çəki</dt>
+              <dd className="mt-1 text-sm text-gray-900">{(product as any).weight} kq</dd>
+            </div>
+          )}
+          {(product as any).dimensions && (
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Ölçülər</dt>
+              <dd className="mt-1 text-sm text-gray-900">{(product as any).dimensions}</dd>
+            </div>
+          )}
+          {(() => {
+            const clothingAttributes = ['size', 'color', 'color_code', 'style', 'gender', 'season', 'material', 'collection', 'additional_notes', 'care_instructions', 'country_of_origin'];
+            const attributes = (product as any).attributes;
+            return attributes && Object.keys(attributes).some(key => !clothingAttributes.includes(key));
+          })() && (
+            <div className="md:col-span-2">
+              <dt className="text-sm font-medium text-gray-500">Digər Xüsusiyyətlər</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const clothingAttributes = ['size', 'color', 'color_code', 'style', 'gender', 'season', 'material', 'collection', 'additional_notes', 'care_instructions', 'country_of_origin'];
+                    const attributes = (product as any).attributes;
+                    return Object.entries(attributes)
+                      .filter(([key, value]) => !clothingAttributes.includes(key) && value)
+                      .map(([key, value]) => (
+                        <span key={key} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {key}: {typeof value === 'string' ? value : JSON.stringify(value)}
+                        </span>
+                      ));
+                  })()}
+                </div>
+              </dd>
+            </div>
+          )}
         </dl>
         {product.description && (
           <div className="mt-6">

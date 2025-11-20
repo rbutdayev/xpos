@@ -23,12 +23,14 @@ interface Customer {
 
 interface RentalItem {
     id: number;
-    product: {
+    product?: {
         id: number;
         name: string;
-        size: string;
-        color: string;
-    };
+        size?: string;
+        color?: string;
+    } | null;
+    product_name?: string;
+    product_sku?: string;
     condition_checklist: any;
     rental_price: number;
 }
@@ -452,9 +454,9 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                     </div>
                                     {rental.items.map((item) => (
                                         <p key={item.id} className="text-base font-medium text-gray-900">
-                                            {item.product.name}
-                                            {item.product.color && ` ${item.product.color}`}
-                                            {item.product.size && ` (${item.product.size})`}
+                                            {item.product?.name || item.product_name || 'Silinmiş məhsul'}
+                                            {item.product?.color && ` ${item.product.color}`}
+                                            {item.product?.size && ` (${item.product.size})`}
                                         </p>
                                     ))}
                                 </div>
@@ -552,7 +554,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                         className="mb-6 pb-6 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0"
                                     >
                                         <h3 className="text-base font-medium text-gray-900 mb-4">
-                                            {item.product.name}
+                                            {item.product?.name || item.product_name || 'Silinmiş məhsul'}
                                         </h3>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

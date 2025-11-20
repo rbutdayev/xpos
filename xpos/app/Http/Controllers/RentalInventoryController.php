@@ -174,8 +174,8 @@ class RentalInventoryController extends Controller
                     throw new \Exception("Filial üçün anbara giriş tapılmadı. Anbara giriş təyin edin və ya əsas anbar yaradın.");
                 }
 
-                // Create the inventory item with explicit status
-                $inventory = RentalInventory::create(array_merge($validated, [
+                // Create the inventory item using createFromProduct to copy product data
+                $inventory = RentalInventory::createFromProduct($product, array_merge($validated, [
                     'stock_deducted' => true,
                     'stock_warehouse_id' => $warehouse->id,
                     'status' => 'available', // Ensure status is explicitly set

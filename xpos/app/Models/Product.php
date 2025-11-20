@@ -42,6 +42,15 @@ class Product extends Model
         'attributes',
         'image_url',
         'is_active',
+        // Rental fields
+        'rental_category',
+        'rental_daily_rate',
+        'rental_weekly_rate',
+        'rental_monthly_rate',
+        'rental_deposit',
+        'is_rentable',
+        'rental_min_days',
+        'rental_max_days',
     ];
 
     protected $appends = [
@@ -60,6 +69,14 @@ class Product extends Model
             'unit_price' => 'decimal:4',
             'weight' => 'decimal:3',
             'attributes' => 'json',
+            // Rental field casts
+            'is_rentable' => 'boolean',
+            'rental_daily_rate' => 'decimal:2',
+            'rental_weekly_rate' => 'decimal:2',
+            'rental_monthly_rate' => 'decimal:2',
+            'rental_deposit' => 'decimal:2',
+            'rental_min_days' => 'integer',
+            'rental_max_days' => 'integer',
         ];
     }
 
@@ -167,6 +184,7 @@ class Product extends Model
     {
         return $this->hasMany(Product::class, 'parent_product_id')->where('is_active', true);
     }
+
 
     public function scopeProducts(Builder $query): Builder
     {
@@ -365,6 +383,9 @@ class Product extends Model
             if ($product->barcode) {
                 self::clearBarcodeImageCache($product->barcode);
             }
+            
+            // Mark rental inventory items when product is deleted
+            RentalInventory::handleProductDeletion($product->id);
         });
     }
 

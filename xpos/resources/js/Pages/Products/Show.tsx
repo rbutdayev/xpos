@@ -6,6 +6,7 @@ import BasicInfo from './Components/Show/BasicInfo';
 import StockSection from './Components/Show/StockSection';
 import PricingSummary from './Components/Show/PricingSummary';
 import SettingsSection from './Components/Show/SettingsSection';
+import ClothingInfo from './Components/Show/ClothingInfo';
 import ImageUploadSection from './Components/ImageUploadSection';
 
 interface PhotoData {
@@ -85,6 +86,7 @@ export default function Show({ product, photos }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <BasicInfo product={product as any} />
+            <ClothingInfo product={product as any} />
             {product.type === 'product' && <StockSection product={product as any} />}
           </div>
           <div className="space-y-6">

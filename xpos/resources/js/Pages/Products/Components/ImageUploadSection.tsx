@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { router } from '@inertiajs/react';
-import { PhotoIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PhotoIcon, XMarkIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import PhotoViewerModal from '@/Components/PhotoViewerModal';
 
 interface PhotoData {
   id: number;
@@ -20,6 +21,8 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
   const [dragActive, setDragActive] = useState(false);
   const [altTexts, setAltTexts] = useState<Record<number, string>>({});
   const [primaryIndex, setPrimaryIndex] = useState<number>(0);
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const maxPhotos = 5;
@@ -115,6 +118,11 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
     router.post(route('products.photos.set-primary', { product: productId, photo: photoId }));
   };
 
+  const openPhotoViewer = (index: number) => {
+    setSelectedPhotoIndex(index);
+    setPhotoViewerOpen(true);
+  };
+
   const formatFileSize = (bytes: number): string => {
     return bytes < 1024 * 1024
       ? `${(bytes / 1024).toFixed(1)} KB`
@@ -137,12 +145,13 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">Yüklənmiş şəkillər</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {photos.map((photo) => (
+                {photos.map((photo, index) => (
                   <div key={photo.id} className="relative group">
                     <img
                       src={photo.thumbnail_url}
                       alt={photo.alt_text || 'Product photo'}
-                      className="w-full h-32 object-cover rounded-lg border border-gray-300"
+                      className="w-full h-32 object-cover rounded-lg border border-gray-300 cursor-pointer"
+                      onClick={() => openPhotoViewer(index)}
                     />
                     {photo.is_primary && (
                       <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
@@ -150,17 +159,34 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
                       </span>
                     )}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPhotoViewer(index);
+                        }}
+                        className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        title="Böyük göstər"
+                      >
+                        <EyeIcon className="w-4 h-4" />
+                      </button>
                       {!photo.is_primary && (
                         <button
-                          onClick={() => setPrimaryPhoto(photo.id)}
-                          className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPrimaryPhoto(photo.id);
+                          }}
+                          className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
                         >
                           Əsas et
                         </button>
                       )}
                       <button
-                        onClick={() => deletePhoto(photo.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePhoto(photo.id);
+                        }}
                         className="p-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        title="Sil"
                       >
                         <TrashIcon className="w-4 h-4" />
                       </button>
@@ -261,6 +287,14 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
           )}
         </div>
       </div>
+
+      {/* Photo Viewer Modal */}
+      <PhotoViewerModal
+        isOpen={photoViewerOpen}
+        onClose={() => setPhotoViewerOpen(false)}
+        photos={photos}
+        initialPhotoIndex={selectedPhotoIndex}
+      />
     </div>
   );
 }

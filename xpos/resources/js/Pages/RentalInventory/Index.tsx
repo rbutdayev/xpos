@@ -18,7 +18,14 @@ interface InventoryItem {
     id: number;
     inventory_number: string;
     serial_number: string | null;
-    product: Product;
+    product: Product | null; // Keep for backwards compatibility
+    product_name: string; // New: copied product data
+    product_sku: string | null;
+    product_category: string | null;
+    product_brand: string | null;
+    original_product_id: number | null;
+    original_product_deleted_at: string | null;
+    can_return_to_stock: boolean;
     branch: Branch;
     status: string;
     rental_category: string;
@@ -213,7 +220,17 @@ export default function Index({ inventory, filters }: Props) {
             label: 'Məhsul',
             sortable: false,
             render: (item: InventoryItem) => (
-                <div className="text-sm text-gray-900">{item.product.name}</div>
+                <div className="text-sm text-gray-900">
+                    {item.product_name || item.product?.name || 'Silinmiş məhsul'}
+                    {item.original_product_deleted_at && (
+                        <span className="ml-2 text-xs text-red-600" title="Original product was deleted">
+                            ⚠️
+                        </span>
+                    )}
+                    {item.product_sku && (
+                        <div className="text-xs text-gray-500">SKU: {item.product_sku}</div>
+                    )}
+                </div>
             ),
         },
         {
