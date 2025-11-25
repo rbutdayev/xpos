@@ -57,6 +57,7 @@ class CategoryController extends Controller
         ]);
 
         $category = Category::create([
+            'account_id' => Auth::user()->account_id,
             'name' => $request->name,
             'parent_id' => $request->parent_id,
             'description' => $request->description,

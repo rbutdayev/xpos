@@ -40,28 +40,103 @@ class StorageServiceProvider extends ServiceProvider
     private function configureDynamicStorage(): void
     {
         try {
-            // Get Azure settings from database
-            $connectionString = StorageSetting::getAzureConnectionString();
-            $container = StorageSetting::getAzureContainer();
+            // Get the selected storage driver from database
+            $driver = StorageSetting::getStorageDriver();
 
-            if ($connectionString) {
-                // Dynamically configure the documents disk with database credentials
-                config([
-                    'filesystems.disks.documents' => [
-                        'driver' => 'azure',
-                        'connection_string' => $connectionString,
-                        'container' => $container,
-                        'prefix' => '',
-                        'throw' => false,
-                    ]
-                ]);
-                return;
+            switch ($driver) {
+                case 'azure':
+                    $this->configureAzureStorage();
+                    break;
+
+                case 's3':
+                case 's3-compatible':
+                    $this->configureS3Storage();
+                    break;
+
+                case 'local':
+                default:
+                    $this->configureLocalStorage();
+                    break;
             }
         } catch (\Exception $e) {
             \Log::warning('Could not load storage settings from database: ' . $e->getMessage());
+            $this->configureFallbackStorage();
+        }
+    }
+
+    private function configureAzureStorage(): void
+    {
+        $connectionString = StorageSetting::getAzureConnectionString();
+        $container = StorageSetting::getAzureContainer();
+
+        if ($connectionString) {
+            config([
+                'filesystems.disks.documents' => [
+                    'driver' => 'azure',
+                    'connection_string' => $connectionString,
+                    'container' => $container,
+                    'prefix' => '',
+                    'throw' => false,
+                ]
+            ]);
+            return;
         }
 
-        // Fallback to .env Azure configuration if database settings don't exist
+        throw new \Exception('Azure credentials not found');
+    }
+
+    private function configureS3Storage(): void
+    {
+        $accessKey = StorageSetting::getS3AccessKey();
+        $secretKey = StorageSetting::getS3SecretKey();
+        $bucket = StorageSetting::getS3Bucket();
+        $region = StorageSetting::getS3Region();
+        $endpoint = StorageSetting::getS3Endpoint();
+        $usePathStyle = StorageSetting::getS3UsePathStyleEndpoint();
+        $url = StorageSetting::getS3Url();
+
+        if ($accessKey && $secretKey && $bucket) {
+            $config = [
+                'driver' => 's3',
+                'key' => $accessKey,
+                'secret' => $secretKey,
+                'region' => $region,
+                'bucket' => $bucket,
+                'throw' => false,
+            ];
+
+            // Add endpoint for S3-compatible services (like Backblaze)
+            if ($endpoint) {
+                $config['endpoint'] = $endpoint;
+                $config['use_path_style_endpoint'] = $usePathStyle;
+            }
+
+            // Add custom URL if provided
+            if ($url) {
+                $config['url'] = $url;
+            }
+
+            config(['filesystems.disks.documents' => $config]);
+            return;
+        }
+
+        throw new \Exception('S3 credentials not found');
+    }
+
+    private function configureLocalStorage(): void
+    {
+        config([
+            'filesystems.disks.documents' => [
+                'driver' => 'local',
+                'root' => storage_path('app/documents'),
+                'throw' => false,
+            ]
+        ]);
+    }
+
+    private function configureFallbackStorage(): void
+    {
+        // Try .env Azure configuration
         $envConnectionString = env('AZURE_STORAGE_CONNECTION_STRING');
         $envContainer = env('AZURE_STORAGE_CONTAINER', 'xpos');
 
@@ -75,17 +150,29 @@ class StorageServiceProvider extends ServiceProvider
                     'throw' => false,
                 ]
             ]);
-        } else {
-            // Final fallback to local storage for development
-            \Log::warning('No Azure credentials found in database or .env, using local storage');
+            return;
+        }
 
+        // Try .env S3 configuration
+        if (env('AWS_ACCESS_KEY_ID') && env('AWS_SECRET_ACCESS_KEY') && env('AWS_BUCKET')) {
             config([
                 'filesystems.disks.documents' => [
-                    'driver' => 'local',
-                    'root' => storage_path('app/documents'),
+                    'driver' => 's3',
+                    'key' => env('AWS_ACCESS_KEY_ID'),
+                    'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                    'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+                    'bucket' => env('AWS_BUCKET'),
+                    'url' => env('AWS_URL'),
+                    'endpoint' => env('AWS_ENDPOINT'),
+                    'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
                     'throw' => false,
                 ]
             ]);
+            return;
         }
+
+        // Final fallback to local storage
+        \Log::warning('No cloud storage credentials found in database or .env, using local storage');
+        $this->configureLocalStorage();
     }
 }

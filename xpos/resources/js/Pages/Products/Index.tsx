@@ -13,12 +13,15 @@ import {
     CheckCircleIcon,
     ExclamationTriangleIcon,
     QueueListIcon,
-    MagnifyingGlassIcon
+    MagnifyingGlassIcon,
+    ArrowUpTrayIcon,
+    ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { productTableConfig } from '@/Components/TableConfigurations';
 import { formatQuantityWithUnit } from '@/utils/formatters';
 import StockDetailsModal from '@/Components/StockDetailsModal';
+import ProductImportModal from '@/Components/ProductImportModal';
 
 interface Props {
     products: {
@@ -60,6 +63,7 @@ export default function Index({ products, categories, warehouses, filters, selec
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
     const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState(filters.warehouse_id || '');
     const [stockModalProduct, setStockModalProduct] = useState<Product | null>(null);
+    const [showImportModal, setShowImportModal] = useState(false);
 
     // Get accessible warehouse IDs based on user role
     const getAccessibleWarehouses = () => {
@@ -398,6 +402,13 @@ export default function Index({ products, categories, warehouses, filters, selec
                             </div>
                             {currentUser.role !== 'sales_staff' && (
                                 <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowImportModal(true)}
+                                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <ArrowUpTrayIcon className="w-4 h-4 mr-2" />
+                                        Import
+                                    </button>
                                     <Link
                                         href="/products/bulk-create"
                                         className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -450,6 +461,12 @@ export default function Index({ products, categories, warehouses, filters, selec
                         showAllWarehouses={showAllWarehouses}
                     />
                 )}
+
+                {/* Import Modal */}
+                <ProductImportModal
+                    isOpen={showImportModal}
+                    onClose={() => setShowImportModal(false)}
+                />
             </div>
         </AuthenticatedLayout>
     );

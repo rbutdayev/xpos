@@ -21,6 +21,11 @@ class ProductPhotoService
     private const MEDIUM_SIZE = 800; // 800x800px for product detail page
     private const THUMBNAIL_SIZE = 300; // 300x300px for product listings
 
+    // Compression settings
+    private const ORIGINAL_QUALITY = 85; // Good balance between quality and size for originals
+    private const RESIZED_QUALITY = 82; // Slightly more compression for resized versions
+    private const CONVERT_TO_WEBP = true; // Convert to WebP for better compression
+
     private array $allowedMimeTypes = [
         'image/jpeg',
         'image/png',
@@ -50,8 +55,8 @@ class ProductPhotoService
         // Generate unique filename
         $filename = $this->generateFileName($file);
 
-        // Store original
-        $originalPath = $file->storeAs($basePath . '/original', $filename, $this->disk);
+        // Compress and store original
+        $originalPath = $this->compressAndStore($file, $basePath . '/original', $filename, self::ORIGINAL_QUALITY);
 
         // Create photo record
         $photo = $product->photos()->create([
@@ -344,17 +349,17 @@ class ProductPhotoService
             $imageContent = Storage::disk($this->disk)->get($originalPath);
             $image = $manager->read($imageContent);
 
-            // Generate medium version (800x800)
+            // Generate medium version (800x800) with compression
             $mediumImage = clone $image;
             $mediumImage->scaleDown(width: self::MEDIUM_SIZE, height: self::MEDIUM_SIZE);
-            $mediumPath = $basePath . '/medium/' . $filename;
-            Storage::disk($this->disk)->put($mediumPath, $mediumImage->encode());
+            $mediumPath = $basePath . '/medium/' . $this->getCompressedFilename($filename);
+            Storage::disk($this->disk)->put($mediumPath, $this->encodeWithCompression($mediumImage, self::RESIZED_QUALITY));
 
-            // Generate thumbnail (300x300)
+            // Generate thumbnail (300x300) with compression
             $thumbnailImage = clone $image;
             $thumbnailImage->scaleDown(width: self::THUMBNAIL_SIZE, height: self::THUMBNAIL_SIZE);
-            $thumbnailPath = $basePath . '/thumbs/' . $filename;
-            Storage::disk($this->disk)->put($thumbnailPath, $thumbnailImage->encode());
+            $thumbnailPath = $basePath . '/thumbs/' . $this->getCompressedFilename($filename);
+            Storage::disk($this->disk)->put($thumbnailPath, $this->encodeWithCompression($thumbnailImage, self::RESIZED_QUALITY));
 
             // Update photo record with paths
             $photo->update([
@@ -415,5 +420,62 @@ class ProductPhotoService
     public static function getMaxFileSize(): int
     {
         return self::MAX_FILE_SIZE;
+    }
+
+    /**
+     * Compress and store an image file
+     */
+    private function compressAndStore(UploadedFile $file, string $path, string $filename, int $quality): string
+    {
+        try {
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file->getPathname());
+
+            // Encode with compression
+            $encoded = $this->encodeWithCompression($image, $quality);
+
+            // Update filename if converting to WebP
+            $filename = $this->getCompressedFilename($filename);
+
+            // Store the compressed image
+            $fullPath = $path . '/' . $filename;
+            Storage::disk($this->disk)->put($fullPath, $encoded);
+
+            return $fullPath;
+        } catch (\Exception $e) {
+            \Log::error('Image compression failed, storing original', [
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback: store original without compression
+            return $file->storeAs($path, $filename, $this->disk);
+        }
+    }
+
+    /**
+     * Encode image with compression
+     */
+    private function encodeWithCompression($image, int $quality)
+    {
+        if (self::CONVERT_TO_WEBP) {
+            // Convert to WebP for better compression
+            return $image->toWebp($quality);
+        } else {
+            // Keep original format but compress
+            return $image->encodeByMediaType(quality: $quality);
+        }
+    }
+
+    /**
+     * Get filename with appropriate extension for compression
+     */
+    private function getCompressedFilename(string $filename): string
+    {
+        if (self::CONVERT_TO_WEBP) {
+            // Replace extension with .webp
+            return preg_replace('/\.(jpg|jpeg|png|gif)$/i', '.webp', $filename);
+        }
+
+        return $filename;
     }
 }

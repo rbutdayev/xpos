@@ -34,6 +34,11 @@ class DocumentUploadService
         'default' => 5 * 1024 * 1024, // 5MB default
     ];
 
+    // Compression settings for images
+    private const IMAGE_QUALITY = 85; // Good balance between quality and size
+    private const THUMBNAIL_QUALITY = 82; // Slightly more compression for thumbnails
+    private const CONVERT_TO_WEBP = true; // Convert to WebP for better compression
+
     public function __construct()
     {
         $this->disk = 'documents';
@@ -285,6 +290,13 @@ class DocumentUploadService
     private function storeFile(UploadedFile $file, string $path): string
     {
         $filename = $this->generateFileName($file);
+
+        // Compress images before storing
+        if ($this->isImage($file)) {
+            return $this->compressAndStore($file, $path, $filename, self::IMAGE_QUALITY);
+        }
+
+        // Store non-image files normally
         return $file->storeAs($path, $filename, $this->disk);
     }
 
@@ -340,13 +352,19 @@ class DocumentUploadService
             
             // Resize to thumbnail
             $image->scaleDown(width: 300, height: 300);
-            
+
             // Generate thumbnail path
             $pathInfo = pathinfo($filePath);
-            $thumbnailPath = $pathInfo['dirname'] . '/thumbs/' . $pathInfo['filename'] . '_thumb.' . $pathInfo['extension'];
-            
-            // Save thumbnail
-            $thumbnailContent = $image->encode();
+            $thumbnailFilename = $pathInfo['filename'] . '_thumb';
+            if (self::CONVERT_TO_WEBP) {
+                $thumbnailFilename .= '.webp';
+            } else {
+                $thumbnailFilename .= '.' . $pathInfo['extension'];
+            }
+            $thumbnailPath = $pathInfo['dirname'] . '/thumbs/' . $thumbnailFilename;
+
+            // Save thumbnail with compression
+            $thumbnailContent = $this->encodeWithCompression($image, self::THUMBNAIL_QUALITY);
             Storage::disk($this->disk)->put($thumbnailPath, $thumbnailContent);
             
             // Update document record
@@ -409,5 +427,62 @@ class DocumentUploadService
     public function downloadFile(string $filePath, string $filename)
     {
         return Storage::disk($this->disk)->download($filePath, $filename);
+    }
+
+    /**
+     * Compress and store an image file
+     */
+    private function compressAndStore(UploadedFile $file, string $path, string $filename, int $quality): string
+    {
+        try {
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file->getPathname());
+
+            // Encode with compression
+            $encoded = $this->encodeWithCompression($image, $quality);
+
+            // Update filename if converting to WebP
+            $filename = $this->getCompressedFilename($filename);
+
+            // Store the compressed image
+            $fullPath = $path . '/' . $filename;
+            Storage::disk($this->disk)->put($fullPath, $encoded);
+
+            return $fullPath;
+        } catch (\Exception $e) {
+            \Log::error('Image compression failed, storing original', [
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback: store original without compression
+            return $file->storeAs($path, $filename, $this->disk);
+        }
+    }
+
+    /**
+     * Encode image with compression
+     */
+    private function encodeWithCompression($image, int $quality)
+    {
+        if (self::CONVERT_TO_WEBP) {
+            // Convert to WebP for better compression
+            return $image->toWebp($quality);
+        } else {
+            // Keep original format but compress
+            return $image->encodeByMediaType(quality: $quality);
+        }
+    }
+
+    /**
+     * Get filename with appropriate extension for compression
+     */
+    private function getCompressedFilename(string $filename): string
+    {
+        if (self::CONVERT_TO_WEBP) {
+            // Replace extension with .webp
+            return preg_replace('/\.(jpg|jpeg|png|gif)$/i', '.webp', $filename);
+        }
+
+        return $filename;
     }
 }

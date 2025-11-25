@@ -72,6 +72,14 @@ class StorageSetting extends Model
     }
 
     /**
+     * Get storage driver type
+     */
+    public static function getStorageDriver()
+    {
+        return static::get('storage_driver', 'local');
+    }
+
+    /**
      * Get Azure connection string
      */
     public static function getAzureConnectionString()
@@ -85,5 +93,61 @@ class StorageSetting extends Model
     public static function getAzureContainer()
     {
         return static::get('azure_container', 'xpos');
+    }
+
+    /**
+     * Get S3 access key
+     */
+    public static function getS3AccessKey()
+    {
+        return static::get('s3_access_key');
+    }
+
+    /**
+     * Get S3 secret key
+     */
+    public static function getS3SecretKey()
+    {
+        return static::get('s3_secret_key');
+    }
+
+    /**
+     * Get S3 bucket name
+     */
+    public static function getS3Bucket()
+    {
+        return static::get('s3_bucket');
+    }
+
+    /**
+     * Get S3 region
+     */
+    public static function getS3Region()
+    {
+        return static::get('s3_region', 'us-east-1');
+    }
+
+    /**
+     * Get S3 endpoint (for S3-compatible services like Backblaze)
+     */
+    public static function getS3Endpoint()
+    {
+        return static::get('s3_endpoint');
+    }
+
+    /**
+     * Check if using path-style endpoint (required for some S3-compatible services)
+     */
+    public static function getS3UsePathStyleEndpoint()
+    {
+        return static::get('s3_use_path_style_endpoint', 'false') === 'true';
+    }
+
+    /**
+     * Get S3 URL
+     */
+    public static function getS3Url()
+    {
+        return static::get('s3_url');
     }
 }

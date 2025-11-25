@@ -18,8 +18,10 @@ use App\Models\StockMovement;
 use App\Models\WarehouseTransfer;
 use App\Models\GoodsReceipt;
 use App\Models\ProductReturn;
+use App\Models\Account;
 use App\Observers\ProductStockObserver;
 use App\Observers\AuditLogObserver;
+use App\Observers\AccountObserver;
 use App\Listeners\TrackLoginAttempts;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
@@ -47,7 +49,8 @@ class AppServiceProvider extends ServiceProvider
         
         // Register observers
         ProductStock::observe(ProductStockObserver::class);
-        
+        Account::observe(AccountObserver::class);
+
         // Register audit log observers for key models
         Product::observe(AuditLogObserver::class);
         Customer::observe(AuditLogObserver::class);

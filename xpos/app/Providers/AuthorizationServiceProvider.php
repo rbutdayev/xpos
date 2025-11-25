@@ -107,14 +107,14 @@ class AuthorizationServiceProvider extends ServiceProvider
         // Product Management
         Gate::define('manage-products', function (User $user) {
             return $user->isActive() && in_array($user->role, [
-                'account_owner', 'admin', 'sales_staff'
+                'account_owner', 'admin', 'warehouse_manager', 'accountant'
             ]);
         });
 
         // Supplier Management
         Gate::define('manage-suppliers', function (User $user) {
             return $user->isActive() && in_array($user->role, [
-                'account_owner', 'admin', 'sales_staff'
+                'account_owner', 'admin', 'warehouse_manager', 'accountant'
             ]);
         });
 

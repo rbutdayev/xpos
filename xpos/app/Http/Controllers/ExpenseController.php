@@ -40,7 +40,7 @@ class ExpenseController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
-        $query = Expense::with(['category', 'branch', 'user'])
+        $query = Expense::with(['category', 'branch', 'user', 'supplier'])
             ->where('account_id', Auth::user()->account_id);
 
         if ($request->filled('search')) {

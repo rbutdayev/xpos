@@ -42,7 +42,20 @@ import {
     CalendarIcon,
     ReceiptPercentIcon,
     PuzzlePieceIcon,
-    GiftIcon
+    GiftIcon,
+    BanknotesIcon,
+    CreditCardIcon,
+    BuildingStorefrontIcon,
+    FolderIcon,
+    ArrowPathIcon,
+    BellAlertIcon,
+    ScissorsIcon,
+    DevicePhoneMobileIcon,
+    ComputerDesktopIcon,
+    ArchiveBoxIcon,
+    Cog6ToothIcon,
+    DocumentDuplicateIcon,
+    ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -121,8 +134,7 @@ export default function Authenticated({
 
         if (currentRoute?.includes('expenses') ||
             currentRoute?.includes('expense-categories') ||
-            currentRoute?.includes('employee-salaries') ||
-            currentRoute?.includes('supplier-payments')) {
+            currentRoute?.includes('employee-salaries')) {
             openMenus.push('Maliyyə');
         }
 
@@ -340,7 +352,259 @@ export default function Authenticated({
             ];
         }
 
-        // Full navigation for other roles - Ordered by usage frequency
+        // Accountant role - Finance and Reports only
+        if (user.role === 'accountant') {
+            return [
+                ...baseNavigation,
+                {
+                    name: 'Maliyyə',
+                    icon: CurrencyDollarIcon,
+                    children: [
+                        {
+                            name: 'Xərclər',
+                            href: '/expenses',
+                            icon: ReceiptPercentIcon,
+                            current: route().current('expenses.*')
+                        },
+                        {
+                            name: 'Xərc Kateqoriyaları',
+                            href: '/expense-categories',
+                            icon: TagIcon,
+                            current: route().current('expense-categories.*')
+                        },
+                        {
+                            name: 'İşçi Maaşları',
+                            href: '/employee-salaries',
+                            icon: BanknotesIcon,
+                            current: route().current('employee-salaries.*')
+                        },
+                        {
+                            name: 'Təchizatçı Ödənişləri',
+                            href: '/supplier-payments',
+                            icon: CreditCardIcon,
+                            current: route().current('supplier-payments.*')
+                        }
+                    ]
+                },
+                {
+                    name: 'Hesabatlar və Analitika',
+                    icon: ChartBarIcon,
+                    children: [
+                        {
+                            name: 'Hesabat Mərkəzi',
+                            href: '/reports',
+                            icon: DocumentTextIcon,
+                            current: route().current('reports.*')
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // Warehouse Manager role - Warehouse and Stock operations only
+        if (user.role === 'warehouse_manager') {
+            return [
+                ...baseNavigation,
+                {
+                    name: 'Anbar və Stok',
+                    icon: BuildingStorefrontIcon,
+                    children: [
+                        {
+                            name: 'Məhsullar',
+                            href: '/products',
+                            icon: CubeIcon,
+                            current: route().current('products.*') && !route().current('products.discounts')
+                        },
+                        {
+                            name: 'Kateqoriyalar',
+                            href: '/categories',
+                            icon: FolderIcon,
+                            current: route().current('categories.*')
+                        },
+                        {
+                            name: 'Təchizatçılar',
+                            href: '/suppliers',
+                            icon: TruckIcon,
+                            current: route().current('suppliers.*')
+                        },
+                        {
+                            name: 'İnventar',
+                            href: '/inventory',
+                            icon: ClipboardDocumentListIcon,
+                            current: route().current('inventory.*')
+                        },
+                        {
+                            name: 'Stok Hərəkətləri',
+                            href: '/stock-movements',
+                            icon: ArrowsRightLeftIcon,
+                            current: route().current('stock-movements.*')
+                        },
+                        {
+                            name: 'Mal Qəbulu',
+                            href: '/goods-receipts',
+                            icon: ClipboardDocumentCheckIcon,
+                            current: route().current('goods-receipts.*')
+                        },
+                        {
+                            name: 'Anbar Transferləri',
+                            href: '/warehouse-transfers',
+                            icon: ArrowPathIcon,
+                            current: route().current('warehouse-transfers.*')
+                        },
+                        {
+                            name: 'Məhsul Qaytarmaları',
+                            href: '/product-returns',
+                            icon: ArrowUturnLeftIcon,
+                            current: route().current('product-returns.*')
+                        },
+                        {
+                            name: 'Stok Xəbərdarlıqları',
+                            href: '/alerts',
+                            icon: BellAlertIcon,
+                            current: route().current('alerts.*')
+                        }
+                    ]
+                },
+                {
+                    name: 'Şirkət',
+                    icon: BuildingOffice2Icon,
+                    children: [
+                        {
+                            name: 'Anbarlar',
+                            href: '/warehouses',
+                            icon: BuildingStorefrontIcon,
+                            current: route().current('warehouses.*')
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // Cashier role - POS and Sales only
+        if (user.role === 'cashier') {
+            return [
+                ...baseNavigation,
+                {
+                    name: 'Satış və Marketinq',
+                    icon: MegaphoneIcon,
+                    children: [
+                        {
+                            name: 'Satışlar',
+                            href: '/sales',
+                            icon: ShoppingCartIcon,
+                            current: route().current('sales.*')
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // Tailor role - Services and Customers only
+        if (user.role === 'tailor') {
+            return [
+                ...baseNavigation,
+                {
+                    name: 'Xidmətlər',
+                    icon: ScissorsIcon,
+                    children: [
+                        {
+                            name: 'Dərzi Xidmətləri',
+                            href: '/services/tailor',
+                            icon: ScissorsIcon,
+                            current: route().current('services.index', { serviceType: 'tailor' }) ||
+                                     route().current('tailor-services.*')
+                        },
+                        {
+                            name: 'Telefon Təmiri',
+                            href: '/services/phone-repair',
+                            icon: DevicePhoneMobileIcon,
+                            current: route().current('services.index', { serviceType: 'phone-repair' })
+                        },
+                        {
+                            name: 'Elektronika',
+                            href: '/services/electronics',
+                            icon: ComputerDesktopIcon,
+                            current: route().current('services.index', { serviceType: 'electronics' })
+                        },
+                        {
+                            name: 'Ümumi Xidmətlər',
+                            href: '/services/general',
+                            icon: WrenchScrewdriverIcon,
+                            current: route().current('services.index', { serviceType: 'general' })
+                        }
+                    ]
+                },
+                {
+                    name: 'Satış və Marketinq',
+                    icon: MegaphoneIcon,
+                    children: [
+                        {
+                            name: 'Müştərilər',
+                            href: '/customers',
+                            icon: UserGroupIcon,
+                            current: route().current('customers.*')
+                        },
+                        {
+                            name: 'Müştəri Məhsulları',
+                            href: '/customer-items',
+                            icon: ArchiveBoxIcon,
+                            current: route().current('customer-items.*')
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // Branch Manager role - Dashboard, Employees, limited Reports
+        if (user.role === 'branch_manager') {
+            return [
+                ...baseNavigation,
+                {
+                    name: 'Şirkət',
+                    icon: BuildingOffice2Icon,
+                    children: [
+                        {
+                            name: 'İstifadəçilər',
+                            href: '/users',
+                            icon: UserGroupIcon,
+                            current: route().current('users.*')
+                        }
+                    ]
+                },
+                {
+                    name: 'Hesabatlar və Analitika',
+                    icon: ChartBarIcon,
+                    children: [
+                        {
+                            name: 'Hesabat Mərkəzi',
+                            href: '/reports',
+                            icon: DocumentTextIcon,
+                            current: route().current('reports.*')
+                        }
+                    ]
+                },
+                {
+                    name: 'Sistem',
+                    icon: Cog6ToothIcon,
+                    children: [
+                        {
+                            name: 'Printer Konfiqurasiyası',
+                            href: '/printer-configs',
+                            icon: PrinterIcon,
+                            current: route().current('printer-configs.*')
+                        },
+                        {
+                            name: 'Qəbz Şablonları',
+                            href: '/receipt-templates',
+                            icon: DocumentDuplicateIcon,
+                            current: route().current('receipt-templates.*')
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // Full navigation for admin and account_owner only - Ordered by usage frequency
         return [
             ...baseNavigation,
         {
@@ -538,12 +802,6 @@ export default function Authenticated({
                     href: '/employee-salaries',
                     icon: UsersIcon,
                     current: route().current('employee-salaries.*')
-                },
-                {
-                    name: 'Təchizatçı Ödənişləri',
-                    href: '/supplier-payments',
-                    icon: TruckIcon,
-                    current: route().current('supplier-payments.*')
                 }
             ]
         },

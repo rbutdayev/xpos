@@ -20,6 +20,7 @@ class ExpenseCategoryController extends Controller
         Gate::authorize('access-account-data');
         
         $categories = ExpenseCategory::with(['parent', 'children'])
+            ->byAccount(auth()->user()->account_id)
             ->orderBy('type')
             ->orderBy('name')
             ->get();
@@ -34,7 +35,8 @@ class ExpenseCategoryController extends Controller
     {
         Gate::authorize('manage-expenses');
         
-        $parentCategories = ExpenseCategory::whereNull('parent_id')
+        $parentCategories = ExpenseCategory::byAccount(auth()->user()->account_id)
+            ->whereNull('parent_id')
             ->orderBy('name')
             ->get();
             
@@ -56,6 +58,7 @@ class ExpenseCategoryController extends Controller
         ]);
 
         $category = ExpenseCategory::create([
+            'account_id' => auth()->user()->account_id,
             'name' => $request->name,
             'type' => $request->type,
             'parent_id' => $request->parent_id,
@@ -84,7 +87,8 @@ class ExpenseCategoryController extends Controller
         Gate::authorize('manage-expenses');
         Gate::authorize('access-account-data', $expenseCategory);
         
-        $parentCategories = ExpenseCategory::whereNull('parent_id')
+        $parentCategories = ExpenseCategory::byAccount(auth()->user()->account_id)
+            ->whereNull('parent_id')
             ->where('category_id', '!=', $expenseCategory->category_id)
             ->orderBy('name')
             ->get();
@@ -157,7 +161,7 @@ class ExpenseCategoryController extends Controller
         ]);
         
         $validated = $request->validated();
-        $query = ExpenseCategory::query();
+        $query = ExpenseCategory::byAccount(auth()->user()->account_id);
         
         if ($request->filled('search')) {
             $search = $validated['search'];

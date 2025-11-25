@@ -64,7 +64,7 @@ class RoleBasedAccess
             'alerts' => ['account_owner', 'admin', 'warehouse_manager'],
             
             // Sales & POS
-            'sales' => ['account_owner', 'admin', 'branch_manager', 'sales_staff', 'cashier', 'accountant', 'salesman'],
+            'sales' => ['account_owner', 'admin', 'branch_manager', 'sales_staff', 'cashier', 'accountant'],
             
             // Finance
             'expenses' => ['account_owner', 'admin', 'accountant'],

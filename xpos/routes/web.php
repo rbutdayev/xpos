@@ -216,6 +216,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/products/bulk-create', [ProductController::class, 'bulkCreate'])->name('products.bulk-create');
     Route::post('/products/bulk-store', [ProductController::class, 'bulkStore'])->name('products.bulk-store');
     Route::get('/products/discounts', [ProductController::class, 'discounts'])->name('products.discounts');
+    Route::get('/products/import/template', [ProductController::class, 'downloadTemplate'])->name('products.import.template');
+    Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
     Route::resource('products', ProductController::class);
 
     // Product Variants

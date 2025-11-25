@@ -9,11 +9,14 @@ use App\Models\Branch;
 use App\Services\BarcodeService;
 use App\Services\DocumentUploadService;
 use App\Services\ProductPhotoService;
+use App\Imports\ProductsImport;
+use App\Exports\ProductsTemplateExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -1009,5 +1012,84 @@ class ProductController extends Controller
                 'branch_id' => $branchId,
             ],
         ]);
+    }
+
+    /**
+     * Download Excel template for bulk product import
+     */
+    public function downloadTemplate()
+    {
+        // Salesmen cannot import products
+        if (Auth::user()->role === 'sales_staff') {
+            abort(403, 'Satış əməkdaşları məhsul import edə bilməz.');
+        }
+
+        Gate::authorize('manage-products');
+
+        return Excel::download(
+            new ProductsTemplateExport(),
+            'products_import_template_' . date('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Import products from Excel file
+     */
+    public function import(Request $request)
+    {
+        // Salesmen cannot import products
+        if (Auth::user()->role === 'sales_staff') {
+            abort(403, 'Satış əməkdaşları məhsul import edə bilməz.');
+        }
+
+        Gate::authorize('manage-products');
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        try {
+            $import = new ProductsImport(Auth::user()->account_id);
+            Excel::import($import, $request->file('file'));
+
+            $summary = $import->getSummary();
+
+            if ($summary['errors'] > 0) {
+                return back()->with([
+                    'success' => "{$summary['success']} məhsul uğurla import edildi.",
+                    'warning' => "{$summary['errors']} sətr xəta ilə atlandı.",
+                    'import_errors' => $summary['error_details'],
+                ]);
+            }
+
+            return redirect()->route('products.index')
+                ->with('success', "{$summary['success']} məhsul uğurla import edildi.");
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errors = [];
+
+            foreach ($failures as $failure) {
+                $errors[] = [
+                    'row' => $failure->row(),
+                    'attribute' => $failure->attribute(),
+                    'errors' => $failure->errors(),
+                ];
+            }
+
+            return back()->withErrors([
+                'file' => 'Import faylında xəta var.',
+            ])->with('import_errors', $errors);
+
+        } catch (\Exception $e) {
+            \Log::error('Product import error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors([
+                'file' => 'Import zamanı xəta baş verdi: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

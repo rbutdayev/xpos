@@ -30,6 +30,10 @@ interface Expense {
         id: number;
         name: string;
     } | null;
+    supplier: {
+        id: number;
+        name: string;
+    } | null;
     user: {
         id: number;
         name: string;
@@ -98,6 +102,11 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         {expense.category && (
                             <div className="text-xs text-blue-600">
                                 {expense.category.name}
+                            </div>
+                        )}
+                        {expense.supplier && (
+                            <div className="text-xs text-green-600">
+                                Təchizatçı: {expense.supplier.name}
                             </div>
                         )}
                     </div>
