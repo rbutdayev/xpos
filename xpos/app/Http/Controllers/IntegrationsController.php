@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FiscalPrinterConfig;
+use App\Models\LoyaltyProgram;
 use App\Models\SmsCredential;
 use App\Models\SmsLog;
 use App\Models\TelegramCredential;
@@ -38,11 +39,18 @@ class IntegrationsController extends Controller
         $fiscalPrinterConfigured = $fiscalPrinterConfig !== null;
         $fiscalPrinterEnabled = $account->fiscal_printer_enabled ?? false;
 
+        // Check Loyalty Program configuration
+        $loyaltyProgram = LoyaltyProgram::where('account_id', $accountId)->first();
+        $loyaltyProgramConfigured = $loyaltyProgram !== null;
+        $loyaltyProgramActive = $loyaltyProgram?->is_active ?? false;
+
         return Inertia::render('Integrations/Index', [
             'smsConfigured' => $smsConfigured,
             'telegramConfigured' => $telegramConfigured,
             'fiscalPrinterConfigured' => $fiscalPrinterConfigured,
             'fiscalPrinterEnabled' => $fiscalPrinterEnabled,
+            'loyaltyProgramConfigured' => $loyaltyProgramConfigured,
+            'loyaltyProgramActive' => $loyaltyProgramActive,
         ]);
     }
 

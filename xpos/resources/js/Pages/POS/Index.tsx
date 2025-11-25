@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PageProps, Product, Customer, Branch } from '@/types';
+import { PageProps, Product, Customer, Branch, LoyaltyProgram } from '@/types';
 import CustomerSection from './components/CustomerSection';
 import ProductSearchSection from './components/ProductSearchSection';
 import CartSection from './components/CartSection';
@@ -14,9 +14,10 @@ interface POSIndexProps extends PageProps {
   customers: Customer[];
   branches: Branch[];
   fiscalPrinterEnabled: boolean;
+  loyaltyProgram?: LoyaltyProgram | null;
 }
 
-export default function Index({ auth, customers, branches, fiscalPrinterEnabled }: POSIndexProps) {
+export default function Index({ auth, customers, branches, fiscalPrinterEnabled, loyaltyProgram }: POSIndexProps) {
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -45,7 +46,14 @@ export default function Index({ auth, customers, branches, fiscalPrinterEnabled 
     credit_due_date: '',
     credit_description: '',
     use_fiscal_printer: true,
+    points_to_redeem: 0,
   });
+
+  // Selected customer
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id.toString() === formData.customer_id) || null,
+    [customers, formData.customer_id]
+  );
 
   // Cart state and operations
   const { cart, setCart, subtotal, addToCart, updateCartItem, removeFromCart, changeItemUnit } = useCart([]);
@@ -224,6 +232,8 @@ export default function Index({ auth, customers, branches, fiscalPrinterEnabled 
                   errors={errors}
                   cartCount={cart.length}
                   fiscalPrinterEnabled={fiscalPrinterEnabled}
+                  loyaltyProgram={loyaltyProgram}
+                  selectedCustomer={selectedCustomer}
                 />
               </div>
             </div>

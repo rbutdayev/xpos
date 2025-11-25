@@ -580,6 +580,14 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/logs', [FiscalPrinterConfigController::class, 'logs'])->name('logs');
     });
 
+    // Loyalty Program
+    Route::prefix('loyalty-program')->name('loyalty-program.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\LoyaltyProgramController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\LoyaltyProgramController::class, 'store'])->name('store');
+        Route::post('/toggle-active', [\App\Http\Controllers\LoyaltyProgramController::class, 'toggleActive'])->name('toggle-active');
+        Route::get('/show', [\App\Http\Controllers\LoyaltyProgramController::class, 'show'])->name('show');
+    });
+
     // Rental Management
     Route::prefix('rentals')->name('rentals.')->group(function () {
         Route::get('/', [\App\Http\Controllers\RentalController::class, 'index'])->name('index');

@@ -41,7 +41,8 @@ import {
     ClockIcon,
     CalendarIcon,
     ReceiptPercentIcon,
-    PuzzlePieceIcon
+    PuzzlePieceIcon,
+    GiftIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -249,6 +250,12 @@ export default function Authenticated({
                             href: '/sms/send-sms',
                             icon: PaperAirplaneIcon,
                             current: route().current('sms.send-page')
+                        },
+                        {
+                            name: 'Loyallıq Proqramı',
+                            href: '/loyalty-program',
+                            icon: GiftIcon,
+                            current: route().current('loyalty-program.*')
                         }
                     ]
                 },
@@ -369,6 +376,12 @@ export default function Authenticated({
                     href: '/sms/send-sms',
                     icon: PaperAirplaneIcon,
                     current: route().current('sms.send-page')
+                },
+                {
+                    name: 'Loyallıq Proqramı',
+                    href: '/loyalty-program',
+                    icon: GiftIcon,
+                    current: route().current('loyalty-program.*')
                 }
             ]
         },

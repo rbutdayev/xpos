@@ -379,6 +379,8 @@ export interface Customer {
     tax_number?: string;
     notes?: string;
     is_active: boolean;
+    current_points?: number;
+    lifetime_points?: number;
     created_at?: string;
     updated_at?: string;
     deleted_at?: string;
@@ -940,6 +942,37 @@ export interface StockMovement {
     warehouse?: Warehouse;
     product?: Product;
     user?: User;
+}
+
+// Loyalty Program Types
+export interface LoyaltyProgram {
+    id: number;
+    account_id: number;
+    points_per_currency_unit: number;
+    redemption_rate: number;
+    min_redemption_points: number;
+    points_expiry_days?: number;
+    max_points_per_transaction?: number;
+    earn_on_discounted_items: boolean;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CustomerPoint {
+    id: number;
+    customer_id: number;
+    account_id: number;
+    sale_id?: number;
+    transaction_type: 'earned' | 'redeemed' | 'expired' | 'adjusted' | 'reversed';
+    points: number;
+    balance_after: number;
+    description?: string;
+    expires_at?: string;
+    created_at?: string;
+    updated_at?: string;
+    customer?: Customer;
+    sale?: Sale;
 }
 
 export type PageProps<

@@ -25,6 +25,8 @@ class Customer extends Model
         'tax_number',
         'notes',
         'is_active',
+        'current_points',
+        'lifetime_points',
     ];
 
     protected $appends = [
@@ -69,6 +71,11 @@ class Customer extends Model
     public function credits(): HasMany
     {
         return $this->hasMany(CustomerCredit::class);
+    }
+
+    public function points(): HasMany
+    {
+        return $this->hasMany(CustomerPoint::class);
     }
 
     public function scopeActive(Builder $query): Builder
@@ -183,5 +190,37 @@ class Customer extends Model
     public function hasPendingCredits(): bool
     {
         return $this->has_pending_credits;
+    }
+
+    /**
+     * Get available (non-expired) points for this customer
+     */
+    public function getAvailablePoints(): int
+    {
+        return $this->current_points ?? 0;
+    }
+
+    /**
+     * Get maximum discount from available points
+     */
+    public function getMaxDiscount(?LoyaltyProgram $program = null): float
+    {
+        if (!$program || !$program->is_active) {
+            return 0;
+        }
+
+        return $program->calculateDiscount($this->getAvailablePoints());
+    }
+
+    /**
+     * Check if customer can redeem points
+     */
+    public function canRedeemPoints(?LoyaltyProgram $program = null): bool
+    {
+        if (!$program || !$program->is_active) {
+            return false;
+        }
+
+        return $program->canRedeemPoints($this->getAvailablePoints());
     }
 }

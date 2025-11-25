@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { CreditCardIcon, BanknotesIcon, ClockIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
+import { CreditCardIcon, BanknotesIcon, ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { LoyaltyProgram, Customer } from '@/types';
 
 interface Props {
   processing: boolean;
@@ -12,6 +13,8 @@ interface Props {
   onSubmit: () => void;
   errors: Record<string, string>;
   cartCount: number;
+  loyaltyProgram?: LoyaltyProgram | null;
+  selectedCustomer?: Customer | null;
 }
 
 export default function TouchPayment({
@@ -25,9 +28,53 @@ export default function TouchPayment({
   onSubmit,
   errors,
   cartCount,
+  loyaltyProgram,
+  selectedCustomer,
 }: Props) {
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [showTaxInput, setShowTaxInput] = useState(false);
+  const [showLoyaltyInput, setShowLoyaltyInput] = useState(false);
+  const [pointsDiscount, setPointsDiscount] = useState(0);
+  const [pointsToEarn, setPointsToEarn] = useState(0);
+
+  // Calculate points discount when points_to_redeem changes
+  useEffect(() => {
+    if (loyaltyProgram && (formData.points_to_redeem || 0) > 0) {
+      const discount = (formData.points_to_redeem || 0) / loyaltyProgram.redemption_rate;
+      setPointsDiscount(Math.round(discount * 100) / 100);
+    } else {
+      setPointsDiscount(0);
+    }
+  }, [formData.points_to_redeem, loyaltyProgram]);
+
+  // Calculate points to earn from this purchase
+  useEffect(() => {
+    if (loyaltyProgram && loyaltyProgram.is_active && selectedCustomer) {
+      let amountForPoints = grandTotal;
+
+      // If program doesn't earn on discounted items, use subtotal - discount
+      if (!loyaltyProgram.earn_on_discounted_items && discountAmount > 0) {
+        amountForPoints = subtotal - discountAmount;
+      }
+
+      const points = Math.floor(Math.max(0, amountForPoints) * loyaltyProgram.points_per_currency_unit);
+      const cappedPoints = loyaltyProgram.max_points_per_transaction
+        ? Math.min(points, loyaltyProgram.max_points_per_transaction)
+        : points;
+
+      setPointsToEarn(cappedPoints);
+    } else {
+      setPointsToEarn(0);
+    }
+  }, [grandTotal, subtotal, discountAmount, loyaltyProgram, selectedCustomer]);
+
+  const handlePointsRedeemChange = (value: number) => {
+    const points = Math.max(0, Math.floor(value));
+    const maxPoints = selectedCustomer?.current_points || 0;
+    const cappedPoints = Math.min(points, maxPoints);
+
+    setFormData((prev: any) => ({ ...prev, points_to_redeem: cappedPoints }));
+  };
 
   const paymentButtons = [
     {
@@ -108,6 +155,69 @@ export default function TouchPayment({
               <span className="text-sm font-medium">-{discountAmount.toFixed(2)} ₼</span>
             )}
           </div>
+
+          {/* Loyalty Points Section */}
+          {loyaltyProgram && loyaltyProgram.is_active && selectedCustomer && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <SparklesIcon className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-900">Bonus Ballar</span>
+                  </div>
+                  <span className="text-sm text-blue-700 font-bold">
+                    {selectedCustomer.current_points || 0} bal
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => setShowLoyaltyInput(!showLoyaltyInput)}
+                  className="w-full text-sm text-blue-600 hover:text-blue-800 text-left font-medium"
+                >
+                  {showLoyaltyInput ? '✓ İstifadə edirsən' : '+ Bonus balları istifadə et'}
+                </button>
+
+                {showLoyaltyInput && (
+                  <div className="space-y-2 mt-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-gray-700">Bal sayı:</span>
+                      <input
+                        type="number"
+                        step="1"
+                        value={formData.points_to_redeem || 0}
+                        onChange={(e) => handlePointsRedeemChange(parseFloat(e.target.value) || 0)}
+                        className="w-24 text-sm text-right border-2 border-blue-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        min="0"
+                        max={selectedCustomer.current_points || 0}
+                        disabled={!selectedCustomer.current_points || processing}
+                      />
+                    </div>
+
+                    {pointsDiscount > 0 && (
+                      <div className="flex justify-between text-xs bg-green-50 rounded p-2">
+                        <span className="text-green-700 font-medium">Endirim:</span>
+                        <span className="font-bold text-green-700">-{pointsDiscount.toFixed(2)} ₼</span>
+                      </div>
+                    )}
+
+                    {(formData.points_to_redeem || 0) > 0 &&
+                     (formData.points_to_redeem || 0) < (loyaltyProgram.min_redemption_points || 0) && (
+                      <p className="text-xs text-red-600 bg-red-50 rounded p-2">
+                        ⚠ Minimum {loyaltyProgram.min_redemption_points} bal tələb olunur
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {pointsToEarn > 0 && (
+                  <div className="flex justify-between text-xs text-blue-700 pt-2 border-t border-blue-200">
+                    <span>Bu satışdan qazanacaq:</span>
+                    <span className="font-bold">+{pointsToEarn} bal</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="border-t pt-2 mt-2">
             <div className="flex justify-between text-xl font-bold text-gray-900">

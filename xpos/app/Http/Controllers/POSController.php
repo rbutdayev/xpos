@@ -16,6 +16,7 @@ use App\Models\NegativeStockAlert;
 use App\Models\Warehouse;
 use App\Services\ThermalPrintService;
 use App\Services\FiscalPrinterService;
+use App\Services\LoyaltyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -35,18 +36,20 @@ class POSController extends Controller
         Gate::authorize('create-account-data');
 
         try {
-            $customers = Customer::where('account_id', Auth::user()->account_id)
+            $accountId = Auth::user()->account_id;
+
+            $customers = Customer::where('account_id', $accountId)
                 ->active()
                 ->orderBy('name')
-                ->get(['id', 'name', 'phone', 'email', 'customer_type']);
+                ->get(['id', 'name', 'phone', 'email', 'customer_type', 'current_points', 'lifetime_points']);
 
-            $employees = User::where('account_id', Auth::user()->account_id)
+            $employees = User::where('account_id', $accountId)
                 ->where('status', 'active')
                 ->whereIn('role', ['account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'accountant', 'tailor'])
                 ->orderBy('name')
                 ->get(['id', 'name', 'position', 'role']);
 
-            $services = Product::where('account_id', Auth::user()->account_id)
+            $services = Product::where('account_id', $accountId)
                 ->where("type", "service")
                 ->where("is_active", true)
                 ->orderBy('name')
@@ -57,9 +60,13 @@ class POSController extends Controller
                 $branches = Branch::where('id', Auth::user()->branch_id)
                     ->select('id', 'name')->get();
             } else {
-                $branches = Branch::where('account_id', Auth::user()->account_id)
+                $branches = Branch::where('account_id', $accountId)
                     ->select('id', 'name')->get();
             }
+
+            // Get loyalty program
+            $loyaltyService = app(LoyaltyService::class);
+            $loyaltyProgram = $loyaltyService->getProgramForAccount($accountId);
 
             return Inertia::render('POS/Index', [
                 'customers' => $customers,
@@ -67,6 +74,7 @@ class POSController extends Controller
                 'services' => $services,
                 'branches' => $branches,
                 'fiscalPrinterEnabled' => Auth::user()->account->fiscal_printer_enabled ?? false,
+                'loyaltyProgram' => $loyaltyProgram,
                 'auth' => [
                     'user' => [
                         'role' => Auth::user()->role,
@@ -85,23 +93,30 @@ class POSController extends Controller
         Gate::authorize('create-account-data');
 
         try {
-            $customers = Customer::where('account_id', Auth::user()->account_id)
+            $accountId = Auth::user()->account_id;
+
+            $customers = Customer::where('account_id', $accountId)
                 ->active()
                 ->orderBy('name')
-                ->get(['id', 'name', 'phone', 'email', 'customer_type']);
+                ->get(['id', 'name', 'phone', 'email', 'customer_type', 'current_points', 'lifetime_points']);
 
             // Branch filtering based on user role
             if (Auth::user()->role === 'sales_staff') {
                 $branches = Branch::where('id', Auth::user()->branch_id)
                     ->select('id', 'name')->get();
             } else {
-                $branches = Branch::where('account_id', Auth::user()->account_id)
+                $branches = Branch::where('account_id', $accountId)
                     ->select('id', 'name')->get();
             }
+
+            // Get loyalty program
+            $loyaltyService = app(LoyaltyService::class);
+            $loyaltyProgram = $loyaltyService->getProgramForAccount($accountId);
 
             return Inertia::render('TouchPOS/Index', [
                 'customers' => $customers,
                 'branches' => $branches,
+                'loyaltyProgram' => $loyaltyProgram,
                 'auth' => [
                     'user' => [
                         'role' => Auth::user()->role,
@@ -141,6 +156,7 @@ class POSController extends Controller
             'credit_amount' => 'nullable|numeric|min:0',
             'credit_due_date' => 'nullable|date|after:today',
             'credit_description' => 'nullable|string|max:500',
+            'points_to_redeem' => 'nullable|integer|min:0',
         ];
 
         // For credit or partial payment, customer is required
@@ -153,7 +169,7 @@ class POSController extends Controller
         \Log::info('POS Sale validation passed', ['validated' => $validated]);
 
         try {
-            $sale = DB::transaction(function() use ($validated) {
+            $sale = DB::transaction(function() use ($validated, $request) {
                 $accountId = Auth::user()->account_id;
                 $userId = Auth::id();
 
@@ -168,6 +184,19 @@ class POSController extends Controller
 
                 $taxAmount = $validated['tax_amount'] ?? 0;
                 $discountAmount = $validated['discount_amount'] ?? 0;
+
+                // Add loyalty points discount if applicable
+                $pointsDiscount = 0;
+                if (($validated['points_to_redeem'] ?? 0) > 0 && $validated['customer_id']) {
+                    $loyaltyService = app(LoyaltyService::class);
+                    $program = $loyaltyService->getProgramForAccount($accountId);
+
+                    if ($program && $program->is_active) {
+                        $pointsDiscount = $program->calculateDiscount($validated['points_to_redeem']);
+                        $discountAmount += $pointsDiscount;
+                    }
+                }
+
                 $total = $subtotal + $taxAmount - $discountAmount;
 
                 \Log::info('Calculated totals', ['subtotal' => $subtotal, 'tax' => $taxAmount, 'discount' => $discountAmount, 'total' => $total]);
@@ -265,10 +294,66 @@ class POSController extends Controller
                 }
                 // Note: For payment_status = 'credit', no payment record is created (full credit sale)
 
+                // Handle loyalty points redemption
+                if (($validated['points_to_redeem'] ?? 0) > 0 && $validated['customer_id']) {
+                    $loyaltyService = app(LoyaltyService::class);
+                    $customer = Customer::find($validated['customer_id']);
+
+                    try {
+                        $loyaltyService->redeemPoints(
+                            $customer,
+                            $validated['points_to_redeem'],
+                            $sale,
+                            "Redeemed {$validated['points_to_redeem']} points for ₼{$pointsDiscount} discount"
+                        );
+                    } catch (\Exception $e) {
+                        \Log::error('Points redemption failed', ['error' => $e->getMessage()]);
+                        throw new \Exception('Bonus ballarını istifadə etmək mümkün olmadı: ' . $e->getMessage());
+                    }
+                }
+
                 return $sale;
             });
 
             \Log::info('Sale transaction completed successfully', ['sale_id' => $sale->sale_id]);
+
+            // Award loyalty points for the purchase (outside transaction)
+            if ($sale->customer_id && $sale->payment_status === 'paid') {
+                $loyaltyService = app(LoyaltyService::class);
+                $customer = Customer::find($sale->customer_id);
+                $program = $loyaltyService->getProgramForAccount($sale->account_id);
+
+                if ($customer && $program && $program->is_active) {
+                    // Calculate amount eligible for points (subtract discount if configured)
+                    $amountForPoints = $sale->total;
+
+                    if (!$program->earn_on_discounted_items && $sale->discount_amount > 0) {
+                        $amountForPoints = $sale->subtotal - $sale->discount_amount;
+                    }
+
+                    try {
+                        $pointsEarned = $loyaltyService->earnPoints(
+                            $customer,
+                            $sale,
+                            max(0, $amountForPoints)
+                        );
+
+                        if ($pointsEarned) {
+                            \Log::info('Loyalty points awarded', [
+                                'sale_id' => $sale->sale_id,
+                                'customer_id' => $customer->id,
+                                'points' => $pointsEarned->points
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to award loyalty points', [
+                            'sale_id' => $sale->sale_id,
+                            'error' => $e->getMessage()
+                        ]);
+                        // Don't fail the sale if points award fails
+                    }
+                }
+            }
 
             // Check if auto-print is enabled
             $account = Auth::user()->account;

@@ -8,6 +8,7 @@ import {
     ReceiptPercentIcon,
     CheckCircleIcon,
     Cog6ToothIcon,
+    GiftIcon,
 } from '@heroicons/react/24/outline';
 
 interface Integration {
@@ -15,7 +16,7 @@ interface Integration {
     name: string;
     description: string;
     icon: React.ComponentType<{ className?: string }>;
-    category: 'communication' | 'fiscal' | 'payment' | 'other';
+    category: 'communication' | 'fiscal' | 'loyalty' | 'payment' | 'other';
     status: 'active' | 'inactive' | 'not_configured';
     route: string;
     color: string;
@@ -28,6 +29,8 @@ interface IntegrationsProps extends PageProps {
     telegramConfigured: boolean;
     fiscalPrinterConfigured: boolean;
     fiscalPrinterEnabled: boolean;
+    loyaltyProgramConfigured: boolean;
+    loyaltyProgramActive: boolean;
 }
 
 export default function Index({
@@ -35,7 +38,9 @@ export default function Index({
     smsConfigured,
     telegramConfigured,
     fiscalPrinterConfigured,
-    fiscalPrinterEnabled
+    fiscalPrinterEnabled,
+    loyaltyProgramConfigured,
+    loyaltyProgramActive
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
 
@@ -88,6 +93,22 @@ export default function Index({
                 'Audit log'
             ],
             requiresOwner: true
+        },
+        {
+            id: 'loyalty-program',
+            name: 'Loyallıq Proqramı',
+            description: 'Müştərilərə bal qazandırın və sadiq müştərilər yaradın',
+            icon: GiftIcon,
+            category: 'loyalty',
+            status: loyaltyProgramConfigured ? (loyaltyProgramActive ? 'active' : 'inactive') : 'not_configured',
+            route: '/loyalty-program',
+            color: 'purple',
+            features: [
+                'Avtomatik bal qazanma',
+                'Endirim üçün bal istifadəsi',
+                'Bal bitmə tarixi',
+                'Müştəri loyallıq hesabatı'
+            ]
         }
     ];
 
@@ -95,6 +116,7 @@ export default function Index({
         { id: 'all', name: 'Hamısı', count: integrations.length },
         { id: 'communication', name: 'Əlaqə', count: integrations.filter(i => i.category === 'communication').length },
         { id: 'fiscal', name: 'Fiskal', count: integrations.filter(i => i.category === 'fiscal').length },
+        { id: 'loyalty', name: 'Loyallıq', count: integrations.filter(i => i.category === 'loyalty').length },
     ];
 
     const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
@@ -132,6 +154,7 @@ export default function Index({
             blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', button: 'bg-blue-600' },
             sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', button: 'bg-sky-600' },
             emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', button: 'bg-emerald-600' },
+            purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', button: 'bg-purple-600' },
         };
         return classes[color]?.[type] || classes.blue[type];
     };

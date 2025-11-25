@@ -16,6 +16,7 @@ interface Props {
 function CustomerSection({ customers, branches, formData, setFormData, errors, userBranchId }: Props) {
   const isBranchFixed = !!userBranchId;
   const selectedBranch = branches.find(b => b.id.toString() === formData.branch_id);
+  const selectedCustomer = customers.find(c => c.id.toString() === formData.customer_id);
 
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6">
@@ -59,6 +60,28 @@ function CustomerSection({ customers, branches, formData, setFormData, errors, u
             <InputError message={errors.branch_id} className="mt-2" />
           </div>
         </div>
+
+        {/* Display customer loyalty points if customer is selected */}
+        {selectedCustomer && (selectedCustomer.current_points || 0) > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                <div>
+                  <span className="text-sm font-medium text-blue-900">Bonus Ballar</span>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    Mövcud: <span className="font-semibold">{selectedCustomer.current_points}</span> bal
+                    {selectedCustomer.lifetime_points && selectedCustomer.lifetime_points > 0 && (
+                      <span className="ml-2">• Ümumi: {selectedCustomer.lifetime_points} bal</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

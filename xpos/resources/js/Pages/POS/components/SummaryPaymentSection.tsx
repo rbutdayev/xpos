@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { LoyaltyProgram, Customer } from '@/types';
 
 interface Props {
   processing: boolean;
@@ -15,6 +16,8 @@ interface Props {
   errors: Record<string, string>;
   cartCount: number;
   fiscalPrinterEnabled?: boolean;
+  loyaltyProgram?: LoyaltyProgram | null;
+  selectedCustomer?: Customer | null;
 }
 
 function SummaryPaymentSection({
@@ -28,7 +31,51 @@ function SummaryPaymentSection({
   errors,
   cartCount,
   fiscalPrinterEnabled = false,
+  loyaltyProgram,
+  selectedCustomer,
 }: Props) {
+  const [pointsDiscount, setPointsDiscount] = useState(0);
+  const [pointsToEarn, setPointsToEarn] = useState(0);
+
+  // Calculate points discount when points_to_redeem changes
+  useEffect(() => {
+    if (loyaltyProgram && (formData.points_to_redeem || 0) > 0) {
+      const discount = (formData.points_to_redeem || 0) / loyaltyProgram.redemption_rate;
+      setPointsDiscount(Math.round(discount * 100) / 100);
+    } else {
+      setPointsDiscount(0);
+    }
+  }, [formData.points_to_redeem, loyaltyProgram]);
+
+  // Calculate points to earn from this purchase
+  useEffect(() => {
+    if (loyaltyProgram && loyaltyProgram.is_active && selectedCustomer) {
+      let amountForPoints = grandTotal;
+
+      // If program doesn't earn on discounted items, use subtotal - discount
+      if (!loyaltyProgram.earn_on_discounted_items && discountAmount > 0) {
+        amountForPoints = subtotal - discountAmount;
+      }
+
+      const points = Math.floor(Math.max(0, amountForPoints) * loyaltyProgram.points_per_currency_unit);
+      const cappedPoints = loyaltyProgram.max_points_per_transaction
+        ? Math.min(points, loyaltyProgram.max_points_per_transaction)
+        : points;
+
+      setPointsToEarn(cappedPoints);
+    } else {
+      setPointsToEarn(0);
+    }
+  }, [grandTotal, subtotal, discountAmount, loyaltyProgram, selectedCustomer]);
+
+  const handlePointsRedeemChange = (value: number) => {
+    const points = Math.max(0, Math.floor(value));
+    const maxPoints = selectedCustomer?.current_points || 0;
+    const cappedPoints = Math.min(points, maxPoints);
+
+    setFormData((prev: any) => ({ ...prev, points_to_redeem: cappedPoints }));
+  };
+
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6 sticky top-6">
       <div className="p-6">
@@ -73,6 +120,58 @@ function SummaryPaymentSection({
               min="0"
             />
           </div>
+
+          {/* Loyalty Points Section */}
+          {loyaltyProgram && loyaltyProgram.is_active && selectedCustomer && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-blue-900">Bonus Ballar</span>
+                  <span className="text-blue-700 font-semibold">
+                    {selectedCustomer.current_points || 0} bal
+                  </span>
+                </div>
+
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center justify-between">
+                    <InputLabel htmlFor="points_to_redeem" value="İstifadə et:" className="text-xs mb-0" />
+                    <TextInput
+                      id="points_to_redeem"
+                      type="number"
+                      step="1"
+                      value={formData.points_to_redeem || 0}
+                      onChange={(e) => handlePointsRedeemChange(parseFloat(e.target.value) || 0)}
+                      className="w-20 text-right text-sm"
+                      min="0"
+                      max={selectedCustomer.current_points || 0}
+                      disabled={!selectedCustomer.current_points || processing}
+                    />
+                  </div>
+
+                  {pointsDiscount > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-green-700">Endirim:</span>
+                      <span className="font-semibold text-green-700">-{pointsDiscount.toFixed(2)} AZN</span>
+                    </div>
+                  )}
+
+                  {(formData.points_to_redeem || 0) > 0 &&
+                   (formData.points_to_redeem || 0) < (loyaltyProgram.min_redemption_points || 0) && (
+                    <p className="text-xs text-red-600">
+                      Minimum {loyaltyProgram.min_redemption_points} bal tələb olunur
+                    </p>
+                  )}
+
+                  {pointsToEarn > 0 && (
+                    <div className="flex justify-between text-xs text-blue-700 pt-2 border-t border-blue-200">
+                      <span>Qazanacaq:</span>
+                      <span className="font-semibold">+{pointsToEarn} bal</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <hr className="my-2" />
 

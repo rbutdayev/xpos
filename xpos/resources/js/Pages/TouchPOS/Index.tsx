@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { PageProps, Product, Customer, Branch } from '@/types';
+import { PageProps, Product, Customer, Branch, LoyaltyProgram } from '@/types';
 import TouchCart from './components/TouchCart';
 import TouchHeader from './components/TouchHeader';
 import TouchPayment from './components/TouchPayment';
@@ -13,9 +13,10 @@ import toast from 'react-hot-toast';
 interface TouchPOSProps extends PageProps {
   customers: Customer[];
   branches: Branch[];
+  loyaltyProgram?: LoyaltyProgram | null;
 }
 
-export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
+export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: TouchPOSProps) {
   // Determine initial branch selection
   const getUserBranch = () => {
     // If user is assigned to a branch, use that
@@ -42,7 +43,14 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
     credit_amount: 0,
     credit_due_date: '',
     credit_description: '',
+    points_to_redeem: 0,
   });
+
+  // Selected customer
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id.toString() === formData.customer_id) || null,
+    [customers, formData.customer_id]
+  );
 
   // Cart state
   const { cart, setCart, subtotal, addToCart, updateCartItem, removeFromCart, changeItemUnit } = useCart([]);
@@ -234,6 +242,8 @@ export default function TouchPOS({ auth, customers, branches }: TouchPOSProps) {
                 onSubmit={handleSubmit}
                 errors={errors}
                 cartCount={cart.length}
+                loyaltyProgram={loyaltyProgram}
+                selectedCustomer={selectedCustomer}
               />
             </div>
           </div>

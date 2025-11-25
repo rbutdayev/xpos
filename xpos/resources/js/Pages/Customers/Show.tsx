@@ -141,6 +141,40 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                         <div className="text-sm text-gray-500">Ümumi xidmətlər</div>
                                     </div>
                                 </div>
+
+                                {/* Loyalty Points Card */}
+                                {((customer.current_points || 0) > 0 || (customer.lifetime_points || 0) > 0) && (
+                                    <div className="mt-4">
+                                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 p-5 rounded-lg">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="bg-blue-600 p-3 rounded-full">
+                                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-medium text-blue-900">Bonus Ballar</div>
+                                                        <div className="text-3xl font-bold text-blue-900 mt-1">
+                                                            {customer.current_points || 0}
+                                                        </div>
+                                                        <div className="text-xs text-blue-700 mt-1">
+                                                            Mövcud ballar
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {customer.lifetime_points && customer.lifetime_points > 0 && (
+                                                    <div className="text-right">
+                                                        <div className="text-xs text-blue-700">Ümumi qazanılmış</div>
+                                                        <div className="text-2xl font-bold text-blue-900">
+                                                            {customer.lifetime_points}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {customer.notes && (
