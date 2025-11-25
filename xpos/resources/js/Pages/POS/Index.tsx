@@ -13,9 +13,10 @@ import { useSearch } from './hooks/useSearch';
 interface POSIndexProps extends PageProps {
   customers: Customer[];
   branches: Branch[];
+  fiscalPrinterEnabled: boolean;
 }
 
-export default function Index({ auth, customers, branches }: POSIndexProps) {
+export default function Index({ auth, customers, branches, fiscalPrinterEnabled }: POSIndexProps) {
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -38,10 +39,12 @@ export default function Index({ auth, customers, branches }: POSIndexProps) {
     discount_amount: 0,
     notes: '',
     payment_status: 'paid' as 'paid' | 'credit' | 'partial',
+    payment_method: 'nağd' as 'nağd' | 'kart' | 'köçürmə',
     paid_amount: 0,
     credit_amount: 0,
     credit_due_date: '',
     credit_description: '',
+    use_fiscal_printer: true,
   });
 
   // Cart state and operations
@@ -151,6 +154,7 @@ export default function Index({ auth, customers, branches }: POSIndexProps) {
           discount_amount: 0,
           tax_amount: 0,
           payment_status: 'paid',
+          payment_method: 'nağd',
           paid_amount: 0,
           credit_amount: 0,
           credit_due_date: '',
@@ -219,6 +223,7 @@ export default function Index({ auth, customers, branches }: POSIndexProps) {
                   setFormData={setFormData}
                   errors={errors}
                   cartCount={cart.length}
+                  fiscalPrinterEnabled={fiscalPrinterEnabled}
                 />
               </div>
             </div>

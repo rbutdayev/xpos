@@ -7,6 +7,7 @@ import StockSection from './Components/Show/StockSection';
 import PricingSummary from './Components/Show/PricingSummary';
 import SettingsSection from './Components/Show/SettingsSection';
 import ClothingInfo from './Components/Show/ClothingInfo';
+import DiscountSection from './Components/Show/DiscountSection';
 import ImageUploadSection from './Components/ImageUploadSection';
 
 interface PhotoData {
@@ -19,12 +20,18 @@ interface PhotoData {
   sort_order: number;
 }
 
+interface Branch {
+  id: number;
+  name: string;
+}
+
 interface Props {
   product: Product & { stockHistory?: any[] };
   photos: PhotoData[];
+  branches: Branch[];
 }
 
-export default function Show({ product, photos }: Props) {
+export default function Show({ product, photos, branches }: Props) {
   const { auth } = usePage().props as any;
   const currentUser = auth.user;
 
@@ -93,6 +100,11 @@ export default function Show({ product, photos }: Props) {
             <PricingSummary product={product as any} />
             <SettingsSection product={product as any} />
           </div>
+        </div>
+
+        {/* Discount Management Section */}
+        <div className="mt-6">
+          <DiscountSection product={product as any} branches={branches} />
         </div>
 
         <ImageUploadSection productId={product.id} photos={photos} />

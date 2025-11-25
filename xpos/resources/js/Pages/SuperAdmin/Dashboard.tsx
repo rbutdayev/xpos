@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import StatCard from '@/Components/StatCard';
+import SuperAdminNav from '@/Components/SuperAdminNav';
 
 interface Stats {
     total_accounts: number;
@@ -50,52 +51,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                     )}
 
                     {/* Navigation */}
-                    <div className="mb-8">
-                        <nav className="flex space-x-4">
-                            <a
-                                href="/admin"
-                                className="bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Dashboard
-                            </a>
-                            <a
-                                href="/admin/accounts"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Hesablar
-                            </a>
-                            <a
-                                href="/admin/users"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                İstifadəçilər
-                            </a>
-                            <a
-                                href="/admin/system-stats"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Sistem Statistikası
-                            </a>
-                            <a
-                                href="/admin/system-health"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Sistemin statusu
-                            </a>
-                            <a
-                                href="/admin/security"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Təhlükəsizlik Mərkəzi
-                            </a>
-                            <a
-                                href="/admin/storage-settings"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Azure Storage
-                            </a>
-                        </nav>
-                    </div>
+                    <SuperAdminNav />
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

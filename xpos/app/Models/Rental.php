@@ -357,20 +357,21 @@ class Rental extends Model
     public static function generateRentalNumber(int $accountId): string
     {
         $prefix = 'RNT';
-        $date = now()->format('Ymd');
 
         // Use a raw SQL query with FOR UPDATE to atomically get and lock the max sequence
+        // Only look at new format numbers (RNT + 4 digits, length = 7)
         $result = \DB::select(
-            "SELECT COALESCE(MAX(CAST(SUBSTRING(rental_number, 12) AS UNSIGNED)), 0) as max_sequence
+            "SELECT COALESCE(MAX(CAST(SUBSTRING(rental_number, 4) AS UNSIGNED)), 0) as max_sequence
              FROM rentals
              WHERE account_id = ?
              AND rental_number LIKE ?
+             AND LENGTH(rental_number) = 7
              FOR UPDATE",
-            [$accountId, $prefix . $date . '%']
+            [$accountId, $prefix . '%']
         );
 
         $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
-        return $prefix . $date . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

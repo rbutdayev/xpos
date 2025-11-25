@@ -164,14 +164,27 @@ class ThermalPrintService
         // Generate items list
         $itemsContent = '';
         foreach ($sale->items as $item) {
-            // Format: Item name on first line, quantity x price = total on second line
+            // Format: Item name on first line
             $itemsContent .= mb_substr($item->product->name, 0, 30) . "\n";
-            $itemsContent .= sprintf(
-                "  %.1fx%.2f = %.2f\n",
-                $item->quantity,
-                $item->unit_price,
-                $item->total
-            );
+
+            // If item has discount, show it
+            if ($item->discount_amount > 0) {
+                $itemsContent .= sprintf(
+                    "  %.1fx%.2f - %.2f = %.2f\n",
+                    $item->quantity,
+                    $item->unit_price,
+                    $item->discount_amount,
+                    $item->total
+                );
+            } else {
+                // No discount, show normal format
+                $itemsContent .= sprintf(
+                    "  %.1fx%.2f = %.2f\n",
+                    $item->quantity,
+                    $item->unit_price,
+                    $item->total
+                );
+            }
         }
         $variables['items'] = $itemsContent;
 

@@ -15,6 +15,7 @@ use App\Models\StockMovement;
 use App\Models\NegativeStockAlert;
 use App\Models\Warehouse;
 use App\Services\ThermalPrintService;
+use App\Services\FiscalPrinterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -65,6 +66,7 @@ class POSController extends Controller
                 'employees' => $employees,
                 'services' => $services,
                 'branches' => $branches,
+                'fiscalPrinterEnabled' => Auth::user()->account->fiscal_printer_enabled ?? false,
                 'auth' => [
                     'user' => [
                         'role' => Auth::user()->role,
@@ -134,6 +136,7 @@ class POSController extends Controller
             'discount_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'payment_status' => 'required|in:paid,credit,partial',
+            'payment_method' => 'nullable|in:nağd,kart,köçürmə',
             'paid_amount' => 'nullable|numeric|min:0',
             'credit_amount' => 'nullable|numeric|min:0',
             'credit_due_date' => 'nullable|date|after:today',
@@ -185,6 +188,7 @@ class POSController extends Controller
                     'payment_status' => $validated['payment_status'],
                     'paid_amount' => $validated['paid_amount'] ?? 0,
                     'credit_due_date' => $validated['credit_due_date'] ?? null,
+                    'use_fiscal_printer' => $validated['use_fiscal_printer'] ?? true,
                 ]);
 
                 \Log::info('Sale created successfully', ['sale_id' => $sale->sale_id, 'sale_number' => $sale->sale_number]);
@@ -238,25 +242,26 @@ class POSController extends Controller
                 }
 
                 // Create payment records based on payment status
-                // Note: POS UI doesn't specify payment method, so we default to 'nağd' (cash)
+                $paymentMethod = $validated['payment_method'] ?? 'nağd'; // Default to cash if not specified
+
                 if ($validated['payment_status'] === 'paid') {
                     // Full payment - create payment record for full amount
                     Payment::create([
                         'sale_id' => $sale->sale_id,
-                        'method' => 'nağd',
+                        'method' => $paymentMethod,
                         'amount' => $total,
                         'notes' => 'POS satışı - tam ödəniş',
                     ]);
-                    \Log::info('Payment created for paid sale', ['sale_id' => $sale->sale_id, 'amount' => $total]);
+                    \Log::info('Payment created for paid sale', ['sale_id' => $sale->sale_id, 'amount' => $total, 'method' => $paymentMethod]);
                 } elseif ($validated['payment_status'] === 'partial' && ($validated['paid_amount'] ?? 0) > 0) {
                     // Partial payment - create payment record for paid amount
                     Payment::create([
                         'sale_id' => $sale->sale_id,
-                        'method' => 'nağd',
+                        'method' => $paymentMethod,
                         'amount' => $validated['paid_amount'],
                         'notes' => 'POS satışı - qismən ödəniş',
                     ]);
-                    \Log::info('Payment created for partial sale', ['sale_id' => $sale->sale_id, 'amount' => $validated['paid_amount']]);
+                    \Log::info('Payment created for partial sale', ['sale_id' => $sale->sale_id, 'amount' => $validated['paid_amount'], 'method' => $paymentMethod]);
                 }
                 // Note: For payment_status = 'credit', no payment record is created (full credit sale)
 
@@ -268,6 +273,35 @@ class POSController extends Controller
             // Check if auto-print is enabled
             $account = Auth::user()->account;
             $autoPrint = $account->auto_print_receipt ?? false;
+
+            // Send to fiscal printer if enabled and sale requires it
+            $fiscalPrinted = false;
+            $fiscalNumber = null;
+            $fiscalError = null;
+
+            if ($account->fiscal_printer_enabled && $sale->use_fiscal_printer) {
+                $fiscalService = app(FiscalPrinterService::class);
+                $fiscalResult = $fiscalService->printReceipt($account->id, $sale);
+
+                if ($fiscalResult['success']) {
+                    $fiscalPrinted = true;
+                    $fiscalNumber = $fiscalResult['fiscal_number'] ?? null;
+
+                    if ($fiscalNumber) {
+                        $sale->update(['fiscal_number' => $fiscalNumber]);
+                        \Log::info('Fiscal receipt printed', [
+                            'sale_id' => $sale->sale_id,
+                            'fiscal_number' => $fiscalNumber
+                        ]);
+                    }
+                } else {
+                    $fiscalError = $fiscalResult['error'] ?? 'Unknown fiscal printer error';
+                    \Log::warning('Fiscal printer failed', [
+                        'sale_id' => $sale->sale_id,
+                        'error' => $fiscalError
+                    ]);
+                }
+            }
 
             // Check if request is from Touch POS - stay on POS page, don't redirect
             $referrer = $request->header('referer');
@@ -283,14 +317,20 @@ class POSController extends Controller
                     ->with('sale_completed', true)
                     ->with('sale_id', $sale->sale_id)
                     ->with('sale_number', $sale->sale_number)
-                    ->with('auto_print', $autoPrint);
+                    ->with('auto_print', $autoPrint)
+                    ->with('fiscal_printed', $fiscalPrinted)
+                    ->with('fiscal_number', $fiscalNumber)
+                    ->with('fiscal_error', $fiscalError);
             }
 
             // For regular POS, redirect to sales detail page
             return redirect()->route('sales.show', $sale->sale_id)
                 ->with('success', 'Satış uğurla tamamlandı. Qaimə #' . $sale->sale_number)
                 ->with('auto_print', $autoPrint)
-                ->with('print_sale_id', $sale->sale_id);
+                ->with('print_sale_id', $sale->sale_id)
+                ->with('fiscal_printed', $fiscalPrinted)
+                ->with('fiscal_number', $fiscalNumber)
+                ->with('fiscal_error', $fiscalError);
         } catch (\Exception $e) {
             \Log::error('POS Sale creation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
@@ -367,6 +407,7 @@ class POSController extends Controller
 
         $accountId = Auth::user()->account_id;
         $search = $request->input('q');
+        $branchId = $request->input('branch_id');
 
         if (empty($search)) {
             return response()->json([]);
@@ -388,15 +429,24 @@ class POSController extends Controller
             }])
             ->limit(20)
             ->get()
-            ->map(function($product) {
+            ->map(function($product) use ($branchId) {
+                $effectivePrice = $product->getEffectivePrice($branchId);
+                $discount = $product->getActiveDiscount($branchId);
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'sku' => $product->sku,
                     'barcode' => $product->barcode,
-                    'sale_price' => $product->sale_price,
+                    'sale_price' => $effectivePrice, // Use effective price (discounted if applicable)
+                    'original_price' => $discount ? $product->sale_price : null,
+                    'discount_percentage' => $discount ? $discount['discount_percentage'] : null,
+                    'has_discount' => $discount !== null,
                     'has_variants' => $product->variants->isNotEmpty(),
-                    'variants' => $product->variants->map(function($variant) {
+                    'variants' => $product->variants->map(function($variant) use ($branchId) {
+                        $variantDiscount = $variant->getActiveDiscount($branchId);
+                        $finalPrice = $variant->getFinalPriceForBranch($branchId);
+
                         return [
                             'id' => $variant->id,
                             'size' => $variant->size,
@@ -404,7 +454,10 @@ class POSController extends Controller
                             'color_code' => $variant->color_code,
                             'display_name' => $variant->display_name,
                             'short_display' => $variant->short_display,
-                            'final_price' => $variant->final_price,
+                            'final_price' => $finalPrice, // Use discounted final price
+                            'original_price' => $variantDiscount ? $variant->final_price : null,
+                            'discount_percentage' => $variantDiscount ? $variantDiscount['discount_percentage'] : null,
+                            'has_discount' => $variantDiscount !== null,
                             'barcode' => $variant->barcode,
                             'sku' => $variant->sku,
                             'total_stock' => $variant->getTotalStock(),
@@ -430,6 +483,7 @@ class POSController extends Controller
 
         $accountId = Auth::user()->account_id;
         $barcode = $request->input('barcode');
+        $branchId = $request->input('branch_id');
 
         if (empty($barcode)) {
             return response()->json(['error' => 'Barkod tələb olunur'], 400);
@@ -445,6 +499,9 @@ class POSController extends Controller
             ->first();
 
         if ($variant && $variant->product && $variant->product->is_active) {
+            $finalPrice = $variant->getFinalPriceForBranch($branchId);
+            $discount = $variant->getActiveDiscount($branchId);
+
             // Found variant - return with product data
             return response()->json([
                 'type' => 'variant',
@@ -461,7 +518,10 @@ class POSController extends Controller
                     'color_code' => $variant->color_code,
                     'display_name' => $variant->display_name,
                     'short_display' => $variant->short_display,
-                    'final_price' => $variant->final_price,
+                    'final_price' => $finalPrice, // Use discounted price
+                    'original_price' => $discount ? $variant->final_price : null,
+                    'discount_percentage' => $discount ? $discount['discount_percentage'] : null,
+                    'has_discount' => $discount !== null,
                     'barcode' => $variant->barcode,
                     'total_stock' => $variant->getTotalStock(),
                 ]
@@ -479,6 +539,8 @@ class POSController extends Controller
             ->first();
 
         if ($product) {
+            $effectivePrice = $product->getEffectivePrice($branchId);
+            $discount = $product->getActiveDiscount($branchId);
             // Found product
             $hasVariants = $product->variants->isNotEmpty();
 
@@ -489,17 +551,26 @@ class POSController extends Controller
                     'name' => $product->name,
                     'sku' => $product->sku,
                     'barcode' => $product->barcode,
-                    'sale_price' => $product->sale_price,
+                    'sale_price' => $effectivePrice, // Use discounted price
+                    'original_price' => $discount ? $product->sale_price : null,
+                    'discount_percentage' => $discount ? $discount['discount_percentage'] : null,
+                    'has_discount' => $discount !== null,
                     'category' => $product->category?->name,
                     'has_variants' => $hasVariants,
-                    'variants' => $hasVariants ? $product->variants->map(function($v) {
+                    'variants' => $hasVariants ? $product->variants->map(function($v) use ($branchId) {
+                        $variantFinalPrice = $v->getFinalPriceForBranch($branchId);
+                        $variantDiscount = $v->getActiveDiscount($branchId);
+
                         return [
                             'id' => $v->id,
                             'size' => $v->size,
                             'color' => $v->color,
                             'color_code' => $v->color_code,
                             'display_name' => $v->display_name,
-                            'final_price' => $v->final_price,
+                            'final_price' => $variantFinalPrice, // Use discounted price
+                            'original_price' => $variantDiscount ? $v->final_price : null,
+                            'discount_percentage' => $variantDiscount ? $variantDiscount['discount_percentage'] : null,
+                            'has_discount' => $variantDiscount !== null,
                             'total_stock' => $v->getTotalStock(),
                         ];
                     }) : null,

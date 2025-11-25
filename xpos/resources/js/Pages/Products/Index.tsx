@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Product, Category } from '@/types';
-import { 
-    PlusIcon, 
+import {
+    PlusIcon,
     EyeIcon,
     PencilIcon,
     TrashIcon,
@@ -12,11 +12,13 @@ import {
     HomeModernIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
-    QueueListIcon
+    QueueListIcon,
+    MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { productTableConfig } from '@/Components/TableConfigurations';
 import { formatQuantityWithUnit } from '@/utils/formatters';
+import StockDetailsModal from '@/Components/StockDetailsModal';
 
 interface Props {
     products: {
@@ -57,6 +59,20 @@ export default function Index({ products, categories, warehouses, filters, selec
     const [selectedType, setSelectedType] = useState(filters.type || '');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
     const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState(filters.warehouse_id || '');
+    const [stockModalProduct, setStockModalProduct] = useState<Product | null>(null);
+
+    // Get accessible warehouse IDs based on user role
+    const getAccessibleWarehouses = () => {
+        if (currentUser.role === 'sales_staff' && currentUser.branch_id) {
+            // Sales staff can only see warehouses their branch has access to
+            return warehouses.map(w => w.id);
+        }
+        // Admins and managers see all
+        return [];
+    };
+
+    const accessibleWarehouses = getAccessibleWarehouses();
+    const showAllWarehouses = currentUser.role !== 'sales_staff';
 
     const handleSearch = () => {
         router.get('/products', {
@@ -221,7 +237,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                     render: (product: Product) => {
                         const stockInfo = getProductStock(product);
                         const isLowStock = stockInfo.details.some(s => s.min_level && s.quantity <= s.min_level);
-                        
+
                         return (
                             <div className="text-center">
                                 <div className={`text-sm font-medium ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
@@ -233,9 +249,36 @@ export default function Index({ products, categories, warehouses, filters, selec
                                         {getCurrentWarehouseName()}
                                     </div>
                                 ) : (
-                                    <div className="text-xs text-gray-500">
-                                        {stockInfo.details.length} anbar
-                                    </div>
+                                    <>
+                                        {/* Show warehouse breakdown when no filter is active */}
+                                        {stockInfo.details.length > 0 && stockInfo.details.length <= 3 ? (
+                                            <div className="text-xs text-gray-600 space-y-0.5 mt-1">
+                                                {stockInfo.details.map((s: any) => (
+                                                    <div key={s.id} className="flex items-center justify-center gap-1">
+                                                        <span className="text-gray-500">{s.warehouse?.name}:</span>
+                                                        <span className="font-medium">{formatQuantityWithUnit(s.quantity, product.unit)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-gray-500">
+                                                {stockInfo.details.length} anbar
+                                            </div>
+                                        )}
+                                        {/* View Details Button */}
+                                        {stockInfo.details.length > 0 && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setStockModalProduct(product);
+                                                }}
+                                                className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                            >
+                                                <MagnifyingGlassIcon className="w-3 h-3 mr-0.5" />
+                                                Təfərrüat
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                                 {isLowStock && (
                                     <div className="text-xs text-red-500">Az stok!</div>
@@ -271,6 +314,12 @@ export default function Index({ products, categories, warehouses, filters, selec
             href: (product: Product) => `/products/${product.id}`,
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'view' as const
+        },
+        {
+            label: 'Stok Təfərrüatı',
+            icon: <HomeModernIcon className="w-4 h-4" />,
+            variant: 'secondary' as const,
+            onClick: (product: Product) => setStockModalProduct(product)
         },
         // Only show edit/delete actions for non-salesmen
         ...(currentUser.role !== 'sales_staff' ? [
@@ -390,6 +439,17 @@ export default function Index({ products, categories, warehouses, filters, selec
 
                     hideMobileActions={true}
                 />
+
+                {/* Stock Details Modal */}
+                {stockModalProduct && (
+                    <StockDetailsModal
+                        isOpen={!!stockModalProduct}
+                        onClose={() => setStockModalProduct(null)}
+                        product={stockModalProduct}
+                        accessibleWarehouses={accessibleWarehouses}
+                        showAllWarehouses={showAllWarehouses}
+                    />
+                )}
             </div>
         </AuthenticatedLayout>
     );

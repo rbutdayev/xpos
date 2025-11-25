@@ -20,6 +20,8 @@ class Sale extends Model
         'branch_id',
         'customer_id',
         'sale_number',
+        'fiscal_number',
+        'use_fiscal_printer',
         'subtotal',
         'tax_amount',
         'discount_amount',
@@ -50,6 +52,7 @@ class Sale extends Model
             'paid_amount' => 'decimal:2',
             'credit_amount' => 'decimal:2',
             'has_negative_stock' => 'boolean',
+            'use_fiscal_printer' => 'boolean',
             'sale_date' => 'datetime',
             'credit_due_date' => 'date',
             'is_online_order' => 'boolean',
@@ -206,23 +209,24 @@ class Sale extends Model
     public static function generateSaleNumber(int $accountId): string
     {
         $prefix = 'SAT';
-        $date = now()->format('Ymd');
 
         // Use a raw SQL query with FOR UPDATE to atomically get and lock the max sequence
         // This prevents race conditions when multiple sales are created simultaneously
-        // The lock is scoped to the specific account_id and date, ensuring tenant isolation
+        // The lock is scoped to the specific account_id, ensuring tenant isolation
+        // Only look at new format numbers (SAT + 4 digits, length = 7)
         $result = \DB::select(
-            "SELECT COALESCE(MAX(CAST(SUBSTRING(sale_number, 12) AS UNSIGNED)), 0) as max_sequence
+            "SELECT COALESCE(MAX(CAST(SUBSTRING(sale_number, 4) AS UNSIGNED)), 0) as max_sequence
              FROM sales
              WHERE account_id = ?
              AND sale_number LIKE ?
+             AND LENGTH(sale_number) = 7
              FOR UPDATE",
-            [$accountId, $prefix . $date . '%']
+            [$accountId, $prefix . '%']
         );
 
         $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
-        return $prefix . $date . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**

@@ -39,7 +39,9 @@ import {
     ShoppingBagIcon,
     DocumentTextIcon,
     ClockIcon,
-    CalendarIcon
+    CalendarIcon,
+    ReceiptPercentIcon,
+    PuzzlePieceIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -78,75 +80,69 @@ export default function Authenticated({
     const getInitialOpenMenus = (): string[] => {
         const currentRoute = route().current();
         const openMenus: string[] = ['dashboard']; // Always show dashboard
-        
+
         // Check which section the current route belongs to and open that menu
-        if (currentRoute?.includes('companies') ||
-            currentRoute?.includes('branches') ||
-            currentRoute?.includes('users') ||
-            currentRoute?.includes('warehouses')) {
-            openMenus.push('Şirkət');
-        }
-        
-        if (currentRoute?.includes('products') || 
-            currentRoute?.includes('suppliers') || 
-            currentRoute?.includes('categories')) {
-            openMenus.push('Anbar İdarəetməsi');
-        }
-        
-        if (currentRoute?.includes('customers') ||
+        // Check SMS first to differentiate from sms/logs vs sms/send
+        if ((currentRoute?.includes('sales') && !currentRoute?.includes('employee-salaries')) ||
+            currentRoute?.includes('online-orders') ||
+            currentRoute?.includes('customers') ||
             currentRoute?.includes('customer-items') ||
-            currentRoute?.includes('tailor-services') ||
-            currentRoute?.includes('services')) {
-            openMenus.push('Müştəri Xidmətləri');
-            if (currentRoute?.includes('services')) {
-                openMenus.push('Xidmətlər');
-            }
+            (currentRoute?.includes('sms') && !currentRoute?.includes('sms.logs'))) {
+            openMenus.push('Satış və Marketinq');
         }
 
         if (currentRoute?.includes('rentals') ||
             currentRoute?.includes('rental-templates') ||
             currentRoute?.includes('rental-inventory') ||
             currentRoute?.includes('rental-categories')) {
-            openMenus.push('Kirayələr');
+            openMenus.push('İcarə İdarəetməsi');
         }
 
-        if (currentRoute?.includes('stock-movements') ||
+        if (currentRoute?.includes('services') ||
+            currentRoute?.includes('tailor-services')) {
+            openMenus.push('Xidmətlər');
+        }
+
+        // Check for product categories but NOT expense-categories or rental-categories
+        if (currentRoute?.includes('products') ||
+            currentRoute?.includes('suppliers') ||
+            (currentRoute?.includes('categories') &&
+             !currentRoute?.includes('expense-categories') &&
+             !currentRoute?.includes('rental-categories')) ||
+            currentRoute?.includes('stock-movements') ||
             currentRoute?.includes('goods-receipts') ||
             currentRoute?.includes('warehouse-transfers') ||
             currentRoute?.includes('product-returns') ||
-            currentRoute?.includes('alerts') ||
+            (currentRoute?.includes('alerts') && !currentRoute?.includes('telegram')) ||
             (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory'))) {
-            openMenus.push('Stok İdarəetməsi');
+            openMenus.push('Anbar və Stok');
         }
-        
-        if (currentRoute?.includes('sales') ||
-            currentRoute?.includes('sms') ||
-            currentRoute?.includes('online-orders')) {
-            openMenus.push('Satış və Marketinq');
-        }
-        
-        if (currentRoute?.includes('pos')) {
-            // POS is at root level, no need to open any menu
-        }
-        
-        if (currentRoute?.includes('expenses') || 
-            currentRoute?.includes('expense-categories') || 
-            currentRoute?.includes('employee-salaries') || 
+
+        if (currentRoute?.includes('expenses') ||
+            currentRoute?.includes('expense-categories') ||
+            currentRoute?.includes('employee-salaries') ||
             currentRoute?.includes('supplier-payments')) {
             openMenus.push('Maliyyə');
         }
-        
-        if (currentRoute?.includes('reports')) {
-            openMenus.push('Hesabatlar');
+
+        if (currentRoute?.includes('reports') ||
+            currentRoute?.includes('sms.logs') ||
+            currentRoute?.includes('telegram.logs') ||
+            currentRoute?.includes('audit-logs')) {
+            openMenus.push('Hesabatlar və Analitika');
         }
-        
-        if (currentRoute?.includes('receipt-templates') ||
+
+        if (currentRoute?.includes('companies') ||
+            currentRoute?.includes('branches') ||
+            (currentRoute?.includes('users') && !currentRoute?.includes('customers')) ||
+            currentRoute?.includes('warehouses') ||
+            currentRoute?.includes('receipt-templates') ||
             currentRoute?.includes('printer-configs') ||
             currentRoute?.includes('settings') ||
-            currentRoute?.includes('audit-logs')) {
-            openMenus.push('Sistem');
+            currentRoute?.includes('integrations')) {
+            openMenus.push('Parametrlər');
         }
-        
+
         return openMenus;
     };
 
@@ -173,15 +169,13 @@ export default function Authenticated({
                 return prev.filter(name => name !== menuName);
             } else {
                 // Close all other menus at the same level and open this one
-                // Keep 'dashboard' always open
-                const baseMenus = ['Dashboard', 'POS Satış', 'TouchPOS'];
                 const topLevelMenus = navigation.map(item => item.name);
-                
+
                 // If the clicked menu is a top-level menu, close other top-level menus
                 if (topLevelMenus.includes(menuName)) {
                     return ['dashboard', menuName];
                 }
-                
+
                 // Otherwise just toggle normally
                 return [...prev, menuName];
             }
@@ -223,7 +217,43 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Kirayələr',
+                    name: 'Satış və Marketinq',
+                    icon: MegaphoneIcon,
+                    children: [
+                        {
+                            name: 'Satışlar',
+                            href: '/sales',
+                            icon: ShoppingCartIcon,
+                            current: route().current('sales.*') && !route().current('sales.online')
+                        },
+                        {
+                            name: 'Online Sifarişlər',
+                            href: '/online-orders',
+                            icon: ShoppingBagIcon,
+                            current: route().current('online-orders.*')
+                        },
+                        {
+                            name: 'Müştərilər',
+                            href: '/customers',
+                            icon: UserGroupIcon,
+                            current: route().current('customers.*')
+                        },
+                        {
+                            name: 'Müştəri Məhsulları',
+                            href: '/customer-items',
+                            icon: TruckIcon,
+                            current: route().current('customer-items.*')
+                        },
+                        {
+                            name: 'SMS Göndər',
+                            href: '/sms/send-sms',
+                            icon: PaperAirplaneIcon,
+                            current: route().current('sms.send-page')
+                        }
+                    ]
+                },
+                {
+                    name: 'İcarə İdarəetməsi',
                     icon: ClockIcon,
                     children: [
                         {
@@ -253,86 +283,50 @@ export default function Authenticated({
                     ]
                 },
                 {
-                    name: 'Müştəri Xidmətləri',
-                    icon: UserGroupIcon,
+                    name: 'Xidmətlər',
+                    icon: WrenchScrewdriverIcon,
                     children: [
                         {
-                            name: 'Müştərilər',
-                            href: '/customers',
-                            icon: UserGroupIcon,
-                            current: route().current('customers.*')
+                            name: SERVICE_TYPES.tailor.name,
+                            href: getServiceRoute('tailor'),
+                            icon: SERVICE_TYPES.tailor.icon,
+                            current: route().current('services.index') && route().params.serviceType === 'tailor'
                         },
                         {
-                            name: 'Müştəri Məhsulları',
-                            href: '/customer-items',
-                            icon: TruckIcon,
-                            current: route().current('customer-items.*')
+                            name: SERVICE_TYPES.phone_repair.name,
+                            href: getServiceRoute('phone_repair'),
+                            icon: SERVICE_TYPES.phone_repair.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'phone-repair'
                         },
                         {
-                            name: 'Xidmətlər',
-                            icon: WrenchScrewdriverIcon,
-                            children: [
-                                {
-                                    name: SERVICE_TYPES.tailor.name,
-                                    href: getServiceRoute('tailor'),
-                                    icon: SERVICE_TYPES.tailor.icon,
-                                    current: route().current('services.index') && route().params.serviceType === 'tailor'
-                                },
-                                {
-                                    name: SERVICE_TYPES.phone_repair.name,
-                                    href: getServiceRoute('phone_repair'),
-                                    icon: SERVICE_TYPES.phone_repair.icon,
-                                    current: route().current('services.*') && route().params.serviceType === 'phone-repair'
-                                },
-                                {
-                                    name: SERVICE_TYPES.electronics.name,
-                                    href: getServiceRoute('electronics'),
-                                    icon: SERVICE_TYPES.electronics.icon,
-                                    current: route().current('services.*') && route().params.serviceType === 'electronics'
-                                },
-                                {
-                                    name: SERVICE_TYPES.general.name,
-                                    href: getServiceRoute('general'),
-                                    icon: SERVICE_TYPES.general.icon,
-                                    current: route().current('services.*') && route().params.serviceType === 'general'
-                                }
-                            ]
+                            name: SERVICE_TYPES.electronics.name,
+                            href: getServiceRoute('electronics'),
+                            icon: SERVICE_TYPES.electronics.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'electronics'
+                        },
+                        {
+                            name: SERVICE_TYPES.general.name,
+                            href: getServiceRoute('general'),
+                            icon: SERVICE_TYPES.general.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'general'
                         }
                     ]
                 },
                 {
-                    name: 'Satış və Marketinq',
-                    icon: MegaphoneIcon,
-                    children: [
-                        {
-                            name: 'Satışlar',
-                            href: '/sales',
-                            icon: ShoppingCartIcon,
-                            current: route().current('sales.*') && !route().current('sales.online')
-                        },
-                        {
-                            name: 'Online Sifarişlər',
-                            href: '/online-orders',
-                            icon: ShoppingBagIcon,
-                            current: route().current('online-orders.*')
-                        },
-                        {
-                            name: 'SMS Göndər',
-                            href: '/sms/send-sms',
-                            icon: PaperAirplaneIcon,
-                            current: route().current('sms.send-page')
-                        }
-                    ]
-                },
-                {
-                    name: 'Anbar İdarəetməsi',
+                    name: 'Anbar və Stok',
                     icon: CubeIcon,
                     children: [
                         {
                             name: 'Məhsullar',
                             href: '/products',
                             icon: CubeIcon,
-                            current: route().current('products.*')
+                            current: route().current('products.index') || route().current('products.show')
+                        },
+                        {
+                            name: 'Endirimlər',
+                            href: '/products/discounts',
+                            icon: ReceiptPercentIcon,
+                            current: route().current('products.discounts')
                         }
                     ]
                 }
@@ -343,7 +337,43 @@ export default function Authenticated({
         return [
             ...baseNavigation,
         {
-            name: 'Kirayələr',
+            name: 'Satış və Marketinq',
+            icon: MegaphoneIcon,
+            children: [
+                {
+                    name: 'Satışlar',
+                    href: '/sales',
+                    icon: ShoppingCartIcon,
+                    current: route().current('sales.*') && !route().current('sales.online')
+                },
+                {
+                    name: 'Online Sifarişlər',
+                    href: '/online-orders',
+                    icon: ShoppingBagIcon,
+                    current: route().current('online-orders.*')
+                },
+                {
+                    name: 'Müştərilər',
+                    href: '/customers',
+                    icon: UserGroupIcon,
+                    current: route().current('customers.*')
+                },
+                {
+                    name: 'Müştəri Məhsulları',
+                    href: '/customer-items',
+                    icon: TruckIcon,
+                    current: route().current('customer-items.*')
+                },
+                {
+                    name: 'SMS Göndər',
+                    href: '/sms/send-sms',
+                    icon: PaperAirplaneIcon,
+                    current: route().current('sms.send-page')
+                }
+            ]
+        },
+        {
+            name: 'İcarə İdarəetməsi',
             icon: ClockIcon,
             children: [
                 {
@@ -379,86 +409,56 @@ export default function Authenticated({
             ]
         },
         {
-            name: 'Müştəri Xidmətləri',
-            icon: UserGroupIcon,
+            name: 'Xidmətlər',
+            icon: WrenchScrewdriverIcon,
             children: [
                 {
-                    name: 'Müştərilər',
-                    href: '/customers',
-                    icon: UserGroupIcon,
-                    current: route().current('customers.*')
+                    name: SERVICE_TYPES.tailor.name,
+                    href: getServiceRoute('tailor'),
+                    icon: SERVICE_TYPES.tailor.icon,
+                    current: route().current('services.*') && route().params.serviceType === 'tailor'
                 },
                 {
-                    name: 'Müştəri Məhsulları',
-                    href: '/customer-items',
-                    icon: TruckIcon,
-                    current: route().current('customer-items.*')
+                    name: SERVICE_TYPES.phone_repair.name,
+                    href: getServiceRoute('phone_repair'),
+                    icon: SERVICE_TYPES.phone_repair.icon,
+                    current: route().current('services.*') && route().params.serviceType === 'phone-repair'
                 },
                 {
-                    name: 'Xidmətlər',
-                    icon: WrenchScrewdriverIcon,
-                    children: [
-                        {
-                            name: SERVICE_TYPES.tailor.name,
-                            href: getServiceRoute('tailor'),
-                            icon: SERVICE_TYPES.tailor.icon,
-                            current: route().current('services.*') && route().params.serviceType === 'tailor'
-                        },
-                        {
-                            name: SERVICE_TYPES.phone_repair.name,
-                            href: getServiceRoute('phone_repair'),
-                            icon: SERVICE_TYPES.phone_repair.icon,
-                            current: route().current('services.*') && route().params.serviceType === 'phone-repair'
-                        },
-                        {
-                            name: SERVICE_TYPES.electronics.name,
-                            href: getServiceRoute('electronics'),
-                            icon: SERVICE_TYPES.electronics.icon,
-                            current: route().current('services.*') && route().params.serviceType === 'electronics'
-                        },
-                        {
-                            name: SERVICE_TYPES.general.name,
-                            href: getServiceRoute('general'),
-                            icon: SERVICE_TYPES.general.icon,
-                            current: route().current('services.*') && route().params.serviceType === 'general'
-                        }
-                    ]
+                    name: SERVICE_TYPES.electronics.name,
+                    href: getServiceRoute('electronics'),
+                    icon: SERVICE_TYPES.electronics.icon,
+                    current: route().current('services.*') && route().params.serviceType === 'electronics'
+                },
+                {
+                    name: SERVICE_TYPES.general.name,
+                    href: getServiceRoute('general'),
+                    icon: SERVICE_TYPES.general.icon,
+                    current: route().current('services.*') && route().params.serviceType === 'general'
                 }
             ]
         },
         {
-            name: 'Satış və Marketinq',
-            icon: MegaphoneIcon,
-            children: [
-                {
-                    name: 'Satışlar',
-                    href: '/sales',
-                    icon: ShoppingCartIcon,
-                    current: route().current('sales.*') && !route().current('sales.online')
-                },
-                {
-                    name: 'Online Sifarişlər',
-                    href: '/online-orders',
-                    icon: ShoppingBagIcon,
-                    current: route().current('online-orders.*')
-                },
-                {
-                    name: 'SMS Göndər',
-                    href: '/sms/send-sms',
-                    icon: PaperAirplaneIcon,
-                    current: route().current('sms.send-page')
-                }
-            ]
-        },
-        {
-            name: 'Anbar İdarəetməsi',
+            name: 'Anbar və Stok',
             icon: CubeIcon,
             children: [
                 {
                     name: 'Məhsullar',
                     href: '/products',
                     icon: CubeIcon,
-                    current: route().current('products.*')
+                    current: route().current('products.index') || route().current('products.show') || route().current('products.edit') || route().current('products.create')
+                },
+                {
+                    name: 'Endirimlər',
+                    href: '/products/discounts',
+                    icon: ReceiptPercentIcon,
+                    current: route().current('products.discounts')
+                },
+                {
+                    name: 'Kateqoriyalar',
+                    href: '/categories',
+                    icon: TagIcon,
+                    current: route().current('categories.*')
                 },
                 {
                     name: 'Təchizatçılar',
@@ -467,21 +467,9 @@ export default function Authenticated({
                     current: route().current('suppliers.*')
                 },
                 {
-                    name: 'Kateqoriyalar',
-                    href: '/categories',
-                    icon: TagIcon,
-                    current: route().current('categories.*')
-                }
-            ]
-        },
-        {
-            name: 'Stok İdarəetməsi',
-            icon: ArrowsRightLeftIcon,
-            children: [
-                {
                     name: 'İnventar',
                     href: '/inventory',
-                    icon: CubeIcon,
+                    icon: InboxIcon,
                     current: route().current('inventory.*')
                 },
                 {
@@ -547,7 +535,7 @@ export default function Authenticated({
             ]
         },
         {
-            name: 'Hesabatlar',
+            name: 'Hesabatlar və Analitika',
             icon: ChartBarIcon,
             children: [
                 {
@@ -559,20 +547,26 @@ export default function Authenticated({
                 {
                     name: 'SMS Logları',
                     href: '/sms/logs',
-                    icon: ClipboardDocumentListIcon,
+                    icon: ChatBubbleLeftRightIcon,
                     current: route().current('sms.logs')
                 },
                 {
                     name: 'Telegram Logları',
                     href: '/telegram/logs',
-                    icon: ClipboardDocumentListIcon,
+                    icon: PaperAirplaneIcon,
                     current: route().current('telegram.logs')
+                },
+                {
+                    name: 'Audit Logları',
+                    href: '/audit-logs',
+                    icon: DocumentTextIcon,
+                    current: route().current('audit-logs.*')
                 }
             ]
         },
         {
-            name: 'Şirkət',
-            icon: BuildingOffice2Icon,
+            name: 'Parametrlər',
+            icon: CogIcon,
             children: [
                 {
                     name: 'Şirkət Məlumatları',
@@ -597,13 +591,7 @@ export default function Authenticated({
                     href: '/warehouses',
                     icon: HomeModernIcon,
                     current: route().current('warehouses.*')
-                }
-            ]
-        },
-        {
-            name: 'Sistem',
-            icon: CogIcon,
-            children: [
+                },
                 {
                     name: 'Printer Konfiqurasiyası',
                     href: '/printer-configs',
@@ -617,16 +605,16 @@ export default function Authenticated({
                     current: route().current('receipt-templates.*')
                 },
                 {
-                    name: 'Parametrlər',
+                    name: 'Tətbiqlər',
+                    href: '/integrations',
+                    icon: PuzzlePieceIcon,
+                    current: route().current('integrations.*')
+                },
+                {
+                    name: 'Sistem Parametrləri',
                     href: '/settings',
                     icon: CogIcon,
                     current: route().current('settings.*')
-                },
-                {
-                    name: 'Audit Logları',
-                    href: '/audit-logs',
-                    icon: DocumentTextIcon,
-                    current: route().current('audit-logs.*')
                 }
             ]
         }

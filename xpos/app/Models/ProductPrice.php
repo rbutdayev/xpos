@@ -64,7 +64,12 @@ class ProductPrice extends Model
     public function scopeForBranch(Builder $query, ?int $branchId): Builder
     {
         if ($branchId) {
-            return $query->where('branch_id', $branchId);
+            // Look for prices specific to this branch OR prices for all branches (null)
+            // Prioritize branch-specific prices by ordering
+            return $query->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                  ->orWhereNull('branch_id');
+            })->orderByRaw('branch_id IS NULL ASC');
         }
         return $query->whereNull('branch_id');
     }

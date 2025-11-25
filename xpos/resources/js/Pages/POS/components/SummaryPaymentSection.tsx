@@ -14,6 +14,7 @@ interface Props {
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   errors: Record<string, string>;
   cartCount: number;
+  fiscalPrinterEnabled?: boolean;
 }
 
 function SummaryPaymentSection({
@@ -26,6 +27,7 @@ function SummaryPaymentSection({
   setFormData,
   errors,
   cartCount,
+  fiscalPrinterEnabled = false,
 }: Props) {
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6 sticky top-6">
@@ -108,6 +110,46 @@ function SummaryPaymentSection({
               <InputError message={errors.payment_status} className="mt-2" />
             </div>
 
+            {/* Payment Method Selection */}
+            {(formData.payment_status === 'paid' || formData.payment_status === 'partial') && (
+              <div>
+                <InputLabel htmlFor="payment_method" value="Ödəniş Tipi" />
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'nağd' }))}
+                    className={`flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
+                      formData.payment_method === 'nağd'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                    disabled={processing}
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span className="font-medium">Nağd</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'kart' }))}
+                    className={`flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
+                      formData.payment_method === 'kart'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                    disabled={processing}
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <span className="font-medium">Kart</span>
+                  </button>
+                </div>
+                <InputError message={errors.payment_method} className="mt-2" />
+              </div>
+            )}
+
             {(formData.payment_status === 'paid' || formData.payment_status === 'partial') && (
               <div>
                 <InputLabel htmlFor="paid_amount" value="Ödənən Məbləğ" />
@@ -142,7 +184,7 @@ function SummaryPaymentSection({
                 />
                 <InputError message={errors.paid_amount} className="mt-2" />
                 {formData.payment_status === 'paid' && (
-                  <p className="text-xs text-gray-500 mt-1">Tam ödəniş - məbləğ avtomatik hesablanır (Nağd)</p>
+                  <p className="text-xs text-gray-500 mt-1">Tam ödəniş - məbləğ avtomatik hesablanır</p>
                 )}
               </div>
             )}
@@ -216,6 +258,28 @@ function SummaryPaymentSection({
             placeholder="Əlavə qeydlər"
           />
         </div>
+
+        {/* Fiscal Printer Toggle */}
+        {fiscalPrinterEnabled && (
+          <div className="mt-4">
+            <div className="flex items-center">
+              <input
+                id="use_fiscal_printer"
+                type="checkbox"
+                checked={formData.use_fiscal_printer ?? true}
+                onChange={(e) => setFormData((prev: any) => ({ ...prev, use_fiscal_printer: e.target.checked }))}
+                className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                disabled={processing}
+              />
+              <label htmlFor="use_fiscal_printer" className="ml-2 text-sm text-gray-700">
+                Fiskal printerə göndər (E-Kassa)
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              Bu satış fiskal printerə göndəriləcək və qanuni çek çap ediləcək
+            </p>
+          </div>
+        )}
 
         {/* Submit Button */}
         <div className="mt-6">

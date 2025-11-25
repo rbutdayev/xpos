@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductPhotoController;
 use App\Http\Controllers\ProductVariantController;
+use App\Http\Controllers\ProductPriceController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\SupplierController;
@@ -33,12 +34,15 @@ use App\Http\Controllers\SupplierPaymentController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SuperAdmin\FiscalPrinterProviderController;
 use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\SmsController;
+use App\Http\Controllers\FiscalPrinterConfigController;
+use App\Http\Controllers\IntegrationsController;
 use App\Http\Controllers\RentalTemplateController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -82,6 +86,9 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     
     // Security & Audit Center
     Route::get('/security', [SecurityController::class, 'index'])->name('security');
+
+    // Fiscal Printer Providers Management
+    Route::resource('fiscal-printer-providers', FiscalPrinterProviderController::class);
     
     // System Health API endpoints
     Route::prefix('api')->name('api.')->group(function () {
@@ -208,6 +215,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/products/generate-barcode', [ProductController::class, 'generateBarcode'])->name('products.generate-barcode');
     Route::get('/products/bulk-create', [ProductController::class, 'bulkCreate'])->name('products.bulk-create');
     Route::post('/products/bulk-store', [ProductController::class, 'bulkStore'])->name('products.bulk-store');
+    Route::get('/products/discounts', [ProductController::class, 'discounts'])->name('products.discounts');
     Route::resource('products', ProductController::class);
 
     // Product Variants
@@ -227,6 +235,21 @@ Route::middleware(['auth', 'account.access'])->group(function () {
             ->name('variants.destroy');
         Route::post('/{variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])
             ->name('variants.toggle-status');
+    });
+
+    // Product Pricing & Discounts
+    Route::prefix('products/{product}/prices')->group(function() {
+        Route::post('/', [ProductPriceController::class, 'store'])
+            ->name('products.prices.store');
+    });
+
+    Route::prefix('product-prices')->group(function() {
+        Route::put('/{productPrice}', [ProductPriceController::class, 'update'])
+            ->name('product-prices.update');
+        Route::delete('/{productPrice}', [ProductPriceController::class, 'destroy'])
+            ->name('product-prices.destroy');
+        Route::post('/{productPrice}/toggle-active', [ProductPriceController::class, 'toggleActive'])
+            ->name('product-prices.toggle-active');
     });
 
     // Barcode Management
@@ -529,6 +552,13 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Audit Logs
     Route::resource('audit-logs', AuditLogController::class, ['only' => ['index', 'show']]);
 
+    // Integrations Marketplace
+    Route::prefix('integrations')->name('integrations.')->group(function () {
+        Route::get('/', [IntegrationsController::class, 'index'])->name('index');
+        Route::get('/sms', [IntegrationsController::class, 'sms'])->name('sms');
+        Route::get('/telegram', [IntegrationsController::class, 'telegram'])->name('telegram');
+    });
+
     // SMS Management
     Route::prefix('sms')->name('sms.')->group(function () {
         Route::get('/', [SmsController::class, 'index'])->name('index');
@@ -539,6 +569,15 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/send-all', [SmsController::class, 'sendAll'])->name('send-all');
         Route::get('/logs', [SmsController::class, 'logs'])->name('logs');
         Route::post('/test', [SmsController::class, 'test'])->name('test');
+    });
+
+    // Fiscal Printer Management
+    Route::prefix('fiscal-printer')->name('fiscal-printer.')->group(function () {
+        Route::get('/', [FiscalPrinterConfigController::class, 'index'])->name('index');
+        Route::post('/', [FiscalPrinterConfigController::class, 'store'])->name('store');
+        Route::delete('/', [FiscalPrinterConfigController::class, 'destroy'])->name('destroy');
+        Route::post('/test-connection', [FiscalPrinterConfigController::class, 'testConnection'])->name('test-connection');
+        Route::get('/logs', [FiscalPrinterConfigController::class, 'logs'])->name('logs');
     });
 
     // Rental Management

@@ -29,6 +29,7 @@ class Account extends Model
         'shop_customer_sms_template',
         'notification_settings',
         'auto_print_receipt',
+        'fiscal_printer_enabled',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class Account extends Model
         'shop_sms_customer_notifications' => 'boolean',
         'notification_settings' => 'array',
         'auto_print_receipt' => 'boolean',
+        'fiscal_printer_enabled' => 'boolean',
     ];
 
     public function users(): HasMany
@@ -95,6 +97,11 @@ class Account extends Model
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function fiscalPrinterConfig(): HasOne
+    {
+        return $this->hasOne(FiscalPrinterConfig::class);
     }
 
     public function isActive(): bool

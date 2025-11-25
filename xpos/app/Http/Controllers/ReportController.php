@@ -16,6 +16,7 @@ use App\Models\ProductStock;
 use App\Models\Warehouse;
 use App\Models\GeneratedReport;
 use App\Models\SupplierPayment;
+use App\Models\Payment;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -81,6 +82,13 @@ class ReportController extends Controller
                 'description' => 'Kirayə məlumatları və performans',
                 'icon' => 'HomeIcon',
                 'color' => 'teal'
+            ],
+            [
+                'id' => 'cash_drawer',
+                'name' => 'Kassa Hesabatı',
+                'description' => 'Kassa nağd ödəniş və balans hesabatı',
+                'icon' => 'BanknotesIcon',
+                'color' => 'emerald'
             ]
         ];
 
@@ -97,7 +105,7 @@ class ReportController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:sales,inventory,financial,customer,service,end_of_day,rental',
+            'type' => 'required|in:sales,inventory,financial,customer,service,end_of_day,rental,cash_drawer',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
             'format' => 'nullable|in:table,excel,pdf'
@@ -131,6 +139,9 @@ class ReportController extends Controller
                 break;
             case 'rental':
                 $data = $this->generateRentalReport($account, $dateFrom, $dateTo);
+                break;
+            case 'cash_drawer':
+                $data = $this->generateCashDrawerReport($account, $dateFrom, $dateTo);
                 break;
             default:
                 abort(404);
@@ -586,6 +597,22 @@ class ReportController extends Controller
             ->with('customer:id,name')
             ->first();
 
+        // Get payment method breakdown
+        $paymentBreakdown = Payment::whereHas('sale', function($q) use ($account, $dateFrom, $dateTo) {
+                $q->where('account_id', $account->id)
+                  ->countable()
+                  ->whereBetween('sale_date', [$dateFrom, $dateTo]);
+            })
+            ->selectRaw('method, SUM(amount) as total, COUNT(*) as count')
+            ->groupBy('method')
+            ->get()
+            ->mapWithKeys(function($item) {
+                return [$item->method => [
+                    'total' => $item->total,
+                    'count' => $item->count
+                ]];
+            });
+
         $summary = [
             'total_sales' => $summaryData->total_sales ?? 0,
             'total_revenue' => $summaryData->total_revenue ?? 0,
@@ -593,7 +620,12 @@ class ReportController extends Controller
             'top_customer' => $topCustomer && $topCustomer->customer ? [
                 'name' => $topCustomer->customer->name,
                 'total' => $topCustomer->total_spent
-            ] : null
+            ] : null,
+            'payment_methods' => [
+                'nağd' => $paymentBreakdown['nağd'] ?? ['total' => 0, 'count' => 0],
+                'kart' => $paymentBreakdown['kart'] ?? ['total' => 0, 'count' => 0],
+                'köçürmə' => $paymentBreakdown['köçürmə'] ?? ['total' => 0, 'count' => 0],
+            ]
         ];
 
         // Get sales data separately for display
@@ -738,11 +770,26 @@ class ReportController extends Controller
 
         $totalExpenses = $expenses + $supplierPayments;
 
+        // Get payment method breakdown for revenue
+        $paymentBreakdown = Payment::whereHas('sale', function($q) use ($account, $dateFrom, $dateTo) {
+                $q->where('account_id', $account->id)
+                  ->countable()
+                  ->whereBetween('sale_date', [$dateFrom, $dateTo]);
+            })
+            ->selectRaw('method, SUM(amount) as total')
+            ->groupBy('method')
+            ->pluck('total', 'method');
+
         $summary = [
             'total_revenue' => $sales,
             'total_expenses' => $totalExpenses,
             'net_profit' => $sales - $totalExpenses,
-            'profit_margin' => $sales > 0 ? (($sales - $totalExpenses) / $sales) * 100 : 0
+            'profit_margin' => $sales > 0 ? (($sales - $totalExpenses) / $sales) * 100 : 0,
+            'revenue_by_payment_method' => [
+                'nağd' => $paymentBreakdown['nağd'] ?? 0,
+                'kart' => $paymentBreakdown['kart'] ?? 0,
+                'köçürmə' => $paymentBreakdown['köçürmə'] ?? 0,
+            ]
         ];
 
         // Get all sales grouped by date (1 query instead of 365+)
@@ -1025,5 +1072,96 @@ class ReportController extends Controller
             'paid' => 'Ödənildi',
             default => $status
         };
+    }
+
+    private function generateCashDrawerReport($account, $dateFrom, $dateTo)
+    {
+        // Get only cash payments for the period
+        $cashPayments = Payment::whereHas('sale', function($q) use ($account, $dateFrom, $dateTo) {
+                $q->where('account_id', $account->id)
+                  ->whereBetween('sale_date', [$dateFrom, $dateTo]);
+            })
+            ->where('method', 'nağd')
+            ->with(['sale.customer', 'sale.branch', 'sale.user'])
+            ->get();
+
+        // Get cash expenses for the period
+        $cashExpenses = Expense::where('account_id', $account->id)
+            ->whereBetween('expense_date', [$dateFrom, $dateTo])
+            ->where('payment_method', 'nağd')
+            ->get();
+
+        // Calculate totals
+        $totalCashSales = $cashPayments->sum('amount');
+        $totalCashExpenses = $cashExpenses->sum('amount');
+        $netCashFlow = $totalCashSales - $totalCashExpenses;
+
+        // Group by date for daily breakdown
+        $dailyBreakdown = collect();
+        $currentDate = $dateFrom->copy();
+        while ($currentDate->lte($dateTo)) {
+            $dateStr = $currentDate->format('Y-m-d');
+
+            $dayCashSales = $cashPayments->filter(function($payment) use ($dateStr) {
+                return $payment->sale && $payment->sale->sale_date->format('Y-m-d') === $dateStr;
+            })->sum('amount');
+
+            $dayCashExpenses = $cashExpenses->filter(function($expense) use ($dateStr) {
+                return $expense->expense_date->format('Y-m-d') === $dateStr;
+            })->sum('amount');
+
+            $dailyBreakdown->push([
+                'date' => $dateStr,
+                'cash_sales' => $dayCashSales,
+                'cash_expenses' => $dayCashExpenses,
+                'net_cash' => $dayCashSales - $dayCashExpenses,
+                'transaction_count' => $cashPayments->filter(function($payment) use ($dateStr) {
+                    return $payment->sale && $payment->sale->sale_date->format('Y-m-d') === $dateStr;
+                })->count()
+            ]);
+
+            $currentDate->addDay();
+        }
+
+        // Payment details
+        $paymentDetails = $cashPayments->map(function($payment) {
+            return [
+                'payment_id' => $payment->payment_id,
+                'sale_number' => $payment->sale->sale_number ?? 'N/A',
+                'customer_name' => $payment->sale->customer->name ?? 'Naməlum',
+                'branch_name' => $payment->sale->branch->name ?? 'N/A',
+                'cashier' => $payment->sale->user->name ?? 'N/A',
+                'amount' => $payment->amount,
+                'date' => $payment->sale->sale_date->format('Y-m-d H:i'),
+                'notes' => $payment->notes
+            ];
+        });
+
+        // Expense details
+        $expenseDetails = $cashExpenses->map(function($expense) {
+            return [
+                'expense_id' => $expense->expense_id,
+                'category' => $expense->category,
+                'description' => $expense->description,
+                'amount' => $expense->amount,
+                'date' => $expense->expense_date->format('Y-m-d'),
+                'notes' => $expense->notes
+            ];
+        });
+
+        return [
+            'summary' => [
+                'total_cash_sales' => $totalCashSales,
+                'total_cash_expenses' => $totalCashExpenses,
+                'net_cash_flow' => $netCashFlow,
+                'total_transactions' => $cashPayments->count(),
+                'total_expenses_count' => $cashExpenses->count(),
+                'average_cash_sale' => $cashPayments->count() > 0 ? $totalCashSales / $cashPayments->count() : 0,
+            ],
+            'daily_breakdown' => $dailyBreakdown,
+            'payment_details' => $paymentDetails,
+            'expense_details' => $expenseDetails,
+            'type' => 'cash_drawer'
+        ];
     }
 }

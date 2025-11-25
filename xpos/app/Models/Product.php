@@ -280,6 +280,59 @@ class Product extends Model
     }
 
     /**
+     * Get the effective sale price considering active ProductPrice discounts
+     * Returns discounted price if there's an active discount for the branch, otherwise regular sale_price
+     *
+     * @param int|null $branchId Branch ID to check for branch-specific pricing
+     * @return float The effective sale price
+     */
+    public function getEffectivePrice(?int $branchId = null): float
+    {
+        // Try to find an active, effective ProductPrice for this branch
+        $productPrice = $this->prices()
+            ->active()
+            ->effective()
+            ->forBranch($branchId)
+            ->first();
+
+        // If we found a product price with discount, return the discounted price
+        if ($productPrice && $productPrice->discount_percentage > 0) {
+            return $productPrice->discounted_price;
+        }
+
+        // Otherwise return regular sale price
+        return (float) $this->sale_price;
+    }
+
+    /**
+     * Get the discount information for this product
+     * Returns null if no active discount, otherwise returns discount details
+     *
+     * @param int|null $branchId Branch ID to check for branch-specific pricing
+     * @return array|null Discount information or null
+     */
+    public function getActiveDiscount(?int $branchId = null): ?array
+    {
+        $productPrice = $this->prices()
+            ->active()
+            ->effective()
+            ->forBranch($branchId)
+            ->first();
+
+        if ($productPrice && $productPrice->discount_percentage > 0) {
+            return [
+                'discount_percentage' => $productPrice->discount_percentage,
+                'original_price' => $this->sale_price,
+                'discounted_price' => $productPrice->discounted_price,
+                'effective_from' => $productPrice->effective_from,
+                'effective_until' => $productPrice->effective_until,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
      * Check if product has variants
      */
     public function hasVariants(): bool

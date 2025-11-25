@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
+import SuperAdminNav from '@/Components/SuperAdminNav';
 import SecurityMetrics from '../../Components/Admin/Security/SecurityMetrics';
 import ThreatMonitor from '../../Components/Admin/Security/ThreatMonitor';
 import LoginAttempts from '../../Components/Admin/Security/LoginAttempts';
@@ -120,52 +121,7 @@ export default function SecurityCenter({
                 <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-8">
                         {/* Navigation */}
-                        <div className="mb-8">
-                            <nav className="flex space-x-4">
-                                <a
-                                    href="/admin"
-                                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Dashboard
-                                </a>
-                                <a
-                                    href="/admin/accounts"
-                                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Hesablar
-                                </a>
-                                <a
-                                    href="/admin/users"
-                                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    İstifadəçilər
-                                </a>
-                                <a
-                                    href="/admin/system-stats"
-                                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Sistem Statistikası
-                                </a>
-                                <a
-                                    href="/admin/system-health"
-                                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Sistemin statusu
-                                </a>
-                                <a
-                                    href="/admin/security"
-                                    className="bg-red-100 text-red-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Təhlükəsizlik Mərkəzi
-                                </a>
-                                <a
-                                    href="/admin/storage-settings"
-                                    className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Azure Storage
-                                </a>
-                            </nav>
-                        </div>
+                        <SuperAdminNav />
 
                         {/* Action Header */}
                         <div className="flex justify-between items-start">

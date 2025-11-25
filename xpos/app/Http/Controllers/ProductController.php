@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Warehouse;
+use App\Models\Branch;
 use App\Services\BarcodeService;
 use App\Services\DocumentUploadService;
 use App\Services\ProductPhotoService;
@@ -550,7 +551,8 @@ class ProductController extends Controller
                 $query->with(['warehouse', 'user'])->latest('occurred_at')->take(10);
             },
             'documents.uploader',
-            'orderedPhotos'
+            'orderedPhotos',
+            'prices.branch'
         ]);
 
         // Format documents for frontend
@@ -586,10 +588,16 @@ class ProductController extends Controller
             ];
         });
 
+        // Get branches for discount form
+        $branches = \App\Models\Branch::where('account_id', Auth::user()->account_id)
+            ->select('id', 'name')
+            ->get();
+
         return Inertia::render('Products/Show', [
             'product' => $product,
             'documents' => $formattedDocuments,
             'photos' => $formattedPhotos,
+            'branches' => $branches,
         ]);
     }
 
@@ -883,7 +891,7 @@ class ProductController extends Controller
                 ->select('id', 'name', 'sku', 'barcode', 'unit', 'base_unit', 'packaging_quantity', 'sale_price', 'unit_price', 'packaging_size', 'allow_negative_stock', 'type')
                 ->with(['stock' => function ($stockQuery) use ($branchId) {
                     $stockQuery->select('product_id', 'quantity', 'warehouse_id');
-                    
+
                     // If branch is selected, only include stock from warehouses accessible to that branch
                     if ($branchId) {
                         $stockQuery->whereHas('warehouse', function ($warehouseQuery) use ($branchId) {
@@ -894,9 +902,10 @@ class ProductController extends Controller
                         });
                     }
                 }])
+                ->with('prices')
                 ->limit(10)
                 ->get()
-                ->map(function ($product) {
+                ->map(function ($product) use ($branchId) {
                     // Services don't have stock, set to null for services
                     if ($product->type === 'service') {
                         $product->filtered_stock = null;
@@ -906,6 +915,16 @@ class ProductController extends Controller
                         $stockCollection = $product->stock ?? collect();
                         $product->filtered_stock = $stockCollection->sum('quantity');
                     }
+
+                    // Apply discount if available
+                    $effectivePrice = $product->getEffectivePrice($branchId);
+                    $discount = $product->getActiveDiscount($branchId);
+
+                    $product->sale_price = $effectivePrice;
+                    $product->original_price = $discount ? $discount['original_price'] : null;
+                    $product->discount_percentage = $discount ? $discount['discount_percentage'] : null;
+                    $product->has_discount = $discount !== null;
+
                     return $product;
                 });
             
@@ -918,5 +937,77 @@ class ProductController extends Controller
             ]);
             return response()->json(['error' => 'Search failed'], 500);
         }
+    }
+
+    /**
+     * Display all products with active discounts
+     */
+    public function discounts(Request $request)
+    {
+        Gate::authorize('access-account-data');
+
+        $branchId = $request->input('branch_id');
+
+        // Get all products that have active, effective prices with discounts
+        $products = Product::where('account_id', Auth::user()->account_id)
+            ->where('type', 'product')
+            ->where('is_active', true)
+            ->whereHas('prices', function ($query) use ($branchId) {
+                $query->active()
+                      ->effective()
+                      ->where('discount_percentage', '>', 0);
+
+                if ($branchId) {
+                    $query->where(function ($q) use ($branchId) {
+                        $q->where('branch_id', $branchId)
+                          ->orWhereNull('branch_id');
+                    });
+                } else {
+                    $query->whereNull('branch_id');
+                }
+            })
+            ->with(['prices' => function ($query) use ($branchId) {
+                $query->active()
+                      ->effective()
+                      ->where('discount_percentage', '>', 0);
+
+                if ($branchId) {
+                    $query->where(function ($q) use ($branchId) {
+                        $q->where('branch_id', $branchId)
+                          ->orWhereNull('branch_id');
+                    });
+                } else {
+                    $query->whereNull('branch_id');
+                }
+            }, 'prices.branch', 'category'])
+            ->orderBy('name')
+            ->paginate(20)
+            ->through(function ($product) use ($branchId) {
+                $discount = $product->getActiveDiscount($branchId);
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'category' => $product->category?->name,
+                    'original_price' => $product->sale_price,
+                    'discount_percentage' => $discount ? $discount['discount_percentage'] : 0,
+                    'discounted_price' => $discount ? $discount['discounted_price'] : $product->sale_price,
+                    'savings' => $discount ? ($product->sale_price - $discount['discounted_price']) : 0,
+                    'effective_from' => $discount ? $discount['effective_from'] : null,
+                    'effective_until' => $discount ? $discount['effective_until'] : null,
+                    'branch_name' => $product->prices->first()?->branch?->name ?? 'Bütün filiallar',
+                ];
+            });
+
+        return Inertia::render('Products/Discounts/Index', [
+            'products' => $products,
+            'branches' => Branch::where('account_id', Auth::user()->account_id)
+                ->select('id', 'name')
+                ->get(),
+            'filters' => [
+                'branch_id' => $branchId,
+            ],
+        ]);
     }
 }

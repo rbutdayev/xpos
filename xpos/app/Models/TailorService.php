@@ -219,8 +219,6 @@ class TailorService extends Model
     // Helper methods
     public static function generateServiceNumber(int $accountId, string $serviceType = 'tailor'): string
     {
-        $year = date('Y');
-
         // Generate prefix based on service type
         $typePrefixes = [
             'tailor' => 'TS',
@@ -230,22 +228,23 @@ class TailorService extends Model
         ];
 
         $typePrefix = $typePrefixes[$serviceType] ?? 'TS';
-        $prefix = "{$typePrefix}-{$year}-";
 
-        $lastService = static::where('account_id', $accountId)
-            ->where('service_type', $serviceType)
-            ->where('service_number', 'like', "{$prefix}%")
-            ->orderBy('service_number', 'desc')
-            ->first();
+        // Use a raw SQL query with FOR UPDATE to atomically get and lock the max sequence
+        // Only look at new format numbers (prefix + 4 digits, length = 6)
+        $result = \DB::select(
+            "SELECT COALESCE(MAX(CAST(SUBSTRING(service_number, 3) AS UNSIGNED)), 0) as max_sequence
+             FROM tailor_services
+             WHERE account_id = ?
+             AND service_type = ?
+             AND service_number LIKE ?
+             AND LENGTH(service_number) = 6
+             FOR UPDATE",
+            [$accountId, $serviceType, $typePrefix . '%']
+        );
 
-        if ($lastService) {
-            $lastNumber = (int) substr($lastService->service_number, -4);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
+        $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
-        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $typePrefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     public function recalculateCosts(): void

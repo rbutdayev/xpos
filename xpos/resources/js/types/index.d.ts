@@ -112,8 +112,14 @@ export interface ProductPrice {
     id: number;
     product_id: number;
     branch_id?: number;
+    branch?: Branch;
     purchase_price: number;
     sale_price: number;
+    discount_percentage: number;
+    min_sale_price?: number;
+    effective_from: string;
+    effective_until?: string;
+    is_active: boolean;
     created_at: string;
     updated_at?: string;
 }
@@ -169,6 +175,7 @@ export interface Product {
     account_id: number;
     stock?: ProductStock[];
     variants?: ProductVariant[];
+    prices?: ProductPrice[];
     latest_price?: ProductPrice;
     total_stock?: number;
     warehouses_count?: number;
@@ -754,7 +761,7 @@ export interface SaleItem {
 export interface Payment {
     payment_id: number;
     sale_id: number;
-    method: 'nağd' | 'kart' | 'köçürmə' | 'naxşiyyə';
+    method: 'nağd' | 'kart' | 'köçürmə';
     amount: number;
     transaction_id?: string;
     card_type?: string;

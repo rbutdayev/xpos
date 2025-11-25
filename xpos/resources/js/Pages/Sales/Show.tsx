@@ -108,7 +108,6 @@ export default function Show({ auth, sale }: SalesShowProps) {
             'nağd': 'Nağd',
             'kart': 'Kart',
             'köçürmə': 'Köçürmə',
-            'naxşiyyə': 'Naxşiyyə',
         };
         return labels[method as keyof typeof labels] || method;
     };

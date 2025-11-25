@@ -34,7 +34,8 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
             'financial': 'Maliyyə hesabatı',
             'customer': 'Müştəri hesabatı',
             'service': 'Servis Hesabatı',
-            'rental': 'Kirayə Hesabatı'
+            'rental': 'Kirayə Hesabatı',
+            'cash_drawer': 'Kassa Hesabatı'
         };
         return titles[type] || 'Hesabat';
     };
@@ -203,6 +204,27 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                         </div>
                     </div>
                 );
+            case 'cash_drawer':
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="bg-green-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-green-600">Nağd Satış</h3>
+                            <p className="text-2xl font-bold text-green-900">{formatCurrency(data.summary.total_cash_sales)}</p>
+                        </div>
+                        <div className="bg-red-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-red-600">Nağd Xərclər</h3>
+                            <p className="text-2xl font-bold text-red-900">{formatCurrency(data.summary.total_cash_expenses)}</p>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-blue-600">Xalis Nağd</h3>
+                            <p className="text-2xl font-bold text-blue-900">{formatCurrency(data.summary.net_cash_flow)}</p>
+                        </div>
+                        <div className="bg-purple-50 rounded-lg p-6">
+                            <h3 className="text-sm font-medium text-purple-600">Əməliyyat Sayı</h3>
+                            <p className="text-2xl font-bold text-purple-900">{formatNumber(data.summary.total_transactions)}</p>
+                        </div>
+                    </div>
+                );
             default:
                 return null;
         }
@@ -223,6 +245,8 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return data.services || [];
             case 'rental':
                 return data.rentals || [];
+            case 'cash_drawer':
+                return data.daily_breakdown || [];
             default:
                 return [];
         }
@@ -279,27 +303,51 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                     {/* Summary Cards */}
                     {getSummaryCards()}
 
-                    {/* End of Day Report Special Layout */}
-                    {reportType === 'end_of_day' ? (
-                        <>
-                            {/* Payment Methods Breakdown */}
-                            <div className="bg-white rounded-lg shadow">
-                                <div className="px-6 py-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-medium text-gray-900">Ödəmə Üsulları</h3>
-                                </div>
-                                <div className="p-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {Object.entries(data.summary.payment_methods || {}).map(([method, amount]: [string, any]) => (
+                    {/* Payment Methods Breakdown - Show for end_of_day, sales, financial reports */}
+                    {(reportType === 'end_of_day' || reportType === 'sales' || reportType === 'financial') && (
+                        <div className="bg-white rounded-lg shadow">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-900">Ödəmə Üsulları</h3>
+                            </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                    {reportType === 'sales' && data.summary.payment_methods ? (
+                                        Object.entries(data.summary.payment_methods).map(([method, methodData]: [string, any]) => (
+                                            <div key={method} className="bg-gray-50 rounded-lg p-4">
+                                                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                                                    {method === 'nağd' ? 'Nağd' : method === 'kart' ? 'Kart' : method === 'köçürmə' ? 'Köçürmə' : method}
+                                                </h4>
+                                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(methodData.total)}</p>
+                                                <p className="text-sm text-gray-600">{methodData.count} əməliyyat</p>
+                                            </div>
+                                        ))
+                                    ) : reportType === 'financial' && data.summary.revenue_by_payment_method ? (
+                                        Object.entries(data.summary.revenue_by_payment_method).map(([method, amount]: [string, any]) => (
                                             <div key={method} className="bg-gray-50 rounded-lg p-4">
                                                 <h4 className="text-sm font-medium text-gray-600 mb-2">
                                                     {method === 'nağd' ? 'Nağd' : method === 'kart' ? 'Kart' : method === 'köçürmə' ? 'Köçürmə' : method}
                                                 </h4>
                                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(amount)}</p>
                                             </div>
-                                        ))}
-                                    </div>
+                                        ))
+                                    ) : (
+                                        Object.entries(data.summary.payment_methods || {}).map(([method, amount]: [string, any]) => (
+                                            <div key={method} className="bg-gray-50 rounded-lg p-4">
+                                                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                                                    {method === 'nağd' ? 'Nağd' : method === 'kart' ? 'Kart' : method === 'köçürmə' ? 'Köçürmə' : method}
+                                                </h4>
+                                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(amount)}</p>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Special Layouts */}
+                    {reportType === 'end_of_day' || reportType === 'cash_drawer' ? (
+                        <>
 
                             {/* Hourly Breakdown */}
                             {data.hourly_breakdown && data.hourly_breakdown.length > 0 && (
@@ -389,6 +437,41 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.sku}</td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.quantity}</td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatCurrency(product.revenue)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Cash Drawer Report - Daily Breakdown Table */}
+                            {reportType === 'cash_drawer' && data.daily_breakdown && data.daily_breakdown.length > 0 && (
+                                <div className="bg-white rounded-lg shadow">
+                                    <div className="px-6 py-4 border-b border-gray-200">
+                                        <h3 className="text-lg font-medium text-gray-900">Günlük Kassa Hesabatı</h3>
+                                    </div>
+                                    <div className="p-6">
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarix</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nağd Satış</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nağd Xərc</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Xalis Nağd</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Əməliyyat</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-200">
+                                                    {data.daily_breakdown.map((day: any, index: number) => (
+                                                        <tr key={index}>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{day.date}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">{formatCurrency(day.cash_sales)}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">{formatCurrency(day.cash_expenses)}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-bold">{formatCurrency(day.net_cash)}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{day.transaction_count}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>

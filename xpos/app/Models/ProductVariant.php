@@ -96,11 +96,37 @@ class ProductVariant extends Model
 
     /**
      * Get the final price (base product price + adjustment)
+     * Note: Uses regular sale_price for backwards compatibility
+     * For discounted prices, use getFinalPriceForBranch($branchId)
      */
     public function getFinalPriceAttribute(): float
     {
         $basePrice = $this->product ? $this->product->sale_price : 0;
         return round($basePrice + $this->price_adjustment, 2);
+    }
+
+    /**
+     * Get the final price considering active ProductPrice discounts
+     * Uses the effective (discounted) price as the base
+     *
+     * @param int|null $branchId Branch ID to check for branch-specific pricing
+     * @return float The final price with discount applied
+     */
+    public function getFinalPriceForBranch(?int $branchId = null): float
+    {
+        $basePrice = $this->product ? $this->product->getEffectivePrice($branchId) : 0;
+        return round($basePrice + $this->price_adjustment, 2);
+    }
+
+    /**
+     * Get the discount information for this variant's product
+     *
+     * @param int|null $branchId Branch ID to check for branch-specific pricing
+     * @return array|null Discount information or null
+     */
+    public function getActiveDiscount(?int $branchId = null): ?array
+    {
+        return $this->product ? $this->product->getActiveDiscount($branchId) : null;
     }
 
     /**

@@ -403,23 +403,23 @@ class RentalInventory extends Model
 
     public static function generateInventoryNumber(int $accountId): string
     {
-        // Include account ID in prefix to ensure uniqueness across accounts
-        $prefix = 'INV' . $accountId . '-';
-        $date = now()->format('Ym');
-        $fullPrefix = $prefix . $date;
+        $prefix = 'INV';
 
+        // Use a raw SQL query with FOR UPDATE to atomically get and lock the max sequence
+        // Only look at new format numbers (INV + 4 digits, length = 7)
         $result = \DB::select(
-            "SELECT COALESCE(MAX(CAST(SUBSTRING(inventory_number, LENGTH(?) + 1) AS UNSIGNED)), 0) as max_sequence
+            "SELECT COALESCE(MAX(CAST(SUBSTRING(inventory_number, 4) AS UNSIGNED)), 0) as max_sequence
              FROM rental_inventory
              WHERE account_id = ?
              AND inventory_number LIKE ?
+             AND LENGTH(inventory_number) = 7
              FOR UPDATE",
-            [$fullPrefix, $accountId, $fullPrefix . '%']
+            [$accountId, $prefix . '%']
         );
 
         $sequence = ($result[0]->max_sequence ?? 0) + 1;
 
-        return $fullPrefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     // New product independence methods

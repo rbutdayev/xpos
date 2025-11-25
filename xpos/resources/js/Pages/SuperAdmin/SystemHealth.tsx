@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Head } from '@inertiajs/react';
 import { useSystemHealth } from '@/Hooks/Admin/useSystemHealth';
+import SuperAdminNav from '@/Components/SuperAdminNav';
 import SystemMetrics from '@/Components/Admin/Health/SystemMetrics';
 import QueueMonitor from '@/Components/Admin/Health/QueueMonitor';
 import ResourceUsage from '@/Components/Admin/Health/ResourceUsage';
@@ -133,46 +134,7 @@ export default function SystemHealth({
 
                 <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Navigation */}
-                    <div className="mb-8">
-                        <nav className="flex space-x-4">
-                            <a
-                                href="/admin"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Dashboard
-                            </a>
-                            <a
-                                href="/admin/accounts"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Hesablar
-                            </a>
-                            <a
-                                href="/admin/users"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                İstifadəçilər
-                            </a>
-                            <a
-                                href="/admin/system-stats"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Sistem Statistikası
-                            </a>
-                            <a
-                                href="/admin/system-health"
-                                className="bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Sistemin statusu
-                            </a>
-                            <a
-                                href="/admin/storage-settings"
-                                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Azure Storage
-                            </a>
-                        </nav>
-                    </div>
+                    <SuperAdminNav />
 
                     {/* Actions Bar */}
                     <div className="flex items-center justify-between mb-6">

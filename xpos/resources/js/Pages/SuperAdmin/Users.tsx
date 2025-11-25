@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import SecondaryButton from '@/Components/SecondaryButton';
+import SuperAdminNav from '@/Components/SuperAdminNav';
 
 interface User {
     id: number;
@@ -93,22 +94,7 @@ export default function SuperAdminUsers({ users, search }: Props) {
 
                 <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Navigation */}
-                    <div className="mb-8">
-                        <nav className="flex space-x-4">
-                            <a href="/admin" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                                Dashboard
-                            </a>
-                            <a href="/admin/accounts" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                                Hesablar
-                            </a>
-                            <a href="/admin/users" className="bg-blue-100 text-blue-700 px-3 py-2 rounded-md text-sm font-medium">
-                                İstifadəçilər
-                            </a>
-                            <a href="/admin/system-stats" className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                                Sistem Statistikası
-                            </a>
-                        </nav>
-                    </div>
+                    <SuperAdminNav />
 
                     {/* Search */}
                     <div className="mb-6">
