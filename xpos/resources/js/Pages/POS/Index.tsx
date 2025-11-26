@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps, Product, Customer, Branch, LoyaltyProgram } from '@/types';
 import CustomerSection from './components/CustomerSection';
@@ -9,15 +9,15 @@ import SummaryPaymentSection from './components/SummaryPaymentSection';
 import VariantSelectorModal from './components/VariantSelectorModal';
 import { useCart } from './hooks/useCart';
 import { useSearch } from './hooks/useSearch';
+import toast from 'react-hot-toast';
 
 interface POSIndexProps extends PageProps {
-  customers: Customer[];
   branches: Branch[];
   fiscalPrinterEnabled: boolean;
   loyaltyProgram?: LoyaltyProgram | null;
 }
 
-export default function Index({ auth, customers, branches, fiscalPrinterEnabled, loyaltyProgram }: POSIndexProps) {
+export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyProgram }: POSIndexProps) {
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -49,16 +49,19 @@ export default function Index({ auth, customers, branches, fiscalPrinterEnabled,
     points_to_redeem: 0,
   });
 
-  // Selected customer
-  const selectedCustomer = useMemo(
-    () => customers.find((c) => c.id.toString() === formData.customer_id) || null,
-    [customers, formData.customer_id]
-  );
+  // Selected customer will be managed by CustomerSection
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   // Cart state and operations
   const { cart, setCart, subtotal, addToCart, updateCartItem, removeFromCart, changeItemUnit } = useCart([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
+
+  // Fiscal printer status
+  const [fiscalPrintStatus, setFiscalPrintStatus] = useState<string | null>(null);
+  const [fiscalPrintLoading, setFiscalPrintLoading] = useState(false);
+
+  const { flash } = usePage<any>().props;
 
   // Variant selector modal state
   const [variantModalOpen, setVariantModalOpen] = useState(false);
@@ -82,6 +85,77 @@ export default function Index({ auth, customers, branches, fiscalPrinterEnabled,
     // For partial payments, keep user input and calculate the other amount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.payment_status, grandTotal]);
+
+  // Fiscal printer status polling
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    const pollFiscalStatus = async (saleId: number) => {
+      try {
+        const response = await fetch(`/api/jobs/sale/${saleId}/status`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+          console.error('Failed to fetch fiscal status');
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+          setFiscalPrintStatus('completed');
+          setFiscalPrintLoading(false);
+          toast.success(`Fiskal çap tamamlandı! №${data.fiscal_number}`, {
+            duration: 5000,
+            icon: '✅'
+          });
+          if (interval) clearInterval(interval);
+        } else if (data.status === 'failed') {
+          setFiscalPrintStatus('failed');
+          setFiscalPrintLoading(false);
+          toast.error(`Fiskal çap xətası: ${data.error || 'Naməlum xəta'}`, {
+            duration: 7000,
+            icon: '❌'
+          });
+          if (interval) clearInterval(interval);
+        } else if (data.status === 'pending' || data.status === 'processing') {
+          setFiscalPrintStatus(data.status);
+          setFiscalPrintLoading(true);
+        }
+      } catch (error) {
+        console.error('Error polling fiscal status:', error);
+      }
+    };
+
+    // Start polling if sale was just completed
+    if (flash?.sale_completed && flash?.sale_id) {
+      setFiscalPrintLoading(true);
+      pollFiscalStatus(flash.sale_id); // Initial poll
+      interval = setInterval(() => pollFiscalStatus(flash.sale_id), 2000); // Poll every 2 seconds
+
+      // Stop polling after 2 minutes
+      timeout = setTimeout(() => {
+        if (interval) clearInterval(interval);
+        if (fiscalPrintLoading) {
+          setFiscalPrintLoading(false);
+          toast.error('Fiskal çap müddəti doldu. Bridge aktiv deyilmi?', {
+            duration: 5000
+          });
+        }
+      }, 120000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [flash?.sale_completed, flash?.sale_id]);
 
   // Handle product selection (check if has variants)
   const handleProductSelect = (product: Product) => {
@@ -182,6 +256,25 @@ export default function Index({ auth, customers, branches, fiscalPrinterEnabled,
       <Head title="POS Satış" />
       <div className="py-6">
         <div className="w-full">
+          {/* Fiscal Print Status Banner */}
+          {fiscalPrintLoading && (
+            <div className="mb-4 bg-blue-50 border-l-4 border-blue-400 p-4 mx-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-700">
+                    Fiskal çap gözləyir... ({fiscalPrintStatus === 'processing' ? 'İşlənir' : 'Növbədə'})
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             {/* Display general errors */}
             {(errors.items || errors.general) && (
@@ -196,12 +289,12 @@ export default function Index({ auth, customers, branches, fiscalPrinterEnabled,
               <div className="lg:col-span-2">
                 {/* Customer Selection */}
                 <CustomerSection
-                  customers={customers}
                   branches={branches}
                   formData={formData}
                   setFormData={setFormData}
                   errors={errors}
                   userBranchId={auth?.user?.branch_id}
+                  onCustomerChange={setSelectedCustomer}
                 />
 
                 {/* Product Search */}

@@ -29,12 +29,28 @@ class FiscalPrinterProviderSeeder extends Seeder
             [
                 'code' => 'caspos',
                 'name' => 'Caspos',
-                'description' => 'Caspos Smart Kassa inteqrasiyası',
+                'description' => 'Caspos Smart Kassa inteqrasiyası (Operation-based API)',
                 'default_port' => 5544,
-                'api_base_path' => '/api',
-                'print_endpoint' => 'print',
-                'status_endpoint' => 'status',
+                'api_base_path' => '', // Caspos uses base URL, operation sent in request body
+                'print_endpoint' => '', // Not used - operation: "sale" in request body
+                'status_endpoint' => '', // Not used - operation: "getInfo" in request body
                 'required_fields' => json_encode(['username', 'password', 'device_serial']),
+                'endpoint_config' => json_encode([
+                    'uses_operation_field' => true,
+                    'content_type' => 'application/json; charset=utf-8',
+                    'operations' => [
+                        'login' => 'toLogin',
+                        'logout' => 'toLogout',
+                        'info' => 'getInfo',
+                        'shift_status' => 'getShiftStatus',
+                        'open_shift' => 'openShift',
+                        'close_shift' => 'closeShift',
+                        'sale' => 'sale',
+                        'money_back' => 'moneyBack',
+                        'deposit' => 'deposit',
+                        'withdraw' => 'withDraw',
+                    ]
+                ]),
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -80,6 +96,13 @@ class FiscalPrinterProviderSeeder extends Seeder
             ],
         ];
 
-        DB::table('fiscal_printer_providers')->insert($providers);
+        // Use updateOrCreate to avoid duplicate errors if seeder runs multiple times
+        foreach ($providers as $provider) {
+            DB::table('fiscal_printer_providers')
+                ->updateOrInsert(
+                    ['code' => $provider['code']], // Match on code
+                    $provider // Update/insert all fields
+                );
+        }
     }
 }

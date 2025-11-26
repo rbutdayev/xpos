@@ -79,7 +79,7 @@ export default function TouchPayment({
   const paymentButtons = [
     {
       key: 'paid',
-      label: 'Nağd Ödəniş',
+      label: 'Ödəniş',
       icon: BanknotesIcon,
       color: 'bg-green-500 hover:bg-green-600',
       active: formData.payment_status === 'paid',

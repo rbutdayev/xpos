@@ -114,9 +114,12 @@ class User extends Authenticatable
     /**
      * Check if this user is a system user (e.g., Online Shop user)
      * System users cannot be edited, deleted, or viewed
+     * MULTI-TENANT: Checks for shop-slug-specific system user emails
      */
     public function isSystemUser(): bool
     {
-        return $this->email === 'online-shop@system.local';
+        // Match pattern: online-shop@system-{shop_slug}.local
+        return str_starts_with($this->email, 'online-shop@system-')
+            && str_ends_with($this->email, '.local');
     }
 }

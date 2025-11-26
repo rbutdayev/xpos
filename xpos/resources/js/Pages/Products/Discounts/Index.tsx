@@ -33,18 +33,38 @@ interface Props extends PageProps {
     branches: Branch[];
     filters: {
         branch_id?: string;
+        tab?: string;
     };
 }
 
 export default function Index({ auth, products, branches, filters }: Props) {
     const [selectedBranch, setSelectedBranch] = useState(filters.branch_id || '');
+    const [activeTab, setActiveTab] = useState(filters.tab || 'active');
 
     const handleBranchChange = (branchId: string) => {
         setSelectedBranch(branchId);
-        router.get(route('products.discounts'), { branch_id: branchId || undefined }, {
+        router.get(route('products.discounts'), {
+            branch_id: branchId || undefined,
+            tab: activeTab
+        }, {
             preserveState: true,
             preserveScroll: true,
         });
+    };
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        router.get(route('products.discounts'), {
+            branch_id: selectedBranch || undefined,
+            tab: tab
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleReEnable = (productId: number) => {
+        router.visit(route('products.show', productId));
     };
 
     const formatDate = (dateString: string) => {
@@ -75,6 +95,34 @@ export default function Index({ auth, products, branches, filters }: Props) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    {/* Tabs */}
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                        <div className="border-b border-gray-200">
+                            <nav className="-mb-px flex">
+                                <button
+                                    onClick={() => handleTabChange('active')}
+                                    className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                                        activeTab === 'active'
+                                            ? 'border-green-500 text-green-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    Aktiv Endirimlər
+                                </button>
+                                <button
+                                    onClick={() => handleTabChange('history')}
+                                    className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                                        activeTab === 'history'
+                                            ? 'border-orange-500 text-orange-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    Tarixçə
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
                     {/* Filter Section */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                         <div className="p-6">
@@ -104,10 +152,13 @@ export default function Index({ auth, products, branches, filters }: Props) {
                             <div className="p-12 text-center">
                                 <TagIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                    Endirimli məhsul yoxdur
+                                    {activeTab === 'active' ? 'Endirimli məhsul yoxdur' : 'Tarixçə yoxdur'}
                                 </h3>
                                 <p className="text-gray-600">
-                                    Seçilmiş filial üçün hal-hazırda aktiv endirim yoxdur.
+                                    {activeTab === 'active'
+                                        ? 'Seçilmiş filial üçün hal-hazırda aktiv endirim yoxdur.'
+                                        : 'Seçilmiş filial üçün bitmiş endirim yoxdur.'
+                                    }
                                 </p>
                             </div>
                         </div>
@@ -141,11 +192,18 @@ export default function Index({ auth, products, branches, filters }: Props) {
 
                                             {/* Discount Badge */}
                                             <div className="mb-4">
-                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full">
-                                                    <TagIcon className="w-5 h-5 text-red-600" />
-                                                    <span className="text-lg font-bold text-red-600">
-                                                        -{product.discount_percentage}%
-                                                    </span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full">
+                                                        <TagIcon className="w-5 h-5 text-red-600" />
+                                                        <span className="text-lg font-bold text-red-600">
+                                                            -{product.discount_percentage}%
+                                                        </span>
+                                                    </div>
+                                                    {activeTab === 'history' && (
+                                                        <span className="px-2 py-0.5 text-xs font-medium bg-orange-600 text-white rounded-full">
+                                                            Vaxtı keçib
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -200,9 +258,13 @@ export default function Index({ auth, products, branches, filters }: Props) {
                                             <div className="mt-4">
                                                 <a
                                                     href={route('products.show', product.id)}
-                                                    className="block w-full text-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                                                    className={`block w-full text-center px-4 py-2 rounded-md transition-colors ${
+                                                        activeTab === 'history'
+                                                            ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                                            : 'bg-green-600 text-white hover:bg-green-700'
+                                                    }`}
                                                 >
-                                                    Məhsula bax
+                                                    {activeTab === 'history' ? 'Yenidən aktivləşdir' : 'Məhsula bax'}
                                                 </a>
                                             </div>
                                         </div>

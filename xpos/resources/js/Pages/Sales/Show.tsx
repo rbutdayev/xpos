@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrintModal from '@/Components/PrintModal';
@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
 import { PageProps, Sale } from '@/types';
+import toast from 'react-hot-toast';
 
 interface SalesShowProps extends PageProps {
     sale: Sale & {
@@ -63,7 +64,80 @@ interface SalesShowProps extends PageProps {
 
 export default function Show({ auth, sale }: SalesShowProps) {
     const [showPrintModal, setShowPrintModal] = React.useState(false);
+    const [fiscalPrintStatus, setFiscalPrintStatus] = useState<string | null>(null);
+    const [fiscalPrintLoading, setFiscalPrintLoading] = useState(false);
     const { flash } = usePage<any>().props;
+
+    // Fiscal printer status polling
+    useEffect(() => {
+        let interval: NodeJS.Timeout | null = null;
+        let timeout: NodeJS.Timeout | null = null;
+
+        const pollFiscalStatus = async () => {
+            try {
+                const response = await fetch(`/api/jobs/sale/${sale.sale_id}/status`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to fetch fiscal status');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'completed') {
+                    setFiscalPrintStatus('completed');
+                    setFiscalPrintLoading(false);
+                    toast.success(`Fiskal çap tamamlandı! №${data.fiscal_number}`, {
+                        duration: 5000,
+                        icon: '✅'
+                    });
+                    if (interval) clearInterval(interval);
+                } else if (data.status === 'failed') {
+                    setFiscalPrintStatus('failed');
+                    setFiscalPrintLoading(false);
+                    toast.error(`Fiskal çap xətası: ${data.error || 'Naməlum xəta'}`, {
+                        duration: 7000,
+                        icon: '❌'
+                    });
+                    if (interval) clearInterval(interval);
+                } else if (data.status === 'pending' || data.status === 'processing') {
+                    setFiscalPrintStatus(data.status);
+                    setFiscalPrintLoading(true);
+                }
+            } catch (error) {
+                console.error('Error polling fiscal status:', error);
+            }
+        };
+
+        // Start polling if this is a new sale (from flash)
+        if (flash?.auto_print && flash?.print_sale_id === sale.sale_id) {
+            setFiscalPrintLoading(true);
+            pollFiscalStatus(); // Initial poll
+            interval = setInterval(pollFiscalStatus, 2000); // Poll every 2 seconds
+
+            // Stop polling after 2 minutes
+            timeout = setTimeout(() => {
+                if (interval) clearInterval(interval);
+                if (fiscalPrintLoading) {
+                    setFiscalPrintLoading(false);
+                    toast.error('Fiskal çap müddəti doldu. Bridge aktiv deyilmi?', {
+                        duration: 5000
+                    });
+                }
+            }, 120000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+            if (timeout) clearTimeout(timeout);
+        };
+    }, [flash, sale.sale_id]);
 
     // Auto-print detection
     useEffect(() => {
@@ -154,6 +228,25 @@ export default function Show({ auth, sale }: SalesShowProps) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                    {/* Fiscal Print Status Banner */}
+                    {fiscalPrintLoading && (
+                        <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-blue-700">
+                                        Fiskal çap gözləyir... ({fiscalPrintStatus === 'processing' ? 'İşlənir' : 'Növbədə'})
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Sale Header */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -163,8 +256,8 @@ export default function Show({ auth, sale }: SalesShowProps) {
                             </div>
                             <div>
                                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                                <StatusBadge 
-                                    status={sale.status} 
+                                <StatusBadge
+                                    status={sale.status}
                                 />
                             </div>
                             <div>

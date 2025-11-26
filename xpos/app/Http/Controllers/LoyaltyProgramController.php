@@ -11,6 +11,7 @@ class LoyaltyProgramController extends Controller
 {
     /**
      * Display loyalty program settings
+     * Note: We allow access even when module is disabled so users can enable it from the Danger Zone
      */
     public function index(): Response
     {
@@ -27,6 +28,13 @@ class LoyaltyProgramController extends Controller
      */
     public function store(Request $request)
     {
+        $account = auth()->user()->account;
+
+        // Check if loyalty module is enabled
+        if (!$account->loyalty_module_enabled) {
+            abort(403, 'Loyallıq proqramı modulu aktivləşdirilməyib.');
+        }
+
         $validated = $request->validate([
             'points_per_currency_unit' => 'required|numeric|min:0|max:1000',
             'redemption_rate' => 'required|numeric|min:1|max:10000',
@@ -52,6 +60,13 @@ class LoyaltyProgramController extends Controller
      */
     public function toggleActive()
     {
+        $account = auth()->user()->account;
+
+        // Check if loyalty module is enabled
+        if (!$account->loyalty_module_enabled) {
+            abort(403, 'Loyallıq proqramı modulu aktivləşdirilməyib.');
+        }
+
         $accountId = auth()->user()->account_id;
         $program = LoyaltyProgram::where('account_id', $accountId)->firstOrFail();
 
@@ -70,9 +85,33 @@ class LoyaltyProgramController extends Controller
      */
     public function show()
     {
+        $account = auth()->user()->account;
+
+        // Check if loyalty module is enabled
+        if (!$account->loyalty_module_enabled) {
+            return response()->json(['program' => null, 'module_disabled' => true], 403);
+        }
+
         $accountId = auth()->user()->account_id;
         $program = LoyaltyProgram::where('account_id', $accountId)->first();
 
         return response()->json(['program' => $program]);
+    }
+
+    /**
+     * Toggle loyalty module enabled/disabled for the entire account
+     */
+    public function toggleModule()
+    {
+        $account = auth()->user()->account;
+
+        $account->loyalty_module_enabled = !$account->loyalty_module_enabled;
+        $account->save();
+
+        return redirect()->back()->with('success',
+            $account->loyalty_module_enabled
+                ? 'Loyallıq proqramı modulu aktivləşdirildi.'
+                : 'Loyallıq proqramı modulu söndürüldü.'
+        );
     }
 }

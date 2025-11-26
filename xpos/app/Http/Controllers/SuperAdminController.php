@@ -194,14 +194,6 @@ class SuperAdminController extends Controller
     {
         try {
             $validated = $request->validate([
-                'company_name' => 'required|string|max:255',
-                'email' => 'required|email|unique:accounts,email',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'nullable|string|max:500',
-                'subscription_plan' => 'required|in:başlanğıc,professional,enterprise',
-                'is_active' => 'boolean',
-                // User creation fields
-                'user_name' => 'required|string|max:255',
                 'user_email' => 'required|email|unique:users,email',
                 'user_password' => 'required|string|min:8',
             ]);
@@ -215,14 +207,19 @@ class SuperAdminController extends Controller
 
         try {
             DB::transaction(function () use ($validated) {
+                // Generate a temporary company name from email
+                // User will set the actual company name during setup wizard
+                $emailUsername = explode('@', $validated['user_email'])[0];
+                $tempCompanyName = ucfirst($emailUsername) . ' Company';
+
                 // Create account with explicit defaults
                 $account = Account::create([
-                    'company_name' => $validated['company_name'],
-                    'email' => $validated['email'] ?? null,
-                    'phone' => $validated['phone'] ?? null,
-                    'address' => $validated['address'] ?? null,
-                    'subscription_plan' => $validated['subscription_plan'],
-                    'is_active' => $validated['is_active'] ?? true,
+                    'company_name' => $tempCompanyName, // Temporary name - will be set in setup wizard
+                    'email' => $validated['user_email'], // Use account owner's email
+                    'phone' => null,
+                    'address' => null,
+                    'subscription_plan' => 'başlanğıc', // Default plan
+                    'is_active' => true,
                     'language' => 'az',
                     'settings' => [
                         'timezone' => 'Asia/Baku',
@@ -236,17 +233,18 @@ class SuperAdminController extends Controller
                     throw new \Exception('Account creation failed - no ID returned');
                 }
 
-                // Create initial user as account owner (no branch_id - user will set up during onboarding)
+                // Create initial user as account owner (no branch_id - will be set during setup wizard)
+                // Company, Branch, and Warehouse will be created during the setup wizard
                 $user = User::create([
                     'account_id' => $account->id,
-                    'name' => $validated['user_name'],
+                    'name' => ucfirst($emailUsername), // Use email username as initial name
                     'email' => $validated['user_email'],
                     'password' => bcrypt($validated['user_password']),
                     'role' => 'account_owner',
                     'status' => 'active',
                     'position' => 'Administrator',
                     'hire_date' => now(),
-                    'branch_id' => null, // Will be set during onboarding wizard
+                    'branch_id' => null, // Will be set during setup wizard
                     'permissions' => [
                         'manage_users' => true,
                         'manage_products' => true,
@@ -261,10 +259,10 @@ class SuperAdminController extends Controller
                     throw new \Exception('User creation failed - no ID returned');
                 }
 
-                \Log::info('Account and user created successfully', [
+                \Log::info('Account and user created successfully - user will complete setup wizard', [
                     'account_id' => $account->id,
                     'user_id' => $user->id,
-                    'company_name' => $validated['company_name']
+                    'email' => $validated['user_email']
                 ]);
             });
         } catch (\Exception $e) {
@@ -273,13 +271,13 @@ class SuperAdminController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'sql_error' => $e instanceof \Illuminate\Database\QueryException ? $e->errorInfo : null
             ]);
-            
+
             return redirect()->back()
                 ->with('error', 'Hesab yaradılarkən xəta baş verdi: ' . $e->getMessage())
                 ->withInput();
         }
 
-        return redirect()->route('superadmin.accounts')->with('success', 'Yeni hesab və istifadəçi yaradıldı.');
+        return redirect()->route('superadmin.accounts')->with('success', 'Yeni hesab və istifadəçi yaradıldı. İstifadəçi ilk dəfə daxil olduqda quraşdırma sehrbazını tamamlamalıdır.');
     }
 
     /**
@@ -334,15 +332,20 @@ class SuperAdminController extends Controller
 
             // 1. Delete sales and related records (depends on products, customers)
             \DB::table('sale_items')->whereIn('sale_id', function($query) use ($accountId) {
-                $query->select('id')->from('sales')->where('account_id', $accountId);
+                $query->select('sale_id')->from('sales')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('payments')->whereIn('sale_id', function($query) use ($accountId) {
+                $query->select('sale_id')->from('sales')->where('account_id', $accountId);
             })->delete();
             \DB::table('sales')->where('account_id', $accountId)->delete();
 
-            // 2. Delete purchases and related records
-            \DB::table('purchase_items')->whereIn('purchase_id', function($query) use ($accountId) {
-                $query->select('id')->from('purchases')->where('account_id', $accountId);
-            })->delete();
-            \DB::table('purchases')->where('account_id', $accountId)->delete();
+            // 2. Delete purchases and related records (if tables exist)
+            if (\Schema::hasTable('purchase_items') && \Schema::hasTable('purchases')) {
+                \DB::table('purchase_items')->whereIn('purchase_id', function($query) use ($accountId) {
+                    $query->select('purchase_id')->from('purchases')->where('account_id', $accountId);
+                })->delete();
+                \DB::table('purchases')->where('account_id', $accountId)->delete();
+            }
 
             // 3. Delete product-related data
             \DB::table('product_photos')->where('account_id', $accountId)->delete();
@@ -352,7 +355,13 @@ class SuperAdminController extends Controller
             \DB::table('product_prices')->whereIn('product_id', function($query) use ($accountId) {
                 $query->select('id')->from('products')->where('account_id', $accountId);
             })->delete();
-            \DB::table('product_stocks')->where('account_id', $accountId)->delete();
+            \DB::table('product_stock')->where('account_id', $accountId)->delete();
+            \DB::table('stock_history')->whereIn('warehouse_id', function($query) use ($accountId) {
+                $query->select('id')->from('warehouses')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('product_variants')->whereIn('product_id', function($query) use ($accountId) {
+                $query->select('id')->from('products')->where('account_id', $accountId);
+            })->delete();
 
             // 4. Delete inventory-related data
             \DB::table('stock_movements')->where('account_id', $accountId)->delete();
@@ -367,6 +376,7 @@ class SuperAdminController extends Controller
             // 6. Delete customer and supplier related data
             \DB::table('customer_credits')->where('account_id', $accountId)->delete();
             \DB::table('supplier_credits')->where('account_id', $accountId)->delete();
+            \DB::table('supplier_payments')->where('account_id', $accountId)->delete();
             \DB::table('customer_items')->whereIn('customer_id', function($query) use ($accountId) {
                 $query->select('id')->from('customers')->where('account_id', $accountId);
             })->delete();
@@ -375,16 +385,29 @@ class SuperAdminController extends Controller
             \DB::table('rental_items')->whereIn('rental_id', function($query) use ($accountId) {
                 $query->select('id')->from('rentals')->where('account_id', $accountId);
             })->delete();
+            if (\Schema::hasTable('rental_agreements')) {
+                \DB::table('rental_agreements')->where('account_id', $accountId)->delete();
+            }
             \DB::table('rentals')->where('account_id', $accountId)->delete();
             \DB::table('rental_categories')->where('account_id', $accountId)->delete();
             \DB::table('rental_inventory')->where('account_id', $accountId)->delete();
             \DB::table('rental_agreement_templates')->where('account_id', $accountId)->delete();
 
             // 8. Delete tailor services
+            if (\Schema::hasTable('tailor_service_items')) {
+                \DB::table('tailor_service_items')->whereIn('tailor_service_id', function($query) use ($accountId) {
+                    $query->select('id')->from('tailor_services')->where('account_id', $accountId);
+                })->delete();
+            }
             \DB::table('tailor_services')->where('account_id', $accountId)->delete();
 
-            // 9. Delete loyalty points
-            \DB::table('loyalty_points')->where('account_id', $accountId)->delete();
+            // 9. Delete loyalty points and programs
+            if (\Schema::hasTable('customer_points')) {
+                \DB::table('customer_points')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('loyalty_programs')) {
+                \DB::table('loyalty_programs')->where('account_id', $accountId)->delete();
+            }
 
             // 10. Delete products (after all dependencies)
             \DB::table('products')->where('account_id', $accountId)->delete();
@@ -416,8 +439,11 @@ class SuperAdminController extends Controller
             // 17. Delete subscriptions
             \DB::table('subscriptions')->where('account_id', $accountId)->delete();
 
-            // 18. Delete users (after all dependencies)
-            \DB::table('users')->where('account_id', $accountId)->delete();
+            // 18. Delete users (after all dependencies) - but NEVER delete super_admin users
+            \DB::table('users')
+                ->where('account_id', $accountId)
+                ->where('role', '!=', 'super_admin')
+                ->delete();
 
             // 19. Finally, delete the account
             // This triggers AccountObserver::deleting() which cleans up files from blob storage

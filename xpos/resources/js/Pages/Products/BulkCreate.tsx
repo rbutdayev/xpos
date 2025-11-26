@@ -7,35 +7,6 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
-// Size and color constants from the original create page
-const SIZES = [
-  'XS',
-  'S',
-  'M',
-  'L',
-  'XL',
-  'XXL',
-  'XXXL',
-  '28', '29', '30', '31', '32', '33', '34', '36', '38', '40', '42', '44', '46', '48', '50'
-];
-
-const COLORS = [
-  { name: 'Ağ (White)', code: '#FFFFFF' },
-  { name: 'Qara (Black)', code: '#000000' },
-  { name: 'Qırmızı (Red)', code: '#FF0000' },
-  { name: 'Mavi (Blue)', code: '#0000FF' },
-  { name: 'Yaşıl (Green)', code: '#008000' },
-  { name: 'Sarı (Yellow)', code: '#FFFF00' },
-  { name: 'Boz (Gray)', code: '#808080' },
-  { name: 'Qəhvəyi (Brown)', code: '#8B4513' },
-  { name: 'Narıncı (Orange)', code: '#FFA500' },
-  { name: 'Çəhrayı (Pink)', code: '#FFC0CB' },
-  { name: 'Bənövşəyi (Purple)', code: '#800080' },
-  { name: 'Bej (Beige)', code: '#F5F5DC' },
-  { name: 'Lacivert (Navy)', code: '#000080' },
-  { name: 'Bordo (Burgundy)', code: '#800020' }
-];
-
 interface Props {
   categories: Category[];
   warehouses: Warehouse[];
@@ -47,7 +18,6 @@ interface ProductItem {
   barcode: string;
   size: string;
   color: string;
-  color_code: string;
   initial_quantity: string;
   warehouse_id: string;
 }
@@ -73,7 +43,6 @@ export default function BulkCreate({ categories, warehouses }: Props) {
         barcode: '',
         size: '',
         color: '',
-        color_code: '',
         initial_quantity: '',
         warehouse_id: '',
       }
@@ -97,7 +66,6 @@ export default function BulkCreate({ categories, warehouses }: Props) {
           barcode: '',
           size: '',
           color: '',
-          color_code: '',
           initial_quantity: '',
           warehouse_id: '',
         });
@@ -117,7 +85,6 @@ export default function BulkCreate({ categories, warehouses }: Props) {
         barcode: '',
         size: '',
         color: '',
-        color_code: '',
         initial_quantity: '',
         warehouse_id: '',
       }
@@ -271,18 +238,31 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                     {errors.purchase_price && <p className="mt-1 text-sm text-red-600">{errors.purchase_price}</p>}
                   </div>
 
-                  {/* Unit - Fixed to ədəd */}
+                  {/* Unit */}
                   <div>
                     <label htmlFor="unit" className="block text-sm font-medium text-gray-700">
-                      Ölçü vahidi
+                      Ölçü vahidi *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       id="unit"
-                      value="ədəd"
-                      readOnly
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500 sm:text-sm"
-                    />
+                      value={data.unit}
+                      onChange={(e) => setData('unit', e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                    >
+                      <option value="ədəd">ədəd (piece)</option>
+                      <option value="kq">kq (kg)</option>
+                      <option value="qr">qr (gram)</option>
+                      <option value="litr">litr (liter)</option>
+                      <option value="ml">ml (milliliter)</option>
+                      <option value="metr">metr (meter)</option>
+                      <option value="sm">sm (cm)</option>
+                      <option value="paket">paket (package)</option>
+                      <option value="qutu">qutu (box)</option>
+                      <option value="səbət">səbət (basket)</option>
+                      <option value="dəst">dəst (set)</option>
+                      <option value="cüt">cüt (pair)</option>
+                    </select>
                     {errors.unit && <p className="mt-1 text-sm text-red-600">{errors.unit}</p>}
                   </div>
                 </div>
@@ -369,19 +349,14 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                           <label htmlFor={`product_size_${index}`} className="block text-xs font-medium text-gray-700">
                             Ölçü
                           </label>
-                          <select
+                          <input
+                            type="text"
                             id={`product_size_${index}`}
                             value={product.size}
                             onChange={(e) => updateProduct(index, 'size', e.target.value)}
                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                          >
-                            <option value="">Ölçü seçin</option>
-                            {SIZES.map((s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="məs: M, 42"
+                          />
                         </div>
 
                         {/* Color */}
@@ -389,27 +364,14 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                           <label htmlFor={`product_color_${index}`} className="block text-xs font-medium text-gray-700">
                             Rəng
                           </label>
-                          <select
+                          <input
+                            type="text"
                             id={`product_color_${index}`}
                             value={product.color}
-                            onChange={(e) => {
-                              const selectedColor = COLORS.find(c => c.name === e.target.value);
-                              updateProduct(index, 'color', e.target.value);
-                              if (selectedColor) {
-                                updateProduct(index, 'color_code', selectedColor.code);
-                              } else {
-                                updateProduct(index, 'color_code', '');
-                              }
-                            }}
+                            onChange={(e) => updateProduct(index, 'color', e.target.value)}
                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                          >
-                            <option value="">Rəng seçin</option>
-                            {COLORS.map((c) => (
-                              <option key={c.name} value={c.name}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="məs: Qırmızı"
+                          />
                         </div>
                       </div>
 
@@ -455,17 +417,6 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                           </div>
                         </div>
                       </div>
-
-                      {/* Color preview - show selected color */}
-                      {product.color && product.color_code && (
-                        <div className="mt-3 flex items-center">
-                          <div 
-                            className="w-6 h-6 rounded border border-gray-300 mr-2" 
-                            style={{ backgroundColor: product.color_code }}
-                          ></div>
-                          <span className="text-xs text-gray-500">{product.color}</span>
-                        </div>
-                      )}
 
                       {/* Display errors for this product */}
                       {errors[`products.${index}.name` as keyof typeof errors] && (

@@ -18,18 +18,16 @@ export default function InventorySection({ mode, data, errors, warehouses, onCha
         <h3 className="text-lg font-semibold text-gray-900">Stok və Anbar</h3>
       </div>
       <div className="p-6 space-y-6">
-        {/* allow negative stock only for product */}
-        {data.type === 'product' && (
-          <div className="flex items-center gap-3">
-            <input id="allow_negative_stock" type="checkbox" checked={!!data.allow_negative_stock}
-              onChange={(e) => onChange('allow_negative_stock', e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
-            <label htmlFor="allow_negative_stock" className="text-sm text-gray-700">Mənfi stok icazəsi</label>
-          </div>
-        )}
+        {/* allow negative stock */}
+        <div className="flex items-center gap-3">
+          <input id="allow_negative_stock" type="checkbox" checked={!!data.allow_negative_stock}
+            onChange={(e) => onChange('allow_negative_stock', e.target.checked)}
+            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+          <label htmlFor="allow_negative_stock" className="text-sm text-gray-700">Mənfi stok icazəsi</label>
+        </div>
 
-        {/* Initial stock inputs for create mode and product type */}
-        {mode === 'create' && data.type === 'product' && (
+        {/* Initial stock inputs for create mode */}
+        {mode === 'create' && (
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-gray-900">Başlanğıc stok (seçimə bağlı)</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

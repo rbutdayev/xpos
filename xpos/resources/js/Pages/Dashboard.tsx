@@ -170,6 +170,7 @@ interface DashboardProps extends PageProps {
     rental_data?: RentalData;
     selectedWarehouse?: { id: number; name: string; type: string } | null;
     warehouseContext?: 'all' | 'specific';
+    pending_online_orders?: number;
 }
 
 // Helper function to format currency
@@ -338,6 +339,7 @@ export default function Dashboard({
     },
     selectedWarehouse,
     warehouseContext = 'all',
+    pending_online_orders = 0,
 }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const user = auth.user as User;
@@ -451,6 +453,23 @@ export default function Dashboard({
                         </div>
                     </div>
                 </div>
+
+                {/* Pending Online Orders Notification */}
+                {pending_online_orders > 0 && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-3" />
+                                <p className="text-sm font-medium text-yellow-800">
+                                    Sizdə <span className="font-bold">{pending_online_orders}</span> gözləyən online sifariş var.{' '}
+                                    <Link href="/online-orders" className="underline hover:text-yellow-900">
+                                        Sifarişlərə baxın
+                                    </Link>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Quick Actions */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

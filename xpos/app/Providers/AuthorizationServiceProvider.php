@@ -73,6 +73,13 @@ class AuthorizationServiceProvider extends ServiceProvider
             ]);
         });
 
+        // Reports and Analytics (including SMS logs, Telegram logs, Audit logs)
+        Gate::define('view-reports', function (User $user) {
+            return $user->isActive() && in_array($user->role, [
+                'account_owner', 'admin', 'accountant', 'branch_manager'
+            ]);
+        });
+
         // System Settings
         Gate::define('manage-system-settings', function (User $user) {
             return $user->isActive() && in_array($user->role, [

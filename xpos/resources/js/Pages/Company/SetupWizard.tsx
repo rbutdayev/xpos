@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import ProgressIndicator from './Components/ProgressIndicator';
 import WizardNavigation from './Components/WizardNavigation';
@@ -42,6 +42,7 @@ export default function SetupWizard() {
   });
 
   const { validateStep, canProceed } = useStepValidation();
+  const [hasValidationErrors, setHasValidationErrors] = useState(false);
 
   const onNext = () => {
     if (validateStep(currentStep, data)) goNext();
@@ -78,18 +79,23 @@ export default function SetupWizard() {
 
         <form onSubmit={onSubmit} className="bg-white shadow-sm rounded-xl p-6">
           <Suspense fallback={<div className="py-10 text-center text-gray-500">Yüklənir...</div>}>
-            <StepComponent data={data} setData={setData} errors={errors as any} />
+            <StepComponent
+              data={data}
+              setData={setData}
+              errors={errors as any}
+              onValidationChange={currentStep === 0 ? setHasValidationErrors : undefined}
+            />
           </Suspense>
 
           <div className="mt-8">
             <WizardNavigation
               canPrev={currentStep > 0}
-              canNext={currentStep < total - 1}
+              canNext={!hasValidationErrors && currentStep < total - 1}
               onPrev={onPrev}
               onNext={onNext}
               isLast={currentStep === total - 1}
               onSubmit={onSubmit}
-              submitting={processing}
+              submitting={processing || hasValidationErrors}
             />
           </div>
         </form>

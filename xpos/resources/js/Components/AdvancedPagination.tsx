@@ -124,34 +124,20 @@ export default function AdvancedPagination({
                             <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                         </Link>
 
-                        {/* Page numbers */}
-                        {pageLinks.map((link, index) => {
-                            if (link.label === '...') {
-                                return (
-                                    <span
-                                        key={index}
-                                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
-                                    >
-                                        ...
-                                    </span>
-                                );
-                            }
-
-                            return (
-                                <Link
-                                    key={index}
-                                    href={link.url || '#'}
-                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                        link.active
-                                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                    }`}
-                                    preserveState
-                                >
-                                    {link.label}
-                                </Link>
-                            );
-                        })}
+                        {/* Current page and Last page info */}
+                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                            {current_page}
+                        </span>
+                        {current_page < last_page && (
+                            <>
+                                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    /
+                                </span>
+                                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500">
+                                    {last_page}
+                                </span>
+                            </>
+                        )}
 
                         {/* Next button */}
                         <Link

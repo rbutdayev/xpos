@@ -43,13 +43,6 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        company_name: '',
-        email: '',
-        phone: '',
-        address: '',
-        subscription_plan: 'başlanğıc',
-        is_active: true,
-        user_name: '',
         user_email: '',
         user_password: '',
     });
@@ -179,103 +172,35 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                                     Yeni Hesab Yarat
                                 </h3>
-                                
-                                <form onSubmit={handleCreateAccount} className="space-y-6">
-                                    {/* Account Information */}
+                                <p className="text-sm text-gray-600 mb-4">
+                                    İstifadəçi ilk girişdən sonra quraşdırma sehrbazında şirkət məlumatlarını dolduracaq.
+                                </p>
+
+                                <form onSubmit={handleCreateAccount} className="space-y-4">
                                     <div>
-                                        <h4 className="text-md font-medium text-gray-900 mb-3">Hesab Məlumatları</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Şirkət Adı</label>
-                                                <TextInput
-                                                    type="text"
-                                                    value={data.company_name}
-                                                    onChange={(e) => setData('company_name', e.target.value)}
-                                                    className={errors.company_name ? 'border-red-500' : ''}
-                                                />
-                                                {errors.company_name && <span className="text-red-500 text-xs">{errors.company_name}</span>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Email</label>
-                                                <TextInput
-                                                    type="email"
-                                                    value={data.email}
-                                                    onChange={(e) => setData('email', e.target.value)}
-                                                    className={errors.email ? 'border-red-500' : ''}
-                                                />
-                                                {errors.email && <span className="text-red-500 text-xs">{errors.email}</span>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Telefon</label>
-                                                <TextInput
-                                                    type="text"
-                                                    value={data.phone}
-                                                    onChange={(e) => setData('phone', e.target.value)}
-                                                    className={errors.phone ? 'border-red-500' : ''}
-                                                />
-                                                {errors.phone && <span className="text-red-500 text-xs">{errors.phone}</span>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Ünvan</label>
-                                                <TextInput
-                                                    type="text"
-                                                    value={data.address}
-                                                    onChange={(e) => setData('address', e.target.value)}
-                                                    className={errors.address ? 'border-red-500' : ''}
-                                                />
-                                                {errors.address && <span className="text-red-500 text-xs">{errors.address}</span>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Abunə Planı</label>
-                                                <select
-                                                    value={data.subscription_plan}
-                                                    onChange={(e) => setData('subscription_plan', e.target.value)}
-                                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                                >
-                                                    <option value="başlanğıc">{plans.başlanğıc}</option>
-                                                    <option value="professional">{plans.professional}</option>
-                                                    <option value="enterprise">{plans.enterprise}</option>
-                                                </select>
-                                                {errors.subscription_plan && <span className="text-red-500 text-xs">{errors.subscription_plan}</span>}
-                                            </div>
-                                        </div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email (Giriş üçün) *</label>
+                                        <TextInput
+                                            type="email"
+                                            value={data.user_email}
+                                            onChange={(e) => setData('user_email', e.target.value)}
+                                            className={errors.user_email ? 'border-red-500' : ''}
+                                            placeholder="email@example.com"
+                                            required
+                                        />
+                                        {errors.user_email && <span className="text-red-500 text-xs">{errors.user_email}</span>}
                                     </div>
-                                    
-                                    {/* User Information */}
+
                                     <div>
-                                        <h4 className="text-md font-medium text-gray-900 mb-3">İlk İstifadəçi Məlumatları</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">İstifadəçi Adı</label>
-                                                <TextInput
-                                                    type="text"
-                                                    value={data.user_name}
-                                                    onChange={(e) => setData('user_name', e.target.value)}
-                                                    className={errors.user_name ? 'border-red-500' : ''}
-                                                />
-                                                {errors.user_name && <span className="text-red-500 text-xs">{errors.user_name}</span>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">İstifadəçi Email</label>
-                                                <TextInput
-                                                    type="email"
-                                                    value={data.user_email}
-                                                    onChange={(e) => setData('user_email', e.target.value)}
-                                                    className={errors.user_email ? 'border-red-500' : ''}
-                                                />
-                                                {errors.user_email && <span className="text-red-500 text-xs">{errors.user_email}</span>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Şifrə</label>
-                                                <TextInput
-                                                    type="password"
-                                                    value={data.user_password}
-                                                    onChange={(e) => setData('user_password', e.target.value)}
-                                                    className={errors.user_password ? 'border-red-500' : ''}
-                                                />
-                                                {errors.user_password && <span className="text-red-500 text-xs">{errors.user_password}</span>}
-                                            </div>
-                                        </div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Şifrə *</label>
+                                        <TextInput
+                                            type="password"
+                                            value={data.user_password}
+                                            onChange={(e) => setData('user_password', e.target.value)}
+                                            className={errors.user_password ? 'border-red-500' : ''}
+                                            placeholder="Minimum 8 simvol"
+                                            required
+                                        />
+                                        {errors.user_password && <span className="text-red-500 text-xs">{errors.user_password}</span>}
                                     </div>
                                     <div className="flex justify-end space-x-2">
                                         <SecondaryButton

@@ -716,4 +716,30 @@ class SaleController extends Controller
             'previous_date' => $previousDate->format('Y-m-d'),
         ];
     }
+
+    /**
+     * Update fiscal number for a sale (called after client-side fiscal printing)
+     */
+    public function updateFiscalNumber(Request $request, Sale $sale)
+    {
+        Gate::authorize('access-account-data', $sale);
+
+        $validated = $request->validate([
+            'fiscal_number' => 'required|string|max:255',
+        ]);
+
+        $sale->update([
+            'fiscal_number' => $validated['fiscal_number'],
+        ]);
+
+        \Log::info('Fiscal number updated (client-side printing)', [
+            'sale_id' => $sale->sale_id,
+            'fiscal_number' => $validated['fiscal_number'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Fiscal number updated successfully',
+        ]);
+    }
 }

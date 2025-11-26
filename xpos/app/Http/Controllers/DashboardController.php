@@ -511,6 +511,12 @@ class DashboardController extends Controller
             'total_rentals_this_month' => $totalRentalsThisMonth,
         ];
 
+        // MULTI-TENANT: Count pending online orders for notification banner
+        $pendingOnlineOrders = Sale::where('account_id', $account->id)
+            ->onlineOrders() // Scope for is_online_order = true
+            ->where('payment_status', 'credit') // Unpaid orders
+            ->count();
+
         return Inertia::render('Dashboard', [
             'stats' => $stats,
             'sales_chart_data' => $salesChartData,
@@ -524,6 +530,7 @@ class DashboardController extends Controller
             'low_stock_products' => $lowStockProducts,
             'selectedWarehouse' => $selectedWarehouse,
             'warehouseContext' => $selectedWarehouseId ? 'specific' : 'all',
+            'pending_online_orders' => $pendingOnlineOrders,
         ]);
     }
 }

@@ -42,6 +42,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\FiscalPrinterConfigController;
+use App\Http\Controllers\FiscalPrinterJobController;
 use App\Http\Controllers\IntegrationsController;
 use App\Http\Controllers\RentalTemplateController;
 use Illuminate\Foundation\Application;
@@ -151,7 +152,11 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Company Setup Wizard
     Route::get('/setup', [CompanyController::class, 'setupWizard'])->name('setup.wizard');
     Route::post('/setup', [CompanyController::class, 'store'])->name('setup.store');
-    
+
+    // Real-time validation endpoints for setup wizard
+    Route::post('/api/company/check-name', [CompanyController::class, 'checkName'])->name('company.check-name');
+    Route::post('/api/company/check-tin', [CompanyController::class, 'checkTin'])->name('company.check-tin');
+
     // Company Management (customers can only view/edit their single company)
     Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
     Route::get('/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
@@ -480,11 +485,15 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/sales/{sale}/print-options', [SaleController::class, 'getPrintOptions'])->name('sales.print-options');
     Route::post('/sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
     Route::post('/sales/{sale}/send-to-printer', [SaleController::class, 'sendToPrinter'])->name('sales.send-to-printer');
+    Route::post('/sales/{sale}/fiscal-number', [SaleController::class, 'updateFiscalNumber'])->name('sales.update-fiscal-number');
 
     // Online Orders Management
     Route::get('/online-orders', [OnlineOrderController::class, 'index'])->name('online-orders.index');
     Route::patch('/online-orders/{sale}/status', [OnlineOrderController::class, 'updateStatus'])->name('online-orders.update-status');
     Route::delete('/online-orders/{sale}/cancel', [OnlineOrderController::class, 'cancel'])->name('online-orders.cancel');
+
+    // Notification Channels
+    Route::get('/notification-channels', [App\Http\Controllers\UnifiedSettingsController::class, 'notificationChannels'])->name('notification-channels.index');
     
     // Thermal Printing Management
     Route::get('/printer-configs/search', [PrinterConfigController::class, 'search'])->name('printer-configs.search');
@@ -498,16 +507,15 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/receipt-templates/create-default', [ReceiptTemplateController::class, 'createDefault'])->name('receipt-templates.create-default');
     Route::resource('receipt-templates', ReceiptTemplateController::class);
     
-    // Unified Settings (Company, Shop, POS, Notifications)
+    // Settings (POS only - Shop moved to dedicated page)
     Route::get('/settings', [App\Http\Controllers\UnifiedSettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings/company', [App\Http\Controllers\UnifiedSettingsController::class, 'updateCompany'])->name('settings.company.update');
     Route::post('/settings/pos', [App\Http\Controllers\UnifiedSettingsController::class, 'updatePOS'])->name('settings.pos.update');
-    Route::post('/settings/shop', [App\Http\Controllers\UnifiedSettingsController::class, 'updateShop'])->name('settings.shop.update');
     Route::post('/settings/notifications', [App\Http\Controllers\UnifiedSettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
     Route::post('/settings/sms', [App\Http\Controllers\UnifiedSettingsController::class, 'updateSms'])->name('settings.sms.update');
     Route::post('/settings/telegram', [App\Http\Controllers\UnifiedSettingsController::class, 'updateTelegram'])->name('settings.telegram.update');
     Route::post('/settings/telegram/test', [App\Http\Controllers\UnifiedSettingsController::class, 'testTelegram'])->name('settings.telegram.test');
     Route::post('/settings/test-notification', [App\Http\Controllers\UnifiedSettingsController::class, 'testNotification'])->name('settings.test-notification');
+    Route::post('/settings/toggle-module', [App\Http\Controllers\UnifiedSettingsController::class, 'toggleModule'])->name('settings.toggle-module');
 
     // Telegram Logs
     Route::get('/telegram/logs', [App\Http\Controllers\UnifiedSettingsController::class, 'telegramLogs'])->name('telegram.logs');
@@ -554,11 +562,25 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Audit Logs
     Route::resource('audit-logs', AuditLogController::class, ['only' => ['index', 'show']]);
 
+    // Fiscal Printer Job Queue
+    Route::prefix('fiscal-printer-jobs')->name('fiscal-printer-jobs.')->group(function () {
+        Route::get('/', [FiscalPrinterJobController::class, 'index'])->name('index');
+        Route::post('/{job}/retry', [FiscalPrinterJobController::class, 'retry'])->name('retry');
+        Route::delete('/{job}', [FiscalPrinterJobController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-delete', [FiscalPrinterJobController::class, 'bulkDelete'])->name('bulk-delete');
+    });
+
     // Integrations Marketplace
     Route::prefix('integrations')->name('integrations.')->group(function () {
         Route::get('/', [IntegrationsController::class, 'index'])->name('index');
         Route::get('/sms', [IntegrationsController::class, 'sms'])->name('sms');
         Route::get('/telegram', [IntegrationsController::class, 'telegram'])->name('telegram');
+    });
+
+    // Shop Settings (Dedicated Page)
+    Route::prefix('shop-settings')->name('shop-settings.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ShopSettingsController::class, 'index'])->name('index');
+        Route::post('/update', [\App\Http\Controllers\ShopSettingsController::class, 'update'])->name('update');
     });
 
     // SMS Management
@@ -582,11 +604,21 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/logs', [FiscalPrinterConfigController::class, 'logs'])->name('logs');
     });
 
+    // Bridge Token Management
+    Route::prefix('bridge-tokens')->name('bridge-tokens.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\BridgeTokenController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\BridgeTokenController::class, 'store'])->name('store');
+        Route::get('/{bridgeToken}', [\App\Http\Controllers\BridgeTokenController::class, 'show'])->name('show');
+        Route::post('/{bridgeToken}/revoke', [\App\Http\Controllers\BridgeTokenController::class, 'revoke'])->name('revoke');
+        Route::delete('/{bridgeToken}', [\App\Http\Controllers\BridgeTokenController::class, 'destroy'])->name('destroy');
+    });
+
     // Loyalty Program
     Route::prefix('loyalty-program')->name('loyalty-program.')->group(function () {
         Route::get('/', [\App\Http\Controllers\LoyaltyProgramController::class, 'index'])->name('index');
         Route::post('/', [\App\Http\Controllers\LoyaltyProgramController::class, 'store'])->name('store');
         Route::post('/toggle-active', [\App\Http\Controllers\LoyaltyProgramController::class, 'toggleActive'])->name('toggle-active');
+        Route::post('/toggle-module', [\App\Http\Controllers\LoyaltyProgramController::class, 'toggleModule'])->name('toggle-module');
         Route::get('/show', [\App\Http\Controllers\LoyaltyProgramController::class, 'show'])->name('show');
     });
 
@@ -673,14 +705,11 @@ Route::middleware(['auth', 'account.access'])->group(function () {
 
 require __DIR__.'/auth.php';
 
-// NOTE: Shop and Notification settings are now unified in /settings with tabs
-// Old separate routes kept for backward compatibility (redirects to unified page)
+// NOTE: Shop settings moved to dedicated page
+// Old route kept for backward compatibility
 Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/settings/shop', function() {
-        return redirect('/settings?tab=shop');
-    });
-    Route::get('/settings/notifications', function() {
-        return redirect('/settings?tab=notifications');
+        return redirect('/shop-settings');
     });
 });
 

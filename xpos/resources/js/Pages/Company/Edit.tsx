@@ -103,10 +103,13 @@ export default function Edit({ company }: Props) {
                                             type="text"
                                             name="name"
                                             value={data.name}
-                                            className="mt-1 block w-full"
-                                            onChange={(e) => setData('name', e.target.value)}
+                                            className="mt-1 block w-full bg-gray-100 cursor-not-allowed"
+                                            disabled
                                             required
                                         />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            ⚠️ Şirkət adı dəyişdirilə bilməz. Dəyişiklik etmək üçün admin ilə əlaqə saxlayın.
+                                        </p>
                                         <InputError message={errors.name} className="mt-2" />
                                     </div>
 

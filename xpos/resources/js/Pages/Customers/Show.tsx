@@ -10,7 +10,8 @@ import {
     ScissorsIcon,
     PlusIcon,
     PencilIcon,
-    TrashIcon
+    TrashIcon,
+    CreditCardIcon
 } from '@heroicons/react/24/outline';
 import { SERVICE_TYPES, ServiceType } from '@/config/serviceTypes';
 
@@ -127,7 +128,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                     <div className="bg-gray-50 p-4 rounded-lg text-center">
                                         <div className="text-2xl font-bold text-gray-900">
                                             {customer.active_customerItems_count || 0}
@@ -139,6 +140,30 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                             {Object.values(serviceCounts).reduce((sum, count) => sum + count, 0) || 0}
                                         </div>
                                         <div className="text-sm text-gray-500">Ümumi xidmətlər</div>
+                                    </div>
+                                    <div className={`p-4 rounded-lg text-center ${
+                                        (customer.total_credit_amount || 0) > 0
+                                            ? 'bg-red-50'
+                                            : 'bg-gray-50'
+                                    }`}>
+                                        <div className="flex items-center justify-center mb-1">
+                                            <CreditCardIcon className={`w-5 h-5 mr-2 ${
+                                                (customer.total_credit_amount || 0) > 0
+                                                    ? 'text-red-600'
+                                                    : 'text-gray-400'
+                                            }`} />
+                                        </div>
+                                        <div className={`text-2xl font-bold ${
+                                            (customer.total_credit_amount || 0) > 0
+                                                ? 'text-red-600'
+                                                : 'text-gray-900'
+                                        }`}>
+                                            {(customer.total_credit_amount || 0).toLocaleString('az-AZ', {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2
+                                            })} ₼
+                                        </div>
+                                        <div className="text-sm text-gray-500">Borc</div>
                                     </div>
                                 </div>
 

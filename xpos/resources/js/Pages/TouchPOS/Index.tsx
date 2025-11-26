@@ -67,6 +67,10 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
   const [lastSaleId, setLastSaleId] = useState<number | null>(null);
   const [lastSaleNumber, setLastSaleNumber] = useState<string>('');
 
+  // Fiscal printer status
+  const [fiscalPrintStatus, setFiscalPrintStatus] = useState<string | null>(null);
+  const [fiscalPrintLoading, setFiscalPrintLoading] = useState(false);
+
   const { flash } = usePage<any>().props;
 
   // Product search using exact same logic as POS (only products, no services)
@@ -85,6 +89,77 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
       setFormData((prev) => ({ ...prev, paid_amount: 0, credit_amount: grandTotal }));
     }
   }, [formData.payment_status, grandTotal]);
+
+  // Fiscal printer status polling
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    const pollFiscalStatus = async (saleId: number) => {
+      try {
+        const response = await fetch(`/api/jobs/sale/${saleId}/status`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+          console.error('Failed to fetch fiscal status');
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+          setFiscalPrintStatus('completed');
+          setFiscalPrintLoading(false);
+          toast.success(`Fiskal çap tamamlandı! №${data.fiscal_number}`, {
+            duration: 5000,
+            icon: '✅'
+          });
+          if (interval) clearInterval(interval);
+        } else if (data.status === 'failed') {
+          setFiscalPrintStatus('failed');
+          setFiscalPrintLoading(false);
+          toast.error(`Fiskal çap xətası: ${data.error || 'Naməlum xəta'}`, {
+            duration: 7000,
+            icon: '❌'
+          });
+          if (interval) clearInterval(interval);
+        } else if (data.status === 'pending' || data.status === 'processing') {
+          setFiscalPrintStatus(data.status);
+          setFiscalPrintLoading(true);
+        }
+      } catch (error) {
+        console.error('Error polling fiscal status:', error);
+      }
+    };
+
+    // Start polling if sale was just completed
+    if (flash?.sale_completed && flash?.sale_id) {
+      setFiscalPrintLoading(true);
+      pollFiscalStatus(flash.sale_id); // Initial poll
+      interval = setInterval(() => pollFiscalStatus(flash.sale_id), 2000); // Poll every 2 seconds
+
+      // Stop polling after 2 minutes
+      timeout = setTimeout(() => {
+        if (interval) clearInterval(interval);
+        if (fiscalPrintLoading) {
+          setFiscalPrintLoading(false);
+          toast.error('Fiskal çap müddəti doldu. Bridge aktiv deyilmi?', {
+            duration: 5000
+          });
+        }
+      }, 120000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [flash?.sale_completed, flash?.sale_id]);
 
   // Handle sale completion and auto-print
   useEffect(() => {
@@ -177,7 +252,6 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
       <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
         {/* Header */}
         <TouchHeader
-          customers={customers}
           branches={branches}
           formData={formData}
           setFormData={setFormData}
@@ -185,6 +259,21 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
           onClearCart={clearCart}
           cartCount={cart.length}
         />
+
+        {/* Fiscal Print Status Banner */}
+        {fiscalPrintLoading && (
+          <div className="bg-blue-50 border-b-2 border-blue-400 px-4 py-2">
+            <div className="flex items-center justify-center">
+              <svg className="animate-spin h-4 w-4 text-blue-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm text-blue-700 font-medium">
+                Fiskal çap gözləyir... ({fiscalPrintStatus === 'processing' ? 'İşlənir' : 'Növbədə'})
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">

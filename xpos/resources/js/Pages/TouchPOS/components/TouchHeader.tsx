@@ -2,25 +2,26 @@ import React from 'react';
 import { Customer, Branch } from '@/types';
 import { TrashIcon, UserIcon, BuildingStorefrontIcon, ArrowLeftIcon, HomeIcon } from '@heroicons/react/24/outline';
 import { Link } from '@inertiajs/react';
+import SearchableCustomerSelect from '@/Components/SearchableCustomerSelect';
 
 interface Props {
-  customers: Customer[];
   branches: Branch[];
   formData: any;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   userBranchId?: number;
   onClearCart: () => void;
   cartCount: number;
+  onCustomerChange?: (customer: Customer | null) => void;
 }
 
 export default function TouchHeader({
-  customers,
   branches,
   formData,
   setFormData,
   userBranchId,
   onClearCart,
   cartCount,
+  onCustomerChange,
 }: Props) {
   return (
     <div className="bg-white border-b border-gray-200 p-4">
@@ -63,21 +64,17 @@ export default function TouchHeader({
           </div>
 
           {/* Customer Selection */}
-          <div className="flex items-center space-x-2">
-            <UserIcon className="w-6 h-6 text-gray-600" />
-            <select
+          <div className="flex items-center space-x-2 min-w-[300px]">
+            <SearchableCustomerSelect
               value={formData.customer_id}
-              onChange={(e) => setFormData((prev: any) => ({ ...prev, customer_id: e.target.value }))}
-              className="text-lg border-2 border-gray-300 rounded-lg px-4 py-2 min-w-[200px] focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Müştəri seçin (ixtiyari)</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                  {customer.phone && ` - ${customer.phone}`}
-                </option>
-              ))}
-            </select>
+              onChange={(value, customer) => {
+                setFormData((prev: any) => ({ ...prev, customer_id: value }));
+                if (onCustomerChange) {
+                  onCustomerChange(customer || null);
+                }
+              }}
+              placeholder="Müştəri axtar..."
+            />
           </div>
         </div>
 

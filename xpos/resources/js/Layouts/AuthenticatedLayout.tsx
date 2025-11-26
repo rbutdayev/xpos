@@ -1,6 +1,7 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import SearchableWarehouseSelect from '@/Components/SearchableWarehouseSelect';
+import SessionManager from '@/Components/SessionManager';
 import { Link, usePage, router } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useEffect } from 'react';
 import { getAppVersion } from '@/utils/version';
@@ -49,7 +50,9 @@ import {
     FolderIcon,
     ArrowPathIcon,
     BellAlertIcon,
+    BellIcon,
     ScissorsIcon,
+    KeyIcon,
     DevicePhoneMobileIcon,
     ComputerDesktopIcon,
     ArchiveBoxIcon,
@@ -73,6 +76,11 @@ export default function Authenticated({
     const user = usePage().props.auth.user;
     const warehouses = usePage().props.warehouses as Array<{id: number, name: string, type: string}>;
     const selectedWarehouse = usePage().props.selectedWarehouse as number | null;
+    const shopEnabled = usePage().props.shopEnabled as boolean;
+    const loyaltyEnabled = usePage().props.loyaltyEnabled as boolean;
+    const servicesEnabled = usePage().props.servicesEnabled as boolean;
+    const rentEnabled = usePage().props.rentEnabled as boolean;
+    const discountsEnabled = usePage().props.discountsEnabled as boolean;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -99,26 +107,33 @@ export default function Authenticated({
         // Check SMS first to differentiate from sms/logs vs sms/send
         if ((currentRoute?.includes('sales') && !currentRoute?.includes('employee-salaries')) ||
             currentRoute?.includes('online-orders') ||
+            currentRoute?.includes('notification-channels') ||
             currentRoute?.includes('customers') ||
             currentRoute?.includes('customer-items') ||
+            currentRoute?.includes('products.discounts') ||
             (currentRoute?.includes('sms') && !currentRoute?.includes('sms.logs'))) {
             openMenus.push('Satış və Marketinq');
         }
 
-        if (currentRoute?.includes('rentals') ||
+        // Open Online Sifarişlər submenu when on orders or notification channels (only if shop is enabled)
+        if (shopEnabled && (currentRoute?.includes('online-orders') || currentRoute?.includes('notification-channels'))) {
+            openMenus.push('Online Sifarişlər');
+        }
+
+        if (rentEnabled && (currentRoute?.includes('rentals') ||
             currentRoute?.includes('rental-templates') ||
             currentRoute?.includes('rental-inventory') ||
-            currentRoute?.includes('rental-categories')) {
+            currentRoute?.includes('rental-categories'))) {
             openMenus.push('İcarə İdarəetməsi');
         }
 
-        if (currentRoute?.includes('services') ||
-            currentRoute?.includes('tailor-services')) {
+        if (servicesEnabled && (currentRoute?.includes('services') ||
+            currentRoute?.includes('tailor-services'))) {
             openMenus.push('Xidmətlər');
         }
 
         // Check for product categories but NOT expense-categories or rental-categories
-        if (currentRoute?.includes('products') ||
+        if ((currentRoute?.includes('products') && !currentRoute?.includes('products.discounts')) ||
             currentRoute?.includes('suppliers') ||
             (currentRoute?.includes('categories') &&
              !currentRoute?.includes('expense-categories') &&
@@ -141,7 +156,8 @@ export default function Authenticated({
         if (currentRoute?.includes('reports') ||
             currentRoute?.includes('sms.logs') ||
             currentRoute?.includes('telegram.logs') ||
-            currentRoute?.includes('audit-logs')) {
+            currentRoute?.includes('audit-logs') ||
+            currentRoute?.includes('fiscal-printer-jobs')) {
             openMenus.push('Hesabatlar və Analitika');
         }
 
@@ -151,9 +167,12 @@ export default function Authenticated({
             currentRoute?.includes('warehouses') ||
             currentRoute?.includes('receipt-templates') ||
             currentRoute?.includes('printer-configs') ||
-            currentRoute?.includes('settings') ||
-            currentRoute?.includes('integrations')) {
+            currentRoute?.includes('settings')) {
             openMenus.push('Parametrlər');
+        }
+
+        if (currentRoute?.includes('integrations')) {
+            openMenus.push('Tətbiqlər');
         }
 
         return openMenus;
@@ -239,12 +258,18 @@ export default function Authenticated({
                             icon: ShoppingCartIcon,
                             current: route().current('sales.*') && !route().current('sales.online')
                         },
-                        {
+                        ...(discountsEnabled ? [{
+                            name: 'Endirimlər',
+                            href: '/products/discounts',
+                            icon: ReceiptPercentIcon,
+                            current: route().current('products.discounts')
+                        }] : []),
+                        ...(shopEnabled ? [{
                             name: 'Online Sifarişlər',
                             href: '/online-orders',
                             icon: ShoppingBagIcon,
                             current: route().current('online-orders.*')
-                        },
+                        }] : []),
                         {
                             name: 'Müştərilər',
                             href: '/customers',
@@ -263,15 +288,15 @@ export default function Authenticated({
                             icon: PaperAirplaneIcon,
                             current: route().current('sms.send-page')
                         },
-                        {
+                        ...(loyaltyEnabled ? [{
                             name: 'Loyallıq Proqramı',
                             href: '/loyalty-program',
                             icon: GiftIcon,
                             current: route().current('loyalty-program.*')
-                        }
+                        }] : [])
                     ]
                 },
-                {
+                ...(rentEnabled ? [{
                     name: 'İcarə İdarəetməsi',
                     icon: ClockIcon,
                     children: [
@@ -300,8 +325,8 @@ export default function Authenticated({
                             current: route().current('rental-categories.*')
                         }
                     ]
-                },
-                {
+                }] : []),
+                ...(servicesEnabled ? [{
                     name: 'Xidmətlər',
                     icon: WrenchScrewdriverIcon,
                     children: [
@@ -330,7 +355,7 @@ export default function Authenticated({
                             current: route().current('services.*') && route().params.serviceType === 'general'
                         }
                     ]
-                },
+                }] : []),
                 {
                     name: 'Anbar və Stok',
                     icon: CubeIcon,
@@ -340,12 +365,6 @@ export default function Authenticated({
                             href: '/products',
                             icon: CubeIcon,
                             current: route().current('products.index') || route().current('products.show')
-                        },
-                        {
-                            name: 'Endirimlər',
-                            href: '/products/discounts',
-                            icon: ReceiptPercentIcon,
-                            current: route().current('products.discounts')
                         }
                     ]
                 }
@@ -395,6 +414,30 @@ export default function Authenticated({
                             href: '/reports',
                             icon: DocumentTextIcon,
                             current: route().current('reports.*')
+                        },
+                        {
+                            name: 'SMS Logları',
+                            href: '/sms/logs',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('sms.logs')
+                        },
+                        {
+                            name: 'Telegram Logları',
+                            href: '/telegram/logs',
+                            icon: PaperAirplaneIcon,
+                            current: route().current('telegram.logs')
+                        },
+                        {
+                            name: 'Audit Logları',
+                            href: '/audit-logs',
+                            icon: DocumentTextIcon,
+                            current: route().current('audit-logs.*')
+                        },
+                        {
+                            name: 'Fiskal Printer Növbəsi',
+                            href: '/fiscal-printer-jobs',
+                            icon: PrinterIcon,
+                            current: route().current('fiscal-printer-jobs.*')
                         }
                     ]
                 }
@@ -503,7 +546,7 @@ export default function Authenticated({
         if (user.role === 'tailor') {
             return [
                 ...baseNavigation,
-                {
+                ...(servicesEnabled ? [{
                     name: 'Xidmətlər',
                     icon: ScissorsIcon,
                     children: [
@@ -533,7 +576,7 @@ export default function Authenticated({
                             current: route().current('services.index', { serviceType: 'general' })
                         }
                     ]
-                },
+                }] : []),
                 {
                     name: 'Satış və Marketinq',
                     icon: MegaphoneIcon,
@@ -580,6 +623,30 @@ export default function Authenticated({
                             href: '/reports',
                             icon: DocumentTextIcon,
                             current: route().current('reports.*')
+                        },
+                        {
+                            name: 'SMS Logları',
+                            href: '/sms/logs',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('sms.logs')
+                        },
+                        {
+                            name: 'Telegram Logları',
+                            href: '/telegram/logs',
+                            icon: PaperAirplaneIcon,
+                            current: route().current('telegram.logs')
+                        },
+                        {
+                            name: 'Audit Logları',
+                            href: '/audit-logs',
+                            icon: DocumentTextIcon,
+                            current: route().current('audit-logs.*')
+                        },
+                        {
+                            name: 'Fiskal Printer Növbəsi',
+                            href: '/fiscal-printer-jobs',
+                            icon: PrinterIcon,
+                            current: route().current('fiscal-printer-jobs.*')
                         }
                     ]
                 },
@@ -617,12 +684,30 @@ export default function Authenticated({
                     icon: ShoppingCartIcon,
                     current: route().current('sales.*') && !route().current('sales.online')
                 },
-                {
+                ...(discountsEnabled ? [{
+                    name: 'Endirimlər',
+                    href: '/products/discounts',
+                    icon: ReceiptPercentIcon,
+                    current: route().current('products.discounts')
+                }] : []),
+                ...(shopEnabled ? [{
                     name: 'Online Sifarişlər',
-                    href: '/online-orders',
                     icon: ShoppingBagIcon,
-                    current: route().current('online-orders.*')
-                },
+                    children: [
+                        {
+                            name: 'Sifarişlər',
+                            href: '/online-orders',
+                            icon: ShoppingBagIcon,
+                            current: route().current('online-orders.index')
+                        },
+                        {
+                            name: 'Bildiriş Kanalları',
+                            href: '/notification-channels',
+                            icon: BellIcon,
+                            current: route().current('notification-channels.*')
+                        }
+                    ]
+                }] : []),
                 {
                     name: 'Müştərilər',
                     href: '/customers',
@@ -641,15 +726,15 @@ export default function Authenticated({
                     icon: PaperAirplaneIcon,
                     current: route().current('sms.send-page')
                 },
-                {
+                ...(loyaltyEnabled ? [{
                     name: 'Loyallıq Proqramı',
                     href: '/loyalty-program',
                     icon: GiftIcon,
                     current: route().current('loyalty-program.*')
-                }
+                }] : [])
             ]
         },
-        {
+        ...(rentEnabled ? [{
             name: 'İcarə İdarəetməsi',
             icon: ClockIcon,
             children: [
@@ -684,8 +769,8 @@ export default function Authenticated({
                     current: route().current('rental-templates.*')
                 }
             ]
-        },
-        {
+        }] : []),
+        ...(servicesEnabled ? [{
             name: 'Xidmətlər',
             icon: WrenchScrewdriverIcon,
             children: [
@@ -714,7 +799,7 @@ export default function Authenticated({
                     current: route().current('services.*') && route().params.serviceType === 'general'
                 }
             ]
-        },
+        }] : []),
         {
             name: 'Anbar və Stok',
             icon: CubeIcon,
@@ -724,12 +809,6 @@ export default function Authenticated({
                     href: '/products',
                     icon: CubeIcon,
                     current: route().current('products.index') || route().current('products.show') || route().current('products.edit') || route().current('products.create')
-                },
-                {
-                    name: 'Endirimlər',
-                    href: '/products/discounts',
-                    icon: ReceiptPercentIcon,
-                    current: route().current('products.discounts')
                 },
                 {
                     name: 'Kateqoriyalar',
@@ -832,6 +911,24 @@ export default function Authenticated({
                     href: '/audit-logs',
                     icon: DocumentTextIcon,
                     current: route().current('audit-logs.*')
+                },
+                {
+                    name: 'Fiskal Printer Növbəsi',
+                    href: '/fiscal-printer-jobs',
+                    icon: PrinterIcon,
+                    current: route().current('fiscal-printer-jobs.*')
+                }
+            ]
+        },
+        {
+            name: 'Tətbiqlər',
+            icon: PuzzlePieceIcon,
+            children: [
+                {
+                    name: 'Bütün Tətbiqlər',
+                    href: '/integrations',
+                    icon: PuzzlePieceIcon,
+                    current: route().current('integrations.*')
                 }
             ]
         },
@@ -876,16 +973,16 @@ export default function Authenticated({
                     current: route().current('receipt-templates.*')
                 },
                 {
-                    name: 'Tətbiqlər',
-                    href: '/integrations',
-                    icon: PuzzlePieceIcon,
-                    current: route().current('integrations.*')
-                },
-                {
                     name: 'Sistem Parametrləri',
                     href: '/settings',
                     icon: CogIcon,
                     current: route().current('settings.*')
+                },
+                {
+                    name: 'Bridge Tokenlər',
+                    href: '/bridge-tokens',
+                    icon: KeyIcon,
+                    current: route().current('bridge-tokens.*')
                 }
             ]
         }
@@ -970,6 +1067,7 @@ export default function Authenticated({
 
     return (
         <>
+            <SessionManager />
             <Toaster position="top-right" />
             <div className="flex h-screen bg-gray-100">
                 {/* Mobile sidebar overlay */}

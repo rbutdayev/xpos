@@ -64,11 +64,6 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
     onChange('attributes', newAttributes);
   };
 
-  // Only show for products (not services)
-  if (data.type === 'service') {
-    return null;
-  }
-
   return (
     <div className="bg-white shadow-sm rounded-lg overflow-hidden">
       <div className="p-6 border-b border-gray-200">

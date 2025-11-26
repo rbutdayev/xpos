@@ -9,6 +9,9 @@ import {
     CheckCircleIcon,
     Cog6ToothIcon,
     GiftIcon,
+    ShoppingBagIcon,
+    WrenchScrewdriverIcon,
+    ClockIcon,
 } from '@heroicons/react/24/outline';
 
 interface Integration {
@@ -16,7 +19,7 @@ interface Integration {
     name: string;
     description: string;
     icon: React.ComponentType<{ className?: string }>;
-    category: 'communication' | 'fiscal' | 'loyalty' | 'payment' | 'other';
+    category: 'communication' | 'fiscal' | 'loyalty' | 'payment' | 'business' | 'other';
     status: 'active' | 'inactive' | 'not_configured';
     route: string;
     color: string;
@@ -31,6 +34,11 @@ interface IntegrationsProps extends PageProps {
     fiscalPrinterEnabled: boolean;
     loyaltyProgramConfigured: boolean;
     loyaltyProgramActive: boolean;
+    shopEnabled: boolean;
+    shopConfigured: boolean;
+    servicesModuleEnabled: boolean;
+    rentModuleEnabled: boolean;
+    discountsModuleEnabled: boolean;
 }
 
 export default function Index({
@@ -40,11 +48,32 @@ export default function Index({
     fiscalPrinterConfigured,
     fiscalPrinterEnabled,
     loyaltyProgramConfigured,
-    loyaltyProgramActive
+    loyaltyProgramActive,
+    shopEnabled,
+    shopConfigured,
+    servicesModuleEnabled,
+    rentModuleEnabled,
+    discountsModuleEnabled
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
 
     const integrations: Integration[] = [
+        {
+            id: 'shop',
+            name: 'Online Mağaza',
+            description: 'Məhsullarınızı online satışa çıxarın və gəlir əldə edin',
+            icon: ShoppingBagIcon,
+            category: 'other',
+            status: shopConfigured ? (shopEnabled ? 'active' : 'inactive') : 'not_configured',
+            route: '/shop-settings',
+            color: 'blue',
+            features: [
+                'Online mağaza',
+                'Məhsul kataloqu',
+                'Online sifarişlər',
+                'Ödəniş inteqrasiyası'
+            ]
+        },
         {
             id: 'sms',
             name: 'SMS Xidməti',
@@ -109,14 +138,64 @@ export default function Index({
                 'Bal bitmə tarixi',
                 'Müştəri loyallıq hesabatı'
             ]
+        },
+        {
+            id: 'services',
+            name: 'Xidmətlər Modulu',
+            description: 'Dərzi, telefon təmiri və digər xidmətləri idarə edin',
+            icon: WrenchScrewdriverIcon,
+            category: 'business',
+            status: servicesModuleEnabled ? 'active' : 'inactive',
+            route: '/settings',
+            color: 'indigo',
+            features: [
+                'Dərzi xidmətləri',
+                'Telefon təmiri',
+                'Elektronika təmiri',
+                'Ümumi xidmətlər'
+            ]
+        },
+        {
+            id: 'rent',
+            name: 'İcarə Modulu',
+            description: 'İcarə əməliyyatlarını və inventarı idarə edin',
+            icon: ClockIcon,
+            category: 'business',
+            status: rentModuleEnabled ? 'active' : 'inactive',
+            route: '/settings',
+            color: 'teal',
+            features: [
+                'İcarə siyahısı',
+                'İcarə təqvimi',
+                'İcarə inventarı',
+                'Müqavilə şablonları'
+            ]
+        },
+        {
+            id: 'discounts',
+            name: 'Endirimlər Modulu',
+            description: 'Məhsullara endirim tətbiq edin və idarə edin',
+            icon: ReceiptPercentIcon,
+            category: 'business',
+            status: discountsModuleEnabled ? 'active' : 'inactive',
+            route: '/settings',
+            color: 'amber',
+            features: [
+                'Məhsul endirimlər',
+                'Endirim faizləri',
+                'Tarix aralığı ilə endirimlər',
+                'Filial üzrə endirimlər'
+            ]
         }
     ];
 
     const categories = [
         { id: 'all', name: 'Hamısı', count: integrations.length },
+        { id: 'business', name: 'Biznes Modulları', count: integrations.filter(i => i.category === 'business').length },
         { id: 'communication', name: 'Əlaqə', count: integrations.filter(i => i.category === 'communication').length },
         { id: 'fiscal', name: 'Fiskal', count: integrations.filter(i => i.category === 'fiscal').length },
         { id: 'loyalty', name: 'Loyallıq', count: integrations.filter(i => i.category === 'loyalty').length },
+        { id: 'other', name: 'Digər', count: integrations.filter(i => i.category === 'other').length },
     ];
 
     const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
@@ -155,6 +234,9 @@ export default function Index({
             sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', button: 'bg-sky-600' },
             emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', button: 'bg-emerald-600' },
             purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', button: 'bg-purple-600' },
+            indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600', button: 'bg-indigo-600' },
+            teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', button: 'bg-teal-600' },
+            amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', button: 'bg-amber-600' },
         };
         return classes[color]?.[type] || classes.blue[type];
     };
@@ -167,15 +249,23 @@ export default function Index({
         router.visit(integration.route);
     };
 
+    const handleToggleModule = (moduleId: string) => {
+        router.post('/settings/toggle-module', {
+            module: moduleId
+        }, {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex justify-between items-center">
                     <div>
-                        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                        <h2 className="font-semibold text-lg sm:text-xl text-gray-800 leading-tight">
                             Tətbiqlər və İnteqrasiyalar
                         </h2>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="mt-1 text-xs sm:text-sm text-gray-500">
                             Biznesinizi genişləndirmək üçün xidmətləri inteqrasiya edin
                         </p>
                     </div>
@@ -184,18 +274,18 @@ export default function Index({
         >
             <Head title="Tətbiqlər və İnteqrasiyalar" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-6 sm:py-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Category Filter */}
                     <div className="mb-6">
-                        <div className="border-b border-gray-200">
-                            <nav className="-mb-px flex space-x-8">
+                        <div className="border-b border-gray-200 overflow-x-auto">
+                            <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
                                 {categories.map((category) => (
                                     <button
                                         key={category.id}
                                         onClick={() => setSelectedCategory(category.id)}
                                         className={`
-                                            whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                                            whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm
                                             ${selectedCategory === category.id
                                                 ? 'border-blue-500 text-blue-600'
                                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -213,7 +303,7 @@ export default function Index({
                     </div>
 
                     {/* Integrations Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         {filteredIntegrations.map((integration) => {
                             const IconComponent = integration.icon;
                             const isDisabled = integration.requiresOwner && !isOwner;
@@ -229,16 +319,16 @@ export default function Index({
                                         flex flex-col
                                     `}
                                 >
-                                    <div className={`p-6 ${getColorClasses(integration.color, 'bg')} flex-1 flex flex-col`}>
+                                    <div className={`p-4 sm:p-6 ${getColorClasses(integration.color, 'bg')} flex-1 flex flex-col`}>
                                         <div className="flex items-start justify-between">
-                                            <div className={`p-3 rounded-lg ${getColorClasses(integration.color, 'text')} bg-white`}>
-                                                <IconComponent className="w-6 h-6" />
+                                            <div className={`p-2 sm:p-3 rounded-lg ${getColorClasses(integration.color, 'text')} bg-white`}>
+                                                <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                                             </div>
                                             {getStatusBadge(integration.status)}
                                         </div>
 
-                                        <div className="mt-4">
-                                            <h3 className="text-lg font-semibold text-gray-900">
+                                        <div className="mt-3 sm:mt-4">
+                                            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                                                 {integration.name}
                                                 {integration.requiresOwner && (
                                                     <span className="ml-2 text-xs text-gray-500">(Owner)</span>
@@ -260,24 +350,54 @@ export default function Index({
                                         </div>
 
                                         {/* Action Button */}
-                                        <div className="mt-auto pt-6">
-                                            <button
-                                                onClick={() => handleIntegrationClick(integration)}
-                                                disabled={isDisabled}
-                                                className={`
-                                                    w-full flex items-center justify-center px-4 py-2 border border-transparent
-                                                    rounded-md shadow-sm text-sm font-medium text-white
-                                                    ${isDisabled
-                                                        ? 'bg-gray-400 cursor-not-allowed'
-                                                        : `${getColorClasses(integration.color, 'button')} hover:opacity-90`
-                                                    }
-                                                    focus:outline-none focus:ring-2 focus:ring-offset-2
-                                                    transition-colors duration-200
-                                                `}
-                                            >
-                                                <Cog6ToothIcon className="w-5 h-5 mr-2" />
-                                                {integration.status === 'not_configured' ? 'Quraşdır' : 'Parametrlər'}
-                                            </button>
+                                        <div className="mt-auto pt-4 sm:pt-6">
+                                            {['services', 'rent', 'discounts'].includes(integration.id) ? (
+                                                // Toggle switch for business modules
+                                                <button
+                                                    onClick={() => handleToggleModule(integration.id)}
+                                                    className={`
+                                                        w-full flex items-center justify-center px-3 sm:px-4 py-2 border-2
+                                                        rounded-md shadow-sm text-xs sm:text-sm font-medium
+                                                        ${integration.status === 'active'
+                                                            ? `${getColorClasses(integration.color, 'button')} text-white hover:opacity-90`
+                                                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                                                        }
+                                                        focus:outline-none focus:ring-2 focus:ring-offset-2
+                                                        transition-all duration-200
+                                                    `}
+                                                >
+                                                    {integration.status === 'active' ? (
+                                                        <>
+                                                            <CheckCircleIcon className="w-5 h-5 mr-2" />
+                                                            Aktivdir - Söndür
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Cog6ToothIcon className="w-5 h-5 mr-2" />
+                                                            Aktivləşdir
+                                                        </>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                // Regular button for other integrations
+                                                <button
+                                                    onClick={() => handleIntegrationClick(integration)}
+                                                    disabled={isDisabled}
+                                                    className={`
+                                                        w-full flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent
+                                                        rounded-md shadow-sm text-xs sm:text-sm font-medium text-white
+                                                        ${isDisabled
+                                                            ? 'bg-gray-400 cursor-not-allowed'
+                                                            : `${getColorClasses(integration.color, 'button')} hover:opacity-90`
+                                                        }
+                                                        focus:outline-none focus:ring-2 focus:ring-offset-2
+                                                        transition-colors duration-200
+                                                    `}
+                                                >
+                                                    <Cog6ToothIcon className="w-5 h-5 mr-2" />
+                                                    {integration.status === 'not_configured' ? 'Quraşdır' : 'Parametrlər'}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -293,7 +413,7 @@ export default function Index({
                     )}
 
                     {/* Info Box */}
-                    <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
                         <div className="flex items-start">
                             <div className="flex-shrink-0">
                                 <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -304,7 +424,7 @@ export default function Index({
                                 <h3 className="text-sm font-medium text-blue-800">
                                     İnteqrasiyalar haqqında
                                 </h3>
-                                <div className="mt-2 text-sm text-blue-700">
+                                <div className="mt-2 text-xs sm:text-sm text-blue-700">
                                     <p>
                                         Tətbiqlər və inteqrasiyalar sizin biznesinizi daha effektiv idarə etməyə kömək edir.
                                         Hər bir xidməti aktivləşdirmək üçün uyğun parametrləri konfiqurasiya etməlisiniz.

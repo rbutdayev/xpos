@@ -18,9 +18,9 @@ class FiscalPrinterConfigController extends Controller
     {
         Gate::authorize('access-account-data');
 
-        // Only account_owner can access fiscal printer configuration
-        if (!Auth::user()->hasRole('account_owner')) {
-            abort(403, 'Bu səhifəyə yalnız account owner daxil ola bilər.');
+        // Only account_owner and admin can access fiscal printer configuration
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Bu səhifəyə yalnız administrator daxil ola bilər.');
         }
 
         $accountId = Auth::user()->account_id;
@@ -55,9 +55,9 @@ class FiscalPrinterConfigController extends Controller
     {
         Gate::authorize('edit-account-data');
 
-        // Only account_owner can update fiscal printer configuration
-        if (!Auth::user()->hasRole('account_owner')) {
-            abort(403, 'Bu əməliyyatı yalnız account owner edə bilər.');
+        // Only account_owner and admin can update fiscal printer configuration
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Bu əməliyyatı yalnız administrator edə bilər.');
         }
 
         $accountId = Auth::user()->account_id;
@@ -119,11 +119,11 @@ class FiscalPrinterConfigController extends Controller
     {
         Gate::authorize('access-account-data');
 
-        // Only account_owner can test fiscal printer connection
-        if (!Auth::user()->hasRole('account_owner')) {
+        // Only account_owner and admin can test fiscal printer connection
+        if (!Auth::user()->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bu əməliyyatı yalnız account owner edə bilər.',
+                'message' => 'Bu əməliyyatı yalnız administrator edə bilər.',
             ], 403);
         }
 
@@ -153,9 +153,9 @@ class FiscalPrinterConfigController extends Controller
     {
         Gate::authorize('delete-account-data');
 
-        // Only account_owner can delete fiscal printer configuration
-        if (!Auth::user()->hasRole('account_owner')) {
-            abort(403, 'Bu əməliyyatı yalnız account owner edə bilər.');
+        // Only account_owner and admin can delete fiscal printer configuration
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Bu əməliyyatı yalnız administrator edə bilər.');
         }
 
         $accountId = Auth::user()->account_id;
@@ -178,9 +178,9 @@ class FiscalPrinterConfigController extends Controller
     {
         Gate::authorize('access-account-data');
 
-        // Only account_owner can view fiscal printer logs
-        if (!Auth::user()->hasRole('account_owner')) {
-            abort(403, 'Bu səhifəyə yalnız account owner daxil ola bilər.');
+        // Only account_owner and admin can view fiscal printer logs
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Bu səhifəyə yalnız administrator daxil ola bilər.');
         }
 
         $accountId = Auth::user()->account_id;

@@ -31,6 +31,11 @@ class OnlineOrderController extends Controller
     {
         Gate::authorize('access-account-data');
 
+        // Check if shop module is enabled
+        if (!Auth::user()->account->shop_enabled) {
+            abort(403, 'Online mağaza modulu aktivləşdirilməyib.');
+        }
+
         $request->validate([
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|string|in:pending,completed,cancelled',
@@ -91,6 +96,11 @@ class OnlineOrderController extends Controller
     public function updateStatus(Request $request, Sale $sale)
     {
         Gate::authorize('access-account-data');
+
+        // Check if shop module is enabled
+        if (!Auth::user()->account->shop_enabled) {
+            abort(403, 'Online mağaza modulu aktivləşdirilməyib.');
+        }
 
         // Verify this is an online order and belongs to the user's account
         if (!$sale->is_online_order || $sale->account_id !== Auth::user()->account_id) {
@@ -273,6 +283,11 @@ class OnlineOrderController extends Controller
     public function cancel(Request $request, Sale $sale)
     {
         Gate::authorize('access-account-data');
+
+        // Check if shop module is enabled
+        if (!Auth::user()->account->shop_enabled) {
+            abort(403, 'Online mağaza modulu aktivləşdirilməyib.');
+        }
 
         // Verify this is an online order and belongs to the user's account
         if (!$sale->is_online_order || $sale->account_id !== Auth::user()->account_id) {

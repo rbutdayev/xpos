@@ -96,18 +96,42 @@ export default function DiscountSection({ product, branches }: Props) {
     return true;
   };
 
+  const getDiscountStatus = (price: ProductPrice) => {
+    if (!price.is_active) return 'inactive';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const from = new Date(price.effective_from);
+    from.setHours(0, 0, 0, 0);
+
+    // Future discount
+    if (from > today) return 'waiting';
+
+    // Check if expired
+    if (price.effective_until) {
+      const until = new Date(price.effective_until);
+      until.setHours(23, 59, 59, 999);
+      if (until < today) return 'expired';
+    }
+
+    // Active and effective
+    return 'active';
+  };
+
   const renderPriceCard = (price: ProductPrice) => {
-    const effective = isEffective(price);
+    const status = getDiscountStatus(price);
     const discountedPrice = calculateDiscountedPrice(price);
 
     return (
       <div
         key={price.id}
         className={`p-4 rounded-lg border-2 ${
-          price.is_active && effective
+          status === 'active'
             ? 'border-green-200 bg-green-50'
-            : price.is_active
+            : status === 'waiting'
             ? 'border-blue-200 bg-blue-50'
+            : status === 'expired'
+            ? 'border-orange-200 bg-orange-50'
             : 'border-gray-200 bg-gray-50'
         }`}
       >
@@ -117,17 +141,22 @@ export default function DiscountSection({ product, branches }: Props) {
               <span className="text-2xl font-bold text-red-600">
                 {price.discount_percentage}%
               </span>
-              {price.is_active && effective && (
+              {status === 'active' && (
                 <span className="px-2 py-0.5 text-xs font-medium bg-green-600 text-white rounded-full">
                   Aktiv
                 </span>
               )}
-              {price.is_active && !effective && (
+              {status === 'waiting' && (
                 <span className="px-2 py-0.5 text-xs font-medium bg-blue-600 text-white rounded-full">
                   Gözləyir
                 </span>
               )}
-              {!price.is_active && (
+              {status === 'expired' && (
+                <span className="px-2 py-0.5 text-xs font-medium bg-orange-600 text-white rounded-full">
+                  Vaxtı keçib
+                </span>
+              )}
+              {status === 'inactive' && (
                 <span className="px-2 py-0.5 text-xs font-medium bg-gray-600 text-white rounded-full">
                   Dayandırılıb
                 </span>

@@ -13,34 +13,6 @@ interface Props {
   generatingBarcode?: boolean;
 }
 
-const SIZES = [
-  'XS',
-  'S',
-  'M',
-  'L',
-  'XL',
-  'XXL',
-  'XXXL',
-  '28', '29', '30', '31', '32', '33', '34', '36', '38', '40', '42', '44', '46', '48', '50'
-];
-
-const COLORS = [
-  { name: 'Ağ (White)', code: '#FFFFFF' },
-  { name: 'Qara (Black)', code: '#000000' },
-  { name: 'Qırmızı (Red)', code: '#FF0000' },
-  { name: 'Mavi (Blue)', code: '#0000FF' },
-  { name: 'Yaşıl (Green)', code: '#008000' },
-  { name: 'Sarı (Yellow)', code: '#FFFF00' },
-  { name: 'Boz (Gray)', code: '#808080' },
-  { name: 'Qəhvəyi (Brown)', code: '#8B4513' },
-  { name: 'Narıncı (Orange)', code: '#FFA500' },
-  { name: 'Çəhrayı (Pink)', code: '#FFC0CB' },
-  { name: 'Bənövşəyi (Purple)', code: '#800080' },
-  { name: 'Bej (Beige)', code: '#F5F5DC' },
-  { name: 'Lacivert (Navy)', code: '#000080' },
-  { name: 'Bordo (Burgundy)', code: '#800020' }
-];
-
 export default function BasicInfoSection({ data, errors, onChange, categories, onGenerateBarcode, generatingBarcode }: Props) {
   // Get clothing attributes from the attributes object
   const getAttr = (key: string) => data.attributes?.[key] || '';
@@ -62,7 +34,7 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
       </div>
       <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <InputLabel htmlFor="name" value={data.type === 'service' ? 'Xidmət Adı *' : 'Məhsul Adı *'} />
+          <InputLabel htmlFor="name" value="Məhsul Adı *" />
           <TextInput id="name" type="text" value={data.name || ''} className="mt-1 block w-full" onChange={(e) => onChange('name', e.target.value)} required />
           <InputError message={errors.name} className="mt-2" />
         </div>
@@ -72,7 +44,7 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
           <select id="category_id" value={data.category_id || ''} onChange={(e) => onChange('category_id', e.target.value)} className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
             <option value="">Kateqoriya seç</option>
             {categories
-              .filter((c) => c.is_service === (data.type === 'service'))
+              .filter((c) => !c.is_service)
               .map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -83,12 +55,28 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
         </div>
 
         <div>
-          <InputLabel htmlFor="type" value="Növ *" />
-          <select id="type" value={data.type} onChange={(e) => onChange('type', e.target.value)} className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-            <option value="product">Məhsul</option>
-            <option value="service">Xidmət</option>
+          <InputLabel htmlFor="unit" value="Ölçü vahidi *" />
+          <select
+            id="unit"
+            value={data.unit || 'ədəd'}
+            onChange={(e) => onChange('unit', e.target.value)}
+            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            required
+          >
+            <option value="ədəd">ədəd (piece)</option>
+            <option value="kq">kq (kg)</option>
+            <option value="qr">qr (gram)</option>
+            <option value="litr">litr (liter)</option>
+            <option value="ml">ml (milliliter)</option>
+            <option value="metr">metr (meter)</option>
+            <option value="sm">sm (cm)</option>
+            <option value="paket">paket (package)</option>
+            <option value="qutu">qutu (box)</option>
+            <option value="səbət">səbət (basket)</option>
+            <option value="dəst">dəst (set)</option>
+            <option value="cüt">cüt (pair)</option>
           </select>
-          <InputError message={errors.type} className="mt-2" />
+          <InputError message={errors.unit} className="mt-2" />
         </div>
 
         <div>
@@ -97,60 +85,31 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
           <InputError message={errors.sku} className="mt-2" />
         </div>
 
-        {data.type === 'product' && (
-          <>
-            <div>
-              <InputLabel htmlFor="size" value="Ölçü (Size) *" />
-              <select
-                id="size"
-                value={getAttr('size')}
-                onChange={(e) => setAttr('size', e.target.value)}
-                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                required
-              >
-                <option value="">Ölçü seçin</option>
-                {SIZES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <InputError message={errors['attributes.size']} className="mt-2" />
-            </div>
+        <div>
+          <InputLabel htmlFor="size" value="Ölçü (Size)" />
+          <TextInput
+            id="size"
+            type="text"
+            value={getAttr('size')}
+            className="mt-1 block w-full"
+            onChange={(e) => setAttr('size', e.target.value)}
+            placeholder="məs: M, L, 42, və s."
+          />
+          <InputError message={errors['attributes.size']} className="mt-2" />
+        </div>
 
-            <div>
-              <InputLabel htmlFor="color" value="Rəng (Color) *" />
-              <select
-                id="color"
-                value={getAttr('color')}
-                onChange={(e) => {
-                  const selectedColor = COLORS.find(c => c.name === e.target.value);
-                  const newAttributes = { ...(data.attributes || {}) };
-                  if (e.target.value) {
-                    newAttributes['color'] = e.target.value;
-                    if (selectedColor) {
-                      newAttributes['color_code'] = selectedColor.code;
-                    }
-                  } else {
-                    delete newAttributes['color'];
-                    delete newAttributes['color_code'];
-                  }
-                  onChange('attributes', newAttributes);
-                }}
-                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                required
-              >
-                <option value="">Rəng seçin</option>
-                {COLORS.map((c) => (
-                  <option key={c.name} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <InputError message={errors['attributes.color']} className="mt-2" />
-            </div>
-          </>
-        )}
+        <div>
+          <InputLabel htmlFor="color" value="Rəng (Color)" />
+          <TextInput
+            id="color"
+            type="text"
+            value={getAttr('color')}
+            className="mt-1 block w-full"
+            onChange={(e) => setAttr('color', e.target.value)}
+            placeholder="məs: Qırmızı, Mavi, və s."
+          />
+          <InputError message={errors['attributes.color']} className="mt-2" />
+        </div>
 
         <div className="md:col-span-3 flex items-end gap-3">
           <div className="flex-1">

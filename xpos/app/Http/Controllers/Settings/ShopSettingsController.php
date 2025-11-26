@@ -83,12 +83,16 @@ class ShopSettingsController extends Controller
 
     /**
      * Create or ensure "Online Shop" system user exists
+     * MULTI-TENANT: Uses company-specific email (shop_slug) to ensure uniqueness across accounts
      */
     private function ensureOnlineShopUser(Account $account): void
     {
+        // MULTI-TENANT: Use shop_slug to make email unique across accounts
+        $systemEmail = "online-shop@system-{$account->shop_slug}.local";
+
         // Check if online shop user already exists
         $onlineUser = User::where('account_id', $account->id)
-            ->where('email', 'online-shop@system.local')
+            ->where('email', $systemEmail)
             ->first();
 
         if (!$onlineUser) {
@@ -96,7 +100,7 @@ class ShopSettingsController extends Controller
             User::create([
                 'account_id' => $account->id,
                 'name' => 'Online Mağaza',
-                'email' => 'online-shop@system.local',
+                'email' => $systemEmail,
                 'password' => Hash::make(bin2hex(random_bytes(32))), // Random unguessable password
                 'role' => 'sales_staff', // Limited role - can only create sales
                 'status' => 'active',
@@ -104,6 +108,7 @@ class ShopSettingsController extends Controller
 
             \Log::info('Created online shop system user', [
                 'account_id' => $account->id,
+                'email' => $systemEmail,
             ]);
         }
     }

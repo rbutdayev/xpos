@@ -352,12 +352,6 @@ class ProductController extends Controller
 
             $product = Product::create($productData);
 
-            // Auto-parse packaging size if provided (products only)
-            if ($request->type === 'product' && !empty($productData['packaging_size'])) {
-                $product->updatePackagingFromSize();
-                $product->save();
-            }
-
             // Create initial stock entries (products only)
             if ($request->type === 'product' && $request->filled('initial_stock')) {
                 foreach ($request->initial_stock as $stock) {
@@ -426,7 +420,6 @@ class ProductController extends Controller
             'products.*.barcode' => 'nullable|string|max:100',
             'products.*.size' => 'nullable|string|max:50',
             'products.*.color' => 'nullable|string|max:100',
-            'products.*.color_code' => 'nullable|string|max:7',
             'products.*.initial_quantity' => 'nullable|numeric|min:0',
             'products.*.warehouse_id' => 'nullable|exists:warehouses,id,account_id,' . Auth::user()->account_id,
         ]);
@@ -486,9 +479,6 @@ class ProductController extends Controller
                 }
                 if (!empty($productData['color'])) {
                     $attributes['color'] = $productData['color'];
-                }
-                if (!empty($productData['color_code'])) {
-                    $attributes['color_code'] = $productData['color_code'];
                 }
                 if (!empty($attributes)) {
                     $data['attributes'] = $attributes;
@@ -751,12 +741,6 @@ class ProductController extends Controller
         }
         
         $product->update($productData);
-        
-        // Auto-parse packaging size if provided
-        if (!empty($productData['packaging_size'])) {
-            $product->updatePackagingFromSize();
-            $product->save();
-        }
 
         return redirect()->route('products.show', $product)
                         ->with('success', __('app.updated_successfully'));
@@ -950,15 +934,22 @@ class ProductController extends Controller
         Gate::authorize('access-account-data');
 
         $branchId = $request->input('branch_id');
+        $tab = $request->input('tab', 'active'); // 'active' or 'history'
 
         // Get all products that have active, effective prices with discounts
         $products = Product::where('account_id', Auth::user()->account_id)
             ->where('type', 'product')
             ->where('is_active', true)
-            ->whereHas('prices', function ($query) use ($branchId) {
+            ->whereHas('prices', function ($query) use ($branchId, $tab) {
                 $query->active()
-                      ->effective()
                       ->where('discount_percentage', '>', 0);
+
+                // Apply effective or expired scope based on tab
+                if ($tab === 'history') {
+                    $query->expired();
+                } else {
+                    $query->effective();
+                }
 
                 if ($branchId) {
                     $query->where(function ($q) use ($branchId) {
@@ -969,10 +960,16 @@ class ProductController extends Controller
                     $query->whereNull('branch_id');
                 }
             })
-            ->with(['prices' => function ($query) use ($branchId) {
+            ->with(['prices' => function ($query) use ($branchId, $tab) {
                 $query->active()
-                      ->effective()
                       ->where('discount_percentage', '>', 0);
+
+                // Apply effective or expired scope based on tab
+                if ($tab === 'history') {
+                    $query->expired();
+                } else {
+                    $query->effective();
+                }
 
                 if ($branchId) {
                     $query->where(function ($q) use ($branchId) {
@@ -1010,6 +1007,7 @@ class ProductController extends Controller
                 ->get(),
             'filters' => [
                 'branch_id' => $branchId,
+                'tab' => $tab,
             ],
         ]);
     }

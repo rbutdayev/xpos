@@ -18,14 +18,28 @@ const setCSRFToken = () => {
 // Set initial token
 setCSRFToken();
 
-// Refresh CSRF token on mobile browsers when page becomes visible
-if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            setCSRFToken();
+// Refresh CSRF token when page becomes visible (especially important for multi-tab scenarios)
+// This handles cases where user logs out/in with different account in another tab
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        // Refresh CSRF token when tab becomes active
+        setCSRFToken();
+
+        // On mobile or if page was hidden for >5 minutes, do a full page reload
+        // to ensure session is still valid and prevent stale state
+        const lastVisible = parseInt(sessionStorage.getItem('lastVisibleTime') || '0');
+        const now = Date.now();
+        const fiveMinutes = 5 * 60 * 1000;
+
+        if (lastVisible && (now - lastVisible) > fiveMinutes) {
+            // Page was inactive for >5 minutes, reload to ensure fresh session
+            router.reload({ only: [] });
         }
-    });
-}
+    } else {
+        // Store when page was hidden
+        sessionStorage.setItem('lastVisibleTime', Date.now().toString());
+    }
+});
 
 // Refresh CSRF token after Inertia page loads (e.g., after login when session regenerates)
 router.on('finish', () => {

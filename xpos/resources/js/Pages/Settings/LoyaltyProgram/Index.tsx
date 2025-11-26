@@ -1,11 +1,12 @@
 import React, { FormEventHandler, useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import SecondaryButton from '@/Components/SecondaryButton';
+import DangerButton from '@/Components/DangerButton';
 import { PageProps, LoyaltyProgram } from '@/types';
 
 interface LoyaltyProgramProps extends PageProps {
@@ -13,7 +14,9 @@ interface LoyaltyProgramProps extends PageProps {
 }
 
 export default function Index({ auth, program }: LoyaltyProgramProps) {
-    const [isEditing, setIsEditing] = useState(!program);
+    const loyaltyEnabled = usePage().props.loyaltyEnabled as boolean;
+    const [isEditing, setIsEditing] = useState(!program && loyaltyEnabled);
+    const [showModuleDisableModal, setShowModuleDisableModal] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm<{
         points_per_currency_unit: number;
@@ -48,6 +51,27 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
         });
     };
 
+    const toggleModule = () => {
+        if (!loyaltyEnabled) {
+            // If module is currently disabled, enable it without confirmation
+            router.post(route('loyalty-program.toggle-module'), {}, {
+                preserveScroll: true,
+            });
+        } else {
+            // If module is enabled, show confirmation modal
+            setShowModuleDisableModal(true);
+        }
+    };
+
+    const confirmModuleDisable = () => {
+        router.post(route('loyalty-program.toggle-module'), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowModuleDisableModal(false);
+            },
+        });
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -62,8 +86,36 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
+                            {/* Module Disabled Warning */}
+                            {!loyaltyEnabled && (
+                                <div className="mb-6 p-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-start">
+                                            <svg className="w-6 h-6 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-yellow-900 mb-2">
+                                                    Modul Söndürülüb
+                                                </h3>
+                                                <p className="text-sm text-yellow-800 mb-3">
+                                                    Loyallıq proqramı modulu hazırda deaktivdir. Modulu aktivləşdirmək üçün düyməyə klikləyin və ya aşağıdakı "Təhlükəli Zona" bölməsindən istifadə edin.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <PrimaryButton
+                                            onClick={toggleModule}
+                                            disabled={processing}
+                                            className="ml-4 flex-shrink-0"
+                                        >
+                                            Modulu Aktivləşdir
+                                        </PrimaryButton>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Status Card */}
-                            {program && !isEditing && (
+                            {loyaltyEnabled && program && !isEditing && (
                                 <div className="mb-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -90,7 +142,7 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                                                 onClick={toggleActive}
                                                 disabled={processing}
                                             >
-                                                {program.is_active ? 'Deaktiv et' : 'Aktiv et'}
+                                                {program.is_active ? 'Proqramı Dayandır' : 'Proqramı İşə Sal'}
                                             </PrimaryButton>
                                         </div>
                                     </div>
@@ -134,7 +186,7 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                             )}
 
                             {/* Configuration Form */}
-                            {isEditing && (
+                            {loyaltyEnabled && isEditing && (
                                 <form onSubmit={submit}>
                                     <div className="space-y-6">
                                         <div>
@@ -313,6 +365,7 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                             )}
 
                             {/* Help Section */}
+                            {loyaltyEnabled && (
                             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <h4 className="text-sm font-semibold text-blue-900 mb-2">
                                     💡 Loyallıq Proqramı Necə İşləyir?
@@ -325,10 +378,84 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                                     <li>Bütün bal hərəkətləri müştəri tarixçəsində qeyd olunur</li>
                                 </ul>
                             </div>
+                            )}
+
+                            {/* Danger Zone */}
+                            <div className="mt-8 p-6 bg-red-50 border-2 border-red-200 rounded-lg">
+                                <h4 className="text-lg font-semibold text-red-900 mb-2">
+                                    ⚠️ Təhlükəli Zona
+                                </h4>
+                                <p className="text-sm text-red-700 mb-4">
+                                    {loyaltyEnabled
+                                        ? 'Loyallıq proqramı modulunu tamamilə söndürərkən diqqətli olun. Modul söndürüldükdə menyu siyahısından gizlədilir və heç kim bu funksiyanı istifadə edə bilməz.'
+                                        : 'Loyallıq proqramı modulu hazırda söndürülüb. Aktivləşdirdikdə menyu siyahısında görünəcək və istifadəyə hazır olacaq.'}
+                                </p>
+                                <DangerButton
+                                    onClick={toggleModule}
+                                    disabled={processing}
+                                >
+                                    {loyaltyEnabled ? 'Modulu Tamamilə Söndür' : 'Modulu Aktivləşdir'}
+                                </DangerButton>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Module Disable Confirmation Modal */}
+            {showModuleDisableModal && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowModuleDisableModal(false)}></div>
+
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                        <div className="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-red-100 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                                        <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                        <h3 className="text-lg font-medium leading-6 text-gray-900">
+                                            Loyallıq Proqramı Modulunu Söndür
+                                        </h3>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                Modulu söndürmək istədiyinizə əminsiniz? Bu əməliyyat:
+                                            </p>
+                                            <ul className="mt-2 text-sm text-gray-700 list-disc list-inside">
+                                                <li>Menyu siyahısından loyallıq proqramını gizlədəcək</li>
+                                                <li>Heç kimin bu funksiyanı istifadə etməsinə icazə verməyəcək</li>
+                                                <li>Mövcud proqram məlumatları saxlanılacaq</li>
+                                                <li>Müştərilərin balları təhlükəsiz saxlanılacaq</li>
+                                                <li>İstənilən vaxt yenidən aktivləşdirə bilərsiniz</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <DangerButton
+                                    onClick={confirmModuleDisable}
+                                    disabled={processing}
+                                    className="ml-3"
+                                >
+                                    Bəli, Söndür
+                                </DangerButton>
+                                <SecondaryButton
+                                    onClick={() => setShowModuleDisableModal(false)}
+                                    disabled={processing}
+                                >
+                                    Ləğv et
+                                </SecondaryButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

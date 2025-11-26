@@ -22,6 +22,7 @@ class Account extends Model
         'is_active',
         'shop_slug',
         'shop_enabled',
+        'shop_warehouse_id',
         'shop_settings',
         'shop_sms_merchant_notifications',
         'shop_notification_phone',
@@ -30,6 +31,10 @@ class Account extends Model
         'notification_settings',
         'auto_print_receipt',
         'fiscal_printer_enabled',
+        'loyalty_module_enabled',
+        'services_module_enabled',
+        'rent_module_enabled',
+        'discounts_module_enabled',
     ];
 
     protected $casts = [
@@ -42,6 +47,10 @@ class Account extends Model
         'notification_settings' => 'array',
         'auto_print_receipt' => 'boolean',
         'fiscal_printer_enabled' => 'boolean',
+        'loyalty_module_enabled' => 'boolean',
+        'services_module_enabled' => 'boolean',
+        'rent_module_enabled' => 'boolean',
+        'discounts_module_enabled' => 'boolean',
     ];
 
     public function users(): HasMany
@@ -72,6 +81,11 @@ class Account extends Model
     public function warehouses(): HasMany
     {
         return $this->hasMany(Warehouse::class);
+    }
+
+    public function shopWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'shop_warehouse_id');
     }
 
     public function products(): HasMany
@@ -143,6 +157,30 @@ class Account extends Model
         $this->update([
             'shop_settings' => array_merge($this->shop_settings ?? [], $settings)
         ]);
+    }
+
+    // Loyalty-related helper methods
+    public function isLoyaltyModuleEnabled(): bool
+    {
+        return $this->loyalty_module_enabled ?? true;
+    }
+
+    // Services module helper methods
+    public function isServicesModuleEnabled(): bool
+    {
+        return $this->services_module_enabled ?? true;
+    }
+
+    // Rent module helper methods
+    public function isRentModuleEnabled(): bool
+    {
+        return $this->rent_module_enabled ?? true;
+    }
+
+    // Discounts module helper methods
+    public function isDiscountsModuleEnabled(): bool
+    {
+        return $this->discounts_module_enabled ?? true;
     }
 
     public function hasSmsConfigured(): bool

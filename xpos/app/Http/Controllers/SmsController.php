@@ -6,6 +6,7 @@ use App\Models\SmsCredential;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class SmsController extends Controller
@@ -87,23 +88,30 @@ class SmsController extends Controller
     {
         $validated = $request->validate([
             'login' => 'required|string',
-            'password' => 'required|string',
+            'password' => 'nullable|string',
             'sender_name' => 'required|string|max:11',
             'is_active' => 'boolean',
         ]);
 
         $accountId = Auth::user()->account_id;
 
+        // Prepare data for update/create
+        $data = [
+            'gateway_url' => 'https://apps.lsim.az/quicksms/v1/smssender',
+            'login' => $validated['login'],
+            'sender_name' => $validated['sender_name'],
+            'is_active' => $validated['is_active'] ?? true,
+        ];
+
+        // Only update password if provided
+        if ($request->filled('password')) {
+            $data['password'] = $validated['password'];
+        }
+
         // Always use LSIM gateway - it's the only provider
         $credentials = SmsCredential::updateOrCreate(
             ['account_id' => $accountId],
-            [
-                'gateway_url' => 'https://apps.lsim.az/quicksms/v1/smssender',
-                'login' => $validated['login'],
-                'password' => $validated['password'],
-                'sender_name' => $validated['sender_name'],
-                'is_active' => $validated['is_active'] ?? true,
-            ]
+            $data
         );
 
         return back()->with('success', 'SMS parametrləri uğurla yadda saxlanıldı');
@@ -187,6 +195,8 @@ class SmsController extends Controller
      */
     public function logs(Request $request)
     {
+        Gate::authorize('view-reports');
+
         $accountId = Auth::user()->account_id;
         $limit = $request->input('limit', 50);
 

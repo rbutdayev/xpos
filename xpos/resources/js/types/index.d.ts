@@ -981,4 +981,25 @@ export type PageProps<
     auth: {
         user: User;
     };
+    flash?: {
+        success?: string;
+        error?: string;
+        message?: string;
+        fiscal_config?: {
+            provider: string;
+            ip_address: string;
+            port: number;
+            username?: string;
+            password?: string;
+        };
+        fiscal_request_data?: {
+            url: string;
+            headers: Record<string, string>;
+            body: any;
+            provider: string;
+        };
+        fiscal_printed?: boolean;
+        fiscal_number?: string;
+        fiscal_error?: string;
+    };
 };

@@ -50,16 +50,30 @@ class PublicShopController extends Controller
 
         // MULTI-TENANT: Only get PARENT products for THIS account (not child variants)
         // This shows one product card per parent, with child products as selectable variants
-        $products = Product::where('account_id', $account->id)
+        $productsQuery = Product::where('account_id', $account->id)
             ->where('type', 'product')
             ->active()
             ->parentProducts()  // Only show parent products, not variants
-            ->with(['orderedPhotos', 'category', 'activeVariants', 'activeChildProducts'])
-            ->latest()
-            ->paginate(12);
+            ->with(['orderedPhotos', 'category', 'activeVariants', 'activeChildProducts']);
+
+        // WAREHOUSE FILTERING: If shop has a specific warehouse selected, only show products with stock in that warehouse
+        if ($account->shop_warehouse_id) {
+            $productsQuery->whereHas('stock', function($query) use ($account) {
+                $query->where('warehouse_id', $account->shop_warehouse_id)
+                      ->where('quantity', '>', 0);
+            });
+        }
+
+        $products = $productsQuery->latest()->paginate(12);
 
         // Load images and available sizes
         foreach ($products as $product) {
+            // Set warehouse-specific stock if warehouse is selected
+            if ($account->shop_warehouse_id) {
+                $product->shop_stock = $product->getStockInWarehouse($account->shop_warehouse_id);
+            } else {
+                $product->shop_stock = $product->total_stock;
+            }
             // Use primary photo or first photo, fallback to old image_url field
             $primaryPhoto = $product->orderedPhotos->where('is_primary', true)->first()
                 ?? $product->orderedPhotos->first();
@@ -181,6 +195,13 @@ class PublicShopController extends Controller
             ->with(['orderedPhotos', 'category', 'activeVariants.stock', 'activeChildProducts.stock', 'activeChildProducts.orderedPhotos'])
             ->firstOrFail();
 
+        // Set warehouse-specific stock
+        if ($account->shop_warehouse_id) {
+            $product->shop_stock = $product->getStockInWarehouse($account->shop_warehouse_id);
+        } else {
+            $product->shop_stock = $product->total_stock;
+        }
+
         // If this is a child product, redirect to parent product page
         if ($product->isChildProduct()) {
             return redirect()->route('shop.product', [
@@ -234,9 +255,15 @@ class PublicShopController extends Controller
 
         // Format ProductVariants with computed price and stock
         if ($product->activeVariants) {
-            $product->activeVariants->each(function($variant) {
+            $product->activeVariants->each(function($variant) use ($account) {
                 $variant->sale_price = $variant->final_price;
-                $variant->stock_quantity = $variant->total_stock;
+                // Use warehouse-specific stock if warehouse is selected
+                if ($account->shop_warehouse_id) {
+                    $warehouseStock = $variant->stock->where('warehouse_id', $account->shop_warehouse_id)->first();
+                    $variant->stock_quantity = $warehouseStock ? $warehouseStock->quantity : 0;
+                } else {
+                    $variant->stock_quantity = $variant->total_stock;
+                }
             });
         }
 
@@ -246,6 +273,11 @@ class PublicShopController extends Controller
 
             // First, add the parent product itself as a variant (if it has size/color attributes)
             if ($product->attributes && (isset($product->attributes['size']) || isset($product->attributes['color']))) {
+                // Get warehouse-specific stock for parent product
+                $stockQty = $account->shop_warehouse_id
+                    ? $product->getStockInWarehouse($account->shop_warehouse_id)
+                    : $product->total_stock;
+
                 $variants->push([
                     'id' => $product->id,
                     'product_id' => $product->id,
@@ -253,14 +285,19 @@ class PublicShopController extends Controller
                     'color' => $product->attributes['color'] ?? null,
                     'color_code' => $product->attributes['color_code'] ?? null,
                     'sale_price' => $product->sale_price,
-                    'stock_quantity' => $product->total_stock,
+                    'stock_quantity' => $stockQty,
                     'sku' => $product->sku,
                     'barcode' => $product->barcode,
                 ]);
             }
 
             // Then add all child products as variants
-            $childVariants = $product->activeChildProducts->map(function($child) {
+            $childVariants = $product->activeChildProducts->map(function($child) use ($account) {
+                // Get warehouse-specific stock for child product
+                $stockQty = $account->shop_warehouse_id
+                    ? $child->getStockInWarehouse($account->shop_warehouse_id)
+                    : $child->total_stock;
+
                 return [
                     'id' => $child->id,
                     'product_id' => $child->id,
@@ -268,7 +305,7 @@ class PublicShopController extends Controller
                     'color' => $child->attributes['color'] ?? null,
                     'color_code' => $child->attributes['color_code'] ?? null,
                     'sale_price' => $child->sale_price,
-                    'stock_quantity' => $child->total_stock,
+                    'stock_quantity' => $stockQty,
                     'sku' => $child->sku,
                     'barcode' => $child->barcode,
                 ];
@@ -328,8 +365,10 @@ class PublicShopController extends Controller
             }
 
             // Get the "Online Shop" system user for this account
+            // MULTI-TENANT: System user email uses shop_slug for uniqueness
+            $systemEmail = "online-shop@system-{$account->shop_slug}.local";
             $onlineShopUser = \App\Models\User::where('account_id', $account->id)
-                ->where('email', 'online-shop@system.local')
+                ->where('email', $systemEmail)
                 ->first();
 
             if (!$onlineShopUser) {

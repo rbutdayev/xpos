@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Company;
 use App\Models\SmsCredential;
 use App\Models\TelegramCredential;
 use App\Services\NotificationService;
@@ -12,7 +11,8 @@ use Inertia\Inertia;
 
 /**
  * Unified Settings Controller
- * Combines: Company Settings, Shop Settings, Notification Settings
+ * Manages: Shop Settings, POS Settings, Notification Settings
+ * Note: Company settings are managed separately via CompanyController
  */
 class UnifiedSettingsController extends Controller
 {
@@ -23,175 +23,25 @@ class UnifiedSettingsController extends Controller
     }
 
     /**
-     * Display unified settings page with all tabs
+     * Display settings page (POS settings only now)
+     * Shop settings moved to ShopSettingsController
      */
-    public function index(Request $request, NotificationService $notificationService)
+    public function index(Request $request)
     {
         $user = Auth::user();
         $account = $user->account;
-        $accountId = $user->account_id;
-
-        // Get company for Şirkət tab
-        $company = Company::where('account_id', $accountId)->first();
-
-        // Company/System Settings
-        $systemSettings = $this->getSystemSettings($company);
 
         // POS Settings
         $posSettings = [
             'auto_print_receipt' => $account->auto_print_receipt,
         ];
 
-        // Shop Settings
-        $shopSettings = [
-            'shop_enabled' => $account->shop_enabled,
-            'shop_slug' => $account->shop_slug,
-            'shop_url' => $account->getShopUrl(),
-            'shop_sms_merchant_notifications' => $account->shop_sms_merchant_notifications,
-            'shop_notification_phone' => $account->shop_notification_phone,
-            'shop_sms_customer_notifications' => $account->shop_sms_customer_notifications,
-            'shop_customer_sms_template' => $account->shop_customer_sms_template,
-        ];
-
-        // Notification Settings - SMS
-        $smsCredential = SmsCredential::where('account_id', $accountId)
-            ->where('is_active', true)
-            ->first();
-
-        // Notification Settings - Telegram
-        $telegramCredential = TelegramCredential::where('account_id', $accountId)
-            ->where('is_active', true)
-            ->first();
-
-        // Get notification statistics
-        $stats = $notificationService->getStatistics($accountId);
-
         return Inertia::render('Settings/Unified', [
-            // Company/Şirkət Tab
-            'company' => $company,
-            'system_settings' => $systemSettings,
-
             // POS Tab
             'pos_settings' => $posSettings,
-
-            // Mağaza Tab
-            'shop_settings' => $shopSettings,
-
-            // Bildirişlər Tab
-            'sms' => [
-                'configured' => $smsCredential !== null,
-                'credential' => $smsCredential ? [
-                    'id' => $smsCredential->id,
-                    'login' => $smsCredential->login,
-                    'sender_name' => $smsCredential->sender_name,
-                    'gateway_url' => $smsCredential->gateway_url,
-                    'is_active' => $smsCredential->is_active,
-                ] : null,
-                'stats' => $stats['sms'],
-            ],
-            'telegram' => [
-                'configured' => $telegramCredential !== null,
-                'credential' => $telegramCredential ? [
-                    'id' => $telegramCredential->id,
-                    'bot_username' => $telegramCredential->bot_username,
-                    'default_chat_id' => $telegramCredential->default_chat_id,
-                    'is_active' => $telegramCredential->is_active,
-                    'last_tested_at' => $telegramCredential->last_tested_at,
-                    'last_test_status' => $telegramCredential->last_test_status,
-                ] : null,
-                'stats' => $stats['telegram'],
-            ],
-            'notification_settings' => $account->notification_settings ?? [],
-            'account_phone' => $account->phone,
-
-            // Default active tab (can be passed via query param)
-            'active_tab' => $request->query('tab', 'company'),
         ]);
     }
 
-    /**
-     * Get system settings from company
-     */
-    private function getSystemSettings(?Company $company): array
-    {
-        $defaults = [
-            'company_name' => '',
-            'company_address' => '',
-            'company_phone' => '',
-            'company_email' => '',
-            'company_website' => '',
-            'tax_number' => '',
-            'default_language' => 'az',
-            'receipt_header_text' => 'Xoş gəlmisiniz!',
-            'receipt_footer_text' => 'Təşəkkür edirik!',
-            'default_paper_size' => '80mm',
-            'default_width_chars' => 32,
-            'currency_code' => 'AZN',
-            'currency_symbol' => '₼',
-            'date_format' => 'd.m.Y',
-            'time_format' => 'H:i',
-            'timezone' => 'Asia/Baku',
-            'business_hours_start' => '09:00',
-            'business_hours_end' => '18:00',
-            'business_days' => ['1', '2', '3', '4', '5'],
-        ];
-
-        if (!$company) {
-            return $defaults;
-        }
-
-        return array_merge($defaults, [
-            'company_name' => $company->name,
-            'company_address' => $company->address,
-            'company_phone' => $company->phone,
-            'company_email' => $company->email,
-            'company_website' => $company->website,
-            'tax_number' => $company->tax_number,
-            'default_language' => $company->default_language ?? 'az',
-            'business_hours_start' => $company->business_hours['start'] ?? '09:00',
-            'business_hours_end' => $company->business_hours['end'] ?? '18:00',
-            'business_days' => $company->business_hours['days'] ?? ['1', '2', '3', '4', '5'],
-        ]);
-    }
-
-    /**
-     * Update company/system settings
-     */
-    public function updateCompany(Request $request)
-    {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'company_address' => 'nullable|string',
-            'company_phone' => 'nullable|string|max:255',
-            'company_email' => 'nullable|email|max:255',
-            'company_website' => 'nullable|url|max:255',
-            'tax_number' => 'nullable|string|max:255',
-            'default_language' => 'required|string|in:az,en,tr',
-            'business_hours_start' => 'nullable|date_format:H:i',
-            'business_hours_end' => 'nullable|date_format:H:i',
-            'business_days' => 'nullable|array',
-        ]);
-
-        $user = Auth::user();
-        $company = Company::where('account_id', $user->account_id)->firstOrFail();
-
-        $company->update([
-            'name' => $validated['company_name'],
-            'address' => $validated['company_address'],
-            'phone' => $validated['company_phone'],
-            'email' => $validated['company_email'],
-            'website' => $validated['company_website'],
-            'tax_number' => $validated['tax_number'],
-            'default_language' => $validated['default_language'],
-            'business_hours' => [
-                'start' => $validated['business_hours_start'] ?? null,
-                'end' => $validated['business_hours_end'] ?? null,
-                'days' => $validated['business_days'] ?? [],
-            ],
-        ]);
-
-        return redirect()->back()->with('success', 'Şirkət parametrləri yeniləndi');
-    }
 
     /**
      * Update POS settings
@@ -208,25 +58,6 @@ class UnifiedSettingsController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'POS parametrləri yeniləndi');
-    }
-
-    /**
-     * Update shop settings
-     */
-    public function updateShop(Request $request)
-    {
-        $request->validate([
-            'shop_enabled' => 'boolean',
-            'shop_slug' => 'nullable|string|alpha_dash|min:3|unique:accounts,shop_slug,' . $request->user()->account_id,
-        ]);
-
-        $account = $request->user()->account;
-        $account->update([
-            'shop_enabled' => $request->shop_enabled,
-            'shop_slug' => $request->shop_slug,
-        ]);
-
-        return redirect()->back()->with('success', 'Mağaza parametrləri yeniləndi');
     }
 
     /**
@@ -253,7 +84,7 @@ class UnifiedSettingsController extends Controller
     {
         $request->validate([
             'login' => 'required|string',
-            'password' => 'required|string',
+            'password' => 'nullable|string',
             'sender_name' => 'required|string|max:11',
             'gateway_url' => 'required|url',
             'is_active' => 'boolean',
@@ -263,14 +94,20 @@ class UnifiedSettingsController extends Controller
 
         SmsCredential::where('account_id', $accountId)->update(['is_active' => false]);
 
+        $data = [
+            'sender_name' => $request->sender_name,
+            'gateway_url' => $request->gateway_url,
+            'is_active' => $request->is_active ?? true,
+        ];
+
+        // Only update password if provided
+        if ($request->filled('password')) {
+            $data['password'] = $request->password;
+        }
+
         SmsCredential::updateOrCreate(
             ['account_id' => $accountId, 'login' => $request->login],
-            [
-                'password' => $request->password,
-                'sender_name' => $request->sender_name,
-                'gateway_url' => $request->gateway_url,
-                'is_active' => $request->is_active ?? true,
-            ]
+            $data
         );
 
         return redirect()->back()->with('success', 'SMS parametrləri yadda saxlanıldı');
@@ -389,5 +226,104 @@ class UnifiedSettingsController extends Controller
         return Inertia::render('Telegram/Logs', [
             'logs' => $logs,
         ]);
+    }
+
+    /**
+     * Display Notification Channels page
+     */
+    public function notificationChannels(Request $request, NotificationService $notificationService)
+    {
+        $user = Auth::user();
+        $account = $user->account;
+        $accountId = $user->account_id;
+
+        // Check if shop module is enabled
+        if (!$account->shop_enabled) {
+            abort(403, 'Online mağaza modulu aktivləşdirilməyib.');
+        }
+
+        // Get SMS credential
+        $smsCredential = SmsCredential::where('account_id', $accountId)
+            ->where('is_active', true)
+            ->first();
+
+        // Get Telegram credential
+        $telegramCredential = TelegramCredential::where('account_id', $accountId)
+            ->where('is_active', true)
+            ->first();
+
+        // Get notification statistics
+        $stats = $notificationService->getStatistics($accountId);
+
+        return Inertia::render('NotificationChannels/Index', [
+            'sms' => [
+                'configured' => $smsCredential !== null,
+                'credential' => $smsCredential ? [
+                    'id' => $smsCredential->id,
+                    'login' => $smsCredential->login,
+                    'sender_name' => $smsCredential->sender_name,
+                    'gateway_url' => $smsCredential->gateway_url,
+                    'is_active' => $smsCredential->is_active,
+                ] : null,
+                'stats' => $stats['sms'],
+            ],
+            'telegram' => [
+                'configured' => $telegramCredential !== null,
+                'credential' => $telegramCredential ? [
+                    'id' => $telegramCredential->id,
+                    'bot_username' => $telegramCredential->bot_username,
+                    'default_chat_id' => $telegramCredential->default_chat_id,
+                    'is_active' => $telegramCredential->is_active,
+                    'last_tested_at' => $telegramCredential->last_tested_at,
+                    'last_test_status' => $telegramCredential->last_test_status,
+                ] : null,
+                'stats' => $stats['telegram'],
+            ],
+            'notification_settings' => $account->notification_settings ?? [],
+            'account_phone' => $account->phone,
+        ]);
+    }
+
+    /**
+     * Toggle module (services, rent, etc.)
+     */
+    public function toggleModule(Request $request)
+    {
+        $request->validate([
+            'module' => 'required|in:services,rent,loyalty,shop,discounts',
+        ]);
+
+        $account = $request->user()->account;
+        $module = $request->module;
+
+        // Map module names to database columns
+        $moduleFields = [
+            'services' => 'services_module_enabled',
+            'rent' => 'rent_module_enabled',
+            'loyalty' => 'loyalty_module_enabled',
+            'shop' => 'shop_enabled',
+            'discounts' => 'discounts_module_enabled',
+        ];
+
+        $fieldName = $moduleFields[$module];
+        $account->$fieldName = !$account->$fieldName;
+        $account->save();
+
+        // Human-readable module names
+        $moduleNames = [
+            'services' => 'Xidmətlər',
+            'rent' => 'İcarə',
+            'loyalty' => 'Loyallıq Proqramı',
+            'shop' => 'Online Mağaza',
+            'discounts' => 'Endirimlər',
+        ];
+
+        $moduleName = $moduleNames[$module];
+
+        return redirect()->back()->with('success',
+            $account->$fieldName
+                ? "{$moduleName} modulu aktivləşdirildi."
+                : "{$moduleName} modulu söndürüldü."
+        );
     }
 }

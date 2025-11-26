@@ -27,22 +27,15 @@ interface ProductFormProps {
 export const ProductForm = memo(({ mode, initialData, categories, warehouses, submitUrl, cancelUrl, onSubmitTransform, method = 'post' }: ProductFormProps) => {
   const { data, setData, errors, processing, calculations, setError, clearErrors } = useProductForm(initialData);
   const [generatingBarcode, setGeneratingBarcode] = useState(false);
-  const [initialType] = useState(initialData?.type || 'product');
   const [photos, setPhotos] = useState<File[]>([]);
   const [primaryPhotoIndex, setPrimaryPhotoIndex] = useState(0);
 
-  // reset some fields when type changes (but not during initialization)
+  // Set type to 'product' by default
   useEffect(() => {
-    if (data.type === initialType) return; // Don't reset if it's still the initial type
-    
-    setData('category_id', '');
-    if (data.type === 'service') {
-      setData('unit', 'ədəd');
-      setData('packaging_quantity', '1');
-      setData('base_unit', 'ədəd');
-      setData('packaging_size', '1 ədəd');
+    if (data.type !== 'product') {
+      setData('type', 'product');
     }
-  }, [data.type, setData, initialType]);
+  }, []);
 
   const onChange = useCallback((field: string, value: any) => {
     setData(field as any, value);

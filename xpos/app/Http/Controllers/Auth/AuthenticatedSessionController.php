@@ -31,18 +31,28 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // Regenerate session to get new CSRF token
         $request->session()->regenerate();
 
+        // Get the authenticated user
+        $user = Auth::user();
+
         // Determine redirect route
-        $redirectRoute = Auth::user()->isSuperAdmin()
+        $redirectRoute = $user->isSuperAdmin()
             ? route('superadmin.dashboard', absolute: false)
             : route('dashboard', absolute: false);
+
+        // Store user ID in session for cross-tab detection
+        // This will be read by frontend SessionManager component
+        $request->session()->put('user_id', $user->id);
+        $request->session()->put('account_id', $user->account_id);
 
         // Force a full page reload to refresh CSRF token in meta tag
         // This prevents "page expired" errors when switching between accounts
         $response = redirect()->intended($redirectRoute);
 
-        // For Inertia requests, force a full page reload
+        // For Inertia requests, force a full page reload by setting X-Inertia-Location
+        // This ensures the new CSRF token is properly loaded
         if ($request->header('X-Inertia')) {
             $response->header('X-Inertia-Location', $redirectRoute);
         }
@@ -55,11 +65,19 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Get user ID before logging out (for cleaning localStorage)
+        $userId = Auth::id();
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        // Store a flag to clear user data on client side
+        // SessionManager will detect this and clear localStorage
+        $request->session()->flash('user_logged_out', true);
+        $request->session()->flash('logged_out_user_id', $userId);
 
         return redirect('/');
     }

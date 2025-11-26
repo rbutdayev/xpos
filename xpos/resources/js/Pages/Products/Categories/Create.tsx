@@ -120,23 +120,6 @@ export default function Create({ parentCategories }: Props) {
                                 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.is_service}
-                                                onChange={(e) => setData('is_service', e.target.checked)}
-                                                className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                            />
-                                            <span className="ml-2 text-sm text-gray-600">
-                                                Bu kateqoriya xidmətlər üçündür
-                                            </span>
-                                        </label>
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            Xidmət kateqoriyalarında stok idarəetməsi olmur
-                                        </p>
-                                    </div>
-
-                                    <div>
                                         <InputLabel htmlFor="sort_order" value="Sıralama" />
                                         <TextInput
                                             id="sort_order"
@@ -162,8 +145,7 @@ export default function Create({ parentCategories }: Props) {
                                     Nümunələr:
                                 </h4>
                                 <div className="text-sm text-blue-800 space-y-1">
-                                    <div><strong>Məhsul kateqoriyaları:</strong>Üst geyim, Alt geyim, Bluz</div>
-                                    <div><strong>Xidmət kateqoriyaları:</strong> Tikiş, kəsim</div>
+                                    <div><strong>Məhsul kateqoriyaları:</strong> Üst geyim, Alt geyim, Bluz</div>
                                     <div><strong>Alt kateqoriyalar:</strong> Üst geyim → Qış → Palto</div>
                                 </div>
                             </div>

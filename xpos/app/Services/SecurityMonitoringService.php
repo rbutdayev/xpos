@@ -132,21 +132,25 @@ class SecurityMonitoringService
     public function blockIP(string $ip, string $reason, bool $isPermanent = false, ?int $hoursToBlock = 24): void
     {
         $existingBlock = BlockedIP::forIP($ip)->active()->first();
-        
+
         if ($existingBlock) {
             return;
         }
 
-        BlockedIP::create([
-            'ip_address' => $ip,
-            'reason' => $reason,
-            'is_permanent' => $isPermanent,
-            'blocked_at' => now(),
-            'expires_at' => $isPermanent ? null : now()->addHours($hoursToBlock),
-            'blocked_by' => auth()->id() ?? 1
-        ]);
+        try {
+            BlockedIP::create([
+                'ip_address' => $ip,
+                'reason' => $reason,
+                'is_permanent' => $isPermanent,
+                'blocked_at' => now(),
+                'expires_at' => $isPermanent ? null : now()->addHours($hoursToBlock),
+                'blocked_by' => auth()->id()
+            ]);
 
-        Log::warning("IP blocked: {$ip} - Reason: {$reason}");
+            Log::warning("IP blocked: {$ip} - Reason: {$reason}");
+        } catch (\Exception $e) {
+            Log::error("Failed to block IP {$ip}: " . $e->getMessage());
+        }
     }
 
     public function unblockIP(string $ip): bool

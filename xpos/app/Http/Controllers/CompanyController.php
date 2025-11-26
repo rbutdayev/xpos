@@ -87,20 +87,47 @@ class CompanyController extends Controller
         }
         
         $request->validate([
-            'company_name' => 'required|string|max:255',
+            'company_name' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    // Check globally across all accounts (case-insensitive)
+                    $exists = Company::withoutGlobalScope('account')
+                        ->whereRaw('LOWER(name) = ?', [strtolower(trim($value))])
+                        ->exists();
+                    if ($exists) {
+                        $fail('Bu şirkət adı artıq istifadə olunur.');
+                    }
+                },
+            ],
             'address' => 'nullable|string',
-            'tax_number' => 'nullable|string|max:50',
+            'tax_number' => [
+                'nullable',
+                'string',
+                'max:50',
+                function ($attribute, $value, $fail) {
+                    if (!$value) return;
+                    // Check globally across all accounts
+                    $exists = Company::withoutGlobalScope('account')
+                        ->where('tax_number', trim($value))
+                        ->exists();
+                    if ($exists) {
+                        $fail('Bu VOEN artıq başqa şirkətə məxsusdur.');
+                    }
+                },
+            ],
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
-            
+
             // Branch data
             'branch_name' => 'required|string|max:255',
             'branch_address' => 'nullable|string',
             'branch_phone' => 'nullable|string|max:20',
             'branch_email' => 'nullable|email|max:255',
-            
+
             // Warehouse data
             'warehouse_name' => 'required|string|max:255',
             'warehouse_type' => 'required|in:main,auxiliary,mobile',
@@ -253,5 +280,49 @@ class CompanyController extends Controller
         // Customers cannot delete their company - only superadmin can
         return redirect()->route('companies.index')
                         ->withErrors(['error' => 'Şirkət silinə bilməz. Dəstək ilə əlaqə saxlayın.']);
+    }
+
+    /**
+     * Check if company name is available (for real-time validation)
+     */
+    public function checkName(Request $request)
+    {
+        $name = trim($request->input('name'));
+
+        if (!$name) {
+            return response()->json(['available' => true]);
+        }
+
+        // Case-insensitive search across ALL accounts (remove global scope)
+        $exists = Company::withoutGlobalScope('account')
+            ->whereRaw('LOWER(name) = ?', [strtolower($name)])
+            ->exists();
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'Bu şirkət adı artıq istifadə olunur.' : null
+        ]);
+    }
+
+    /**
+     * Check if TIN/VOEN is available (for real-time validation)
+     */
+    public function checkTin(Request $request)
+    {
+        $tin = trim($request->input('tin'));
+
+        if (!$tin) {
+            return response()->json(['available' => true]);
+        }
+
+        // Exact match for tax numbers across ALL accounts (remove global scope)
+        $exists = Company::withoutGlobalScope('account')
+            ->where('tax_number', $tin)
+            ->exists();
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'Bu VOEN artıq başqa şirkətə məxsusdur.' : null
+        ]);
     }
 }

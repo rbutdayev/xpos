@@ -87,8 +87,12 @@ class CustomerController extends Controller
             $query->whereMonth('birthday', $request->birthday_month);
         }
 
+        // Get per_page from request, default to 25, max 100
+        $perPage = $request->input('per_page', 25);
+        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 25;
+
         $customers = $query->latest()
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('Customers/Index', [
@@ -106,8 +110,14 @@ class CustomerController extends Controller
         $customers = Customer::where('account_id', Auth::user()->account_id)
             ->search($search)
             ->active()
-            ->limit(10)
+            ->limit(20)
             ->get(['id', 'name', 'phone', 'customer_type']);
+
+        // Add formatted fields
+        $customers->each(function($customer) {
+            $customer->formatted_phone = $customer->formatted_phone;
+            $customer->customer_type_text = $customer->customer_type_text;
+        });
 
         return response()->json($customers);
     }

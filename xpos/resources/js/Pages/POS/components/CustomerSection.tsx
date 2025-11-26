@@ -1,22 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
-import CustomerSelect from '@/Components/CustomerSelect';
+import SearchableCustomerSelect from '@/Components/SearchableCustomerSelect';
 import { Branch, Customer } from '@/types';
 
 interface Props {
-  customers: Customer[];
   branches: Branch[];
   formData: any;
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   errors: Record<string, string>;
   userBranchId?: number;
+  onCustomerChange?: (customer: Customer | null) => void;
 }
 
-function CustomerSection({ customers, branches, formData, setFormData, errors, userBranchId }: Props) {
+function CustomerSection({ branches, formData, setFormData, errors, userBranchId, onCustomerChange }: Props) {
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const isBranchFixed = !!userBranchId;
   const selectedBranch = branches.find(b => b.id.toString() === formData.branch_id);
-  const selectedCustomer = customers.find(c => c.id.toString() === formData.customer_id);
 
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6">
@@ -25,10 +25,16 @@ function CustomerSection({ customers, branches, formData, setFormData, errors, u
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <InputLabel htmlFor="customer_id" value="Müştəri" />
-            <CustomerSelect
-              customers={customers}
+            <SearchableCustomerSelect
               value={formData.customer_id}
-              onChange={(value) => setFormData((prev: any) => ({ ...prev, customer_id: value }))}
+              onChange={(value, customer) => {
+                setFormData((prev: any) => ({ ...prev, customer_id: value }));
+                const newCustomer = customer || null;
+                setSelectedCustomer(newCustomer);
+                if (onCustomerChange) {
+                  onCustomerChange(newCustomer);
+                }
+              }}
               className="mt-1 block w-full"
             />
             <InputError message={errors.customer_id} className="mt-2" />

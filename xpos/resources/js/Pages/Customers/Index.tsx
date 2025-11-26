@@ -9,7 +9,12 @@ interface CustomersIndexProps extends PageProps {
     customers: {
         data: Customer[];
         links: any[];
-        meta: any;
+        current_page: number;
+        last_page: number;
+        total: number;
+        per_page: number;
+        from: number;
+        to: number;
     };
     filters: {
         search?: string;
@@ -44,6 +49,13 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
 
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         router.get(route('customers.index'), { ...localFilters, sort: field, direction }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handlePerPageChange = (perPage: number) => {
+        router.get(route('customers.index'), { ...localFilters, per_page: perPage }, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -287,12 +299,12 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
                             data={{
                                 data: customers.data,
                                 links: customers.links,
-                                current_page: customers.meta?.current_page || 1,
-                                last_page: customers.meta?.last_page || 1,
-                                total: customers.meta?.total || 0,
-                                per_page: customers.meta?.per_page || 10,
-                                from: customers.meta?.from || 0,
-                                to: customers.meta?.to || 0
+                                current_page: customers.current_page,
+                                last_page: customers.last_page,
+                                total: customers.total,
+                                per_page: customers.per_page,
+                                from: customers.from,
+                                to: customers.to
                             }}
                             columns={columns}
                             filters={filters_config}
@@ -305,6 +317,7 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
                             onSort={(field: string) => handleSort(field, 'asc')}
+                            onPerPageChange={handlePerPageChange}
                             fullWidth={true}
                             mobileClickable={true}
                             hideMobileActions={true}

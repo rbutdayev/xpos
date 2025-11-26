@@ -7,14 +7,21 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Checkbox from '@/Components/Checkbox';
 
-interface Props {
-    settings: any;
+interface Warehouse {
+    id: number;
+    name: string;
 }
 
-export default function ShopTab({ settings }: Props) {
+interface Props {
+    settings: any;
+    warehouses: Warehouse[];
+}
+
+export default function ShopTab({ settings, warehouses }: Props) {
     const form: any = useForm({
         shop_enabled: settings.shop_enabled || false,
         shop_slug: settings.shop_slug || '',
+        shop_warehouse_id: settings.shop_warehouse_id || '',
     });
 
     const { data, setData, post, processing, errors, recentlySuccessful } = form;
@@ -32,18 +39,6 @@ export default function ShopTab({ settings }: Props) {
                 icon={ShoppingBagIcon}
             >
                 <FormGrid>
-                    <div className="sm:col-span-6">
-                        <label className="flex items-center space-x-3">
-                            <Checkbox
-                                checked={data.shop_enabled}
-                                onChange={(e) => setData('shop_enabled', e.target.checked)}
-                            />
-                            <span className="text-sm font-medium text-gray-900">
-                                Online mağazanı aktiv et
-                            </span>
-                        </label>
-                    </div>
-
                     <FormField label="Mağaza URL (slug)" className="sm:col-span-6">
                         <TextInput
                             value={data.shop_slug}
@@ -57,6 +52,28 @@ export default function ShopTab({ settings }: Props) {
                                 <GlobeAltIcon className="inline-block w-4 h-4 mr-1" />
                                 Mağaza URL: <strong>{window.location.origin}/shop/{data.shop_slug}</strong>
                             </p>
+                        )}
+                    </FormField>
+
+                    <FormField label="Anbar / Filial" className="sm:col-span-6">
+                        <select
+                            value={data.shop_warehouse_id}
+                            onChange={(e) => setData('shop_warehouse_id', e.target.value)}
+                            disabled={!data.shop_enabled}
+                            className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                        >
+                            <option value="">Anbar seçin</option>
+                            {warehouses.map((warehouse) => (
+                                <option key={warehouse.id} value={warehouse.id}>
+                                    {warehouse.name}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Online mağazada yalnız seçilmiş anbardan məhsullar göstəriləcək
+                        </p>
+                        {errors.shop_warehouse_id && (
+                            <p className="mt-1 text-sm text-red-600">{errors.shop_warehouse_id}</p>
                         )}
                     </FormField>
                 </FormGrid>

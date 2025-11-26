@@ -61,6 +61,13 @@ class ProductPrice extends Model
                     });
     }
 
+    public function scopeExpired(Builder $query): Builder
+    {
+        $today = now()->toDateString();
+        return $query->whereNotNull('effective_until')
+                    ->where('effective_until', '<', $today);
+    }
+
     public function scopeForBranch(Builder $query, ?int $branchId): Builder
     {
         if ($branchId) {

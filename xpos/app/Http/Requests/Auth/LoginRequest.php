@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Services\SecurityMonitoringService;
 
 class LoginRequest extends FormRequest
 {
@@ -39,6 +40,14 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
+        // Check if IP is blocked
+        $securityService = app(SecurityMonitoringService::class);
+        if ($securityService->isIPBlocked($this->ip())) {
+            throw ValidationException::withMessages([
+                'email' => 'Giriş qadağandır. Sizin IP ünvanınız şübhəli fəaliyyətə görə bloklanıb.',
+            ]);
+        }
+
         $this->ensureIsNotRateLimited();
 
         // Log authentication attempt

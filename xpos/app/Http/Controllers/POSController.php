@@ -16,6 +16,8 @@ use App\Models\NegativeStockAlert;
 use App\Models\Warehouse;
 use App\Services\ThermalPrintService;
 use App\Services\FiscalPrinterService;
+use App\Models\FiscalPrinterJob;
+use App\Models\FiscalPrinterConfig;
 use App\Services\LoyaltyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,11 +39,6 @@ class POSController extends Controller
 
         try {
             $accountId = Auth::user()->account_id;
-
-            $customers = Customer::where('account_id', $accountId)
-                ->active()
-                ->orderBy('name')
-                ->get(['id', 'name', 'phone', 'email', 'customer_type', 'current_points', 'lifetime_points']);
 
             $employees = User::where('account_id', $accountId)
                 ->where('status', 'active')
@@ -69,7 +66,6 @@ class POSController extends Controller
             $loyaltyProgram = $loyaltyService->getProgramForAccount($accountId);
 
             return Inertia::render('POS/Index', [
-                'customers' => $customers,
                 'employees' => $employees,
                 'services' => $services,
                 'branches' => $branches,
@@ -95,10 +91,11 @@ class POSController extends Controller
         try {
             $accountId = Auth::user()->account_id;
 
+            // Get customers for customer selection
             $customers = Customer::where('account_id', $accountId)
-                ->active()
+                ->select('id', 'name', 'email', 'phone', 'current_points')
                 ->orderBy('name')
-                ->get(['id', 'name', 'phone', 'email', 'customer_type', 'current_points', 'lifetime_points']);
+                ->get();
 
             // Branch filtering based on user role
             if (Auth::user()->role === 'sales_staff') {
@@ -157,6 +154,7 @@ class POSController extends Controller
             'credit_due_date' => 'nullable|date|after:today',
             'credit_description' => 'nullable|string|max:500',
             'points_to_redeem' => 'nullable|integer|min:0',
+            'use_fiscal_printer' => 'nullable|boolean',
         ];
 
         // For credit or partial payment, customer is required
@@ -363,28 +361,34 @@ class POSController extends Controller
             $fiscalPrinted = false;
             $fiscalNumber = null;
             $fiscalError = null;
+            $fiscalConfig = null;
+            $fiscalRequestData = null;
 
             if ($account->fiscal_printer_enabled && $sale->use_fiscal_printer) {
-                $fiscalService = app(FiscalPrinterService::class);
-                $fiscalResult = $fiscalService->printReceipt($account->id, $sale);
+                $config = FiscalPrinterConfig::where('account_id', $account->id)
+                    ->where('is_active', true)
+                    ->first();
 
-                if ($fiscalResult['success']) {
-                    $fiscalPrinted = true;
-                    $fiscalNumber = $fiscalResult['fiscal_number'] ?? null;
+                if ($config) {
+                    // Queue job for bridge to pick up
+                    $fiscalService = app(FiscalPrinterService::class);
+                    $requestData = $fiscalService->getFormattedRequestData($config, $sale);
 
-                    if ($fiscalNumber) {
-                        $sale->update(['fiscal_number' => $fiscalNumber]);
-                        \Log::info('Fiscal receipt printed', [
-                            'sale_id' => $sale->sale_id,
-                            'fiscal_number' => $fiscalNumber
-                        ]);
-                    }
-                } else {
-                    $fiscalError = $fiscalResult['error'] ?? 'Unknown fiscal printer error';
-                    \Log::warning('Fiscal printer failed', [
+                    FiscalPrinterJob::create([
+                        'account_id' => $account->id,
                         'sale_id' => $sale->sale_id,
-                        'error' => $fiscalError
+                        'status' => FiscalPrinterJob::STATUS_PENDING,
+                        'request_data' => $requestData,
+                        'provider' => $config->provider,
                     ]);
+
+                    \Log::info('Fiscal print job queued', [
+                        'sale_id' => $sale->sale_id,
+                        'account_id' => $account->id,
+                    ]);
+
+                    // Job queued successfully - bridge will process it
+                    $fiscalPrinted = false; // Not yet printed, just queued
                 }
             }
 
@@ -405,17 +409,28 @@ class POSController extends Controller
                     ->with('auto_print', $autoPrint)
                     ->with('fiscal_printed', $fiscalPrinted)
                     ->with('fiscal_number', $fiscalNumber)
-                    ->with('fiscal_error', $fiscalError);
+                    ->with('fiscal_error', $fiscalError)
+                    ->with('fiscal_config', $fiscalConfig)
+                    ->with('fiscal_request_data', $fiscalRequestData);
             }
 
             // For regular POS, redirect to sales detail page
+            \Log::info('Redirecting to sales.show', [
+                'sale_id' => $sale->sale_id,
+                'fiscal_config_set' => !is_null($fiscalConfig),
+                'fiscal_request_data_set' => !is_null($fiscalRequestData),
+                'fiscal_config' => $fiscalConfig,
+            ]);
+
             return redirect()->route('sales.show', $sale->sale_id)
                 ->with('success', 'Satış uğurla tamamlandı. Qaimə #' . $sale->sale_number)
                 ->with('auto_print', $autoPrint)
                 ->with('print_sale_id', $sale->sale_id)
                 ->with('fiscal_printed', $fiscalPrinted)
                 ->with('fiscal_number', $fiscalNumber)
-                ->with('fiscal_error', $fiscalError);
+                ->with('fiscal_error', $fiscalError)
+                ->with('fiscal_config', $fiscalConfig)
+                ->with('fiscal_request_data', $fiscalRequestData);
         } catch (\Exception $e) {
             \Log::error('POS Sale creation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             

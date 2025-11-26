@@ -41,8 +41,22 @@ class IntegrationsController extends Controller
 
         // Check Loyalty Program configuration
         $loyaltyProgram = LoyaltyProgram::where('account_id', $accountId)->first();
-        $loyaltyProgramConfigured = $loyaltyProgram !== null;
+        $loyaltyModuleEnabled = $account->loyalty_module_enabled ?? true;
+        $loyaltyProgramConfigured = $loyaltyProgram !== null && $loyaltyModuleEnabled;
         $loyaltyProgramActive = $loyaltyProgram?->is_active ?? false;
+
+        // Check Shop configuration
+        $shopEnabled = $account->shop_enabled ?? false;
+        $shopConfigured = !empty($account->shop_slug);
+
+        // Check Services module
+        $servicesModuleEnabled = $account->services_module_enabled ?? true;
+
+        // Check Rent module
+        $rentModuleEnabled = $account->rent_module_enabled ?? true;
+
+        // Check Discounts module
+        $discountsModuleEnabled = $account->discounts_module_enabled ?? true;
 
         return Inertia::render('Integrations/Index', [
             'smsConfigured' => $smsConfigured,
@@ -50,7 +64,12 @@ class IntegrationsController extends Controller
             'fiscalPrinterConfigured' => $fiscalPrinterConfigured,
             'fiscalPrinterEnabled' => $fiscalPrinterEnabled,
             'loyaltyProgramConfigured' => $loyaltyProgramConfigured,
-            'loyaltyProgramActive' => $loyaltyProgramActive,
+            'loyaltyProgramActive' => $loyaltyProgramActive && $loyaltyModuleEnabled,
+            'shopEnabled' => $shopEnabled,
+            'shopConfigured' => $shopConfigured,
+            'servicesModuleEnabled' => $servicesModuleEnabled,
+            'rentModuleEnabled' => $rentModuleEnabled,
+            'discountsModuleEnabled' => $discountsModuleEnabled,
         ]);
     }
 
