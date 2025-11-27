@@ -33,16 +33,26 @@ class SaleController extends Controller
         Gate::authorize('access-account-data');
 
         $request->validate([
-            'q' => 'required|string|max:255',
+            'q' => 'nullable|string|max:255',
+            'query' => 'nullable|string|max:255',
         ]);
 
-        $searchTerm = $request->input('q');
-        
+        // Accept both 'q' and 'query' parameters for compatibility
+        $searchTerm = $request->input('query') ?? $request->input('q');
+
+        if (!$searchTerm) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Axtarış sorğusu tələb olunur'
+            ], 400);
+        }
+
         $query = Sale::with(['customer', 'branch'])
             ->where('account_id', Auth::user()->account_id)
             ->countable() // Only include POS sales + completed online orders
             ->where(function($q) use ($searchTerm) {
                 $q->where('sale_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('fiscal_number', 'like', '%' . $searchTerm . '%')
                   ->orWhereHas('customer', function($q) use ($searchTerm) {
                       $q->where('name', 'like', '%' . $searchTerm . '%');
                   });
@@ -52,11 +62,14 @@ class SaleController extends Controller
         if (Auth::user()->role === 'sales_staff') {
             $query->where('branch_id', Auth::user()->branch_id);
         }
-        
-        $sales = $query->limit(10)
-            ->get(['sale_id', 'sale_number', 'total', 'status']);
 
-        return response()->json($sales);
+        $sales = $query->limit(10)
+            ->get(['sale_id', 'sale_number', 'fiscal_number', 'total', 'status']);
+
+        return response()->json([
+            'success' => true,
+            'sales' => $sales
+        ]);
     }
 
     public function index(Request $request)

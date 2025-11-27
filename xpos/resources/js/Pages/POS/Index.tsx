@@ -7,6 +7,7 @@ import ProductSearchSection from './components/ProductSearchSection';
 import CartSection from './components/CartSection';
 import SummaryPaymentSection from './components/SummaryPaymentSection';
 import VariantSelectorModal from './components/VariantSelectorModal';
+import ReturnModal from '@/Components/ReturnModal';
 import { useCart } from './hooks/useCart';
 import { useSearch } from './hooks/useSearch';
 import toast from 'react-hot-toast';
@@ -66,6 +67,9 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
   // Variant selector modal state
   const [variantModalOpen, setVariantModalOpen] = useState(false);
   const [selectedProductForVariant, setSelectedProductForVariant] = useState<Product | null>(null);
+
+  // Return modal state
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
 
   // Product search using debounced + abortable fetch
   const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching, searchImmediate } = useSearch(formData.branch_id);
@@ -252,7 +256,21 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
   };
 
   return (
-    <AuthenticatedLayout header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">POS Satış</h2>}>
+    <AuthenticatedLayout header={
+      <div className="flex justify-between items-center">
+        <h2 className="font-semibold text-xl text-gray-800 leading-tight">POS Satış</h2>
+        <button
+          type="button"
+          onClick={() => setReturnModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+          Mal Qaytarma
+        </button>
+      </div>
+    }>
       <Head title="POS Satış" />
       <div className="py-6">
         <div className="w-full">
@@ -344,6 +362,12 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
               onSelect={handleVariantSelect}
             />
           )}
+
+          {/* Return Modal */}
+          <ReturnModal
+            show={returnModalOpen}
+            onClose={() => setReturnModalOpen(false)}
+          />
         </div>
       </div>
     </AuthenticatedLayout>

@@ -5,11 +5,88 @@ namespace App\Services;
 use App\Models\FiscalPrinterConfig;
 use App\Models\FiscalPrinterLog;
 use App\Models\Sale;
+use App\Models\SaleReturn;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class FiscalPrinterService
 {
+    /**
+     * Print return receipt to fiscal printer
+     */
+    public function printReturnReceipt(int $accountId, SaleReturn $return): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer not configured for this account',
+            ];
+        }
+
+        if (!$config->isConfigured()) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer is not active or IP address not set',
+            ];
+        }
+
+        // Validate that the original sale has a fiscal number (required for Caspos moneyBack operation)
+        $return->load('sale');
+        if (!$return->sale || !$return->sale->fiscal_number) {
+            Log::warning('Cannot process fiscal return: original sale has no fiscal number', [
+                'return_id' => $return->return_id,
+                'sale_id' => $return->sale_id,
+            ]);
+            return [
+                'success' => false,
+                'error' => 'Orijinal satışın fiskal nömrəsi yoxdur. Yalnız fiskal qəbz ilə satışlar üçün fiskal qaytarma edilə bilər.',
+            ];
+        }
+
+        $log = FiscalPrinterLog::create([
+            'account_id' => $accountId,
+            'sale_id' => $return->sale_id,
+            'status' => 'pending',
+            'request_data' => null,
+        ]);
+
+        try {
+            $response = $this->sendReturnToTerminal($config, $return, $log);
+
+            if ($response['success']) {
+                $log->markAsSuccess($response);
+                return [
+                    'success' => true,
+                    'message' => 'Fiscal return receipt printed successfully',
+                    'fiscal_number' => $response['fiscal_number'] ?? null,
+                    'log_id' => $log->id,
+                ];
+            } else {
+                $log->markAsFailed($response['error']);
+                return [
+                    'success' => false,
+                    'error' => $response['error'],
+                    'log_id' => $log->id,
+                ];
+            }
+        } catch (\Exception $e) {
+            $log->markAsFailed($e->getMessage());
+            Log::error('Fiscal printer return failed', [
+                'account_id' => $accountId,
+                'return_id' => $return->return_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Failed to print fiscal return receipt: ' . $e->getMessage(),
+                'log_id' => $log->id,
+            ];
+        }
+    }
+
     /**
      * Print receipt to fiscal printer
      */
@@ -114,6 +191,35 @@ class FiscalPrinterService
     }
 
     /**
+     * Get formatted request data for return (for bridge queue system)
+     */
+    public function getFormattedReturnRequestData(FiscalPrinterConfig $config, SaleReturn $return): array
+    {
+        $url = $this->getApiEndpoint($config, 'return');
+        $returnData = $this->formatReturnData($config, $return);
+
+        // Caspos requires UTF-8 encoding in Content-Type header
+        $contentType = $config->provider === 'caspos'
+            ? 'application/json; charset=utf-8'
+            : 'application/json';
+
+        $headers = array_merge(
+            [
+                'Content-Type' => $contentType,
+                'Accept' => 'application/json',
+            ],
+            $config->getAuthHeaders()
+        );
+
+        return [
+            'url' => $url,
+            'headers' => $headers,
+            'body' => $returnData,
+            'provider' => $config->provider,
+        ];
+    }
+
+    /**
      * Send sale data to fiscal printer terminal
      */
     protected function sendToTerminal(FiscalPrinterConfig $config, Sale $sale, FiscalPrinterLog $log): array
@@ -195,6 +301,98 @@ class FiscalPrinterService
             }
         } catch (\Exception $e) {
             Log::error('Fiscal printer exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer connection failed: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Send return data to fiscal printer terminal
+     */
+    protected function sendReturnToTerminal(FiscalPrinterConfig $config, SaleReturn $return, FiscalPrinterLog $log): array
+    {
+        try {
+            $returnData = $this->formatReturnData($config, $return);
+
+            $log->update([
+                'request_data' => json_encode($returnData),
+            ]);
+
+            $url = $this->getApiEndpoint($config, 'return');
+
+            Log::info('Sending return to fiscal printer', [
+                'url' => $url,
+                'return_id' => $return->return_id,
+            ]);
+
+            // Caspos requires UTF-8 encoding in Content-Type header
+            $contentType = $config->provider === 'caspos'
+                ? 'application/json; charset=utf-8'
+                : 'application/json';
+
+            $headers = array_merge(
+                [
+                    'Content-Type' => $contentType,
+                    'Accept' => 'application/json',
+                ],
+                $config->getAuthHeaders()
+            );
+
+            $response = Http::timeout(30)
+                ->withHeaders($headers)
+                ->post($url, $returnData);
+
+            Log::info('Fiscal printer return response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+
+                // Caspos uses different response format: {"code": 0, "message": "...", "data": {...}}
+                if ($config->provider === 'caspos') {
+                    $code = $responseData['code'] ?? 999;
+                    if ($code === 0 || $code === '0') {
+                        return [
+                            'success' => true,
+                            'fiscal_number' => $responseData['data']['document_number'] ?? $responseData['data']['document_id'] ?? null,
+                            'response' => $response->body(),
+                        ];
+                    } else {
+                        return [
+                            'success' => false,
+                            'error' => $responseData['message'] ?? 'Error code: ' . $code,
+                        ];
+                    }
+                }
+
+                // Handle other providers
+                if (isset($responseData['success']) && $responseData['success']) {
+                    return [
+                        'success' => true,
+                        'fiscal_number' => $responseData['fiscal_number'] ?? $responseData['fiscalNumber'] ?? null,
+                        'response' => $response->body(),
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'error' => $responseData['error'] ?? $responseData['message'] ?? 'Unknown error from fiscal printer',
+                    ];
+                }
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'HTTP ' . $response->status() . ': ' . $response->body(),
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Fiscal printer return exception', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -450,7 +648,245 @@ class FiscalPrinterService
                 'clientEarnedBonus' => 0.0,
                 'clientBonusCardNumber' => $sale->customer?->loyalty_card_number ?? null,
                 'cashierName' => $this->getCashierDisplayName($sale->user),
-                'note' => $sale->notes ?? '',
+                'note' => 'Satış №: ' . $sale->sale_number . ($sale->notes ? ' | ' . $sale->notes : ''),
+                'currency' => 'AZN',
+            ],
+        ];
+    }
+
+    /**
+     * Format return data for fiscal printer API
+     */
+    protected function formatReturnData(FiscalPrinterConfig $config, SaleReturn $return): array
+    {
+        // Caspos has a completely different API structure
+        if ($config->provider === 'caspos') {
+            return $this->formatCasposReturnRequest($config, $return);
+        }
+
+        $return->load(['items.product', 'refunds', 'customer', 'branch', 'sale']);
+
+        $items = $return->items->map(function ($item) use ($config) {
+            return [
+                'name' => $item->product->name ?? 'Unknown Product',
+                'quantity' => (float) $item->quantity,
+                'price' => (float) $item->unit_price,
+                'total' => (float) $item->total,
+                'tax_name' => $config->default_tax_name,
+                'tax_rate' => $config->default_tax_rate,
+                'tax_amount' => (float) ($item->total * $config->default_tax_rate / 100),
+            ];
+        })->toArray();
+
+        $refunds = $return->refunds->map(function ($refund) {
+            return [
+                'method' => $refund->method,
+                'amount' => (float) $refund->amount,
+            ];
+        })->toArray();
+
+        $baseData = [
+            'return_id' => $return->return_id,
+            'return_number' => $return->return_number,
+            'sale_number' => $return->sale->sale_number ?? null,
+            'original_fiscal_number' => $return->sale->fiscal_number ?? null,
+            'return_date' => $return->return_date,
+            'branch' => [
+                'name' => $return->branch->name ?? 'Main Branch',
+                'address' => $return->branch->address ?? null,
+            ],
+            'customer' => $return->customer ? [
+                'name' => $return->customer->name,
+                'phone' => $return->customer->phone,
+                'tax_number' => $return->customer->tax_number ?? null,
+            ] : null,
+            'items' => $items,
+            'subtotal' => (float) $return->subtotal,
+            'tax_name' => $config->default_tax_name,
+            'tax_rate' => $config->default_tax_rate,
+            'tax_amount' => (float) $return->tax_amount,
+            'total' => (float) $return->total,
+            'refunds' => $refunds,
+            'reason' => $return->reason,
+        ];
+
+        return match($config->provider) {
+            'azsmart' => array_merge($baseData, [
+                'merchant_id' => $config->merchant_id,
+            ]),
+            'oneclick' => array_merge($baseData, [
+                'security_key' => $config->security_key,
+            ]),
+            default => $baseData,
+        };
+    }
+
+    /**
+     * Format Caspos return request according to API documentation
+     */
+    protected function formatCasposReturnRequest(FiscalPrinterConfig $config, SaleReturn $return): array
+    {
+        $return->load(['items.product', 'refunds', 'customer', 'sale']);
+
+        // Map VAT type (1=18%, 2=Trade18%, 3=VAT-free, 5=0%, 6=Simplified2%, 7=Simplified8%)
+        $vatType = 1; // Default to 18% VAT
+        if ($config->default_tax_rate == 18) {
+            $vatType = 1;
+        } elseif ($config->default_tax_rate == 0) {
+            $vatType = 5;
+        } elseif ($config->default_tax_rate == 2) {
+            $vatType = 6;
+        } elseif ($config->default_tax_rate == 8) {
+            $vatType = 7;
+        }
+
+        // Format items according to Caspos API spec
+        $items = $return->items->map(function ($item) use ($vatType, $return) {
+            // Map product unit to Caspos quantityType
+            $quantityType = $this->mapUnitToQuantityType($item->product->unit ?? 'ədəd');
+
+            // Generate UUIDs
+            $itemUuid = \Illuminate\Support\Str::uuid()->toString();
+
+            // Try to get original item UUID from fiscal job if available
+            $parentItemUuid = null;
+            try {
+                // Find the original sale's fiscal printer job
+                $fiscalJob = \App\Models\FiscalPrinterJob::where('sale_id', $return->sale_id)
+                    ->where('status', 'completed')
+                    ->orderBy('completed_at', 'desc')
+                    ->first();
+
+                if ($fiscalJob && $fiscalJob->request_data) {
+                    // Try different possible structures for request_data
+                    $itemsArray = null;
+
+                    // Structure 1: request_data['body']['data']['items'] (Caspos format)
+                    if (isset($fiscalJob->request_data['body']['data']['items'])) {
+                        $itemsArray = $fiscalJob->request_data['body']['data']['items'];
+                    }
+                    // Structure 2: request_data['body']['items'] (Generic format)
+                    elseif (isset($fiscalJob->request_data['body']['items'])) {
+                        $itemsArray = $fiscalJob->request_data['body']['items'];
+                    }
+                    // Structure 3: request_data['data']['items'] (Alternative)
+                    elseif (isset($fiscalJob->request_data['data']['items'])) {
+                        $itemsArray = $fiscalJob->request_data['data']['items'];
+                    }
+
+                    // Search for matching item
+                    if ($itemsArray) {
+                        foreach ($itemsArray as $fiscalItem) {
+                            if (isset($fiscalItem['code']) &&
+                                ($fiscalItem['code'] == $item->product->barcode ||
+                                 $fiscalItem['code'] == $item->product_id ||
+                                 $fiscalItem['code'] == (string)$item->product_id)) {
+                                $parentItemUuid = $fiscalItem['itemUuid'] ?? null;
+                                if ($parentItemUuid) {
+                                    Log::info('Found parent item UUID', [
+                                        'return_item_id' => $item->item_id,
+                                        'parent_uuid' => $parentItemUuid,
+                                        'matched_code' => $fiscalItem['code']
+                                    ]);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not find parent item UUID', [
+                    'return_item_id' => $item->item_id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Fallback: use same UUID if parent not found
+            if (!$parentItemUuid) {
+                $parentItemUuid = $itemUuid;
+                Log::warning('Using same UUID for parentItemUuid (original not found)', [
+                    'return_item_id' => $item->item_id,
+                    'sale_id' => $return->sale_id,
+                    'product_barcode' => $item->product->barcode ?? 'N/A',
+                    'product_id' => $item->product_id
+                ]);
+            }
+
+            return [
+                'name' => $item->product->name ?? 'Unknown Product',
+                'code' => $item->product->barcode ?? $item->product_id,
+                'quantity' => number_format((float) $item->quantity, 3, '.', ''), // POSITIVE - operation type indicates return
+                'salePrice' => number_format((float) $item->unit_price, 2, '.', ''),
+                'purchasePrice' => number_format((float) ($item->product->cost_price ?? 0), 2, '.', ''),
+                'codeType' => 1, // 0=Plain text, 1=EAN8, 2=EAN13, 3=Service
+                'quantityType' => $quantityType,
+                'vatType' => $vatType,
+                'discountAmount' => number_format(0.0, 2, '.', ''),
+                'itemUuid' => $itemUuid,
+                'parentItemUuid' => $parentItemUuid, // ✅ Original item UUID-dən götürülür
+            ];
+        })->toArray();
+
+        // Calculate refund payment methods from return refunds
+        $cashPayment = 0.0;
+        $cardPayment = 0.0;
+        $creditPayment = 0.0;
+        $bonusPayment = 0.0;
+
+        foreach ($return->refunds as $refund) {
+            $amount = (float) $refund->amount;
+            $method = trim(strtolower($refund->method ?? ''));
+
+            // Map refund method to Caspos payment types
+            switch ($method) {
+                case 'cash':
+                case 'nağd':
+                case 'nagd':
+                    $cashPayment += $amount;
+                    break;
+                case 'card':
+                case 'terminal':
+                case 'kart':
+                case 'köçürmə':
+                case 'kocurme':
+                case 'bank':
+                    $cardPayment += $amount;
+                    break;
+                case 'credit':
+                case 'kredit':
+                    $creditPayment += $amount;
+                    break;
+                case 'bonus':
+                    $bonusPayment += $amount;
+                    break;
+                default:
+                    // Default to cash
+                    $cashPayment += $amount;
+            }
+        }
+
+        // Format according to Caspos API: {"operation": "moneyBack", "data": {...}, "username": "...", "password": "..."}
+        return [
+            'operation' => 'moneyBack',
+            'username' => $config->username,
+            'password' => $config->password,
+            'data' => [
+                'parentDocumentId' => $return->sale?->fiscal_document_id ?? null, // Use document_id (long hash), not fiscal_number!
+                'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                'cashPayment' => number_format($cashPayment, 2, '.', ''), // POSITIVE - operation type indicates return
+                'creditPayment' => number_format($creditPayment, 2, '.', ''), // POSITIVE - operation type indicates return
+                'depositPayment' => number_format(0.0, 2, '.', ''),
+                'cardPayment' => number_format($cardPayment, 2, '.', ''), // POSITIVE - operation type indicates return
+                'bonusPayment' => number_format($bonusPayment, 2, '.', ''), // POSITIVE - operation type indicates return
+                'items' => $items,
+                'isManual' => true,
+                'moneyBackType' => 0, // 0 = Sale, 6 = Advance, 7 = Credit Payment
+                'clientName' => $return->customer?->name ?? null,
+                'clientTotalBonus' => $return->customer?->loyalty_points ?? 0.0,
+                'clientEarnedBonus' => 0.0,
+                'clientBonusCardNumber' => $return->customer?->loyalty_card_number ?? null,
+                'cashierName' => $this->getCashierDisplayName($return->user),
+                'note' => 'Qaytarma №: ' . $return->return_number . ' | Satış №: ' . ($return->sale?->sale_number ?? 'N/A') . ($return->notes ? ' | ' . $return->notes : ($return->reason ? ' | ' . $return->reason : '')),
                 'currency' => 'AZN',
             ],
         ];

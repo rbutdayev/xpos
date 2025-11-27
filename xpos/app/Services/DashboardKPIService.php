@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Sale;
+use App\Models\SaleReturn;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\ServiceRecord;
@@ -54,54 +55,74 @@ class DashboardKPIService
         $todaySales = (clone $query)->whereDate('sale_date', $today)
             ->selectRaw('COUNT(*) as count, SUM(total) as total, AVG(total) as average')
             ->first();
+        $todayReturns = $this->getReturnsTotal($today, $today);
 
         // Yesterday's sales for comparison
         $yesterdaySales = (clone $query)->whereDate('sale_date', $yesterday)
             ->selectRaw('COUNT(*) as count, SUM(total) as total')
             ->first();
+        $yesterdayReturns = $this->getReturnsTotal($yesterday, $yesterday);
 
         // This week vs last week
         $thisWeekSales = (clone $query)->whereBetween('sale_date', $thisWeek)
             ->selectRaw('COUNT(*) as count, SUM(total) as total')
             ->first();
+        $thisWeekReturns = $this->getReturnsTotal($thisWeek[0], $thisWeek[1]);
 
         $lastWeekSales = (clone $query)->whereBetween('sale_date', $lastWeek)
             ->selectRaw('COUNT(*) as count, SUM(total) as total')
             ->first();
+        $lastWeekReturns = $this->getReturnsTotal($lastWeek[0], $lastWeek[1]);
 
         // This month vs last month
         $thisMonthSales = (clone $query)->whereBetween('sale_date', $thisMonth)
             ->selectRaw('COUNT(*) as count, SUM(total) as total')
             ->first();
+        $thisMonthReturns = $this->getReturnsTotal($thisMonth[0], $thisMonth[1]);
 
         $lastMonthSales = (clone $query)->whereBetween('sale_date', $lastMonth)
             ->selectRaw('COUNT(*) as count, SUM(total) as total')
             ->first();
+        $lastMonthReturns = $this->getReturnsTotal($lastMonth[0], $lastMonth[1]);
+
+        // Calculate net revenue (sales - returns)
+        $todayNet = ($todaySales->total ?? 0) - $todayReturns;
+        $yesterdayNet = ($yesterdaySales->total ?? 0) - $yesterdayReturns;
+        $thisWeekNet = ($thisWeekSales->total ?? 0) - $thisWeekReturns;
+        $lastWeekNet = ($lastWeekSales->total ?? 0) - $lastWeekReturns;
+        $thisMonthNet = ($thisMonthSales->total ?? 0) - $thisMonthReturns;
+        $lastMonthNet = ($lastMonthSales->total ?? 0) - $lastMonthReturns;
 
         return [
             'today' => [
                 'count' => $todaySales->count ?? 0,
                 'total' => $todaySales->total ?? 0,
+                'returns' => $todayReturns,
+                'net_revenue' => $todayNet,
                 'average' => $todaySales->average ?? 0,
                 'change_from_yesterday' => $this->calculatePercentageChange(
-                    $yesterdaySales->total ?? 0,
-                    $todaySales->total ?? 0
+                    $yesterdayNet,
+                    $todayNet
                 ),
             ],
             'this_week' => [
                 'count' => $thisWeekSales->count ?? 0,
                 'total' => $thisWeekSales->total ?? 0,
+                'returns' => $thisWeekReturns,
+                'net_revenue' => $thisWeekNet,
                 'change_from_last_week' => $this->calculatePercentageChange(
-                    $lastWeekSales->total ?? 0,
-                    $thisWeekSales->total ?? 0
+                    $lastWeekNet,
+                    $thisWeekNet
                 ),
             ],
             'this_month' => [
                 'count' => $thisMonthSales->count ?? 0,
                 'total' => $thisMonthSales->total ?? 0,
+                'returns' => $thisMonthReturns,
+                'net_revenue' => $thisMonthNet,
                 'change_from_last_month' => $this->calculatePercentageChange(
-                    $lastMonthSales->total ?? 0,
-                    $thisMonthSales->total ?? 0
+                    $lastMonthNet,
+                    $thisMonthNet
                 ),
             ],
         ];
@@ -420,5 +441,22 @@ class DashboardKPIService
         }
 
         return round((($newValue - $oldValue) / $oldValue) * 100, 2);
+    }
+
+    /**
+     * Get total returns amount for a date range
+     * Returns are subtracted from revenue calculations
+     */
+    private function getReturnsTotal($startDate, $endDate): float
+    {
+        $query = SaleReturn::where('account_id', $this->accountId)
+            ->where('status', 'completed');
+
+        if ($this->branchId) {
+            $query->where('branch_id', $this->branchId);
+        }
+
+        return $query->whereBetween('return_date', [$startDate, $endDate])
+            ->sum('total') ?? 0;
     }
 }

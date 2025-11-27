@@ -45,6 +45,7 @@ use App\Http\Controllers\FiscalPrinterConfigController;
 use App\Http\Controllers\FiscalPrinterJobController;
 use App\Http\Controllers\IntegrationsController;
 use App\Http\Controllers\RentalTemplateController;
+use App\Http\Controllers\ProductActivityController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -356,6 +357,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Customer Management
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::get('/customers/{id}/get', [CustomerController::class, 'getById'])->name('customers.get-by-id');
     Route::post('/customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quick-store');
     Route::resource('customers', CustomerController::class);
 
@@ -466,7 +468,13 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::patch('/alerts/{alert}/view', [MinMaxAlertController::class, 'markAsViewed'])->name('alerts.view');
     Route::patch('/alerts/{alert}/resolve', [MinMaxAlertController::class, 'markAsResolved'])->name('alerts.resolve');
     Route::resource('alerts', MinMaxAlertController::class, ['except' => ['create', 'store', 'edit', 'update']]);
-    
+
+    // Product Activity & Discrepancy Investigation
+    Route::get('/product-activity/timeline', [ProductActivityController::class, 'timeline'])->name('product-activity.timeline');
+    Route::get('/product-activity/discrepancy', [ProductActivityController::class, 'discrepancy'])->name('product-activity.discrepancy');
+    Route::post('/product-activity/investigate', [ProductActivityController::class, 'investigate'])->name('product-activity.investigate');
+    Route::post('/product-activity/create-adjustment', [ProductActivityController::class, 'createAdjustment'])->name('product-activity.create-adjustment');
+
     // Sales & POS Management
     Route::get('/pos', [\App\Http\Controllers\POSController::class, 'index'])->name('pos.index');
     Route::get('/pos/touch', [\App\Http\Controllers\POSController::class, 'touch'])->name('pos.touch');
@@ -486,6 +494,14 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
     Route::post('/sales/{sale}/send-to-printer', [SaleController::class, 'sendToPrinter'])->name('sales.send-to-printer');
     Route::post('/sales/{sale}/fiscal-number', [SaleController::class, 'updateFiscalNumber'])->name('sales.update-fiscal-number');
+
+    // Returns & Refunds Management
+    Route::get('/returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
+    Route::get('/returns/create', [\App\Http\Controllers\ReturnController::class, 'create'])->name('returns.create');
+    Route::post('/returns', [\App\Http\Controllers\ReturnController::class, 'store'])->name('returns.store');
+    Route::get('/returns/{id}', [\App\Http\Controllers\ReturnController::class, 'show'])->name('returns.show');
+    Route::post('/returns/{id}/cancel', [\App\Http\Controllers\ReturnController::class, 'cancel'])->name('returns.cancel');
+    Route::get('/api/sales/{saleId}/for-return', [\App\Http\Controllers\ReturnController::class, 'getSaleForReturn'])->name('api.sales.for-return');
 
     // Online Orders Management
     Route::get('/online-orders', [OnlineOrderController::class, 'index'])->name('online-orders.index');

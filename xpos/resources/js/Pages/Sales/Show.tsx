@@ -220,6 +220,16 @@ export default function Show({ auth, sale }: SalesShowProps) {
                         <PrimaryButton onClick={() => setShowPrintModal(true)}>
                             Çap et
                         </PrimaryButton>
+                        {sale.status === 'completed' && (
+                            <Link href={route('returns.create', { sale_id: sale.sale_id })}>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 transition ease-in-out duration-150"
+                                >
+                                    Mal Qaytarma
+                                </button>
+                            </Link>
+                        )}
                     </div>
                 </div>
             }

@@ -6,6 +6,7 @@ import TouchHeader from './components/TouchHeader';
 import TouchPayment from './components/TouchPayment';
 import ProductSearchSection from '../POS/components/ProductSearchSection';
 import PrintModal from '@/Components/PrintModal';
+import ReturnModal from '@/Components/ReturnModal';
 import { useCart } from '../POS/hooks/useCart';
 import { useSearch } from '../POS/hooks/useSearch';
 import toast from 'react-hot-toast';
@@ -66,6 +67,9 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [lastSaleId, setLastSaleId] = useState<number | null>(null);
   const [lastSaleNumber, setLastSaleNumber] = useState<string>('');
+
+  // Return modal state
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
 
   // Fiscal printer status
   const [fiscalPrintStatus, setFiscalPrintStatus] = useState<string | null>(null);
@@ -258,6 +262,7 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
           userBranchId={auth?.user?.branch_id}
           onClearCart={clearCart}
           cartCount={cart.length}
+          onOpenReturn={() => setReturnModalOpen(true)}
         />
 
         {/* Fiscal Print Status Banner */}
@@ -359,6 +364,12 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
           autoTrigger={flash?.auto_print}
         />
       )}
+
+      {/* Return Modal */}
+      <ReturnModal
+        show={returnModalOpen}
+        onClose={() => setReturnModalOpen(false)}
+      />
     </>
   );
 }

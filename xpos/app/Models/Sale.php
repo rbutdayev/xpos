@@ -21,6 +21,7 @@ class Sale extends Model
         'customer_id',
         'sale_number',
         'fiscal_number',
+        'fiscal_document_id',
         'use_fiscal_printer',
         'subtotal',
         'tax_amount',
@@ -92,6 +93,11 @@ class Sale extends Model
     public function customerCredit(): BelongsTo
     {
         return $this->belongsTo(CustomerCredit::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class, 'sale_id', 'sale_id');
     }
 
     public function scopeCompleted(Builder $query): Builder

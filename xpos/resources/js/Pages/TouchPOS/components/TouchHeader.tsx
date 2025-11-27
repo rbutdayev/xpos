@@ -1,7 +1,7 @@
 import React from 'react';
 import { Customer, Branch } from '@/types';
-import { TrashIcon, UserIcon, BuildingStorefrontIcon, ArrowLeftIcon, HomeIcon } from '@heroicons/react/24/outline';
-import { Link } from '@inertiajs/react';
+import { TrashIcon, UserIcon, BuildingStorefrontIcon, ArrowLeftIcon, HomeIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { Link, router } from '@inertiajs/react';
 import SearchableCustomerSelect from '@/Components/SearchableCustomerSelect';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   onClearCart: () => void;
   cartCount: number;
   onCustomerChange?: (customer: Customer | null) => void;
+  onOpenReturn: () => void;
 }
 
 export default function TouchHeader({
@@ -22,6 +23,7 @@ export default function TouchHeader({
   onClearCart,
   cartCount,
   onCustomerChange,
+  onOpenReturn,
 }: Props) {
   return (
     <div className="bg-white border-b border-gray-200 p-4">
@@ -84,6 +86,15 @@ export default function TouchHeader({
           <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
             Məhsul: {cartCount}
           </div>
+
+          {/* Return Button */}
+          <button
+            onClick={onOpenReturn}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
+          >
+            <ArrowUturnLeftIcon className="w-5 h-5" />
+            <span>Mal Qaytarma</span>
+          </button>
 
           {/* Clear Cart Button */}
           {cartCount > 0 && (

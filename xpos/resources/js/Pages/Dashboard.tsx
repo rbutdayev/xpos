@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageProps, User } from '@/types';
 import { formatChartDate } from '@/utils/dateFormatters';
+import { useState } from 'react';
 import {
     CubeIcon,
     UserIcon,
@@ -25,6 +26,7 @@ import {
 import {
     ArrowUpIcon,
     ArrowDownIcon,
+    InformationCircleIcon,
 } from '@heroicons/react/20/solid';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -234,6 +236,30 @@ type KPICardColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'indigo' | 
 type Trend = {
     value: string;
     isPositive: boolean;
+};
+
+// Section Header with Tooltip Component
+const SectionHeader = ({ title, tooltip }: { title: string; tooltip: string }) => {
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    return (
+        <div className="flex items-center gap-2 mb-0">
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <div className="relative group">
+                <InformationCircleIcon
+                    className="h-5 w-5 text-gray-400 hover:text-blue-600 cursor-help transition-colors"
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                />
+                {showTooltip && (
+                    <div className="absolute z-50 right-0 top-6 w-72 p-3 bg-white text-gray-700 text-sm rounded-lg shadow-xl border border-gray-200 animate-fadeIn">
+                        <div className="absolute -top-2 right-2 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
+                        {tooltip}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 // Modern KPI Card Component
@@ -507,83 +533,96 @@ export default function Dashboard({
                 {!isSalesman ? (
                     <>
                         {/* Financial Overview */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                            <ModernKPICard
-                                title="Bu Ay Gəlir"
-                                value={formatCurrency(financial_data.monthly_revenue)}
-                                icon={<BanknotesIcon className="h-8 w-8" />}
-                                color="green"
-                                trend={{
-                                    value: Math.abs(financial_data.revenue_growth).toFixed(1),
-                                    isPositive: financial_data.revenue_growth >= 0,
-                                }}
-                                subtitle="Aylıq gəlir statistikası"
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                            <SectionHeader
+                                title="Maliyyə İcmalı"
+                                tooltip="Bu ay və ümumi maliyyə göstəriciləri: gəlirlər, xərclər, mənfəət və aktiv müştəri sayı. Bu statistika işinizin ümumi maliyyə vəziyyətini göstərir."
                             />
-                            <ModernKPICard
-                                title="Bu Ay Xərclər"
-                                value={formatCurrency(financial_data.monthly_expenses)}
-                                icon={<DocumentTextIcon className="h-8 w-8" />}
-                                color="orange"
-                                trend={{
-                                    value: Math.abs(financial_data.expense_growth).toFixed(1),
-                                    isPositive: financial_data.expense_growth < 0,
-                                }}
-                                subtitle="Aylıq xərc statistikası"
-                            />
-                            <ModernKPICard
-                                title="Ümumi Mənfəət"
-                                value={formatCurrency(financial_data.total_profit)}
-                                icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
-                                color="indigo"
-                                subtitle="Gəlir - Xərclər"
-                            />
-                            <ModernKPICard
-                                title="Aktiv Müştərilər"
-                                value={stats.active_customers}
-                                icon={<UserIcon className="h-8 w-8" />}
-                                color="purple"
-                                subtitle={`${stats.customers_count} ümumi müştəri`}
-                            />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                                <ModernKPICard
+                                    title="Bu Ay Gəlir"
+                                    value={formatCurrency(financial_data.monthly_revenue)}
+                                    icon={<BanknotesIcon className="h-8 w-8" />}
+                                    color="green"
+                                    trend={{
+                                        value: Math.abs(financial_data.revenue_growth).toFixed(1),
+                                        isPositive: financial_data.revenue_growth >= 0,
+                                    }}
+                                    subtitle="Aylıq gəlir statistikası"
+                                />
+                                <ModernKPICard
+                                    title="Bu Ay Xərclər"
+                                    value={formatCurrency(financial_data.monthly_expenses)}
+                                    icon={<DocumentTextIcon className="h-8 w-8" />}
+                                    color="orange"
+                                    trend={{
+                                        value: Math.abs(financial_data.expense_growth).toFixed(1),
+                                        isPositive: financial_data.expense_growth < 0,
+                                    }}
+                                    subtitle="Aylıq xərc statistikası"
+                                />
+                                <ModernKPICard
+                                    title="Ümumi Mənfəət"
+                                    value={formatCurrency(financial_data.total_profit)}
+                                    icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
+                                    color="indigo"
+                                    subtitle="Gəlir - Xərclər"
+                                />
+                                <ModernKPICard
+                                    title="Aktiv Müştərilər"
+                                    value={stats.active_customers}
+                                    icon={<UserIcon className="h-8 w-8" />}
+                                    color="purple"
+                                    subtitle={`${stats.customers_count} ümumi müştəri`}
+                                />
+                            </div>
                         </div>
 
                         {/* Rental Services Overview */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                            <ModernKPICard
-                                title="Aktiv İcarələr"
-                                value={rental_data.active_rentals_count}
-                                icon={<CubeIcon className="h-8 w-8" />}
-                                color="blue"
-                                subtitle="Hazırda icarədə"
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                            <SectionHeader
+                                title="İcarə Statistikası"
+                                tooltip="İcarə xidmətləri üzrə statistika: aktiv icarələr, aylıq gəlir, gözlənilən qaytarmalar (3 gün ərzində) və gecikmiş icarələr. Bu məlumat icarə idarəçiliyinə kömək edir."
                             />
-                            <ModernKPICard
-                                title="Bu Ay İcarə Gəliri"
-                                value={formatCurrency(rental_data.monthly_rental_revenue)}
-                                icon={<CurrencyDollarIcon className="h-8 w-8" />}
-                                color="teal"
-                                subtitle={`${rental_data.total_rentals_this_month} icarə`}
-                            />
-                            <ModernKPICard
-                                title="Gözlənilən Qaytarmalar"
-                                value={rental_data.pending_returns_count}
-                                icon={<CalendarDaysIcon className="h-8 w-8" />}
-                                color="orange"
-                                subtitle="3 gün ərzində"
-                            />
-                            <ModernKPICard
-                                title="Gecikmiş İcarələr"
-                                value={rental_data.overdue_rentals_count}
-                                icon={<ClockIcon className="h-8 w-8" />}
-                                color="red"
-                                subtitle="Diqqət tələb edir"
-                            />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                                <ModernKPICard
+                                    title="Aktiv İcarələr"
+                                    value={rental_data.active_rentals_count}
+                                    icon={<CubeIcon className="h-8 w-8" />}
+                                    color="blue"
+                                    subtitle="Hazırda icarədə"
+                                />
+                                <ModernKPICard
+                                    title="Bu Ay İcarə Gəliri"
+                                    value={formatCurrency(rental_data.monthly_rental_revenue)}
+                                    icon={<CurrencyDollarIcon className="h-8 w-8" />}
+                                    color="teal"
+                                    subtitle={`${rental_data.total_rentals_this_month} icarə`}
+                                />
+                                <ModernKPICard
+                                    title="Gözlənilən Qaytarmalar"
+                                    value={rental_data.pending_returns_count}
+                                    icon={<CalendarDaysIcon className="h-8 w-8" />}
+                                    color="orange"
+                                    subtitle="3 gün ərzində"
+                                />
+                                <ModernKPICard
+                                    title="Gecikmiş İcarələr"
+                                    value={rental_data.overdue_rentals_count}
+                                    icon={<ClockIcon className="h-8 w-8" />}
+                                    color="red"
+                                    subtitle="Diqqət tələb edir"
+                                />
+                            </div>
                         </div>
 
                         {/* Stock by Unit Breakdown */}
                         {stats.stock_by_unit && stats.stock_by_unit.length > 0 && (
                             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                    Vahid üzrə Stok Bölgüsü
-                                </h3>
+                                <SectionHeader
+                                    title="Vahid üzrə Stok Bölgüsü"
+                                    tooltip="Anbarlarınızdakı məhsulların vahid tiplərinə (ədəd, kq, litr və s.) görə qruplaşdırılmış miqdarları və dəyərləri."
+                                />
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                                     {stats.stock_by_unit.map((item, index) => (
                                         <div
@@ -615,9 +654,10 @@ export default function Dashboard({
 
                         {/* Credits Statistics */}
                         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                Borc Statistikaları
-                            </h3>
+                            <SectionHeader
+                                title="Borc Statistikaları"
+                                tooltip="Müştərilərə verilən borcların ümumi vəziyyəti, aylıq borc verilişi və ödənişləri. Bu bölmə müştəri kreditlərini izləməyə kömək edir."
+                            />
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                                 <ModernKPICard
                                     title="Ümumi Borc"
@@ -724,9 +764,10 @@ export default function Dashboard({
                             {/* Sales Chart */}
                             <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        Son 10 Gün Satış Statistikası
-                                    </h3>
+                                    <SectionHeader
+                                        title="Son 10 Gün Satış Statistikası"
+                                        tooltip="Seçilmiş müddət ərzində günlük və ya saatlıq satış gəlirinizin qrafiki. Bu qrafik satış trendlərini anlamağa kömək edir."
+                                    />
                                     <ChartBarIcon className="h-6 w-6 text-gray-400" />
                                 </div>
                                 <div className="h-80">
@@ -737,9 +778,10 @@ export default function Dashboard({
                             {/* Payment Methods */}
                             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        Ödəniş Üsulları
-                                    </h3>
+                                    <SectionHeader
+                                        title="Ödəniş Üsulları"
+                                        tooltip="Bu ay daxil olan satışların ödəniş üsullarına (nağd, kart, köçürmə) görə bölgüsü. Müştərilərin ödəniş üstünlüklərini göstərir."
+                                    />
                                     <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
                                 </div>
                                 <div className="h-80 flex items-center justify-center">
@@ -773,9 +815,10 @@ export default function Dashboard({
                             {/* Top Products */}
                             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        Ən Çox Satılan Məhsullar
-                                    </h3>
+                                    <SectionHeader
+                                        title="Ən Çox Satılan Məhsullar"
+                                        tooltip="Seçilmiş müddət ərzində ən çox satış miqdarı olan məhsulların siyahısı. Bu məlumat stok planlaması üçün faydalıdır."
+                                    />
                                     <Link
                                         href="/products"
                                         className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -824,9 +867,10 @@ export default function Dashboard({
                             {/* Low Stock Products */}
                             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        Az Stoklu Məhsullar
-                                    </h3>
+                                    <SectionHeader
+                                        title="Az Stoklu Məhsullar"
+                                        tooltip="Stok miqdarı minimum səviyyəyə çatmış və ya ondan aşağı düşmüş məhsullar. Bu məhsulları vaxtında sifariş etməyi unutmayın."
+                                    />
                                     <Link
                                         href="/alerts"
                                         className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -890,7 +934,10 @@ export default function Dashboard({
                         {/* Recent Sales */}
                         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900">Son Satışlar</h3>
+                                <SectionHeader
+                                    title="Son Satışlar"
+                                    tooltip="Seçilmiş müddət ərzində edilmiş son satışların siyahısı. Müştəri adı, satış məbləği və statusu haqqında məlumat verir."
+                                />
                                 <Link
                                     href="/sales"
                                     className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -1010,9 +1057,10 @@ export default function Dashboard({
                         {/* Low Stock for Sales Staff */}
                         {low_stock_products.length > 0 && (
                             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
-                                    Az Stoklu Məhsullar
-                                </h3>
+                                <SectionHeader
+                                    title="Az Stoklu Məhsullar"
+                                    tooltip="Stok miqdarı minimum səviyyəyə çatmış məhsullar. Müştərilərə satış edərkən diqqətli olun."
+                                />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     {low_stock_products.map((product) => (
                                         <div

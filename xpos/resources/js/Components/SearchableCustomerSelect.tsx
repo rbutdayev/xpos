@@ -31,18 +31,16 @@ export default function SearchableCustomerSelect({
 
     // Load selected customer details when value changes
     useEffect(() => {
-        if (value && !selectedCustomer) {
-            // Fetch customer details
-            axios.get(route('customers.search'), {
-                params: { q: value }
-            }).then(response => {
-                const customer = response.data.find((c: Customer) => c.id.toString() === value);
-                if (customer) {
-                    setSelectedCustomer(customer);
-                }
-            }).catch(error => {
-                console.error('Error fetching customer:', error);
-            });
+        if (value && (!selectedCustomer || selectedCustomer.id.toString() !== value)) {
+            // Fetch customer details by ID
+            axios.get(route('customers.get-by-id', { id: value }))
+                .then(response => {
+                    setSelectedCustomer(response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching customer:', error);
+                    setSelectedCustomer(null);
+                });
         } else if (!value) {
             setSelectedCustomer(null);
         }

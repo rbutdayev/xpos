@@ -180,13 +180,21 @@ class FiscalPrinterBridgeController extends Controller
 
         $validated = $request->validate([
             'fiscal_number' => 'required|string',
+            'fiscal_document_id' => 'nullable|string',
             'response' => 'nullable|array',
+            'response_data' => 'nullable|array',
         ]);
 
         $job->markAsCompleted(
             $validated['fiscal_number'],
+            $validated['fiscal_document_id'] ?? null,
             $validated['response'] ?? null
         );
+
+        // Store response_data if provided
+        if (isset($validated['response_data'])) {
+            $job->update(['response_data' => $validated['response_data']]);
+        }
 
         Log::info('Fiscal printer job completed', [
             'job_id' => $job->id,
@@ -227,9 +235,15 @@ class FiscalPrinterBridgeController extends Controller
 
         $validated = $request->validate([
             'error' => 'required|string',
+            'response_data' => 'nullable|array',
         ]);
 
         $errorMessage = $validated['error'];
+
+        // Store response_data if provided (helpful for debugging)
+        if (isset($validated['response_data'])) {
+            $job->update(['response_data' => $validated['response_data']]);
+        }
 
         // Check if this is a non-retriable error (like duplicate sale)
         $isRetriable = !FiscalPrinterJob::isNonRetriableError($errorMessage);

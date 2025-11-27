@@ -106,7 +106,7 @@ class CustomerController extends Controller
         Gate::authorize('access-account-data');
 
         $search = $request->get('q', '');
-        
+
         $customers = Customer::where('account_id', Auth::user()->account_id)
             ->search($search)
             ->active()
@@ -120,6 +120,25 @@ class CustomerController extends Controller
         });
 
         return response()->json($customers);
+    }
+
+    public function getById(Request $request, $id)
+    {
+        Gate::authorize('access-account-data');
+
+        $customer = Customer::where('account_id', Auth::user()->account_id)
+            ->where('id', $id)
+            ->first(['id', 'name', 'phone', 'customer_type', 'loyalty_points', 'loyalty_card_number']);
+
+        if (!$customer) {
+            return response()->json(['error' => 'Customer not found'], 404);
+        }
+
+        // Add formatted fields
+        $customer->formatted_phone = $customer->formatted_phone;
+        $customer->customer_type_text = $customer->customer_type_text;
+
+        return response()->json($customer);
     }
 
     public function quickStore(Request $request)

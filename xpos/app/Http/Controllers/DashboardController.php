@@ -13,6 +13,7 @@ use App\Models\Warehouse;
 use App\Models\Branch;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SaleReturn;
 use App\Models\Expense;
 use App\Models\CustomerCredit;
 use App\Models\SupplierPayment;
@@ -323,6 +324,15 @@ class DashboardController extends Controller
             ->whereMonth('sale_date', $currentMonth->month)
             ->sum('total') ?? 0;
 
+        // Subtract returns from monthly revenue
+        $monthlyReturns = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->whereYear('return_date', $currentMonth->year)
+            ->whereMonth('return_date', $currentMonth->month)
+            ->sum('total') ?? 0;
+
+        $monthlyRevenue -= $monthlyReturns;
+
         // Add rental revenue to monthly revenue
         $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
             ->whereYear('rental_start_date', $currentMonth->year)
@@ -357,6 +367,15 @@ class DashboardController extends Controller
             ->whereMonth('sale_date', $previousMonth->month)
             ->sum('total') ?? 0;
 
+        // Subtract returns from previous month revenue
+        $prevMonthReturns = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->whereYear('return_date', $previousMonth->year)
+            ->whereMonth('return_date', $previousMonth->month)
+            ->sum('total') ?? 0;
+
+        $prevMonthRevenue -= $prevMonthReturns;
+
         // Add rental revenue to previous month revenue
         $prevMonthRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
             ->whereYear('rental_start_date', $previousMonth->year)
@@ -388,6 +407,13 @@ class DashboardController extends Controller
         $totalRevenue = Sale::where('account_id', $account->id)
             ->countable() // Only include POS sales + completed online orders
             ->sum('total') ?? 0;
+
+        // Subtract all returns from total revenue
+        $totalReturns = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->sum('total') ?? 0;
+
+        $totalRevenue -= $totalReturns;
 
         // Add rental revenue to total revenue
         $totalRentalRevenue = \App\Models\Rental::where('account_id', $account->id)

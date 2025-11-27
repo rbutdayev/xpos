@@ -10,10 +10,13 @@ class FiscalPrinterJob extends Model
     protected $fillable = [
         'account_id',
         'sale_id',
+        'return_id',
         'status',
         'request_data',
+        'response_data',
         'provider',
         'fiscal_number',
+        'fiscal_document_id',
         'error_message',
         'picked_up_at',
         'completed_at',
@@ -24,6 +27,7 @@ class FiscalPrinterJob extends Model
 
     protected $casts = [
         'request_data' => 'array',
+        'response_data' => 'array',
         'picked_up_at' => 'datetime',
         'completed_at' => 'datetime',
         'next_retry_at' => 'datetime',
@@ -48,18 +52,34 @@ class FiscalPrinterJob extends Model
 
     /**
      * Mark job as completed
+     *
+     * @param string $fiscalNumber The display number (e.g., "60")
+     * @param string|null $fiscalDocumentId The document ID hash for Caspos (e.g., "EMnVW3qyEbUSsJ4xTJbMytDStusgXMDauaCQxdJE1wuM")
+     * @param array|null $response Full response from fiscal printer
      */
-    public function markAsCompleted(string $fiscalNumber, ?array $response = null): void
+    public function markAsCompleted(string $fiscalNumber, ?string $fiscalDocumentId = null, ?array $response = null): void
     {
         $this->update([
             'status' => self::STATUS_COMPLETED,
             'fiscal_number' => $fiscalNumber,
+            'fiscal_document_id' => $fiscalDocumentId,
             'completed_at' => now(),
         ]);
 
-        // Update the sale with fiscal number
-        if ($this->sale) {
-            $this->sale->update(['fiscal_number' => $fiscalNumber]);
+        // Update the sale with fiscal number and document ID ONLY if this is a sale (not a return)
+        if ($this->sale_id && !$this->return_id && $this->sale) {
+            $this->sale->update([
+                'fiscal_number' => $fiscalNumber,
+                'fiscal_document_id' => $fiscalDocumentId,
+            ]);
+        }
+
+        // Update the return with fiscal number and document ID if this is a return
+        if ($this->return_id && $this->return) {
+            $this->return->update([
+                'fiscal_number' => $fiscalNumber,
+                'fiscal_document_id' => $fiscalDocumentId,
+            ]);
         }
     }
 
@@ -136,5 +156,10 @@ class FiscalPrinterJob extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class, 'sale_id', 'sale_id');
+    }
+
+    public function return(): BelongsTo
+    {
+        return $this->belongsTo(SaleReturn::class, 'return_id', 'return_id');
     }
 }

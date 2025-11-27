@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Models\Sale;
+use App\Models\SaleReturn;
 use App\Models\ServiceRecord;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -587,6 +588,21 @@ class ReportController extends Controller
             ')
             ->first();
 
+        // Get returns for the period
+        $returnsData = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->whereBetween('return_date', [$dateFrom, $dateTo])
+            ->selectRaw('
+                COUNT(*) as total_returns,
+                SUM(total) as total_returns_amount
+            ')
+            ->first();
+
+        $totalReturns = $returnsData->total_returns ?? 0;
+        $totalReturnsAmount = $returnsData->total_returns_amount ?? 0;
+        $grossRevenue = $summaryData->total_revenue ?? 0;
+        $netRevenue = $grossRevenue - $totalReturnsAmount;
+
         // Get top customer with efficient query
         $topCustomer = Sale::where('account_id', $account->id)
             ->countable() // Only include POS sales + completed online orders
@@ -615,7 +631,11 @@ class ReportController extends Controller
 
         $summary = [
             'total_sales' => $summaryData->total_sales ?? 0,
-            'total_revenue' => $summaryData->total_revenue ?? 0,
+            'gross_revenue' => $grossRevenue,
+            'total_returns' => $totalReturns,
+            'total_returns_amount' => $totalReturnsAmount,
+            'net_revenue' => $netRevenue,
+            'total_revenue' => $netRevenue, // For backward compatibility
             'average_sale' => $summaryData->average_sale ?? 0,
             'top_customer' => $topCustomer && $topCustomer->customer ? [
                 'name' => $topCustomer->customer->name,
@@ -760,6 +780,14 @@ class ReportController extends Controller
             ->whereBetween('sale_date', [$dateFrom, $dateTo])
             ->sum('total');
 
+        // Subtract returns from revenue
+        $returns = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->whereBetween('return_date', [$dateFrom, $dateTo])
+            ->sum('total');
+
+        $netRevenue = $sales - $returns;
+
         $expenses = Expense::where('account_id', $account->id)
             ->whereBetween('expense_date', [$dateFrom, $dateTo])
             ->sum('amount');
@@ -781,10 +809,13 @@ class ReportController extends Controller
             ->pluck('total', 'method');
 
         $summary = [
-            'total_revenue' => $sales,
+            'gross_revenue' => $sales,
+            'total_returns' => $returns,
+            'net_revenue' => $netRevenue,
+            'total_revenue' => $netRevenue, // For backward compatibility
             'total_expenses' => $totalExpenses,
-            'net_profit' => $sales - $totalExpenses,
-            'profit_margin' => $sales > 0 ? (($sales - $totalExpenses) / $sales) * 100 : 0,
+            'net_profit' => $netRevenue - $totalExpenses,
+            'profit_margin' => $netRevenue > 0 ? (($netRevenue - $totalExpenses) / $netRevenue) * 100 : 0,
             'revenue_by_payment_method' => [
                 'nağd' => $paymentBreakdown['nağd'] ?? 0,
                 'kart' => $paymentBreakdown['kart'] ?? 0,
@@ -799,6 +830,14 @@ class ReportController extends Controller
             ->selectRaw('DATE(sale_date) as date, SUM(total) as total_revenue')
             ->groupBy('date')
             ->pluck('total_revenue', 'date');
+
+        // Get all returns grouped by date
+        $returnsByDate = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->whereBetween('return_date', [$dateFrom, $dateTo])
+            ->selectRaw('DATE(return_date) as date, SUM(total) as total_returns')
+            ->groupBy('date')
+            ->pluck('total_returns', 'date');
 
         // Get all expenses grouped by date (1 query instead of 365+)
         $expensesByDate = Expense::where('account_id', $account->id)
@@ -820,14 +859,18 @@ class ReportController extends Controller
 
         while ($currentDate <= $dateTo) {
             $dateKey = $currentDate->format('Y-m-d');
-            $revenue = $salesByDate[$dateKey] ?? 0;
+            $grossRevenue = $salesByDate[$dateKey] ?? 0;
+            $returnsAmount = $returnsByDate[$dateKey] ?? 0;
+            $netRevenue = $grossRevenue - $returnsAmount;
             $expenses = ($expensesByDate[$dateKey] ?? 0) + ($supplierPaymentsByDate[$dateKey] ?? 0);
 
             $dailyData[] = [
                 'date' => $dateKey,
-                'revenue' => $revenue,
+                'revenue' => $netRevenue, // Net revenue after returns
+                'gross_revenue' => $grossRevenue,
+                'returns' => $returnsAmount,
                 'expenses' => $expenses,
-                'profit' => $revenue - $expenses
+                'profit' => $netRevenue - $expenses
             ];
 
             $currentDate->addDay();
@@ -932,6 +975,13 @@ class ReportController extends Controller
             ->with(['payments', 'user', 'items'])
             ->get();
 
+        // Get all returns for the period
+        $returns = SaleReturn::where('account_id', $account->id)
+            ->where('status', 'completed')
+            ->whereBetween('return_date', [$dateFrom, $dateTo])
+            ->with(['items', 'refunds'])
+            ->get();
+
         // Calculate payment method breakdown
         $paymentMethods = [
             'nağd' => 0,
@@ -1016,12 +1066,20 @@ class ReportController extends Controller
             });
 
         // Summary calculations
+        $grossRevenue = $sales->sum('total');
+        $totalReturns = $returns->sum('total');
+        $netRevenue = $grossRevenue - $totalReturns;
+
         $summary = [
             'total_sales' => $sales->count(),
-            'total_revenue' => $sales->sum('total'),
+            'gross_revenue' => $grossRevenue,
+            'total_returns' => $returns->count(),
+            'total_returns_amount' => $totalReturns,
+            'net_revenue' => $netRevenue,
+            'total_revenue' => $netRevenue, // For backward compatibility
             'total_discount' => $sales->sum('discount_amount'),
             'total_tax' => $sales->sum('tax_amount'),
-            'average_transaction' => $sales->count() > 0 ? $sales->sum('total') / $sales->count() : 0,
+            'average_transaction' => $sales->count() > 0 ? $grossRevenue / $sales->count() : 0,
             'total_items_sold' => $sales->sum(function($sale) {
                 return $sale->items->sum('quantity');
             }),

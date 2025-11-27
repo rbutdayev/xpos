@@ -1,0 +1,304 @@
+import React, { useState, useEffect } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
+import PrimaryButton from '@/Components/PrimaryButton';
+import { EyeIcon, ArrowUturnLeftIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { PageProps } from '@/types';
+
+interface SaleReturn {
+    return_id: number;
+    return_number: string;
+    sale_id: number;
+    sale?: {
+        sale_number: string;
+    };
+    customer?: {
+        name: string;
+    };
+    user?: {
+        name: string;
+    };
+    subtotal: string;
+    tax_amount: string;
+    total: string;
+    status: 'pending' | 'completed' | 'cancelled';
+    reason?: string;
+    notes?: string;
+    fiscal_number?: string;
+    return_date: string;
+    items?: Array<{
+        product: {
+            name: string;
+        };
+        quantity: string;
+    }>;
+}
+
+interface ReturnsIndexProps extends PageProps {
+    returns: {
+        data: SaleReturn[];
+        links: any[];
+        meta: any;
+    };
+    filters: {
+        search?: string;
+        status?: string;
+        start_date?: string;
+        end_date?: string;
+    };
+    statistics: {
+        total_returns: number;
+        total_amount: number;
+        today_returns: number;
+        today_amount: number;
+    };
+}
+
+export default function Index({ auth, returns, filters, statistics }: ReturnsIndexProps) {
+    const [localFilters, setLocalFilters] = useState(filters);
+    const [searchInput, setSearchInput] = useState(filters.search || '');
+
+    // Debounced search effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const newFilters = { ...localFilters, search: searchInput };
+            setLocalFilters(newFilters);
+            router.get(route('returns.index'), newFilters, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchInput]);
+
+    const handleSearchInput = (search: string) => {
+        setSearchInput(search);
+    };
+
+    const handleFilter = (key: string, value: any) => {
+        const newFilters = { ...localFilters, [key]: value };
+        setLocalFilters(newFilters);
+        router.get(route('returns.index'), newFilters, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleTodayFilter = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const newFilters = { ...localFilters, start_date: today, end_date: today };
+        setLocalFilters(newFilters);
+        router.get(route('returns.index'), newFilters, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const isTodaySelected = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return localFilters.start_date === today && localFilters.end_date === today;
+    };
+
+    const getStatusBadge = (status: string) => {
+        const badges = {
+            completed: { color: 'bg-green-100 text-green-800', text: 'Tamamlandı' },
+            pending: { color: 'bg-yellow-100 text-yellow-800', text: 'Gözləyir' },
+            cancelled: { color: 'bg-red-100 text-red-800', text: 'Ləğv edilib' },
+        };
+        const badge = badges[status as keyof typeof badges] || badges.completed;
+        return (
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badge.color}`}>
+                {badge.text}
+            </span>
+        );
+    };
+
+    const columns: Column[] = [
+        {
+            key: 'return_number',
+            label: 'Qaytarma №',
+            sortable: true,
+            render: (returnItem: SaleReturn) => (
+                <Link
+                    href={route('returns.show', returnItem.return_id)}
+                    className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                    {returnItem.return_number}
+                </Link>
+            ),
+        },
+        {
+            key: 'sale.sale_number',
+            label: 'Orijinal Satış',
+            sortable: true,
+            render: (returnItem: SaleReturn) => (
+                returnItem.sale ? (
+                    <Link
+                        href={route('sales.show', returnItem.sale_id)}
+                        className="text-blue-600 hover:text-blue-800"
+                    >
+                        {returnItem.sale.sale_number}
+                    </Link>
+                ) : '-'
+            ),
+        },
+        {
+            key: 'customer.name',
+            label: 'Müştəri',
+            sortable: true,
+            render: (returnItem: SaleReturn) => returnItem.customer?.name || 'Anonim',
+        },
+        {
+            key: 'total',
+            label: 'Qaytarılan Məbləğ',
+            sortable: true,
+            render: (returnItem: SaleReturn) => `${returnItem.total} ₼`,
+            className: 'text-right font-semibold',
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            sortable: true,
+            render: (returnItem: SaleReturn) => getStatusBadge(returnItem.status),
+        },
+        {
+            key: 'return_date',
+            label: 'Tarix',
+            sortable: true,
+            render: (returnItem: SaleReturn) => new Date(returnItem.return_date).toLocaleString('az-AZ'),
+        },
+        {
+            key: 'user.name',
+            label: 'İstifadəçi',
+            sortable: true,
+            render: (returnItem: SaleReturn) => returnItem.user?.name || '-',
+        },
+    ];
+
+    const tableFilters: Filter[] = [
+        {
+            key: 'status',
+            label: 'Status',
+            type: 'dropdown',
+            value: localFilters.status || '',
+            options: [
+                { value: '', label: 'Hamısı' },
+                { value: 'completed', label: 'Tamamlandı' },
+                { value: 'pending', label: 'Gözləyir' },
+                { value: 'cancelled', label: 'Ləğv edilib' },
+            ],
+            onChange: (value) => handleFilter('status', value),
+        },
+        {
+            key: 'start_date',
+            label: 'Başlanğıc Tarixi',
+            type: 'date',
+            value: localFilters.start_date || '',
+            onChange: (value) => handleFilter('start_date', value),
+        },
+        {
+            key: 'end_date',
+            label: 'Bitmə Tarixi',
+            type: 'date',
+            value: localFilters.end_date || '',
+            onChange: (value) => handleFilter('end_date', value),
+        },
+    ];
+
+    const actions: Action[] = [
+        {
+            label: 'Bax',
+            onClick: (returnItem: SaleReturn) => router.visit(route('returns.show', returnItem.return_id)),
+            className: 'text-blue-600 hover:text-blue-800',
+        },
+    ];
+
+    return (
+        <AuthenticatedLayout
+            header={
+                <div className="flex justify-between items-center">
+                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                        Mal Qaytarma
+                    </h2>
+                </div>
+            }
+        >
+            <Head title="Mal Qaytarma" />
+
+            <div className="py-6">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    {/* Statistics Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                            <div className="text-sm text-gray-600">Bugünkü Qaytarmalar</div>
+                            <div className="text-2xl font-bold text-gray-900 mt-1">
+                                {statistics.today_returns}
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                                {parseFloat(statistics.today_amount.toString()).toFixed(2)} ₼
+                            </div>
+                        </div>
+
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                            <div className="text-sm text-gray-600">Ümumi Qaytarmalar</div>
+                            <div className="text-2xl font-bold text-gray-900 mt-1">
+                                {statistics.total_returns}
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                                {parseFloat(statistics.total_amount.toString()).toFixed(2)} ₼
+                            </div>
+                        </div>
+
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                            <div className="text-sm text-gray-600">Ortalama Qaytarma</div>
+                            <div className="text-2xl font-bold text-gray-900 mt-1">
+                                {statistics.total_returns > 0
+                                    ? (parseFloat(statistics.total_amount.toString()) / statistics.total_returns).toFixed(2)
+                                    : '0.00'
+                                } ₼
+                            </div>
+                        </div>
+
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 flex items-center justify-center">
+                            <button
+                                onClick={handleTodayFilter}
+                                className={`w-full px-4 py-2 text-sm font-medium rounded-md ${
+                                    isTodaySelected()
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                Bugünkü Qaytarmalar
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Data Table */}
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <SharedDataTable
+                            columns={columns}
+                            data={{
+                                data: returns.data,
+                                links: returns.links,
+                                current_page: returns.meta?.current_page || 1,
+                                last_page: returns.meta?.last_page || 1,
+                                total: returns.meta?.total || 0,
+                                per_page: returns.meta?.per_page || 20,
+                                from: returns.meta?.from || 0,
+                                to: returns.meta?.to || 0,
+                            }}
+                            filters={tableFilters}
+                            actions={actions}
+                            searchValue={searchInput}
+                            onSearch={() => {}}
+                            onSearchChange={handleSearchInput}
+                            searchPlaceholder="Qaytarma nömrəsi, satış nömrəsi və ya müştəri adı ilə axtar..."
+                        />
+                    </div>
+                </div>
+            </div>
+        </AuthenticatedLayout>
+    );
+}

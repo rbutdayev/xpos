@@ -58,7 +58,8 @@ import {
     ArchiveBoxIcon,
     Cog6ToothIcon,
     DocumentDuplicateIcon,
-    ClipboardDocumentCheckIcon
+    ClipboardDocumentCheckIcon,
+    MagnifyingGlassCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -82,7 +83,14 @@ export default function Authenticated({
     const rentEnabled = usePage().props.rentEnabled as boolean;
     const discountsEnabled = usePage().props.discountsEnabled as boolean;
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        // Load sidebar state from localStorage, default to false (expanded)
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('sidebarCollapsed');
+            return saved === 'true';
+        }
+        return false;
+    });
     const [currentTime, setCurrentTime] = useState(new Date());
 
     const handleWarehouseChange = (warehouseId: string) => {
@@ -92,6 +100,13 @@ export default function Authenticated({
             preserveScroll: true,
         });
     };
+
+    // Save sidebar collapsed state to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed));
+        }
+    }, [sidebarCollapsed]);
 
     const getCurrentWarehouse = () => {
         if (!selectedWarehouse) return null;
@@ -106,10 +121,10 @@ export default function Authenticated({
         // Check which section the current route belongs to and open that menu
         // Check SMS first to differentiate from sms/logs vs sms/send
         if ((currentRoute?.includes('sales') && !currentRoute?.includes('employee-salaries')) ||
+            currentRoute?.includes('returns') ||
             currentRoute?.includes('online-orders') ||
             currentRoute?.includes('notification-channels') ||
             currentRoute?.includes('customers') ||
-            currentRoute?.includes('customer-items') ||
             currentRoute?.includes('products.discounts') ||
             (currentRoute?.includes('sms') && !currentRoute?.includes('sms.logs'))) {
             openMenus.push('Satış və Marketinq');
@@ -128,7 +143,8 @@ export default function Authenticated({
         }
 
         if (servicesEnabled && (currentRoute?.includes('services') ||
-            currentRoute?.includes('tailor-services'))) {
+            currentRoute?.includes('tailor-services') ||
+            currentRoute?.includes('customer-items'))) {
             openMenus.push('Xidmətlər');
         }
 
@@ -143,8 +159,26 @@ export default function Authenticated({
             currentRoute?.includes('warehouse-transfers') ||
             currentRoute?.includes('product-returns') ||
             (currentRoute?.includes('alerts') && !currentRoute?.includes('telegram')) ||
-            (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory'))) {
+            (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory')) ||
+            currentRoute?.includes('product-activity')) {
             openMenus.push('Anbar və Stok');
+
+            // Also open the appropriate submenu
+            if (currentRoute?.includes('goods-receipts') || currentRoute?.includes('suppliers')) {
+                openMenus.push('Daxil Olan');
+            } else if ((currentRoute?.includes('products') && !currentRoute?.includes('products.discounts')) ||
+                       (currentRoute?.includes('categories') &&
+                        !currentRoute?.includes('expense-categories') &&
+                        !currentRoute?.includes('rental-categories')) ||
+                       (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory')) ||
+                       currentRoute?.includes('stock-movements') ||
+                       currentRoute?.includes('product-activity')) {
+                openMenus.push('İdarəetmə');
+            } else if (currentRoute?.includes('warehouse-transfers') ||
+                       currentRoute?.includes('product-returns') ||
+                       (currentRoute?.includes('alerts') && !currentRoute?.includes('telegram'))) {
+                openMenus.push('Çıxan');
+            }
         }
 
         if (currentRoute?.includes('expenses') ||
@@ -258,6 +292,12 @@ export default function Authenticated({
                             icon: ShoppingCartIcon,
                             current: route().current('sales.*') && !route().current('sales.online')
                         },
+                        {
+                            name: 'Mal Qaytarma',
+                            href: '/returns',
+                            icon: ArrowUturnLeftIcon,
+                            current: route().current('returns.*')
+                        },
                         ...(discountsEnabled ? [{
                             name: 'Endirimlər',
                             href: '/products/discounts',
@@ -275,12 +315,6 @@ export default function Authenticated({
                             href: '/customers',
                             icon: UserGroupIcon,
                             current: route().current('customers.*')
-                        },
-                        {
-                            name: 'Müştəri Məhsulları',
-                            href: '/customer-items',
-                            icon: TruckIcon,
-                            current: route().current('customer-items.*')
                         },
                         {
                             name: 'SMS Göndər',
@@ -353,6 +387,12 @@ export default function Authenticated({
                             href: getServiceRoute('general'),
                             icon: SERVICE_TYPES.general.icon,
                             current: route().current('services.*') && route().params.serviceType === 'general'
+                        },
+                        {
+                            name: 'Xidmətə Qəbul',
+                            href: '/customer-items',
+                            icon: InboxIcon,
+                            current: route().current('customer-items.*')
                         }
                     ]
                 }] : []),
@@ -453,58 +493,88 @@ export default function Authenticated({
                     icon: BuildingStorefrontIcon,
                     children: [
                         {
-                            name: 'Məhsullar',
-                            href: '/products',
+                            name: 'Daxil Olan',
+                            icon: ArrowDownTrayIcon,
+                            children: [
+                                {
+                                    name: 'Mal Qəbulu',
+                                    href: '/goods-receipts',
+                                    icon: ClipboardDocumentCheckIcon,
+                                    current: route().current('goods-receipts.*')
+                                },
+                                {
+                                    name: 'Təchizatçılar',
+                                    href: '/suppliers',
+                                    icon: TruckIcon,
+                                    current: route().current('suppliers.*')
+                                }
+                            ]
+                        },
+                        {
+                            name: 'İdarəetmə',
                             icon: CubeIcon,
-                            current: route().current('products.*') && !route().current('products.discounts')
+                            children: [
+                                {
+                                    name: 'Məhsullar',
+                                    href: '/products',
+                                    icon: CubeIcon,
+                                    current: route().current('products.*') && !route().current('products.discounts')
+                                },
+                                {
+                                    name: 'Kateqoriyalar',
+                                    href: '/categories',
+                                    icon: FolderIcon,
+                                    current: route().current('categories.*')
+                                },
+                                {
+                                    name: 'İnventar',
+                                    href: '/inventory',
+                                    icon: ClipboardDocumentListIcon,
+                                    current: route().current('inventory.*')
+                                },
+                                {
+                                    name: 'Stok Hərəkətləri',
+                                    href: '/stock-movements',
+                                    icon: ArrowsRightLeftIcon,
+                                    current: route().current('stock-movements.*')
+                                },
+                                {
+                                    name: 'Məhsul Tarixi',
+                                    href: '/product-activity/timeline',
+                                    icon: ClockIcon,
+                                    current: route().current('product-activity.timeline')
+                                },
+                                {
+                                    name: 'Fərq Araşdırması',
+                                    href: '/product-activity/discrepancy',
+                                    icon: MagnifyingGlassCircleIcon,
+                                    current: route().current('product-activity.discrepancy')
+                                }
+                            ]
                         },
                         {
-                            name: 'Kateqoriyalar',
-                            href: '/categories',
-                            icon: FolderIcon,
-                            current: route().current('categories.*')
-                        },
-                        {
-                            name: 'Təchizatçılar',
-                            href: '/suppliers',
-                            icon: TruckIcon,
-                            current: route().current('suppliers.*')
-                        },
-                        {
-                            name: 'İnventar',
-                            href: '/inventory',
-                            icon: ClipboardDocumentListIcon,
-                            current: route().current('inventory.*')
-                        },
-                        {
-                            name: 'Stok Hərəkətləri',
-                            href: '/stock-movements',
+                            name: 'Çıxan',
                             icon: ArrowsRightLeftIcon,
-                            current: route().current('stock-movements.*')
-                        },
-                        {
-                            name: 'Mal Qəbulu',
-                            href: '/goods-receipts',
-                            icon: ClipboardDocumentCheckIcon,
-                            current: route().current('goods-receipts.*')
-                        },
-                        {
-                            name: 'Anbar Transferləri',
-                            href: '/warehouse-transfers',
-                            icon: ArrowPathIcon,
-                            current: route().current('warehouse-transfers.*')
-                        },
-                        {
-                            name: 'Məhsul Qaytarmaları',
-                            href: '/product-returns',
-                            icon: ArrowUturnLeftIcon,
-                            current: route().current('product-returns.*')
-                        },
-                        {
-                            name: 'Stok Xəbərdarlıqları',
-                            href: '/alerts',
-                            icon: BellAlertIcon,
-                            current: route().current('alerts.*')
+                            children: [
+                                {
+                                    name: 'Anbar Transferləri',
+                                    href: '/warehouse-transfers',
+                                    icon: ArrowPathIcon,
+                                    current: route().current('warehouse-transfers.*')
+                                },
+                                {
+                                    name: 'Məhsul Qaytarmaları',
+                                    href: '/product-returns',
+                                    icon: ArrowUturnLeftIcon,
+                                    current: route().current('product-returns.*')
+                                },
+                                {
+                                    name: 'Stok Xəbərdarlıqları',
+                                    href: '/alerts',
+                                    icon: BellAlertIcon,
+                                    current: route().current('alerts.*')
+                                }
+                            ]
                         }
                     ]
                 },
@@ -536,6 +606,12 @@ export default function Authenticated({
                             href: '/sales',
                             icon: ShoppingCartIcon,
                             current: route().current('sales.*')
+                        },
+                        {
+                            name: 'Mal Qaytarma',
+                            href: '/returns',
+                            icon: ArrowUturnLeftIcon,
+                            current: route().current('returns.*')
                         }
                     ]
                 }
@@ -574,6 +650,12 @@ export default function Authenticated({
                             href: '/services/general',
                             icon: WrenchScrewdriverIcon,
                             current: route().current('services.index', { serviceType: 'general' })
+                        },
+                        {
+                            name: 'Xidmətə Qəbul',
+                            href: '/customer-items',
+                            icon: InboxIcon,
+                            current: route().current('customer-items.*')
                         }
                     ]
                 }] : []),
@@ -586,12 +668,6 @@ export default function Authenticated({
                             href: '/customers',
                             icon: UserGroupIcon,
                             current: route().current('customers.*')
-                        },
-                        {
-                            name: 'Müştəri Məhsulları',
-                            href: '/customer-items',
-                            icon: ArchiveBoxIcon,
-                            current: route().current('customer-items.*')
                         }
                     ]
                 }
@@ -684,6 +760,12 @@ export default function Authenticated({
                     icon: ShoppingCartIcon,
                     current: route().current('sales.*') && !route().current('sales.online')
                 },
+                {
+                    name: 'Mal Qaytarma',
+                    href: '/returns',
+                    icon: ArrowUturnLeftIcon,
+                    current: route().current('returns.*')
+                },
                 ...(discountsEnabled ? [{
                     name: 'Endirimlər',
                     href: '/products/discounts',
@@ -713,12 +795,6 @@ export default function Authenticated({
                     href: '/customers',
                     icon: UserGroupIcon,
                     current: route().current('customers.*')
-                },
-                {
-                    name: 'Müştəri Məhsulları',
-                    href: '/customer-items',
-                    icon: TruckIcon,
-                    current: route().current('customer-items.*')
                 },
                 {
                     name: 'SMS Göndər',
@@ -797,6 +873,12 @@ export default function Authenticated({
                     href: getServiceRoute('general'),
                     icon: SERVICE_TYPES.general.icon,
                     current: route().current('services.*') && route().params.serviceType === 'general'
+                },
+                {
+                    name: 'Xidmətə Qəbul',
+                    href: '/customer-items',
+                    icon: InboxIcon,
+                    current: route().current('customer-items.*')
                 }
             ]
         }] : []),
@@ -805,58 +887,88 @@ export default function Authenticated({
             icon: CubeIcon,
             children: [
                 {
-                    name: 'Məhsullar',
-                    href: '/products',
-                    icon: CubeIcon,
-                    current: route().current('products.index') || route().current('products.show') || route().current('products.edit') || route().current('products.create')
-                },
-                {
-                    name: 'Kateqoriyalar',
-                    href: '/categories',
-                    icon: TagIcon,
-                    current: route().current('categories.*')
-                },
-                {
-                    name: 'Təchizatçılar',
-                    href: '/suppliers',
-                    icon: TruckIcon,
-                    current: route().current('suppliers.*')
-                },
-                {
-                    name: 'İnventar',
-                    href: '/inventory',
-                    icon: InboxIcon,
-                    current: route().current('inventory.*')
-                },
-                {
-                    name: 'Stok Hərəkətləri',
-                    href: '/stock-movements',
-                    icon: ClipboardDocumentListIcon,
-                    current: route().current('stock-movements.*')
-                },
-                {
-                    name: 'Mal Qəbulu',
-                    href: '/goods-receipts',
+                    name: 'Daxil Olan',
                     icon: ArrowDownTrayIcon,
-                    current: route().current('goods-receipts.*')
+                    children: [
+                        {
+                            name: 'Mal Qəbulu',
+                            href: '/goods-receipts',
+                            icon: ArrowDownTrayIcon,
+                            current: route().current('goods-receipts.*')
+                        },
+                        {
+                            name: 'Təchizatçılar',
+                            href: '/suppliers',
+                            icon: TruckIcon,
+                            current: route().current('suppliers.*')
+                        }
+                    ]
                 },
                 {
-                    name: 'Anbar Transferləri',
-                    href: '/warehouse-transfers',
+                    name: 'İdarəetmə',
+                    icon: CubeIcon,
+                    children: [
+                        {
+                            name: 'Məhsullar',
+                            href: '/products',
+                            icon: CubeIcon,
+                            current: route().current('products.index') || route().current('products.show') || route().current('products.edit') || route().current('products.create')
+                        },
+                        {
+                            name: 'Kateqoriyalar',
+                            href: '/categories',
+                            icon: TagIcon,
+                            current: route().current('categories.*')
+                        },
+                        {
+                            name: 'İnventar',
+                            href: '/inventory',
+                            icon: InboxIcon,
+                            current: route().current('inventory.*')
+                        },
+                        {
+                            name: 'Stok Hərəkətləri',
+                            href: '/stock-movements',
+                            icon: ClipboardDocumentListIcon,
+                            current: route().current('stock-movements.*')
+                        },
+                        {
+                            name: 'Məhsul Tarixi',
+                            href: '/product-activity/timeline',
+                            icon: ClockIcon,
+                            current: route().current('product-activity.timeline')
+                        },
+                        {
+                            name: 'Fərq Araşdırması',
+                            href: '/product-activity/discrepancy',
+                            icon: MagnifyingGlassCircleIcon,
+                            current: route().current('product-activity.discrepancy')
+                        }
+                    ]
+                },
+                {
+                    name: 'Çıxan',
                     icon: ArrowsRightLeftIcon,
-                    current: route().current('warehouse-transfers.*')
-                },
-                {
-                    name: 'Məhsul Qaytarmaları',
-                    href: '/product-returns',
-                    icon: ArrowUturnLeftIcon,
-                    current: route().current('product-returns.*')
-                },
-                {
-                    name: 'Stok Xəbərdarlıqları',
-                    href: '/alerts',
-                    icon: ExclamationTriangleIcon,
-                    current: route().current('alerts.*')
+                    children: [
+                        {
+                            name: 'Anbar Transferləri',
+                            href: '/warehouse-transfers',
+                            icon: ArrowsRightLeftIcon,
+                            current: route().current('warehouse-transfers.*')
+                        },
+                        {
+                            name: 'Məhsul Qaytarmaları',
+                            href: '/product-returns',
+                            icon: ArrowUturnLeftIcon,
+                            current: route().current('product-returns.*')
+                        },
+                        {
+                            name: 'Stok Xəbərdarlıqları',
+                            href: '/alerts',
+                            icon: ExclamationTriangleIcon,
+                            current: route().current('alerts.*')
+                        }
+                    ]
                 }
             ]
         },
