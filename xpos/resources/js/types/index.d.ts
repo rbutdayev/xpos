@@ -981,6 +981,11 @@ export type PageProps<
     auth: {
         user: User;
     };
+    shopEnabled?: boolean;
+    loyaltyEnabled?: boolean;
+    servicesEnabled?: boolean;
+    rentEnabled?: boolean;
+    discountsEnabled?: boolean;
     flash?: {
         success?: string;
         error?: string;

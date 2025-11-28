@@ -26,8 +26,9 @@ import {
     InformationCircleIcon,
 } from '@heroicons/react/20/solid';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { KPICard } from '@/Components/Dashboard/KPICard';
+import { CompactKPICard } from '@/Components/Dashboard/KPICard';
 import { QuickActionButton, QuickActionGrid } from '@/Components/Dashboard/QuickActionButton';
+import { SectionGroup, CompactSectionHeader } from '@/Components/Dashboard/SectionGroup';
 import { usePermissions } from '@/Hooks/usePermissions';
 import {
     Chart as ChartJS,
@@ -278,7 +279,7 @@ export default function Dashboard({
     warehouseContext = 'all',
     pending_online_orders = 0,
 }: DashboardProps) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, shopEnabled, rentEnabled } = usePage<PageProps>().props;
     const user = auth.user as User;
 
     // Use permission-based access control instead of role checks
@@ -346,55 +347,9 @@ export default function Dashboard({
         <AuthenticatedLayout>
             <Head title="İdarə Paneli" />
 
-            <div className="space-y-4 sm:space-y-6">
-                {/* Modern Header */}
-                <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-700 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 text-white overflow-hidden">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div className="mb-4 lg:mb-0">
-                            <h1 className="text-4xl font-bold mb-2">xPOS</h1>
-                            <p className="text-blue-100 text-lg">Satış İdarəetmə Sistemi</p>
-
-                            <div className="mt-4 flex flex-wrap gap-3">
-                                {selectedWarehouse && (
-                                    <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                        <HomeModernIcon className="h-5 w-5 mr-2" />
-                                        <span className="font-medium">{selectedWarehouse.name}</span>
-                                    </div>
-                                )}
-                                {user.branch && (
-                                    <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                        <BuildingOfficeIcon className="h-5 w-5 mr-2" />
-                                        <span className="font-medium">{user.branch.name}</span>
-                                    </div>
-                                )}
-                                <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                    <UserIcon className="h-5 w-5 mr-2" />
-                                    <span className="font-medium">{user.name}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Time Display */}
-                        <div className="text-center lg:text-right">
-                            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold">
-                                {new Date().toLocaleTimeString('az-AZ', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                            <div className="text-blue-100 mt-1 text-sm sm:text-base">
-                                {new Date().toLocaleDateString('az-AZ', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Pending Online Orders Notification */}
-                {pending_online_orders > 0 && (
+            <div className="space-y-2 sm:space-y-3">
+                {/* Pending Online Orders Notification - Only show if shop module is enabled */}
+                {shopEnabled && pending_online_orders > 0 && (
                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center">
@@ -411,148 +366,168 @@ export default function Dashboard({
                 )}
 
                 {/* Quick Actions */}
-                <QuickActionGrid>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                     <QuickActionButton
                         href={route('pos.index')}
-                        icon={<ShoppingCartIcon className="h-8 w-8" />}
+                        icon={<ShoppingCartIcon />}
                         title="Yeni Satış"
                         variant="primary"
                         description="POS sistemindən satış et"
                     />
                     <QuickActionButton
                         href={route('pos.index', { mode: 'service' })}
-                        icon={<WrenchScrewdriverIcon className="h-8 w-8" />}
+                        icon={<WrenchScrewdriverIcon />}
                         title="Yeni Servis"
                         variant="success"
                         description="Servis qeydi yarat"
                     />
                     <QuickActionButton
                         href="/customers/create"
-                        icon={<UserIcon className="h-8 w-8" />}
+                        icon={<UserIcon />}
                         title="Yeni Müştəri"
                         variant="primary"
                         description="Müştəri əlavə et"
                     />
                     <QuickActionButton
                         href="/products/create"
-                        icon={<CubeIcon className="h-8 w-8" />}
+                        icon={<CubeIcon />}
                         title="Yeni Məhsul"
                         variant="primary"
                         description="Məhsul kataloqa əlavə et"
                     />
-                </QuickActionGrid>
+                    <QuickActionButton
+                        href="/goods-receipts/create"
+                        icon={<TruckIcon />}
+                        title="Mal Qəbulu"
+                        variant="success"
+                        description="Yeni mal qəbulu yarat"
+                    />
+                </div>
 
                 {/* Main KPI Cards */}
                 {can('view-financial-reports') ? (
                     <>
                         {/* Financial Overview */}
-                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                            <SectionHeader
-                                title="Maliyyə İcmalı"
-                                tooltip="Bu ay və ümumi maliyyə göstəriciləri: gəlirlər, xərclər, mənfəət və aktiv müştəri sayı. Bu statistika işinizin ümumi maliyyə vəziyyətini göstərir."
+                        <SectionGroup
+                            title="Maliyyə İcmalı"
+                            description="Bu ay və ümumi maliyyə göstəriciləri"
+                            icon={<BanknotesIcon />}
+                            variant="highlight"
+                        >
+                            <CompactKPICard
+                                title="Bu Ay Gəlir"
+                                value={formatCurrency(financial_data.monthly_revenue)}
+                                icon={<BanknotesIcon />}
+                                variant="success"
+                                trend={{
+                                    value: Math.abs(financial_data.revenue_growth),
+                                    isPositive: financial_data.revenue_growth >= 0,
+                                }}
+                                subtitle="Aylıq gəlir"
                             />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                                <KPICard
-                                    title="Bu Ay Gəlir"
-                                    value={formatCurrency(financial_data.monthly_revenue)}
-                                    icon={<BanknotesIcon className="h-8 w-8" />}
-                                    variant="success"
-                                    trend={{
-                                        value: Math.abs(financial_data.revenue_growth),
-                                        isPositive: financial_data.revenue_growth >= 0,
-                                    }}
-                                    subtitle="Aylıq gəlir statistikası"
-                                />
-                                <KPICard
-                                    title="Bu Ay Xərclər"
-                                    value={formatCurrency(financial_data.monthly_expenses)}
-                                    icon={<DocumentTextIcon className="h-8 w-8" />}
-                                    variant="warning"
-                                    trend={{
-                                        value: Math.abs(financial_data.expense_growth),
-                                        isPositive: financial_data.expense_growth < 0,
-                                    }}
-                                    subtitle="Aylıq xərc statistikası"
-                                />
-                                <KPICard
-                                    title="Ümumi Mənfəət"
-                                    value={formatCurrency(financial_data.total_profit)}
-                                    icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
-                                    variant="primary"
-                                    subtitle="Gəlir - Xərclər"
-                                />
-                                <KPICard
-                                    title="Aktiv Müştərilər"
-                                    value={stats.active_customers}
-                                    icon={<UserIcon className="h-8 w-8" />}
-                                    variant="primary"
-                                    subtitle={`${stats.customers_count} ümumi müştəri`}
-                                />
-                            </div>
-                        </div>
+                            <CompactKPICard
+                                title="Bu Ay Xərclər"
+                                value={formatCurrency(financial_data.monthly_expenses)}
+                                icon={<DocumentTextIcon />}
+                                variant="warning"
+                                trend={{
+                                    value: Math.abs(financial_data.expense_growth),
+                                    isPositive: financial_data.expense_growth < 0,
+                                }}
+                                subtitle="Aylıq xərclər"
+                            />
+                            <CompactKPICard
+                                title="Ümumi Mənfəət"
+                                value={formatCurrency(financial_data.total_profit)}
+                                icon={<ArrowTrendingUpIcon />}
+                                variant="success"
+                                subtitle="Gəlir - Xərclər"
+                            />
+                            <CompactKPICard
+                                title="Aktiv Müştərilər"
+                                value={stats.active_customers}
+                                icon={<UserIcon />}
+                                variant="primary"
+                                subtitle={`${stats.customers_count} ümumi müştəri`}
+                            />
+                            <CompactKPICard
+                                title="Məhsullar"
+                                value={stats.products_count}
+                                icon={<CubeIcon />}
+                                variant="primary"
+                                subtitle="Kataloqda"
+                            />
+                            <CompactKPICard
+                                title="Gözləyən Ödəniş"
+                                value={formatCurrency(financial_data.pending_payments)}
+                                icon={<ClockIcon />}
+                                variant="warning"
+                                subtitle="Ödənilməmiş"
+                            />
+                        </SectionGroup>
 
-                        {/* Rental Services Overview */}
-                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                            <SectionHeader
+                        {/* Rental Services Overview - Only show if rent module is enabled */}
+                        {rentEnabled && (
+                            <SectionGroup
                                 title="İcarə Statistikası"
-                                tooltip="İcarə xidmətləri üzrə statistika: aktiv icarələr, aylıq gəlir, gözlənilən qaytarmalar (3 gün ərzində) və gecikmiş icarələr. Bu məlumat icarə idarəçiliyinə kömək edir."
-                            />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                                <KPICard
+                                description="Aktiv icarələr və gəlir məlumatları"
+                                icon={<HomeModernIcon />}
+                            >
+                                <CompactKPICard
                                     title="Aktiv İcarələr"
                                     value={rental_data.active_rentals_count}
-                                    icon={<CubeIcon className="h-8 w-8" />}
+                                    icon={<CubeIcon />}
                                     variant="primary"
                                     subtitle="Hazırda icarədə"
                                 />
-                                <KPICard
+                                <CompactKPICard
                                     title="Bu Ay İcarə Gəliri"
                                     value={formatCurrency(rental_data.monthly_rental_revenue)}
-                                    icon={<CurrencyDollarIcon className="h-8 w-8" />}
+                                    icon={<CurrencyDollarIcon />}
                                     variant="success"
                                     subtitle={`${rental_data.total_rentals_this_month} icarə`}
                                 />
-                                <KPICard
+                                <CompactKPICard
                                     title="Gözlənilən Qaytarmalar"
                                     value={rental_data.pending_returns_count}
-                                    icon={<CalendarDaysIcon className="h-8 w-8" />}
+                                    icon={<CalendarDaysIcon />}
                                     variant="warning"
                                     subtitle="3 gün ərzində"
                                 />
-                                <KPICard
+                                <CompactKPICard
                                     title="Gecikmiş İcarələr"
                                     value={rental_data.overdue_rentals_count}
-                                    icon={<ClockIcon className="h-8 w-8" />}
+                                    icon={<ClockIcon />}
                                     variant="danger"
                                     subtitle="Diqqət tələb edir"
                                 />
-                            </div>
-                        </div>
+                            </SectionGroup>
+                        )}
 
                         {/* Stock by Unit Breakdown */}
                         {stats.stock_by_unit && stats.stock_by_unit.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
                                 <SectionHeader
                                     title="Vahid üzrə Stok Bölgüsü"
                                     tooltip="Anbarlarınızdakı məhsulların vahid tiplərinə (ədəd, kq, litr və s.) görə qruplaşdırılmış miqdarları və dəyərləri."
                                 />
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                                     {stats.stock_by_unit.map((item, index) => (
                                         <div
                                             key={index}
-                                            className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 sm:p-4 border border-gray-200"
+                                            className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 border border-gray-200 transition-colors"
                                         >
-                                            <div className="flex items-center justify-center mb-2">
-                                                <BeakerIcon className="h-6 w-6 text-blue-600" />
+                                            <div className="flex items-center justify-center mb-1.5">
+                                                <BeakerIcon className="h-5 w-5 text-blue-600" />
                                             </div>
                                             <div className="text-center">
-                                                <div className="text-2xl font-bold text-gray-900">
+                                                <div className="text-lg font-bold text-gray-900">
                                                     {formatNumber(item.total_quantity, 2)}
                                                 </div>
-                                                <div className="text-sm font-medium text-gray-600 mt-1">
+                                                <div className="text-xs font-medium text-gray-600 mt-0.5">
                                                     {item.unit || 'ədəd'}
                                                 </div>
-                                                <div className="text-xs text-gray-500 mt-1">
+                                                <div className="text-xs text-gray-500 mt-0.5">
                                                     {item.products_count} məhsul
                                                 </div>
                                                 <div className="text-xs text-gray-500">
@@ -566,58 +541,56 @@ export default function Dashboard({
                         )}
 
                         {/* Credits Statistics */}
-                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                            <SectionHeader
-                                title="Borc Statistikaları"
-                                tooltip="Müştərilərə verilən borcların ümumi vəziyyəti, aylıq borc verilişi və ödənişləri. Bu bölmə müştəri kreditlərini izləməyə kömək edir."
+                        <SectionGroup
+                            title="Borc Statistikaları"
+                            description="Müştəri borc və ödəniş məlumatları"
+                            icon={<DocumentTextIcon />}
+                        >
+                            <CompactKPICard
+                                title="Ümumi Borc"
+                                value={formatCurrency(credits_data.total_outstanding)}
+                                icon={<BanknotesIcon />}
+                                variant="warning"
+                                subtitle="Ödənilməmiş"
                             />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                                <KPICard
-                                    title="Ümumi Borc"
-                                    value={formatCurrency(credits_data.total_outstanding)}
-                                    icon={<BanknotesIcon className="h-8 w-8" />}
-                                    variant="danger"
-                                    subtitle="Ödənilməmiş borc"
-                                />
-                                <KPICard
-                                    title="Bu Ay Verilən Borc"
-                                    value={formatCurrency(credits_data.total_credits_this_month)}
-                                    icon={<ArrowTrendingDownIcon className="h-8 w-8" />}
-                                    variant="warning"
-                                    subtitle="Aylıq borc məbləği"
-                                />
-                                <KPICard
-                                    title="Bu Ay Ödənilən"
-                                    value={formatCurrency(credits_data.total_paid_this_month)}
-                                    icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
-                                    variant="success"
-                                    subtitle="Aylıq ödəniş"
-                                />
-                                <KPICard
-                                    title="Borclu Müştərilər"
-                                    value={credits_data.active_credit_customers_count}
-                                    icon={<UserIcon className="h-8 w-8" />}
-                                    variant="warning"
-                                    subtitle="Aktiv borc olan"
-                                />
-                            </div>
-                        </div>
+                            <CompactKPICard
+                                title="Bu Ay Verilən Borc"
+                                value={formatCurrency(credits_data.total_credits_this_month)}
+                                icon={<ArrowTrendingDownIcon />}
+                                variant="danger"
+                                subtitle="Borc məbləği"
+                            />
+                            <CompactKPICard
+                                title="Bu Ay Ödənilən"
+                                value={formatCurrency(credits_data.total_paid_this_month)}
+                                icon={<ArrowTrendingUpIcon />}
+                                variant="success"
+                                subtitle="Ödəniş"
+                            />
+                            <CompactKPICard
+                                title="Borclu Müştərilər"
+                                value={credits_data.active_credit_customers_count}
+                                icon={<UserIcon />}
+                                variant="warning"
+                                subtitle="Aktiv borc olan"
+                            />
+                        </SectionGroup>
 
                         {/* Alerts */}
                         {(stats.low_stock_count! > 0 ||
                             stats.out_of_stock_count! > 0 ||
                             stats.negative_stock_count! > 0 ||
                             stats.pending_services > 0) && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                 {stats.low_stock_count! > 0 && (
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4">
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-3">
                                         <div className="flex items-center">
-                                            <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600 mr-3" />
+                                            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-2" />
                                             <div>
-                                                <p className="text-sm font-medium text-yellow-800">
-                                                    Az Stok Xəbərdarlığı
+                                                <p className="text-xs font-medium text-yellow-800">
+                                                    Az Stok
                                                 </p>
-                                                <p className="text-2xl font-bold text-yellow-900">
+                                                <p className="text-xl font-bold text-yellow-900">
                                                     {stats.low_stock_count}
                                                 </p>
                                             </div>
@@ -625,14 +598,14 @@ export default function Dashboard({
                                     </div>
                                 )}
                                 {stats.out_of_stock_count! > 0 && (
-                                    <div className="bg-red-50 border-l-4 border-red-400 rounded-lg p-4">
+                                    <div className="bg-red-50 border-l-4 border-red-400 rounded-lg p-3">
                                         <div className="flex items-center">
-                                            <ExclamationTriangleIcon className="h-6 w-6 text-red-600 mr-3" />
+                                            <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
                                             <div>
-                                                <p className="text-sm font-medium text-red-800">
-                                                    Tükənmiş Məhsullar
+                                                <p className="text-xs font-medium text-red-800">
+                                                    Tükənmiş
                                                 </p>
-                                                <p className="text-2xl font-bold text-red-900">
+                                                <p className="text-xl font-bold text-red-900">
                                                     {stats.out_of_stock_count}
                                                 </p>
                                             </div>
@@ -640,14 +613,14 @@ export default function Dashboard({
                                     </div>
                                 )}
                                 {stats.negative_stock_count! > 0 && (
-                                    <div className="bg-purple-50 border-l-4 border-purple-400 rounded-lg p-4">
+                                    <div className="bg-purple-50 border-l-4 border-purple-400 rounded-lg p-3">
                                         <div className="flex items-center">
-                                            <ExclamationTriangleIcon className="h-6 w-6 text-purple-600 mr-3" />
+                                            <ExclamationTriangleIcon className="h-5 w-5 text-purple-600 mr-2" />
                                             <div>
-                                                <p className="text-sm font-medium text-purple-800">
+                                                <p className="text-xs font-medium text-purple-800">
                                                     Mənfi Stok
                                                 </p>
-                                                <p className="text-2xl font-bold text-purple-900">
+                                                <p className="text-xl font-bold text-purple-900">
                                                     {stats.negative_stock_count}
                                                 </p>
                                             </div>
@@ -655,14 +628,14 @@ export default function Dashboard({
                                     </div>
                                 )}
                                 {stats.pending_services > 0 && (
-                                    <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-4">
+                                    <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-3">
                                         <div className="flex items-center">
-                                            <WrenchScrewdriverIcon className="h-6 w-6 text-blue-600 mr-3" />
+                                            <WrenchScrewdriverIcon className="h-5 w-5 text-blue-600 mr-2" />
                                             <div>
-                                                <p className="text-sm font-medium text-blue-800">
+                                                <p className="text-xs font-medium text-blue-800">
                                                     Gözləyən Servislər
                                                 </p>
-                                                <p className="text-2xl font-bold text-blue-900">
+                                                <p className="text-xl font-bold text-blue-900">
                                                     {stats.pending_services}
                                                 </p>
                                             </div>
@@ -673,31 +646,31 @@ export default function Dashboard({
                         )}
 
                         {/* Charts Section */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
                             {/* Sales Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                                <div className="flex items-center justify-between mb-6">
+                            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-3 sm:p-4">
+                                <div className="flex items-center justify-between mb-4">
                                     <SectionHeader
                                         title="Son 10 Gün Satış Statistikası"
                                         tooltip="Seçilmiş müddət ərzində günlük və ya saatlıq satış gəlirinizin qrafiki. Bu qrafik satış trendlərini anlamağa kömək edir."
                                     />
-                                    <ChartBarIcon className="h-6 w-6 text-gray-400" />
+                                    <ChartBarIcon className="h-5 w-5 text-gray-400" />
                                 </div>
-                                <div className="h-80">
+                                <div className="h-64 sm:h-72">
                                     <Line data={salesChartConfig} options={salesChartOptions} />
                                 </div>
                             </div>
 
                             {/* Payment Methods */}
-                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                                <div className="flex items-center justify-between mb-6">
+                            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+                                <div className="flex items-center justify-between mb-4">
                                     <SectionHeader
                                         title="Ödəniş Üsulları"
                                         tooltip="Bu ay daxil olan satışların ödəniş üsullarına (nağd, kart, köçürmə) görə bölgüsü. Müştərilərin ödəniş üstünlüklərini göstərir."
                                     />
-                                    <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
+                                    <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                                 </div>
-                                <div className="h-80 flex items-center justify-center">
+                                <div className="h-64 sm:h-72 flex items-center justify-center">
                                     <Doughnut
                                         data={paymentMethodsChartData}
                                         options={{
@@ -724,10 +697,10 @@ export default function Dashboard({
                         </div>
 
                         {/* Top Products and Low Stock */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                             {/* Top Products */}
-                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                                <div className="flex items-center justify-between mb-6">
+                            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+                                <div className="flex items-center justify-between mb-4">
                                     <SectionHeader
                                         title="Ən Çox Satılan Məhsullar"
                                         tooltip="Seçilmiş müddət ərzində ən çox satış miqdarı olan məhsulların siyahısı. Bu məlumat stok planlaması üçün faydalıdır."
@@ -778,8 +751,8 @@ export default function Dashboard({
                             </div>
 
                             {/* Low Stock Products */}
-                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                                <div className="flex items-center justify-between mb-6">
+                            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+                                <div className="flex items-center justify-between mb-4">
                                     <SectionHeader
                                         title="Az Stoklu Məhsullar"
                                         tooltip="Stok miqdarı minimum səviyyəyə çatmış və ya ondan aşağı düşmüş məhsullar. Bu məhsulları vaxtında sifariş etməyi unutmayın."
@@ -845,8 +818,8 @@ export default function Dashboard({
                         </div>
 
                         {/* Recent Sales */}
-                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                            <div className="flex items-center justify-between mb-6">
+                        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+                            <div className="flex items-center justify-between mb-4">
                                 <SectionHeader
                                     title="Son Satışlar"
                                     tooltip="Seçilmiş müddət ərzində edilmiş son satışların siyahısı. Müştəri adı, satış məbləği və statusu haqqında məlumat verir."
@@ -936,45 +909,49 @@ export default function Dashboard({
                 ) : (
                     /* Simplified view for sales staff */
                     <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                            <KPICard
+                        <SectionGroup
+                            title="Əsas Göstəricilər"
+                            description="Müştəri və servis məlumatları"
+                            icon={<ChartBarIcon />}
+                        >
+                            <CompactKPICard
                                 title="Müştərilər"
                                 value={stats.customers_count}
-                                icon={<UserIcon className="h-8 w-8" />}
-                                variant="success"
+                                icon={<UserIcon />}
+                                variant="primary"
                                 subtitle={`${stats.active_customers} aktiv`}
                             />
-                            <KPICard
+                            <CompactKPICard
                                 title="Servis Qeydləri"
                                 value={stats.service_records_count}
-                                icon={<WrenchScrewdriverIcon className="h-8 w-8" />}
+                                icon={<WrenchScrewdriverIcon />}
                                 variant="primary"
                                 subtitle="Ümumi servislər"
                             />
-                            <KPICard
+                            <CompactKPICard
                                 title="Bu Ay Servislər"
                                 value={stats.service_records_this_month}
-                                icon={<DocumentTextIcon className="h-8 w-8" />}
-                                variant="primary"
+                                icon={<DocumentTextIcon />}
+                                variant="success"
                                 subtitle="Bu ay tamamlanan"
                             />
-                            <KPICard
+                            <CompactKPICard
                                 title="Gözləyən Servislər"
                                 value={stats.pending_services}
-                                icon={<ExclamationTriangleIcon className="h-8 w-8" />}
+                                icon={<ExclamationTriangleIcon />}
                                 variant="warning"
                                 subtitle="Diqqət tələb edir"
                             />
-                        </div>
+                        </SectionGroup>
 
                         {/* Low Stock for Sales Staff */}
                         {low_stock_products.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
                                 <SectionHeader
                                     title="Az Stoklu Məhsullar"
                                     tooltip="Stok miqdarı minimum səviyyəyə çatmış məhsullar. Müştərilərə satış edərkən diqqətli olun."
                                 />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {low_stock_products.map((product) => (
                                         <div
                                             key={product.id}

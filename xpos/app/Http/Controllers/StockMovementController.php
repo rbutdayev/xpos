@@ -228,6 +228,14 @@ class StockMovementController extends Controller
             abort(403);
         }
 
+        // Prevent deletion of system-created stock movements (linked to goods receipts, sales, etc.)
+        if ($stockMovement->reference_type !== null) {
+            return back()->withErrors([
+                'error' => 'Sistem tərəfindən yaradılmış stok hərəkətlərini silmək mümkün deyil. ' .
+                           'Mal qəbulunu və ya əlaqəli sənədi redaktə edin.'
+            ]);
+        }
+
         DB::transaction(function () use ($stockMovement) {
             $this->reverseStockMovement($stockMovement);
             $stockMovement->delete();

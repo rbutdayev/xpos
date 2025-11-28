@@ -333,20 +333,24 @@ class DashboardController extends Controller
 
         $monthlyRevenue -= $monthlyReturns;
 
-        // Add rental revenue to monthly revenue
-        $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-            ->whereYear('rental_start_date', $currentMonth->year)
-            ->whereMonth('rental_start_date', $currentMonth->month)
-            ->sum('rental_price') ?? 0;
+        // Add rental revenue to monthly revenue - Only if rent module is enabled
+        if ($account->isRentModuleEnabled()) {
+            $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
+                ->whereYear('rental_start_date', $currentMonth->year)
+                ->whereMonth('rental_start_date', $currentMonth->month)
+                ->sum('rental_price') ?? 0;
+            $monthlyRevenue += $monthlyRentalRevenue;
+        }
 
-        // Add service revenue to monthly revenue
-        $monthlyServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
-            ->whereIn('status', ['completed'])
-            ->whereYear('updated_at', $currentMonth->year)
-            ->whereMonth('updated_at', $currentMonth->month)
-            ->sum('total_cost') ?? 0;
-
-        $monthlyRevenue += $monthlyRentalRevenue + $monthlyServiceRevenue;
+        // Add service revenue to monthly revenue - Only if services module is enabled
+        if ($account->isServicesModuleEnabled()) {
+            $monthlyServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
+                ->whereIn('status', ['completed'])
+                ->whereYear('updated_at', $currentMonth->year)
+                ->whereMonth('updated_at', $currentMonth->month)
+                ->sum('total_cost') ?? 0;
+            $monthlyRevenue += $monthlyServiceRevenue;
+        }
 
         $monthlyExpenses = Expense::where('account_id', $account->id)
             ->whereYear('expense_date', $currentMonth->year)
@@ -376,20 +380,24 @@ class DashboardController extends Controller
 
         $prevMonthRevenue -= $prevMonthReturns;
 
-        // Add rental revenue to previous month revenue
-        $prevMonthRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-            ->whereYear('rental_start_date', $previousMonth->year)
-            ->whereMonth('rental_start_date', $previousMonth->month)
-            ->sum('rental_price') ?? 0;
+        // Add rental revenue to previous month revenue - Only if rent module is enabled
+        if ($account->isRentModuleEnabled()) {
+            $prevMonthRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
+                ->whereYear('rental_start_date', $previousMonth->year)
+                ->whereMonth('rental_start_date', $previousMonth->month)
+                ->sum('rental_price') ?? 0;
+            $prevMonthRevenue += $prevMonthRentalRevenue;
+        }
 
-        // Add service revenue to previous month revenue
-        $prevMonthServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
-            ->whereIn('status', ['completed'])
-            ->whereYear('updated_at', $previousMonth->year)
-            ->whereMonth('updated_at', $previousMonth->month)
-            ->sum('total_cost') ?? 0;
-
-        $prevMonthRevenue += $prevMonthRentalRevenue + $prevMonthServiceRevenue;
+        // Add service revenue to previous month revenue - Only if services module is enabled
+        if ($account->isServicesModuleEnabled()) {
+            $prevMonthServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
+                ->whereIn('status', ['completed'])
+                ->whereYear('updated_at', $previousMonth->year)
+                ->whereMonth('updated_at', $previousMonth->month)
+                ->sum('total_cost') ?? 0;
+            $prevMonthRevenue += $prevMonthServiceRevenue;
+        }
 
         $prevMonthExpenses = Expense::where('account_id', $account->id)
             ->whereYear('expense_date', $previousMonth->year)
@@ -415,16 +423,20 @@ class DashboardController extends Controller
 
         $totalRevenue -= $totalReturns;
 
-        // Add rental revenue to total revenue
-        $totalRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-            ->sum('rental_price') ?? 0;
+        // Add rental revenue to total revenue - Only if rent module is enabled
+        if ($account->isRentModuleEnabled()) {
+            $totalRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
+                ->sum('rental_price') ?? 0;
+            $totalRevenue += $totalRentalRevenue;
+        }
 
-        // Add service revenue to total revenue
-        $totalServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
-            ->whereIn('status', ['completed'])
-            ->sum('total_cost') ?? 0;
-
-        $totalRevenue += $totalRentalRevenue + $totalServiceRevenue;
+        // Add service revenue to total revenue - Only if services module is enabled
+        if ($account->isServicesModuleEnabled()) {
+            $totalServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
+                ->whereIn('status', ['completed'])
+                ->sum('total_cost') ?? 0;
+            $totalRevenue += $totalServiceRevenue;
+        }
 
         $totalExpenses = Expense::where('account_id', $account->id)
             ->sum('amount') ?? 0;
@@ -505,43 +517,56 @@ class DashboardController extends Controller
             'active_credit_customers_count' => $activeCreditCustomersCount,
         ];
 
-        // Rental statistics
-        $activeRentalsCount = \App\Models\Rental::where('account_id', $account->id)
-            ->where('status', 'active')
-            ->count();
-
-        $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-            ->whereYear('rental_start_date', $currentMonth->year)
-            ->whereMonth('rental_start_date', $currentMonth->month)
-            ->sum('rental_price') ?? 0;
-
-        $pendingReturnsCount = \App\Models\Rental::where('account_id', $account->id)
-            ->whereIn('status', ['reserved', 'active'])
-            ->whereBetween('rental_end_date', [today(), today()->addDays(3)])
-            ->count();
-
-        $overdueRentalsCount = \App\Models\Rental::where('account_id', $account->id)
-            ->where('status', 'overdue')
-            ->count();
-
-        $totalRentalsThisMonth = \App\Models\Rental::where('account_id', $account->id)
-            ->whereYear('rental_start_date', $currentMonth->year)
-            ->whereMonth('rental_start_date', $currentMonth->month)
-            ->count();
-
+        // Rental statistics - Only calculate if rent module is enabled
         $rentalData = [
-            'active_rentals_count' => $activeRentalsCount,
-            'monthly_rental_revenue' => $monthlyRentalRevenue,
-            'pending_returns_count' => $pendingReturnsCount,
-            'overdue_rentals_count' => $overdueRentalsCount,
-            'total_rentals_this_month' => $totalRentalsThisMonth,
+            'active_rentals_count' => 0,
+            'monthly_rental_revenue' => 0,
+            'pending_returns_count' => 0,
+            'overdue_rentals_count' => 0,
+            'total_rentals_this_month' => 0,
         ];
 
-        // MULTI-TENANT: Count pending online orders for notification banner
-        $pendingOnlineOrders = Sale::where('account_id', $account->id)
-            ->onlineOrders() // Scope for is_online_order = true
-            ->where('payment_status', 'credit') // Unpaid orders
-            ->count();
+        if ($account->isRentModuleEnabled()) {
+            $activeRentalsCount = \App\Models\Rental::where('account_id', $account->id)
+                ->where('status', 'active')
+                ->count();
+
+            $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
+                ->whereYear('rental_start_date', $currentMonth->year)
+                ->whereMonth('rental_start_date', $currentMonth->month)
+                ->sum('rental_price') ?? 0;
+
+            $pendingReturnsCount = \App\Models\Rental::where('account_id', $account->id)
+                ->whereIn('status', ['reserved', 'active'])
+                ->whereBetween('rental_end_date', [today(), today()->addDays(3)])
+                ->count();
+
+            $overdueRentalsCount = \App\Models\Rental::where('account_id', $account->id)
+                ->where('status', 'overdue')
+                ->count();
+
+            $totalRentalsThisMonth = \App\Models\Rental::where('account_id', $account->id)
+                ->whereYear('rental_start_date', $currentMonth->year)
+                ->whereMonth('rental_start_date', $currentMonth->month)
+                ->count();
+
+            $rentalData = [
+                'active_rentals_count' => $activeRentalsCount,
+                'monthly_rental_revenue' => $monthlyRentalRevenue,
+                'pending_returns_count' => $pendingReturnsCount,
+                'overdue_rentals_count' => $overdueRentalsCount,
+                'total_rentals_this_month' => $totalRentalsThisMonth,
+            ];
+        }
+
+        // MULTI-TENANT: Count pending online orders for notification banner - Only if shop is enabled
+        $pendingOnlineOrders = 0;
+        if ($account->isShopEnabled()) {
+            $pendingOnlineOrders = Sale::where('account_id', $account->id)
+                ->onlineOrders() // Scope for is_online_order = true
+                ->where('payment_status', 'credit') // Unpaid orders
+                ->count();
+        }
 
         return Inertia::render('Dashboard', [
             'stats' => $stats,

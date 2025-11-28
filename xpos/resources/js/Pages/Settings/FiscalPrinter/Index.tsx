@@ -26,14 +26,19 @@ interface FiscalPrinterConfig {
     auto_send: boolean;
     show_in_terminal: boolean;
     is_active: boolean;
+    settings?: {
+        api_path?: string;
+    };
 }
 
 interface Provider {
     id: string;
     name: string;
     port: number;
+    api_base_path: string;
     fields: string[];
     description: string;
+    is_active: boolean;
 }
 
 interface FiscalPrinterProps extends PageProps {
@@ -55,6 +60,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
         name: config?.name || '',
         ip_address: config?.ip_address || '',
         port: config?.port || 0,
+        api_path: config?.settings?.api_path || '',
         username: config?.username || '',
         password: '',
         merchant_id: config?.merchant_id || '',
@@ -75,6 +81,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
             ...data,
             provider: providerId,
             port: provider?.port || 0,
+            api_path: provider?.api_base_path || '',
             // Reset provider-specific fields
             username: '',
             password: '',
@@ -187,11 +194,16 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                             key={provider.id}
                                             type="button"
                                             onClick={() => {
-                                                handleProviderChange(provider.id);
-                                                setIsEditing(true);
+                                                if (provider.is_active) {
+                                                    handleProviderChange(provider.id);
+                                                    setIsEditing(true);
+                                                }
                                             }}
-                                            className={`p-4 border-2 rounded-lg text-left transition-colors ${
-                                                selectedProvider?.id === provider.id
+                                            disabled={!provider.is_active}
+                                            className={`p-4 border-2 rounded-lg text-left transition-colors relative ${
+                                                !provider.is_active
+                                                    ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                    : selectedProvider?.id === provider.id
                                                     ? 'border-blue-500 bg-blue-50'
                                                     : 'border-gray-200 hover:border-blue-300'
                                             }`}
@@ -199,6 +211,11 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                             <div className="font-semibold text-gray-900">{provider.name}</div>
                                             <div className="text-sm text-gray-600 mt-1">{provider.description}</div>
                                             <div className="text-xs text-gray-500 mt-2">Port: {provider.port}</div>
+                                            {!provider.is_active && (
+                                                <div className="mt-2 inline-block px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded">
+                                                    Uygun deyil
+                                                </div>
+                                            )}
                                         </button>
                                     ))}
                                 </div>
@@ -299,6 +316,26 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                             {selectedProvider && (
                                                 <p className="text-xs text-gray-500 mt-1">
                                                     Default: {selectedProvider.port}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* API Path */}
+                                        <div>
+                                            <InputLabel htmlFor="api_path" value="API Path" />
+                                            <TextInput
+                                                id="api_path"
+                                                type="text"
+                                                value={data.api_path}
+                                                onChange={(e) => setData('api_path', e.target.value)}
+                                                className="mt-1 block w-full"
+                                                disabled={!isEditing}
+                                                placeholder="/api/v2"
+                                            />
+                                            <InputError message={errors.api_path} className="mt-2" />
+                                            {selectedProvider && (
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    Default: {selectedProvider.api_base_path}
                                                 </p>
                                             )}
                                         </div>

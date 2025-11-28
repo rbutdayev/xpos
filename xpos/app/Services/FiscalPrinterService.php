@@ -414,9 +414,9 @@ class FiscalPrinterService
             return $config->getFullUrl();
         }
 
-        // Omnitech uses base URL with /v2 path, all operations go to same endpoint
+        // Omnitech uses base URL, api_path from settings includes the version
         if ($config->provider === 'omnitech') {
-            return $config->getFullUrl('v2');
+            return $config->getFullUrl();
         }
 
         // Load provider configuration from database

@@ -75,6 +75,12 @@ class FiscalPrinterConfig extends Model
     public function getFullUrl(string $endpoint = ''): string
     {
         $base = "http://{$this->ip_address}:{$this->port}";
+
+        // Add custom API path if specified in settings
+        if (!empty($this->settings['api_path'])) {
+            $base .= '/' . ltrim($this->settings['api_path'], '/');
+        }
+
         return $endpoint ? $base . '/' . ltrim($endpoint, '/') : $base;
     }
 
@@ -87,13 +93,12 @@ class FiscalPrinterConfig extends Model
         switch ($this->provider) {
             case 'nba':
             case 'caspos':
+            case 'omnitech':
                 return !empty($this->username) && !empty($this->password);
             case 'oneclick':
                 return !empty($this->security_key);
             case 'azsmart':
                 return !empty($this->merchant_id);
-            case 'omnitech':
-                return true;
             default:
                 return false;
         }

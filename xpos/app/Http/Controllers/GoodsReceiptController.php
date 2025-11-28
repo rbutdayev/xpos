@@ -390,6 +390,15 @@ class GoodsReceiptController extends Controller
 
             $goodsReceipt->save();
 
+            // Update the original stock movement's unit_cost if it changed
+            $originalStockMovement = StockMovement::where('reference_type', 'goods_receipt')
+                ->where('reference_id', $goodsReceipt->id)
+                ->first();
+
+            if ($originalStockMovement && $originalStockMovement->unit_cost != $request->unit_cost) {
+                $originalStockMovement->update(['unit_cost' => $request->unit_cost ?? 0]);
+            }
+
             // Adjust stock if quantity or variant changed
             if ($quantityDifference != 0 || $variantChanged) {
                 // If variant changed, we need to handle old and new stock separately

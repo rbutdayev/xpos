@@ -26,18 +26,18 @@ class FiscalPrinterConfigController extends Controller
         $accountId = Auth::user()->account_id;
         $config = FiscalPrinterConfig::where('account_id', $accountId)->first();
 
-        // Get providers from database
-        $providersFromDb = \App\Models\FiscalPrinterProvider::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        // Get all providers from database (including inactive ones)
+        $providersFromDb = \App\Models\FiscalPrinterProvider::orderBy('name')->get();
 
         $providers = $providersFromDb->map(function ($provider) {
             return [
                 'id' => $provider->code,
                 'name' => $provider->name,
                 'port' => $provider->default_port,
+                'api_base_path' => $provider->api_base_path,
                 'fields' => $provider->required_fields ?? [],
                 'description' => $provider->description,
+                'is_active' => $provider->is_active,
             ];
         })->toArray();
 
@@ -62,11 +62,25 @@ class FiscalPrinterConfigController extends Controller
 
         $accountId = Auth::user()->account_id;
 
+        // Get active provider codes or allow editing existing config with disabled provider
+        $existingConfig = FiscalPrinterConfig::where('account_id', $accountId)->first();
+        $activeProviders = \App\Models\FiscalPrinterProvider::where('is_active', true)
+            ->pluck('code')
+            ->toArray();
+
+        // Allow existing provider even if disabled, so users can edit existing configs
+        if ($existingConfig && !in_array($existingConfig->provider, $activeProviders)) {
+            $activeProviders[] = $existingConfig->provider;
+        }
+
+        $allowedProviders = implode(',', $activeProviders);
+
         $rules = [
-            'provider' => 'required|in:nba,caspos,oneclick,omnitech,azsmart',
+            'provider' => 'required|in:' . $allowedProviders,
             'name' => 'required|string|max:255',
             'ip_address' => 'required|ip',
             'port' => 'required|integer|min:1|max:65535',
+            'api_path' => 'nullable|string|max:255',
             'default_tax_name' => 'required|string|max:50',
             'default_tax_rate' => 'required|numeric|min:0|max:100',
             'auto_send' => 'boolean',
@@ -96,6 +110,14 @@ class FiscalPrinterConfigController extends Controller
 
         $validated = $request->validate($rules);
         $validated['account_id'] = $accountId;
+
+        // Extract api_path and store in settings
+        $apiPath = $validated['api_path'] ?? null;
+        unset($validated['api_path']);
+
+        if ($apiPath) {
+            $validated['settings'] = ['api_path' => $apiPath];
+        }
 
         // Update or create configuration
         $config = FiscalPrinterConfig::updateOrCreate(
