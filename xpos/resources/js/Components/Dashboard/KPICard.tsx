@@ -17,13 +17,13 @@ export interface KPICardProps {
 }
 
 /**
- * Modern KPI Card Component - Simplified Design
+ * Modern KPI Card Component - Clean Minimal Design
  *
- * Reduced from 8 color variants to 4 semantic variants:
- * - primary: Default state, main metrics
- * - success: Positive metrics (revenue, profit)
- * - danger: Critical alerts (errors, out of stock)
- * - warning: Attention needed (low stock, expenses)
+ * White card with colored icon only:
+ * - primary: Default state, main metrics (blue icon)
+ * - success: Positive metrics (green icon)
+ * - danger: Critical alerts (red icon)
+ * - warning: Attention needed (yellow icon)
  */
 export function KPICard({
     title,
@@ -35,42 +35,33 @@ export function KPICard({
 }: KPICardProps) {
     const colorConfig = COLORS[variant];
 
-    // Build gradient class
-    const gradientClass = `bg-gradient-to-br ${colorConfig.gradient}`;
-
     return (
-        <div className={`${gradientClass} text-white rounded-xl shadow-lg p-4 sm:p-6 relative overflow-hidden`}>
-            {/* Decorative background circles */}
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 sm:w-24 h-20 sm:h-24 bg-white/10 rounded-full"></div>
-            <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-16 sm:w-20 h-16 sm:h-20 bg-white/10 rounded-full"></div>
+        <div className="bg-white rounded-xl shadow-md hover:shadow-lg border border-gray-200 p-4 sm:p-6 transition-shadow duration-200">
+            {/* Header with colored icon and trend */}
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+                {icon && (
+                    <div className={`${colorConfig.text} p-2 sm:p-3 ${colorConfig.light} rounded-lg`}>
+                        {icon}
+                    </div>
+                )}
+                {trend && (
+                    <TrendBadge value={trend.value} isPositive={trend.isPositive} variant={variant} />
+                )}
+            </div>
 
-            <div className="relative z-10">
-                {/* Header with icon and trend */}
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    {icon && (
-                        <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
-                            {icon}
-                        </div>
-                    )}
-                    {trend && (
-                        <TrendBadge value={trend.value} isPositive={trend.isPositive} />
-                    )}
-                </div>
-
-                {/* Content */}
-                <div>
-                    <p className="text-xs sm:text-sm font-medium text-white/80 truncate">
-                        {title}
+            {/* Content */}
+            <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+                    {title}
+                </p>
+                <p className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-gray-900 truncate">
+                    {value}
+                </p>
+                {subtitle && (
+                    <p className="mt-1 text-xs sm:text-sm text-gray-500 truncate">
+                        {subtitle}
                     </p>
-                    <p className="mt-1 sm:mt-2 text-xl sm:text-3xl font-bold truncate">
-                        {value}
-                    </p>
-                    {subtitle && (
-                        <p className="mt-1 text-xs sm:text-sm text-white/70 truncate">
-                            {subtitle}
-                        </p>
-                    )}
-                </div>
+                )}
             </div>
         </div>
     );
@@ -78,11 +69,13 @@ export function KPICard({
 
 /**
  * Trend Badge Component
- * Shows percentage change with up/down arrow
+ * Shows percentage change with up/down arrow (colored based on direction)
  */
-function TrendBadge({ value, isPositive }: TrendData) {
+function TrendBadge({ value, isPositive, variant }: TrendData & { variant?: ColorVariant }) {
+    const trendColor = isPositive ? 'text-green-600' : 'text-red-600';
+
     return (
-        <div className="flex items-center space-x-1 text-xs sm:text-sm font-medium text-white">
+        <div className={`flex items-center space-x-1 text-xs sm:text-sm font-medium ${trendColor}`}>
             {isPositive ? (
                 <ArrowUpIcon className="h-3 sm:h-4 w-3 sm:w-4" />
             ) : (
