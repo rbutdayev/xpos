@@ -112,12 +112,12 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                     <CubeIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
                     <div className="min-w-0">
                         <div className="text-sm font-medium text-gray-900 truncate">
-                            {stock.product.name}
+                            {stock.product?.name || 'N/A'}
                         </div>
                         <div className="text-sm text-gray-500">
-                            SKU: {stock.product.sku}
+                            SKU: {stock.product?.sku || 'N/A'}
                         </div>
-                        {stock.product.barcode && (
+                        {stock.product?.barcode && (
                             <div className="text-xs text-gray-400">
                                 Barkod: {stock.product.barcode}
                             </div>
@@ -131,7 +131,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
             label: 'Kateqoriya',
             render: (stock: ProductStock) => (
                 <span className="text-sm text-gray-600">
-                    {stock.product.category?.name || 'Kateqoriya yoxdur'}
+                    {stock.product?.category?.name || 'Kateqoriya yoxdur'}
                 </span>
             )
         },
@@ -142,7 +142,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
             render: (stock: ProductStock) => (
                 <div className="text-sm">
                     <div className="font-medium text-gray-900">
-                        {formatNumber(stock.quantity)} {stock.product.unit}
+                        {formatNumber(stock.quantity)} {stock.product?.unit || ''}
                     </div>
                     {stock.reserved_quantity > 0 && (
                         <div className="text-xs text-orange-600">

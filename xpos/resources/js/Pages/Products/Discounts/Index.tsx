@@ -76,48 +76,52 @@ export default function Index({ auth, products, branches, filters }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Endirimlər
-                    </h2>
-                    <div className="flex items-center gap-2">
-                        <TagIcon className="w-5 h-5 text-red-600" />
-                        <span className="text-sm text-gray-600">
-                            {products.data.length} məhsul endirimlidir
-                        </span>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Endirimlər" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    {/* Tabs */}
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                        <div className="border-b border-gray-200">
-                            <nav className="-mb-px flex">
+                    {/* Tabs - Enterprise Style */}
+                    <div className="mb-6">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                            <nav className="flex flex-wrap gap-1">
                                 <button
                                     onClick={() => handleTabChange('active')}
-                                    className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
-                                        activeTab === 'active'
-                                            ? 'border-green-500 text-green-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
+                                    className={`
+                                        relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                        font-medium text-sm transition-all duration-200 ease-in-out
+                                        focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1
+                                        ${activeTab === 'active'
+                                            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 transform scale-[1.02]'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                                        }
+                                    `}
                                 >
-                                    Aktiv Endirimlər
+                                    <TagIcon className={`h-5 w-5 ${activeTab === 'active' ? 'text-white' : 'text-gray-400'}`} />
+                                    <span className="font-semibold">Aktiv Endirimlər</span>
+                                    {activeTab === 'active' && (
+                                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                    )}
                                 </button>
                                 <button
                                     onClick={() => handleTabChange('history')}
-                                    className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
-                                        activeTab === 'history'
-                                            ? 'border-orange-500 text-orange-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
+                                    className={`
+                                        relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                        font-medium text-sm transition-all duration-200 ease-in-out
+                                        focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
+                                        ${activeTab === 'history'
+                                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/30 transform scale-[1.02]'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                                        }
+                                    `}
                                 >
-                                    Tarixçə
+                                    <svg className={`h-5 w-5 ${activeTab === 'history' ? 'text-white' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="font-semibold">Tarixçə</span>
+                                    {activeTab === 'history' && (
+                                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                    )}
                                 </button>
                             </nav>
                         </div>

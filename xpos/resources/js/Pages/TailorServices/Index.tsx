@@ -279,10 +279,6 @@ export default function Index({ services, filters, branches, stats, serviceType 
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        {serviceConfig.name}
                     </h2>
                     <Link href={route('services.create', { serviceType: routeParam })}>
                         <PrimaryButton>

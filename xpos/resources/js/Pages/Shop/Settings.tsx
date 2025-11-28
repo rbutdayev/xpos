@@ -60,19 +60,6 @@ export default function ShopSettings({
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex items-center">
-                    <ShoppingBagIcon className="w-8 h-8 mr-3 text-blue-600" />
-                    <div>
-                        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                            Online Mağaza
-                        </h2>
-                        <p className="mt-1 text-sm text-gray-600">
-                            Online mağazanızı konfiqurasiya edin və idarə edin
-                        </p>
-                    </div>
-                </div>
-            }
         >
             <Head title="Online Mağaza" />
 

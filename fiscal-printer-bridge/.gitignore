@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+package-lock.json
+
+# Config files (contain tokens)
+config.json
+
+# Build output
+dist/
+dist-electron/
+
+# Electron builder cache
+.electron-builder/
+
+# User data
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Icons (if auto-generated)
+electron/assets/*.png
+electron/assets/*.ico
+electron/assets/*.icns
+electron/assets/*.svg
+electron/assets/icon.iconset/
+
+# Temporary files
+*.tmp
+*.temp

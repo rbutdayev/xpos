@@ -74,19 +74,6 @@ export default function Create({ employees, statuses, months, currentYear, curre
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight text-gray-800">
-                        Yeni maaş
-                    </h2>
-                    <Link
-                        href="/employee-salaries"
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        ← Maaşlara qayıt
-                    </Link>
-                </div>
-            }
         >
             <Head title="Yeni maaş" />
 

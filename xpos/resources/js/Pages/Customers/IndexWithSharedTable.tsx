@@ -260,13 +260,7 @@ export default function Index({ customers, filters }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Müştərilər
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Müştərilər" />
 
             <div className="py-12">

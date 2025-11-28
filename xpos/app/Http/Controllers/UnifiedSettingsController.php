@@ -23,21 +23,22 @@ class UnifiedSettingsController extends Controller
     }
 
     /**
-     * Display settings page (POS settings only now)
+     * Display settings page (Company settings with system config and POS)
      * Shop settings moved to ShopSettingsController
      */
     public function index(Request $request)
     {
         $user = Auth::user();
         $account = $user->account;
+        $company = $account->companies()->first();
 
         // POS Settings
         $posSettings = [
             'auto_print_receipt' => $account->auto_print_receipt,
         ];
 
-        return Inertia::render('Settings/Unified', [
-            // POS Tab
+        return Inertia::render('Settings/Index', [
+            'company' => $company,
             'pos_settings' => $posSettings,
         ]);
     }

@@ -1,6 +1,16 @@
 import { Product } from '@/types';
 
 export default function BasicInfo({ product }: { product: Product }) {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('az-AZ', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
       <div className="p-6 border-b border-gray-200">
@@ -106,6 +116,10 @@ export default function BasicInfo({ product }: { product: Product }) {
               </dd>
             </div>
           )}
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Yaradılma Tarixi</dt>
+            <dd className="mt-1 text-sm text-gray-900">{formatDate(product.created_at)}</dd>
+          </div>
         </dl>
         {product.description && (
           <div className="mt-6">

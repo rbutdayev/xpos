@@ -133,21 +133,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Bridge Tokenlər
-                    </h2>
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        + Yeni Token
-                    </button>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Bridge Tokenlər" />
 
             <div className="py-12">

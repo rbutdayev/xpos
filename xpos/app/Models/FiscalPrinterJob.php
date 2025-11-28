@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
+use App\Models\FiscalPrinterConfig;
 
 class FiscalPrinterJob extends Model
 {
@@ -12,6 +14,7 @@ class FiscalPrinterJob extends Model
         'sale_id',
         'return_id',
         'status',
+        'operation_type',
         'request_data',
         'response_data',
         'provider',
@@ -38,6 +41,13 @@ class FiscalPrinterJob extends Model
     const STATUS_PROCESSING = 'processing';
     const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
+
+    const OPERATION_SALE = 'sale';
+    const OPERATION_RETURN = 'return';
+    const OPERATION_SHIFT_OPEN = 'shift_open';
+    const OPERATION_SHIFT_CLOSE = 'shift_close';
+    const OPERATION_SHIFT_STATUS = 'shift_status';
+    const OPERATION_SHIFT_X_REPORT = 'shift_x_report';
 
     /**
      * Mark job as picked up by bridge
@@ -80,6 +90,73 @@ class FiscalPrinterJob extends Model
                 'fiscal_number' => $fiscalNumber,
                 'fiscal_document_id' => $fiscalDocumentId,
             ]);
+        }
+    }
+
+    /**
+     * Mark shift operation as completed and update fiscal config
+     */
+    public function markShiftOperationCompleted(?array $response = null): void
+    {
+        $this->update([
+            'status' => self::STATUS_COMPLETED,
+            'response_data' => $response,
+            'completed_at' => now(),
+        ]);
+
+        // Update fiscal config based on operation type
+        $config = FiscalPrinterConfig::where('account_id', $this->account_id)
+            ->where('is_active', true)
+            ->first();
+
+        if ($config && $response) {
+            switch ($this->operation_type) {
+                case self::OPERATION_SHIFT_OPEN:
+                    $config->update([
+                        'shift_open' => true,
+                        'shift_opened_at' => now(),
+                    ]);
+                    break;
+
+                case self::OPERATION_SHIFT_CLOSE:
+                    $config->update([
+                        'shift_open' => false,
+                        'shift_opened_at' => null,
+                        'last_z_report_at' => now(),
+                    ]);
+                    break;
+
+                case self::OPERATION_SHIFT_STATUS:
+                    // Parse shift status from response
+                    $shiftOpen = $response['shift_open'] ?? $response['shiftStatus'] ?? false;
+                    $shiftOpenTime = $response['shift_open_time'] ?? null;
+
+                    $updateData = ['shift_open' => $shiftOpen];
+
+                    if ($shiftOpen && $shiftOpenTime) {
+                        try {
+                            // Try different date formats (printer returns time in Azerbaijan timezone)
+                            if (str_contains($shiftOpenTime, '.')) {
+                                // Format: "d.m.Y H:i:s"
+                                $updateData['shift_opened_at'] = \Carbon\Carbon::createFromFormat(
+                                    'd.m.Y H:i:s',
+                                    $shiftOpenTime,
+                                    'Asia/Baku' // Azerbaijan timezone (UTC+4)
+                                );
+                            } else {
+                                // ISO format or other
+                                $updateData['shift_opened_at'] = \Carbon\Carbon::parse($shiftOpenTime, 'Asia/Baku');
+                            }
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to parse shift open time', ['time' => $shiftOpenTime, 'error' => $e->getMessage()]);
+                        }
+                    } elseif (!$shiftOpen) {
+                        $updateData['shift_opened_at'] = null;
+                    }
+
+                    $config->update($updateData);
+                    break;
+            }
         }
     }
 

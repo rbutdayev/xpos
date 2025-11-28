@@ -120,6 +120,8 @@ class FiscalPrinterBridgeController extends Controller
                 return [
                     'id' => $job->id,
                     'sale_id' => $job->sale_id,
+                    'return_id' => $job->return_id,
+                    'operation_type' => $job->operation_type ?? 'sale',
                     'provider' => $job->provider,
                     'request_data' => $job->request_data,
                     'retry_count' => $job->retry_count,
@@ -209,6 +211,51 @@ class FiscalPrinterBridgeController extends Controller
     }
 
     /**
+     * Mark shift operation job as completed
+     */
+    public function completeShiftJob(Request $request, int $jobId): JsonResponse
+    {
+        $bridge = $this->authenticateBridge($request);
+
+        if (!$bridge) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid or revoked token',
+            ], 401);
+        }
+
+        $job = FiscalPrinterJob::where('id', $jobId)
+            ->where('account_id', $bridge->account_id)
+            ->first();
+
+        if (!$job) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Job not found',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'response' => 'nullable|array',
+            'response_data' => 'nullable|array',
+        ]);
+
+        // Use the shift-specific completion method
+        $job->markShiftOperationCompleted($validated['response_data'] ?? $validated['response'] ?? null);
+
+        Log::info('Shift operation completed', [
+            'job_id' => $job->id,
+            'operation_type' => $job->operation_type,
+            'account_id' => $job->account_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Shift operation completed',
+        ]);
+    }
+
+    /**
      * Mark job as failed
      */
     public function failJob(Request $request, int $jobId): JsonResponse
@@ -279,6 +326,139 @@ class FiscalPrinterBridgeController extends Controller
             'message' => 'Job marked as failed',
             'can_retry' => $job->canRetry(),
             'is_retriable' => $isRetriable,
+        ]);
+    }
+
+    /**
+     * Get shift status request configuration for agent
+     */
+    public function getShiftStatusRequest(Request $request): JsonResponse
+    {
+        $bridge = $this->authenticateBridge($request);
+
+        if (!$bridge) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid or revoked token',
+            ], 401);
+        }
+
+        // Get active fiscal printer config
+        $config = \App\Models\FiscalPrinterConfig::where('account_id', $bridge->account_id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$config || !$config->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Fiscal printer not configured',
+            ], 404);
+        }
+
+        // Use FiscalPrinterService to format the request
+        $service = app(\App\Services\FiscalPrinterService::class);
+
+        try {
+            $requestData = $service->formatShiftOperationRequest($config, 'shift_status');
+
+            return response()->json([
+                'success' => true,
+                'request_data' => $requestData,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate shift status request', [
+                'account_id' => $bridge->account_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to generate shift status request',
+            ], 500);
+        }
+    }
+
+    /**
+     * Receive shift status update from agent
+     */
+    public function pushStatus(Request $request): JsonResponse
+    {
+        $bridge = $this->authenticateBridge($request);
+
+        if (!$bridge) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid or revoked token',
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'shift_open' => 'required|boolean',
+            'shift_opened_at' => 'nullable|string',
+            'provider' => 'required|string',
+        ]);
+
+        // Store in Redis with 2-minute TTL (for fast frontend access)
+        $cacheKey = "shift_status:{$bridge->account_id}";
+        $statusData = [
+            'shift_open' => $validated['shift_open'],
+            'shift_opened_at' => $validated['shift_opened_at'],
+            'provider' => $validated['provider'],
+            'last_updated' => now()->toIso8601String(),
+        ];
+
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $statusData, 120); // 2 minutes
+
+        // Also update the database so shift management page shows correct status
+        $config = \App\Models\FiscalPrinterConfig::where('account_id', $bridge->account_id)
+            ->where('is_active', true)
+            ->first();
+
+        if ($config) {
+            $updateData = ['shift_open' => $validated['shift_open']];
+
+            // Parse shift_opened_at if provided
+            if ($validated['shift_open'] && $validated['shift_opened_at']) {
+                try {
+                    // Parse different date formats
+                    // Printer returns time in Azerbaijan local time (UTC+4)
+                    if (str_contains($validated['shift_opened_at'], '.')) {
+                        // Format: "d.m.Y H:i:s" (e.g., "27.11.2025 17:39:26")
+                        // Parse as Azerbaijan time, then Laravel will handle storage
+                        $updateData['shift_opened_at'] = \Carbon\Carbon::createFromFormat(
+                            'd.m.Y H:i:s',
+                            $validated['shift_opened_at'],
+                            'Asia/Baku'
+                        )->setTimezone('UTC'); // Convert to UTC for storage
+                    } else {
+                        // ISO format or other
+                        $updateData['shift_opened_at'] = \Carbon\Carbon::parse(
+                            $validated['shift_opened_at'],
+                            'Asia/Baku'
+                        )->setTimezone('UTC');
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to parse shift open time from agent', [
+                        'time' => $validated['shift_opened_at'],
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } elseif (!$validated['shift_open']) {
+                // If shift is closed, clear the opened_at timestamp
+                $updateData['shift_opened_at'] = null;
+            }
+
+            $config->update($updateData);
+
+            Log::debug('Shift status updated in database and cache', [
+                'account_id' => $bridge->account_id,
+                'shift_open' => $validated['shift_open'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated',
         ]);
     }
 }

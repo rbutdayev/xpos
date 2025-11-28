@@ -70,21 +70,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        İstifadəçini Düzəliş Et
-                    </h2>
-                    <Link
-                        href="/users"
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        ← İstifadəçilərə qayıt
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="İstifadəçini Düzəliş Et" />
 
             <div className="py-12">

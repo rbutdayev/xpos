@@ -47,10 +47,6 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Müştəri: {customer.name}
                     </h2>
                     <div className="flex space-x-4">
                         <Link

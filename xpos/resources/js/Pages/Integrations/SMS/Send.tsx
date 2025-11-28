@@ -87,11 +87,6 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
     if (!hasCredentials) {
         return (
             <AuthenticatedLayout
-                header={
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        SMS Göndər
-                    </h2>
-                }
             >
                 <Head title="SMS Göndər" />
 
@@ -118,13 +113,7 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
     }
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    SMS Göndər
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="SMS Göndər" />
 
             <div className="py-12">

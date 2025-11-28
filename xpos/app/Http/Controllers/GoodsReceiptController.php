@@ -8,6 +8,7 @@ use App\Models\ProductVariant;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Models\StockMovement;
+use App\Models\StockHistory;
 use App\Models\ProductStock;
 use App\Services\DocumentUploadService;
 use Illuminate\Http\Request;
@@ -225,7 +226,24 @@ class GoodsReceiptController extends Controller
                     ]
                 );
 
+                $quantityBefore = $productStock->quantity;
                 $productStock->increment('quantity', $inventoryQuantity);
+
+                // Create stock history record
+                StockHistory::create([
+                    'product_id' => $productData['product_id'],
+                    'variant_id' => $productData['variant_id'] ?? null,
+                    'warehouse_id' => $request->warehouse_id,
+                    'quantity_before' => $quantityBefore,
+                    'quantity_change' => $inventoryQuantity,
+                    'quantity_after' => $quantityBefore + $inventoryQuantity,
+                    'type' => 'daxil_olma',
+                    'reference_type' => 'goods_receipt',
+                    'reference_id' => $goodsReceipt->id,
+                    'user_id' => auth()->id(),
+                    'notes' => "Mal qəbulu: {$goodsReceipt->receipt_number}",
+                    'occurred_at' => $goodsReceipt->created_at ?? now(),
+                ]);
             }
 
             // Process payment after successful goods receipt creation
@@ -386,7 +404,24 @@ class GoodsReceiptController extends Controller
                         ->first();
 
                     if ($oldProductStock) {
+                        $oldQuantityBefore = $oldProductStock->quantity;
                         $oldProductStock->decrement('quantity', $goodsReceipt->getOriginal('quantity'));
+
+                        // Create stock history for old variant
+                        StockHistory::create([
+                            'product_id' => $goodsReceipt->product_id,
+                            'variant_id' => $oldVariantId,
+                            'warehouse_id' => $goodsReceipt->warehouse_id,
+                            'quantity_before' => $oldQuantityBefore,
+                            'quantity_change' => -$goodsReceipt->getOriginal('quantity'),
+                            'quantity_after' => $oldQuantityBefore - $goodsReceipt->getOriginal('quantity'),
+                            'type' => 'duzelis_azaltma',
+                            'reference_type' => 'goods_receipt_update',
+                            'reference_id' => $goodsReceipt->id,
+                            'user_id' => auth()->id(),
+                            'notes' => "Mal qəbulu düzəlişi (variant dəyişdi): {$goodsReceipt->receipt_number}",
+                            'occurred_at' => now(),
+                        ]);
                     }
 
                     // Add stock to new variant
@@ -403,7 +438,24 @@ class GoodsReceiptController extends Controller
                             'min_level' => 3,
                         ]
                     );
+                    $newQuantityBefore = $newProductStock->quantity;
                     $newProductStock->increment('quantity', $request->quantity);
+
+                    // Create stock history for new variant
+                    StockHistory::create([
+                        'product_id' => $goodsReceipt->product_id,
+                        'variant_id' => $request->variant_id,
+                        'warehouse_id' => $goodsReceipt->warehouse_id,
+                        'quantity_before' => $newQuantityBefore,
+                        'quantity_change' => $request->quantity,
+                        'quantity_after' => $newQuantityBefore + $request->quantity,
+                        'type' => 'duzelis_artim',
+                        'reference_type' => 'goods_receipt_update',
+                        'reference_id' => $goodsReceipt->id,
+                        'user_id' => auth()->id(),
+                        'notes' => "Mal qəbulu düzəlişi (variant dəyişdi): {$goodsReceipt->receipt_number}",
+                        'occurred_at' => now(),
+                    ]);
 
                     // Create stock movement for variant change
                     $stockMovement = new StockMovement();
@@ -428,7 +480,25 @@ class GoodsReceiptController extends Controller
                         ->first();
 
                     if ($productStock) {
+                        $quantityBefore = $productStock->quantity;
                         $productStock->increment('quantity', $quantityDifference);
+
+                        // Create stock history for quantity adjustment
+                        $movementType = $quantityDifference > 0 ? 'duzelis_artim' : 'duzelis_azaltma';
+                        StockHistory::create([
+                            'product_id' => $goodsReceipt->product_id,
+                            'variant_id' => $request->variant_id,
+                            'warehouse_id' => $goodsReceipt->warehouse_id,
+                            'quantity_before' => $quantityBefore,
+                            'quantity_change' => $quantityDifference,
+                            'quantity_after' => $quantityBefore + $quantityDifference,
+                            'type' => $movementType,
+                            'reference_type' => 'goods_receipt_update',
+                            'reference_id' => $goodsReceipt->id,
+                            'user_id' => auth()->id(),
+                            'notes' => "Mal qəbulu düzəlişi: {$goodsReceipt->receipt_number}",
+                            'occurred_at' => now(),
+                        ]);
                     }
 
                     // Create stock movement for the adjustment
@@ -600,7 +670,24 @@ class GoodsReceiptController extends Controller
                     ->first();
 
                 if ($productStock) {
+                    $quantityBefore = $productStock->quantity;
                     $productStock->decrement('quantity', (float) $goodsReceipt->quantity);
+
+                    // Create stock history for deletion
+                    StockHistory::create([
+                        'product_id' => $goodsReceipt->product_id,
+                        'variant_id' => $goodsReceipt->variant_id,
+                        'warehouse_id' => $goodsReceipt->warehouse_id,
+                        'quantity_before' => $quantityBefore,
+                        'quantity_change' => -(float) $goodsReceipt->quantity,
+                        'quantity_after' => $quantityBefore - (float) $goodsReceipt->quantity,
+                        'type' => 'duzelis_azaltma',
+                        'reference_type' => 'goods_receipt_delete',
+                        'reference_id' => $goodsReceipt->id,
+                        'user_id' => auth()->id(),
+                        'notes' => "Mal qəbulu silindi: {$goodsReceipt->receipt_number}",
+                        'occurred_at' => now(),
+                    ]);
                 }
 
                 $stockMovement->delete();

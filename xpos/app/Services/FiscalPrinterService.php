@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\FiscalPrinterConfig;
+use App\Models\FiscalPrinterJob;
 use App\Models\FiscalPrinterLog;
 use App\Models\Sale;
 use App\Models\SaleReturn;
@@ -413,6 +414,11 @@ class FiscalPrinterService
             return $config->getFullUrl();
         }
 
+        // Omnitech uses base URL with /v2 path, all operations go to same endpoint
+        if ($config->provider === 'omnitech') {
+            return $config->getFullUrl('v2');
+        }
+
         // Load provider configuration from database
         $provider = \App\Models\FiscalPrinterProvider::where('code', $config->provider)
             ->where('is_active', true)
@@ -427,7 +433,6 @@ class FiscalPrinterService
         return match($config->provider) {
             'nba' => $config->getFullUrl("api/{$action}"),
             'oneclick' => $config->getFullUrl("api/{$action}"),
-            'omnitech' => $config->getFullUrl("api/v2/{$action}"),
             'azsmart' => $config->getFullUrl("api/{$action}"),
             default => $config->getFullUrl("api/{$action}"),
         };
@@ -441,6 +446,11 @@ class FiscalPrinterService
         // Caspos has a completely different API structure
         if ($config->provider === 'caspos') {
             return $this->formatCasposRequest($config, $sale);
+        }
+
+        // Omnitech has its own API structure
+        if ($config->provider === 'omnitech') {
+            return $this->formatOmnitechRequest($config, $sale);
         }
 
         $sale->load(['items.product', 'payments', 'customer', 'branch']);
@@ -664,6 +674,11 @@ class FiscalPrinterService
             return $this->formatCasposReturnRequest($config, $return);
         }
 
+        // Omnitech has its own API structure
+        if ($config->provider === 'omnitech') {
+            return $this->formatOmnitechReturnRequest($config, $return);
+        }
+
         $return->load(['items.product', 'refunds', 'customer', 'branch', 'sale']);
 
         $items = $return->items->map(function ($item) use ($config) {
@@ -719,6 +734,258 @@ class FiscalPrinterService
             ]),
             default => $baseData,
         };
+    }
+
+    /**
+     * Format Omnitech request according to API documentation (v2.0.1)
+     * API Doc: omnitec.md
+     */
+    protected function formatOmnitechRequest(FiscalPrinterConfig $config, Sale $sale): array
+    {
+        $sale->load(['items.product', 'payments', 'customer']);
+
+        // Map VAT percentage to itemVatPercent (18, 0, 2, 8)
+        $vatPercent = $config->default_tax_rate ?? 18;
+
+        // Format items according to Omnitech API spec
+        $items = $sale->items->map(function ($item) use ($vatPercent) {
+            // Map product unit to Omnitech itemQuantityType (same as Caspos)
+            $quantityType = $this->mapUnitToQuantityType($item->product->unit ?? 'ədəd');
+
+            return [
+                'itemName' => $item->product->name ?? 'Unknown Product',
+                'itemCode' => $item->product->barcode ?? (string)$item->product_id,
+                'itemCodeType' => 1, // 0=Plain text, 1=EAN8, 2=EAN13, 3=Service
+                'itemQuantityType' => $quantityType,
+                'itemQuantity' => (float) $item->quantity,
+                'itemPrice' => (float) $item->unit_price,
+                'itemSum' => (float) $item->total,
+                'itemVatPercent' => $vatPercent,
+                'discount' => (float) ($item->discount_amount ?? 0),
+            ];
+        })->toArray();
+
+        // Calculate payment methods
+        $cashSum = 0.0;
+        $cashlessSum = 0.0;
+        $creditSum = 0.0;
+        $bonusSum = 0.0;
+        $prepaymentSum = 0.0;
+
+        // For credit sales (debt), Azerbaijan fiscal rules require recording as cash sale
+        if ($sale->payment_status === 'credit' && $sale->payments->isEmpty()) {
+            $cashSum = (float) $sale->total;
+        } else {
+            // Process actual payment records
+            $primaryPaymentMethod = null;
+
+            foreach ($sale->payments as $payment) {
+                $amount = (float) $payment->amount;
+                $method = trim(strtolower($payment->method ?? ''));
+
+                if ($primaryPaymentMethod === null && !empty($method)) {
+                    $primaryPaymentMethod = $method;
+                }
+
+                // Map payment method to Omnitech payment types
+                switch ($method) {
+                    case 'cash':
+                    case 'nağd':
+                    case 'nagd':
+                        $cashSum += $amount;
+                        break;
+                    case 'card':
+                    case 'terminal':
+                    case 'kart':
+                    case 'köçürmə':
+                    case 'kocurme':
+                    case 'bank':
+                        $cashlessSum += $amount;
+                        break;
+                    case 'credit':
+                    case 'kredit':
+                        $creditSum += $amount;
+                        break;
+                    case 'bonus':
+                        $bonusSum += $amount;
+                        break;
+                    default:
+                        $cashSum += $amount;
+                }
+            }
+
+            // For partial payment sales with remaining balance as debt
+            if ($sale->payment_status === 'partial') {
+                $totalPaid = $cashSum + $cashlessSum + $creditSum + $bonusSum;
+                $unpaidAmount = (float) $sale->total - $totalPaid;
+
+                if ($unpaidAmount > 0) {
+                    // Add unpaid amount using the same payment method
+                    switch ($primaryPaymentMethod) {
+                        case 'kart':
+                        case 'köçürmə':
+                        case 'terminal':
+                            $cashlessSum += $unpaidAmount;
+                            break;
+                        default:
+                            $cashSum += $unpaidAmount;
+                    }
+                }
+            }
+        }
+
+        // Calculate total VAT amount
+        $totalSum = (float) $sale->total;
+        $vatAmounts = [
+            [
+                'vatSum' => $totalSum,
+                'vatPercent' => $vatPercent,
+            ]
+        ];
+
+        // Format according to Omnitech API v2:
+        // POST to http://ip:8989/v2
+        // {"requestData": {"access_token": "...", "tokenData": {...}, "checkData": {...}}}
+        return [
+            'requestData' => [
+                'tokenData' => [
+                    'parameters' => [
+                        'doc_type' => 'sale',
+                        'data' => [
+                            'cashier' => $this->getCashierDisplayName($sale->user),
+                            'currency' => 'AZN',
+                            'items' => $items,
+                            'sum' => $totalSum,
+                            'cashSum' => $cashSum,
+                            'cashlessSum' => $cashlessSum,
+                            'prepaymentSum' => $prepaymentSum,
+                            'creditSum' => $creditSum,
+                            'bonusSum' => $bonusSum,
+                            'incomingSum' => $cashSum, // Amount of cash buyer pays for change calculation
+                            'vatAmounts' => $vatAmounts,
+                        ],
+                    ],
+                    'operationId' => 'createDocument',
+                    'version' => 1,
+                ],
+                'checkData' => [
+                    'check_type' => 1, // 1 = Sale
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Format Omnitech return request according to API documentation (v2.0.1)
+     */
+    protected function formatOmnitechReturnRequest(FiscalPrinterConfig $config, SaleReturn $return): array
+    {
+        $return->load(['items.product', 'refunds', 'customer', 'sale']);
+
+        // Map VAT percentage
+        $vatPercent = $config->default_tax_rate ?? 18;
+
+        // Format items according to Omnitech API spec
+        $items = $return->items->map(function ($item) use ($vatPercent) {
+            $quantityType = $this->mapUnitToQuantityType($item->product->unit ?? 'ədəd');
+
+            return [
+                'itemName' => $item->product->name ?? 'Unknown Product',
+                'itemCode' => $item->product->barcode ?? (string)$item->product_id,
+                'itemCodeType' => 1,
+                'itemQuantityType' => $quantityType,
+                'itemQuantity' => (float) $item->quantity,
+                'itemPrice' => (float) $item->unit_price,
+                'itemSum' => (float) $item->total,
+                'itemVatPercent' => $vatPercent,
+                'discount' => 0.0,
+            ];
+        })->toArray();
+
+        // Calculate refund payment methods
+        $cashSum = 0.0;
+        $cashlessSum = 0.0;
+        $creditSum = 0.0;
+        $bonusSum = 0.0;
+
+        foreach ($return->refunds as $refund) {
+            $amount = (float) $refund->amount;
+            $method = trim(strtolower($refund->method ?? ''));
+
+            switch ($method) {
+                case 'cash':
+                case 'nağd':
+                case 'nagd':
+                    $cashSum += $amount;
+                    break;
+                case 'card':
+                case 'terminal':
+                case 'kart':
+                case 'köçürmə':
+                case 'kocurme':
+                case 'bank':
+                    $cashlessSum += $amount;
+                    break;
+                case 'credit':
+                case 'kredit':
+                    $creditSum += $amount;
+                    break;
+                case 'bonus':
+                    $bonusSum += $amount;
+                    break;
+                default:
+                    $cashSum += $amount;
+            }
+        }
+
+        $totalSum = (float) $return->total;
+        $vatAmounts = [
+            [
+                'vatSum' => $totalSum,
+                'vatPercent' => $vatPercent,
+            ]
+        ];
+
+        // Get fiscal document ID from original sale (parentDocument)
+        $parentDocument = $return->sale?->fiscal_document_id ?? null;
+
+        // Get short document ID (first 12 characters of long ID)
+        $refundShortDocumentId = $parentDocument ? substr($parentDocument, 0, 12) : null;
+
+        // Get fiscal number (document number)
+        $refundDocumentNumber = $return->sale?->fiscal_number ?? null;
+
+        // Format according to Omnitech API v2 for money_back
+        return [
+            'requestData' => [
+                'tokenData' => [
+                    'operationId' => 'createDocument',
+                    'parameters' => [
+                        'doc_type' => 'money_back',
+                        'data' => [
+                            'bonusSum' => $bonusSum,
+                            'cashSum' => $cashSum,
+                            'cashier' => $this->getCashierDisplayName($return->user),
+                            'cashlessSum' => $cashlessSum,
+                            'creditSum' => $creditSum,
+                            'currency' => 'AZN',
+                            'items' => $items,
+                            'lastOperationAtUtc' => '',
+                            'parentDocument' => $parentDocument, // Long fiscal document ID
+                            'prepaymentSum' => 0.0,
+                            'refund_document_number' => (string)$refundDocumentNumber,
+                            'refund_short_document_id' => $refundShortDocumentId,
+                            'sum' => $totalSum,
+                            'vatAmounts' => $vatAmounts,
+                        ],
+                    ],
+                    'version' => 1,
+                ],
+                'checkData' => [
+                    'check_type' => 100, // 100 = Money back
+                ],
+            ],
+        ];
     }
 
     /**
@@ -893,6 +1160,74 @@ class FiscalPrinterService
     }
 
     /**
+     * Format shift operation request data for bridge processing
+     */
+    public function formatShiftOperationRequest(FiscalPrinterConfig $config, string $operationType): array
+    {
+        $url = $this->getApiEndpoint($config, $operationType);
+
+        if ($config->provider === 'omnitech') {
+            // Map operation type to Omnitech check_type
+            $checkTypeMap = [
+                'shift_status' => 14,
+                'shift_open' => 15,
+                'shift_close' => 16, // Z-Report
+                'shift_x_report' => 17, // X-Report
+            ];
+
+            $checkType = $checkTypeMap[$operationType] ?? 14;
+
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'checkData' => [
+                            'check_type' => $checkType,
+                        ],
+                        // access_token will be injected by bridge after login
+                    ],
+                    // Include credentials for bridge to use for login
+                    'username' => $config->username,
+                    'password' => $config->password,
+                ],
+            ];
+        }
+
+        if ($config->provider === 'caspos') {
+            // Map operation type to Caspos operation
+            $operationMap = [
+                'shift_status' => 'getShiftStatus',
+                'shift_open' => 'openShift',
+                'shift_close' => 'closeShift', // Z-Report
+                'shift_x_report' => 'getXReport', // X-Report
+            ];
+
+            $operation = $operationMap[$operationType] ?? 'getShiftStatus';
+
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => $operation,
+                    'username' => $config->username,
+                    'password' => $config->password,
+                ],
+            ];
+        }
+
+        throw new \Exception('Unsupported provider: ' . $config->provider);
+    }
+
+    /**
      * Test connection to fiscal printer
      */
     public function testConnection(int $accountId): array
@@ -951,6 +1286,87 @@ class FiscalPrinterService
                     return [
                         'success' => false,
                         'error' => 'HTTP ' . $response->status() . ': ' . $response->body(),
+                    ];
+                }
+            }
+
+            // Omnitech requires login first, then get info (check_type 41)
+            if ($config->provider === 'omnitech') {
+                $url = $this->getApiEndpoint($config, 'login');
+
+                // First login to get access_token
+                $loginData = [
+                    'requestData' => [
+                        'checkData' => [
+                            'check_type' => 40, // Login operation
+                        ],
+                        'name' => $config->username,
+                        'password' => $config->password,
+                    ]
+                ];
+
+                $loginResponse = Http::timeout(10)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->post($url, $loginData);
+
+                if (!$loginResponse->successful()) {
+                    return [
+                        'success' => false,
+                        'error' => 'Login failed: HTTP ' . $loginResponse->status(),
+                    ];
+                }
+
+                $loginResult = $loginResponse->json();
+                if (!isset($loginResult['access_token'])) {
+                    return [
+                        'success' => false,
+                        'error' => 'Login failed: ' . ($loginResult['message'] ?? 'No access token received'),
+                    ];
+                }
+
+                $accessToken = $loginResult['access_token'];
+
+                // Now get device info
+                $infoData = [
+                    'requestData' => [
+                        'checkData' => [
+                            'check_type' => 41, // Get info operation
+                        ],
+                        'access_token' => $accessToken,
+                    ]
+                ];
+
+                $infoResponse = Http::timeout(10)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->post($url, $infoData);
+
+                if ($infoResponse->successful()) {
+                    $infoData = $infoResponse->json();
+                    $code = $infoData['code'] ?? 999;
+
+                    if ($code === 0 || $code === '0') {
+                        return [
+                            'success' => true,
+                            'message' => 'Connection successful to ' . $config->getProviderName(),
+                            'provider' => $config->provider,
+                            'data' => $infoData['data'] ?? null,
+                        ];
+                    } else {
+                        return [
+                            'success' => false,
+                            'error' => $infoData['message'] ?? 'Error code: ' . $code,
+                        ];
+                    }
+                } else {
+                    return [
+                        'success' => false,
+                        'error' => 'HTTP ' . $infoResponse->status() . ': ' . $infoResponse->body(),
                     ];
                 }
             }
@@ -1069,5 +1485,177 @@ class FiscalPrinterService
         }
 
         return $name;
+    }
+
+    /**
+     * Get shift status from fiscal printer
+     */
+    public function getShiftStatus(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer not configured',
+            ];
+        }
+
+        if (!$config->isConfigured()) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer configuration incomplete',
+            ];
+        }
+
+        try {
+            // Format request data for bridge
+            $requestData = $this->formatShiftOperationRequest($config, 'shift_status');
+
+            // Queue job for bridge to process
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_SHIFT_STATUS,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            // Return current cached status from database
+            return [
+                'success' => true,
+                'shift_open' => $config->shift_open,
+                'shift_opened_at' => $config->shift_opened_at?->toISOString(),
+                'message' => 'Status yenilənməsi növbəyə əlavə edildi',
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Shift status check failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Failed to check shift status: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Open fiscal shift
+     */
+    public function openShift(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer not configured',
+            ];
+        }
+
+        try {
+            $requestData = $this->formatShiftOperationRequest($config, 'shift_open');
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_SHIFT_OPEN,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Növbə açma əməliyyatı növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'Failed to open shift: ' . $e->getMessage(),
+            ];
+        }
+    }
+    /**
+     * Close fiscal shift and print Z-Report
+     */
+    public function closeShift(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer not configured',
+            ];
+        }
+
+        try {
+            $requestData = $this->formatShiftOperationRequest($config, 'shift_close');
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_SHIFT_CLOSE,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Növbə bağlanma və Z-Hesabat əməliyyatı növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'Failed to close shift: ' . $e->getMessage(),
+            ];
+        }
+    }
+    /**
+     * Print X-Report (intermediate report without closing shift)
+     */
+    public function printXReport(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer not configured',
+            ];
+        }
+
+        try {
+            $requestData = $this->formatShiftOperationRequest($config, 'shift_x_report');
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_SHIFT_X_REPORT,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'X-Hesabat əməliyyatı növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'Failed to print X report: ' . $e->getMessage(),
+            ];
+        }
     }
 }

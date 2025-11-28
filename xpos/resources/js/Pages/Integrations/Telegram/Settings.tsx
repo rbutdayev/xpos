@@ -39,24 +39,6 @@ export default function Settings({ auth, credentials }: TelegramSettingsProps) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                            Telegram Bot İnteqrasiyası
-                        </h2>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Telegram vasitəsilə real-time bildirişlər alın
-                        </p>
-                    </div>
-                    <a
-                        href="/integrations"
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                        ← Tətbiqlərə qayıt
-                    </a>
-                </div>
-            }
         >
             <Head title="Telegram Bot Parametrləri" />
 

@@ -18,7 +18,7 @@ interface StockMovement {
         name: string;
     };
     employee?: {
-        employee_id: number;
+        id: number;
         name: string;
     };
     movement_type: string;
@@ -153,15 +153,7 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Stok Hərəkətləri
-                    </h2>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Stok Hərəkətləri" />
 
             <div className="py-12">

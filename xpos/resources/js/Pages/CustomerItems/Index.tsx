@@ -225,25 +225,7 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                            Müştəri Məhsulları
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Müştərilərdən qəbul edilmiş məhsulların siyahısı və xidmət tarixçəsi
-                        </p>
-                    </div>
-                    <Link href={route('customer-items.create')}>
-                        <PrimaryButton>
-                            Yeni məhsul əlavə et
-                        </PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Müştəri Məhsulları" />
 
             <div className="py-12">

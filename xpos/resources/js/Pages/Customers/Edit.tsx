@@ -30,23 +30,7 @@ export default function Edit({ customer }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Müştərini düzəliş et: {customer.name}
-                    </h2>
-                    <div className="flex space-x-4">
-                        <Link
-                            href={`/customers/${customer.id}`}
-                            className="text-gray-600 hover:text-gray-900"
-                        >
-                            ← Müştəriyə qayıt
-                        </Link>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Düzəliş et: ${customer.name}`} />
 
             <div className="py-12">

@@ -85,20 +85,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
     const maxPayableAmount = remainingBalance;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Satış düzəliş et - #{sale.sale_number}
-                    </h2>
-                    <Link href={route('sales.show', sale.sale_id)}>
-                        <SecondaryButton>
-                            Geriyə qayıt
-                        </SecondaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Satış düzəliş et - #${sale.sale_number}`} />
 
             <div className="py-12">

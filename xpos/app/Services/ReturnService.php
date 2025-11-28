@@ -139,8 +139,25 @@ class ReturnService
                         ->first();
 
                     if ($config) {
+                        // Validate shift status before creating fiscal job
+                        if (!$config->isShiftValid()) {
+                            $shiftError = null;
+                            if (!$config->isShiftOpen()) {
+                                $shiftError = 'Fiskal növbə bağlıdır';
+                            } elseif ($config->isShiftExpired()) {
+                                $shiftError = 'Fiskal növbə vaxtı bitib (24 saat)';
+                            }
+
+                            Log::warning('Fiscal shift validation failed for return', [
+                                'return_id' => $return->return_id,
+                                'account_id' => $accountId,
+                                'shift_open' => $config->shift_open,
+                                'shift_hours' => $config->getShiftDurationHours(),
+                                'error' => $shiftError
+                            ]);
+                            // Don't create fiscal job if shift is invalid
                         // Validate that original sale has fiscal_document_id (required for Caspos returns)
-                        if ($config->provider === 'caspos' && !$sale->fiscal_document_id) {
+                        } elseif ($config->provider === 'caspos' && !$sale->fiscal_document_id) {
                             Log::warning('Cannot create fiscal return: original sale has no fiscal_document_id', [
                                 'return_id' => $return->return_id,
                                 'sale_id' => $sale->sale_id,

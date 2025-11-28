@@ -73,13 +73,7 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    Müştəri Loyallıq Proqramı
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Loyallıq Proqramı" />
 
             <div className="py-12">

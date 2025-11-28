@@ -239,33 +239,49 @@ export default function Form({ template, categories }: Props) {
                         </div>
                     </div>
 
-                    {/* Language Tabs */}
+                    {/* Language Tabs - Enterprise Style */}
                     <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-                        <div className="border-b border-gray-200">
-                            <nav className="flex -mb-px">
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab('az')}
-                                    className={`px-6 py-3 text-sm font-medium ${
-                                        activeTab === 'az'
-                                            ? 'border-b-2 border-blue-500 text-blue-600'
-                                            : 'text-gray-500 hover:text-gray-700'
-                                    }`}
-                                >
-                                    Azərbaycan dili
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab('en')}
-                                    className={`px-6 py-3 text-sm font-medium ${
-                                        activeTab === 'en'
-                                            ? 'border-b-2 border-blue-500 text-blue-600'
-                                            : 'text-gray-500 hover:text-gray-700'
-                                    }`}
-                                >
-                                    English
-                                </button>
-                            </nav>
+                        <div className="p-1">
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                                <nav className="flex gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('az')}
+                                        className={`
+                                            relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                            font-medium text-sm transition-all duration-200 ease-in-out
+                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                            ${activeTab === 'az'
+                                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                                            }
+                                        `}
+                                    >
+                                        <span className="font-semibold">Azərbaycan dili</span>
+                                        {activeTab === 'az' && (
+                                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('en')}
+                                        className={`
+                                            relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                            font-medium text-sm transition-all duration-200 ease-in-out
+                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                            ${activeTab === 'en'
+                                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                                            }
+                                        `}
+                                    >
+                                        <span className="font-semibold">English</span>
+                                        {activeTab === 'en' && (
+                                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                        )}
+                                    </button>
+                                </nav>
+                            </div>
                         </div>
 
                         <div className="p-6">

@@ -173,15 +173,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Fiskal Printer Növbəsi
-                    </h2>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Fiskal Printer Növbəsi" />
 
             <div className="py-6">
@@ -198,10 +190,10 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                         </div>
                     )}
 
-                    {/* Status Tabs */}
-                    <div className="bg-white shadow sm:rounded-lg mb-6">
-                        <div className="border-b border-gray-200">
-                            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                    {/* Status Tabs - Enterprise Style */}
+                    <div className="mb-6">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                            <nav className="flex flex-wrap gap-1" aria-label="Tabs">
                                 {[
                                     { key: 'all', label: 'Hamısı', count: statusCounts.all },
                                     { key: 'pending', label: 'Gözləyir', count: statusCounts.pending },
@@ -212,22 +204,29 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                     <button
                                         key={tab.key}
                                         onClick={() => handleStatusFilter(tab.key)}
-                                        className={`${
-                                            selectedStatus === tab.key
-                                                ? 'border-indigo-500 text-indigo-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                        className={`
+                                            relative flex items-center gap-2.5 px-4 py-3 rounded-md
+                                            font-medium text-sm transition-all duration-200 ease-in-out
+                                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                            ${selectedStatus === tab.key
+                                                ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                                            }
+                                        `}
                                     >
-                                        {tab.label}
+                                        <span className="font-semibold">{tab.label}</span>
                                         <span
                                             className={`${
                                                 selectedStatus === tab.key
-                                                    ? 'bg-indigo-100 text-indigo-600'
-                                                    : 'bg-gray-100 text-gray-900'
-                                            } ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium`}
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'bg-gray-100 text-gray-700'
+                                            } py-0.5 px-2.5 rounded-full text-xs font-medium`}
                                         >
                                             {tab.count}
                                         </span>
+                                        {selectedStatus === tab.key && (
+                                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                        )}
                                     </button>
                                 ))}
                             </nav>

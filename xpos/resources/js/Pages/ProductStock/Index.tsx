@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { productStockTableConfig } from '@/Components/TableConfigurations';
 import useInventoryUpdate from '@/Pages/GoodsReceipts/Hooks/useInventoryUpdate';
+import InventoryNavigation from '@/Components/InventoryNavigation';
 
 interface Props {
     stocks: {
@@ -72,6 +73,9 @@ export default function Index({ stocks, warehouses, filters }: Props) {
     return (
         <AuthenticatedLayout>
             <Head title="Məhsul Stoku" />
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <InventoryNavigation currentRoute="product-stock" />
+            </div>
             <SharedDataTable
                 title="Məhsul Stoku"
                 data={stocks}

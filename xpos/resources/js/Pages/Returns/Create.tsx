@@ -7,7 +7,7 @@ import TextInput from '@/Components/TextInput';
 import TextArea from '@/Components/TextArea';
 import InputError from '@/Components/InputError';
 import { PageProps } from '@/types';
-import { ArrowLeftIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 interface Sale {
     sale_id: number;
@@ -150,21 +150,7 @@ export default function Create({ auth, sale }: CreateReturnsProps) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center space-x-4">
-                    <button
-                        onClick={() => router.visit(route('sales.show', sale.sale_id))}
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Mal Qaytarma - {sale.sale_number}
-                    </h2>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Mal Qaytarma - ${sale.sale_number}`} />
 
             <div className="py-6">

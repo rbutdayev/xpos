@@ -8,17 +8,29 @@ import CartSection from './components/CartSection';
 import SummaryPaymentSection from './components/SummaryPaymentSection';
 import VariantSelectorModal from './components/VariantSelectorModal';
 import ReturnModal from '@/Components/ReturnModal';
+import ShiftStatusWidget from '@/Components/ShiftStatusWidget';
+import ShiftStatusWarningModal from '@/Components/ShiftStatusWarningModal';
 import { useCart } from './hooks/useCart';
 import { useSearch } from './hooks/useSearch';
 import toast from 'react-hot-toast';
 
+interface FiscalConfig {
+  id: number;
+  provider: string;
+  name: string;
+  shift_open: boolean;
+  shift_opened_at: string | null;
+  last_z_report_at: string | null;
+}
+
 interface POSIndexProps extends PageProps {
   branches: Branch[];
   fiscalPrinterEnabled: boolean;
+  fiscalConfig: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
 }
 
-export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyProgram }: POSIndexProps) {
+export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConfig, loyaltyProgram }: POSIndexProps) {
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -70,6 +82,11 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
 
   // Return modal state
   const [returnModalOpen, setReturnModalOpen] = useState(false);
+
+  // Shift status warning modal state
+  const [shiftWarningModalOpen, setShiftWarningModalOpen] = useState(false);
+  const [shiftWarningType, setShiftWarningType] = useState<'offline' | 'closed'>('closed');
+  const [pendingSaleSubmission, setPendingSaleSubmission] = useState(false);
 
   // Product search using debounced + abortable fetch
   const { query: itemSearch, setQuery: setItemSearch, results: searchResults, loading: isSearching, searchImmediate } = useSearch(formData.branch_id);
@@ -184,36 +201,77 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
     setSelectedProductForVariant(null);
   };
 
+  // Check shift status before submitting sale
+  const checkShiftStatus = async (): Promise<{ online: boolean; shift_open: boolean | null }> => {
+    try {
+      const response = await fetch('/api/shift-status', {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+      });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Prevent accidental form submission from barcode scanner Enter key
-    const activeElement = document.activeElement;
-    if (activeElement && activeElement.id === 'itemSearch') {
-      // If the search input is focused, ignore form submission
-      // This happens when barcode scanners send Enter key after scanning
-      return;
+      if (!response.ok) {
+        throw new Error('Failed to check shift status');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error checking shift status:', error);
+      // If we can't check status, assume offline
+      return { online: false, shift_open: null };
     }
-    
-    setProcessing(true);
-    setErrors({});
+  };
 
-    const newErrors: Record<string, string> = {};
-    if (!formData.branch_id) newErrors.branch_id = 'Filial seçmək məcburidir';
-    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul əlavə edilməlidir';
+  // Handle opening shift from modal
+  const handleOpenShift = async () => {
+    try {
+      const response = await fetch('/fiscal-printer/shift/open', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+      });
 
-    // For credit or partial payment, customer is required
-    if ((formData.payment_status === 'credit' || formData.payment_status === 'partial') && !formData.customer_id) {
-      newErrors.customer_id = 'Borc və ya qismən ödəniş üçün müştəri seçmək məcburidir';
+      if (!response.ok) {
+        throw new Error('Failed to open shift');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Növbə açılır...', { duration: 3000 });
+
+        // Wait a bit for the shift to actually open
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Check status again
+        const status = await checkShiftStatus();
+
+        if (status.shift_open) {
+          toast.success('Növbə açıldı!', { duration: 2000 });
+          setShiftWarningModalOpen(false);
+          // Now submit the sale
+          submitSale();
+        } else {
+          toast.error('Növbə açılmadı. Yenidən cəhd edin.');
+        }
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Error opening shift:', error);
+      toast.error(`Növbə açılarkən xəta: ${error.message}`, { duration: 5000 });
     }
+  };
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setProcessing(false);
-      return;
-    }
-
+  // Actually submit the sale (called directly or after modal confirmation)
+  const submitSale = () => {
     const submitData = {
       ...formData,
       items: cart.map((item) => ({
@@ -255,22 +313,64 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
     });
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Prevent accidental form submission from barcode scanner Enter key
+    const activeElement = document.activeElement;
+    if (activeElement && activeElement.id === 'itemSearch') {
+      // If the search input is focused, ignore form submission
+      // This happens when barcode scanners send Enter key after scanning
+      return;
+    }
+
+    setProcessing(true);
+    setErrors({});
+
+    const newErrors: Record<string, string> = {};
+    if (!formData.branch_id) newErrors.branch_id = 'Filial seçmək məcburidir';
+    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul əlavə edilməlidir';
+
+    // For credit or partial payment, customer is required
+    if ((formData.payment_status === 'credit' || formData.payment_status === 'partial') && !formData.customer_id) {
+      newErrors.customer_id = 'Borc və ya qismən ödəniş üçün müştəri seçmək məcburidir';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setProcessing(false);
+      return;
+    }
+
+    // Check shift status if fiscal printer is enabled
+    if (fiscalPrinterEnabled && formData.use_fiscal_printer) {
+      const status = await checkShiftStatus();
+
+      if (!status.online) {
+        // Agent is offline
+        setShiftWarningType('offline');
+        setShiftWarningModalOpen(true);
+        setPendingSaleSubmission(true);
+        setProcessing(false);
+        return;
+      }
+
+      if (!status.shift_open) {
+        // Shift is closed
+        setShiftWarningType('closed');
+        setShiftWarningModalOpen(true);
+        setPendingSaleSubmission(true);
+        setProcessing(false);
+        return;
+      }
+    }
+
+    // All checks passed, submit the sale
+    submitSale();
+  };
+
   return (
-    <AuthenticatedLayout header={
-      <div className="flex justify-between items-center">
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">POS Satış</h2>
-        <button
-          type="button"
-          onClick={() => setReturnModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-          </svg>
-          Mal Qaytarma
-        </button>
-      </div>
-    }>
+    <AuthenticatedLayout>
       <Head title="POS Satış" />
       <div className="py-6">
         <div className="w-full">
@@ -367,6 +467,22 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, loyaltyPro
           <ReturnModal
             show={returnModalOpen}
             onClose={() => setReturnModalOpen(false)}
+          />
+
+          {/* Shift Status Warning Modal */}
+          <ShiftStatusWarningModal
+            show={shiftWarningModalOpen}
+            type={shiftWarningType}
+            onContinue={() => {
+              setShiftWarningModalOpen(false);
+              setPendingSaleSubmission(false);
+              submitSale();
+            }}
+            onCancel={() => {
+              setShiftWarningModalOpen(false);
+              setPendingSaleSubmission(false);
+            }}
+            onOpenShift={shiftWarningType === 'closed' ? handleOpenShift : undefined}
           />
         </div>
       </div>

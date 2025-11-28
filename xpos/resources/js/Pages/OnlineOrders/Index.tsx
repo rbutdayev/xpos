@@ -138,11 +138,6 @@ export default function Index({ orders, filters, statusCounts }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-gray-900">Online Sifarişlər</h2>
-                </div>
-            }
         >
             <Head title="Online Sifarişlər" />
 

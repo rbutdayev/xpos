@@ -11,13 +11,23 @@ import { useCart } from '../POS/hooks/useCart';
 import { useSearch } from '../POS/hooks/useSearch';
 import toast from 'react-hot-toast';
 
+interface FiscalConfig {
+  id: number;
+  provider: string;
+  name: string;
+  shift_open: boolean;
+  shift_opened_at: string | null;
+  last_z_report_at: string | null;
+}
+
 interface TouchPOSProps extends PageProps {
   customers: Customer[];
   branches: Branch[];
+  fiscalConfig: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
 }
 
-export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: TouchPOSProps) {
+export default function TouchPOS({ auth, customers, branches, fiscalConfig, loyaltyProgram }: TouchPOSProps) {
   // Determine initial branch selection
   const getUserBranch = () => {
     // If user is assigned to a branch, use that
@@ -263,6 +273,7 @@ export default function TouchPOS({ auth, customers, branches, loyaltyProgram }: 
           onClearCart={clearCart}
           cartCount={cart.length}
           onOpenReturn={() => setReturnModalOpen(true)}
+          fiscalConfig={fiscalConfig}
         />
 
         {/* Fiscal Print Status Banner */}

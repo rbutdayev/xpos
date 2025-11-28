@@ -5,6 +5,7 @@ import SharedDataTable from '@/Components/SharedDataTable';
 import { WarehouseTransfer } from '@/types';
 // Using hardcoded Azerbaijani strings like other pages in the application
 import { EyeIcon } from '@heroicons/react/24/outline';
+import InventoryNavigation from '@/Components/InventoryNavigation';
 
 interface Props {
     transfers: {
@@ -95,7 +96,9 @@ export default function Index({ transfers }: Props) {
     return (
         <AuthenticatedLayout>
             <Head title="Anbar Transferləri" />
-
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <InventoryNavigation currentRoute="warehouse-transfers" />
+            </div>
             <div className="w-full">
                 <div className="md:flex md:items-center md:justify-between mb-6">
                     <div className="flex-1 min-w-0">

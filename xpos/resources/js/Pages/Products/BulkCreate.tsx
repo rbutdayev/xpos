@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ProductsNavigation from '@/Components/ProductsNavigation';
 import { Category, Warehouse } from '@/types';
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -158,6 +159,10 @@ export default function BulkCreate({ categories, warehouses }: Props) {
   return (
     <AuthenticatedLayout>
       <Head title="Toplu Məhsul Yaratma" />
+
+      <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+        <ProductsNavigation currentRoute="products.bulk-create" />
+      </div>
 
       <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">

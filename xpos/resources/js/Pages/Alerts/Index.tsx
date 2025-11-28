@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
+import InventoryNavigation from '@/Components/InventoryNavigation';
 
 
 interface Alert {
@@ -42,16 +43,12 @@ interface Props {
 
 export default function Index({ alerts }: Props) {
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Xəbərdarlıqlar
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Xəbərdarlıqlar" />
-
-            <div className="py-12">
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <InventoryNavigation currentRoute="alerts" />
+            </div>
+            <div className="pb-12">
                 <div className="w-full">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">

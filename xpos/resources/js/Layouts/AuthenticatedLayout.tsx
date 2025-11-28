@@ -23,7 +23,6 @@ import {
     CogIcon,
     BuildingOffice2Icon,
     HomeModernIcon,
-    ExclamationTriangleIcon,
     Bars3Icon,
     XMarkIcon,
     ChevronDownIcon,
@@ -34,32 +33,17 @@ import {
     InboxIcon,
     ChevronLeftIcon,
     DeviceTabletIcon,
-    ChatBubbleLeftRightIcon,
-    PaperAirplaneIcon,
-    MegaphoneIcon,
     ShoppingBagIcon,
-    DocumentTextIcon,
     ClockIcon,
     CalendarIcon,
     ReceiptPercentIcon,
     PuzzlePieceIcon,
     GiftIcon,
     BanknotesIcon,
-    CreditCardIcon,
     BuildingStorefrontIcon,
     FolderIcon,
-    ArrowPathIcon,
-    BellAlertIcon,
-    BellIcon,
-    ScissorsIcon,
-    KeyIcon,
-    DevicePhoneMobileIcon,
-    ComputerDesktopIcon,
     ArchiveBoxIcon,
-    Cog6ToothIcon,
-    DocumentDuplicateIcon,
-    ClipboardDocumentCheckIcon,
-    MagnifyingGlassCircleIcon
+    Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -118,28 +102,23 @@ export default function Authenticated({
         const currentRoute = route().current();
         const openMenus: string[] = ['dashboard']; // Always show dashboard
 
-        // Check which section the current route belongs to and open that menu
-        // Check SMS first to differentiate from sms/logs vs sms/send
-        if ((currentRoute?.includes('sales') && !currentRoute?.includes('employee-salaries')) ||
-            currentRoute?.includes('returns') ||
-            currentRoute?.includes('online-orders') ||
-            currentRoute?.includes('notification-channels') ||
-            currentRoute?.includes('customers') ||
+        // Sales section removed - now uses topbar navigation only
+
+        if ((currentRoute?.includes('products') && !currentRoute?.includes('products.returns')) ||
+            (currentRoute?.includes('categories') &&
+             !currentRoute?.includes('expense-categories') &&
+             !currentRoute?.includes('rental-categories')) ||
             currentRoute?.includes('products.discounts') ||
-            (currentRoute?.includes('sms') && !currentRoute?.includes('sms.logs'))) {
-            openMenus.push('Satış və Marketinq');
+            currentRoute?.includes('loyalty-program')) {
+            openMenus.push('Məhsullar');
         }
 
-        // Open Online Sifarişlər submenu when on orders or notification channels (only if shop is enabled)
-        if (shopEnabled && (currentRoute?.includes('online-orders') || currentRoute?.includes('notification-channels'))) {
-            openMenus.push('Online Sifarişlər');
-        }
-
-        if (rentEnabled && (currentRoute?.includes('rentals') ||
-            currentRoute?.includes('rental-templates') ||
-            currentRoute?.includes('rental-inventory') ||
-            currentRoute?.includes('rental-categories'))) {
-            openMenus.push('İcarə İdarəetməsi');
+        if (currentRoute?.includes('goods-receipts') ||
+            currentRoute?.includes('suppliers') ||
+            currentRoute?.includes('stock-movements') ||
+            currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory') ||
+            currentRoute?.includes('product-returns')) {
+            openMenus.push('Anbar İdarəetməsi');
         }
 
         if (servicesEnabled && (currentRoute?.includes('services') ||
@@ -148,65 +127,25 @@ export default function Authenticated({
             openMenus.push('Xidmətlər');
         }
 
-        // Check for product categories but NOT expense-categories or rental-categories
-        if ((currentRoute?.includes('products') && !currentRoute?.includes('products.discounts')) ||
-            currentRoute?.includes('suppliers') ||
-            (currentRoute?.includes('categories') &&
-             !currentRoute?.includes('expense-categories') &&
-             !currentRoute?.includes('rental-categories')) ||
-            currentRoute?.includes('stock-movements') ||
-            currentRoute?.includes('goods-receipts') ||
-            currentRoute?.includes('warehouse-transfers') ||
-            currentRoute?.includes('product-returns') ||
-            (currentRoute?.includes('alerts') && !currentRoute?.includes('telegram')) ||
-            (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory')) ||
-            currentRoute?.includes('product-activity')) {
-            openMenus.push('Anbar və Stok');
-
-            // Also open the appropriate submenu
-            if (currentRoute?.includes('goods-receipts') || currentRoute?.includes('suppliers')) {
-                openMenus.push('Daxil Olan');
-            } else if ((currentRoute?.includes('products') && !currentRoute?.includes('products.discounts')) ||
-                       (currentRoute?.includes('categories') &&
-                        !currentRoute?.includes('expense-categories') &&
-                        !currentRoute?.includes('rental-categories')) ||
-                       (currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory')) ||
-                       currentRoute?.includes('stock-movements') ||
-                       currentRoute?.includes('product-activity')) {
-                openMenus.push('İdarəetmə');
-            } else if (currentRoute?.includes('warehouse-transfers') ||
-                       currentRoute?.includes('product-returns') ||
-                       (currentRoute?.includes('alerts') && !currentRoute?.includes('telegram'))) {
-                openMenus.push('Çıxan');
-            }
+        if (rentEnabled && (currentRoute?.includes('rentals') ||
+            currentRoute?.includes('rental-inventory') ||
+            currentRoute?.includes('rental-categories'))) {
+            openMenus.push('İcarə İdarəetməsi');
         }
 
         if (currentRoute?.includes('expenses') ||
-            currentRoute?.includes('expense-categories') ||
-            currentRoute?.includes('employee-salaries')) {
-            openMenus.push('Maliyyə');
-        }
-
-        if (currentRoute?.includes('reports') ||
-            currentRoute?.includes('sms.logs') ||
-            currentRoute?.includes('telegram.logs') ||
-            currentRoute?.includes('audit-logs') ||
-            currentRoute?.includes('fiscal-printer-jobs')) {
-            openMenus.push('Hesabatlar və Analitika');
+            currentRoute?.includes('employee-salaries') ||
+            currentRoute?.includes('supplier-payments') ||
+            currentRoute?.includes('reports')) {
+            openMenus.push('Maliyyə və Hesabatlar');
         }
 
         if (currentRoute?.includes('companies') ||
             currentRoute?.includes('branches') ||
             (currentRoute?.includes('users') && !currentRoute?.includes('customers')) ||
             currentRoute?.includes('warehouses') ||
-            currentRoute?.includes('receipt-templates') ||
-            currentRoute?.includes('printer-configs') ||
             currentRoute?.includes('settings')) {
             openMenus.push('Parametrlər');
-        }
-
-        if (currentRoute?.includes('integrations')) {
-            openMenus.push('Tətbiqlər');
         }
 
         return openMenus;
@@ -283,83 +222,17 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Satış və Marketinq',
-                    icon: MegaphoneIcon,
-                    children: [
-                        {
-                            name: 'Satışlar',
-                            href: '/sales',
-                            icon: ShoppingCartIcon,
-                            current: route().current('sales.*') && !route().current('sales.online')
-                        },
-                        {
-                            name: 'Mal Qaytarma',
-                            href: '/returns',
-                            icon: ArrowUturnLeftIcon,
-                            current: route().current('returns.*')
-                        },
-                        ...(discountsEnabled ? [{
-                            name: 'Endirimlər',
-                            href: '/products/discounts',
-                            icon: ReceiptPercentIcon,
-                            current: route().current('products.discounts')
-                        }] : []),
-                        ...(shopEnabled ? [{
-                            name: 'Online Sifarişlər',
-                            href: '/online-orders',
-                            icon: ShoppingBagIcon,
-                            current: route().current('online-orders.*')
-                        }] : []),
-                        {
-                            name: 'Müştərilər',
-                            href: '/customers',
-                            icon: UserGroupIcon,
-                            current: route().current('customers.*')
-                        },
-                        {
-                            name: 'SMS Göndər',
-                            href: '/sms/send-sms',
-                            icon: PaperAirplaneIcon,
-                            current: route().current('sms.send-page')
-                        },
-                        ...(loyaltyEnabled ? [{
-                            name: 'Loyallıq Proqramı',
-                            href: '/loyalty-program',
-                            icon: GiftIcon,
-                            current: route().current('loyalty-program.*')
-                        }] : [])
-                    ]
+                    name: 'Satışlar və Müştərilər',
+                    href: '/sales',
+                    icon: ShoppingCartIcon,
+                    current: route().current('sales.*') || route().current('returns.*') || route().current('shift-management.*') || route().current('online-orders.*') || route().current('customers.*') || route().current('sms.*')
                 },
-                ...(rentEnabled ? [{
-                    name: 'İcarə İdarəetməsi',
-                    icon: ClockIcon,
-                    children: [
-                        {
-                            name: 'İcarə Siyahısı',
-                            href: '/rentals',
-                            icon: ClockIcon,
-                            current: route().current('rentals.*') && !route().current('rental-templates.*') && !route().current('rental-categories.*') && !route().current('rentals.calendar')
-                        },
-                        {
-                            name: 'Təqvim',
-                            href: '/rentals/calendar',
-                            icon: CalendarIcon,
-                            current: route().current('rentals.calendar')
-                        },
-                        {
-                            name: 'İcarə İnventarı',
-                            href: '/rental-inventory',
-                            icon: CubeIcon,
-                            current: route().current('rental-inventory.*')
-                        },
-                        {
-                            name: 'İcarə Kateqoriyaları',
-                            href: '/rental-categories',
-                            icon: TagIcon,
-                            current: route().current('rental-categories.*')
-                        }
-                    ]
-                }] : []),
+                {
+                    name: 'Məhsullar',
+                    href: '/products',
+                    icon: CubeIcon,
+                    current: route().current('products.*') || route().current('categories.*') || route().current('loyalty-program.*')
+                },
                 ...(servicesEnabled ? [{
                     name: 'Xidmətlər',
                     icon: WrenchScrewdriverIcon,
@@ -368,7 +241,7 @@ export default function Authenticated({
                             name: SERVICE_TYPES.tailor.name,
                             href: getServiceRoute('tailor'),
                             icon: SERVICE_TYPES.tailor.icon,
-                            current: route().current('services.index') && route().params.serviceType === 'tailor'
+                            current: route().current('services.*') && route().params.serviceType === 'tailor'
                         },
                         {
                             name: SERVICE_TYPES.phone_repair.name,
@@ -396,18 +269,36 @@ export default function Authenticated({
                         }
                     ]
                 }] : []),
-                {
-                    name: 'Anbar və Stok',
-                    icon: CubeIcon,
+                ...(rentEnabled ? [{
+                    name: 'İcarə İdarəetməsi',
+                    icon: ClockIcon,
                     children: [
                         {
-                            name: 'Məhsullar',
-                            href: '/products',
-                            icon: CubeIcon,
-                            current: route().current('products.index') || route().current('products.show')
+                            name: 'İcarə Siyahısı',
+                            href: '/rentals',
+                            icon: ClockIcon,
+                            current: route().current('rentals.*') && !route().current('rentals.calendar')
+                        },
+                        {
+                            name: 'Təqvim',
+                            href: '/rentals/calendar',
+                            icon: CalendarIcon,
+                            current: route().current('rentals.calendar')
+                        },
+                        {
+                            name: 'İcarə İnventarı',
+                            href: '/rental-inventory',
+                            icon: ArchiveBoxIcon,
+                            current: route().current('rental-inventory.*')
+                        },
+                        {
+                            name: 'İcarə Kateqoriyaları',
+                            href: '/rental-categories',
+                            icon: TagIcon,
+                            current: route().current('rental-categories.*')
                         }
                     ]
-                }
+                }] : [])
             ];
         }
 
@@ -416,68 +307,26 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Maliyyə',
+                    name: 'Maliyyə və Hesabatlar',
                     icon: CurrencyDollarIcon,
                     children: [
                         {
                             name: 'Xərclər',
                             href: '/expenses',
-                            icon: ReceiptPercentIcon,
+                            icon: BanknotesIcon,
                             current: route().current('expenses.*')
-                        },
-                        {
-                            name: 'Xərc Kateqoriyaları',
-                            href: '/expense-categories',
-                            icon: TagIcon,
-                            current: route().current('expense-categories.*')
                         },
                         {
                             name: 'İşçi Maaşları',
                             href: '/employee-salaries',
-                            icon: BanknotesIcon,
+                            icon: UsersIcon,
                             current: route().current('employee-salaries.*')
                         },
                         {
-                            name: 'Təchizatçı Ödənişləri',
-                            href: '/supplier-payments',
-                            icon: CreditCardIcon,
-                            current: route().current('supplier-payments.*')
-                        }
-                    ]
-                },
-                {
-                    name: 'Hesabatlar və Analitika',
-                    icon: ChartBarIcon,
-                    children: [
-                        {
                             name: 'Hesabat Mərkəzi',
                             href: '/reports',
-                            icon: DocumentTextIcon,
+                            icon: ChartBarIcon,
                             current: route().current('reports.*')
-                        },
-                        {
-                            name: 'SMS Logları',
-                            href: '/sms/logs',
-                            icon: ChatBubbleLeftRightIcon,
-                            current: route().current('sms.logs')
-                        },
-                        {
-                            name: 'Telegram Logları',
-                            href: '/telegram/logs',
-                            icon: PaperAirplaneIcon,
-                            current: route().current('telegram.logs')
-                        },
-                        {
-                            name: 'Audit Logları',
-                            href: '/audit-logs',
-                            icon: DocumentTextIcon,
-                            current: route().current('audit-logs.*')
-                        },
-                        {
-                            name: 'Fiskal Printer Növbəsi',
-                            href: '/fiscal-printer-jobs',
-                            icon: PrinterIcon,
-                            current: route().current('fiscal-printer-jobs.*')
                         }
                     ]
                 }
@@ -489,104 +338,44 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Anbar və Stok',
+                    name: 'Məhsullar',
+                    href: '/products',
+                    icon: CubeIcon,
+                    current: route().current('products.*') || route().current('categories.*')
+                },
+                {
+                    name: 'Anbar İdarəetməsi',
                     icon: BuildingStorefrontIcon,
                     children: [
                         {
-                            name: 'Daxil Olan',
+                            name: 'Mal Qəbulu',
+                            href: '/goods-receipts',
                             icon: ArrowDownTrayIcon,
-                            children: [
-                                {
-                                    name: 'Mal Qəbulu',
-                                    href: '/goods-receipts',
-                                    icon: ClipboardDocumentCheckIcon,
-                                    current: route().current('goods-receipts.*')
-                                },
-                                {
-                                    name: 'Təchizatçılar',
-                                    href: '/suppliers',
-                                    icon: TruckIcon,
-                                    current: route().current('suppliers.*')
-                                }
-                            ]
+                            current: route().current('goods-receipts.*')
                         },
                         {
-                            name: 'İdarəetmə',
-                            icon: CubeIcon,
-                            children: [
-                                {
-                                    name: 'Məhsullar',
-                                    href: '/products',
-                                    icon: CubeIcon,
-                                    current: route().current('products.*') && !route().current('products.discounts')
-                                },
-                                {
-                                    name: 'Kateqoriyalar',
-                                    href: '/categories',
-                                    icon: FolderIcon,
-                                    current: route().current('categories.*')
-                                },
-                                {
-                                    name: 'İnventar',
-                                    href: '/inventory',
-                                    icon: ClipboardDocumentListIcon,
-                                    current: route().current('inventory.*')
-                                },
-                                {
-                                    name: 'Stok Hərəkətləri',
-                                    href: '/stock-movements',
-                                    icon: ArrowsRightLeftIcon,
-                                    current: route().current('stock-movements.*')
-                                },
-                                {
-                                    name: 'Məhsul Tarixi',
-                                    href: '/product-activity/timeline',
-                                    icon: ClockIcon,
-                                    current: route().current('product-activity.timeline')
-                                },
-                                {
-                                    name: 'Fərq Araşdırması',
-                                    href: '/product-activity/discrepancy',
-                                    icon: MagnifyingGlassCircleIcon,
-                                    current: route().current('product-activity.discrepancy')
-                                }
-                            ]
-                        },
-                        {
-                            name: 'Çıxan',
+                            name: 'Stok Hərəkətləri',
+                            href: '/stock-movements',
                             icon: ArrowsRightLeftIcon,
-                            children: [
-                                {
-                                    name: 'Anbar Transferləri',
-                                    href: '/warehouse-transfers',
-                                    icon: ArrowPathIcon,
-                                    current: route().current('warehouse-transfers.*')
-                                },
-                                {
-                                    name: 'Məhsul Qaytarmaları',
-                                    href: '/product-returns',
-                                    icon: ArrowUturnLeftIcon,
-                                    current: route().current('product-returns.*')
-                                },
-                                {
-                                    name: 'Stok Xəbərdarlıqları',
-                                    href: '/alerts',
-                                    icon: BellAlertIcon,
-                                    current: route().current('alerts.*')
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    name: 'Şirkət',
-                    icon: BuildingOffice2Icon,
-                    children: [
+                            current: route().current('stock-movements.*')
+                        },
                         {
-                            name: 'Anbarlar',
-                            href: '/warehouses',
-                            icon: BuildingStorefrontIcon,
-                            current: route().current('warehouses.*')
+                            name: 'İnventar',
+                            href: '/inventory',
+                            icon: ClipboardDocumentListIcon,
+                            current: route().current('inventory.*')
+                        },
+                        {
+                            name: 'Təchizatçılar',
+                            href: '/suppliers',
+                            icon: TruckIcon,
+                            current: route().current('suppliers.*')
+                        },
+                        {
+                            name: 'Məhsul Qaytarmaları',
+                            href: '/product-returns',
+                            icon: ArrowUturnLeftIcon,
+                            current: route().current('product-returns.*')
                         }
                     ]
                 }
@@ -596,25 +385,7 @@ export default function Authenticated({
         // Cashier role - POS and Sales only
         if (user.role === 'cashier') {
             return [
-                ...baseNavigation,
-                {
-                    name: 'Satış və Marketinq',
-                    icon: MegaphoneIcon,
-                    children: [
-                        {
-                            name: 'Satışlar',
-                            href: '/sales',
-                            icon: ShoppingCartIcon,
-                            current: route().current('sales.*')
-                        },
-                        {
-                            name: 'Mal Qaytarma',
-                            href: '/returns',
-                            icon: ArrowUturnLeftIcon,
-                            current: route().current('returns.*')
-                        }
-                    ]
-                }
+                ...baseNavigation
             ];
         }
 
@@ -624,32 +395,31 @@ export default function Authenticated({
                 ...baseNavigation,
                 ...(servicesEnabled ? [{
                     name: 'Xidmətlər',
-                    icon: ScissorsIcon,
+                    icon: WrenchScrewdriverIcon,
                     children: [
                         {
-                            name: 'Dərzi Xidmətləri',
-                            href: '/services/tailor',
-                            icon: ScissorsIcon,
-                            current: route().current('services.index', { serviceType: 'tailor' }) ||
-                                     route().current('tailor-services.*')
+                            name: SERVICE_TYPES.tailor.name,
+                            href: getServiceRoute('tailor'),
+                            icon: SERVICE_TYPES.tailor.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'tailor'
                         },
                         {
-                            name: 'Telefon Təmiri',
-                            href: '/services/phone-repair',
-                            icon: DevicePhoneMobileIcon,
-                            current: route().current('services.index', { serviceType: 'phone-repair' })
+                            name: SERVICE_TYPES.phone_repair.name,
+                            href: getServiceRoute('phone_repair'),
+                            icon: SERVICE_TYPES.phone_repair.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'phone-repair'
                         },
                         {
-                            name: 'Elektronika',
-                            href: '/services/electronics',
-                            icon: ComputerDesktopIcon,
-                            current: route().current('services.index', { serviceType: 'electronics' })
+                            name: SERVICE_TYPES.electronics.name,
+                            href: getServiceRoute('electronics'),
+                            icon: SERVICE_TYPES.electronics.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'electronics'
                         },
                         {
-                            name: 'Ümumi Xidmətlər',
-                            href: '/services/general',
-                            icon: WrenchScrewdriverIcon,
-                            current: route().current('services.index', { serviceType: 'general' })
+                            name: SERVICE_TYPES.general.name,
+                            href: getServiceRoute('general'),
+                            icon: SERVICE_TYPES.general.icon,
+                            current: route().current('services.*') && route().params.serviceType === 'general'
                         },
                         {
                             name: 'Xidmətə Qəbul',
@@ -658,19 +428,7 @@ export default function Authenticated({
                             current: route().current('customer-items.*')
                         }
                     ]
-                }] : []),
-                {
-                    name: 'Satış və Marketinq',
-                    icon: MegaphoneIcon,
-                    children: [
-                        {
-                            name: 'Müştərilər',
-                            href: '/customers',
-                            icon: UserGroupIcon,
-                            current: route().current('customers.*')
-                        }
-                    ]
-                }
+                }] : [])
             ];
         }
 
@@ -679,173 +437,89 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Şirkət',
-                    icon: BuildingOffice2Icon,
-                    children: [
-                        {
-                            name: 'İstifadəçilər',
-                            href: '/users',
-                            icon: UserGroupIcon,
-                            current: route().current('users.*')
-                        }
-                    ]
-                },
-                {
-                    name: 'Hesabatlar və Analitika',
-                    icon: ChartBarIcon,
+                    name: 'Maliyyə və Hesabatlar',
+                    icon: CurrencyDollarIcon,
                     children: [
                         {
                             name: 'Hesabat Mərkəzi',
                             href: '/reports',
-                            icon: DocumentTextIcon,
+                            icon: ChartBarIcon,
                             current: route().current('reports.*')
-                        },
-                        {
-                            name: 'SMS Logları',
-                            href: '/sms/logs',
-                            icon: ChatBubbleLeftRightIcon,
-                            current: route().current('sms.logs')
-                        },
-                        {
-                            name: 'Telegram Logları',
-                            href: '/telegram/logs',
-                            icon: PaperAirplaneIcon,
-                            current: route().current('telegram.logs')
-                        },
-                        {
-                            name: 'Audit Logları',
-                            href: '/audit-logs',
-                            icon: DocumentTextIcon,
-                            current: route().current('audit-logs.*')
-                        },
-                        {
-                            name: 'Fiskal Printer Növbəsi',
-                            href: '/fiscal-printer-jobs',
-                            icon: PrinterIcon,
-                            current: route().current('fiscal-printer-jobs.*')
                         }
                     ]
                 },
                 {
-                    name: 'Sistem',
-                    icon: Cog6ToothIcon,
+                    name: 'Parametrlər',
+                    icon: CogIcon,
                     children: [
                         {
-                            name: 'Printer Konfiqurasiyası',
-                            href: '/printer-configs',
-                            icon: PrinterIcon,
-                            current: route().current('printer-configs.*')
+                            name: 'İstifadəçilər',
+                            href: '/users',
+                            icon: UsersIcon,
+                            current: route().current('users.*')
                         },
                         {
-                            name: 'Qəbz Şablonları',
-                            href: '/receipt-templates',
-                            icon: DocumentDuplicateIcon,
-                            current: route().current('receipt-templates.*')
+                            name: 'Sistem Parametrləri',
+                            href: '/settings',
+                            icon: Cog6ToothIcon,
+                            current: route().current('settings.*') || route().current('printer-configs.*') || route().current('receipt-templates.*')
                         }
                     ]
                 }
             ];
         }
 
-        // Full navigation for admin and account_owner only - Ordered by usage frequency
+        // Full navigation for admin and account_owner only - Simplified structure
         return [
             ...baseNavigation,
         {
-            name: 'Satış və Marketinq',
-            icon: MegaphoneIcon,
-            children: [
-                {
-                    name: 'Satışlar',
-                    href: '/sales',
-                    icon: ShoppingCartIcon,
-                    current: route().current('sales.*') && !route().current('sales.online')
-                },
-                {
-                    name: 'Mal Qaytarma',
-                    href: '/returns',
-                    icon: ArrowUturnLeftIcon,
-                    current: route().current('returns.*')
-                },
-                ...(discountsEnabled ? [{
-                    name: 'Endirimlər',
-                    href: '/products/discounts',
-                    icon: ReceiptPercentIcon,
-                    current: route().current('products.discounts')
-                }] : []),
-                ...(shopEnabled ? [{
-                    name: 'Online Sifarişlər',
-                    icon: ShoppingBagIcon,
-                    children: [
-                        {
-                            name: 'Sifarişlər',
-                            href: '/online-orders',
-                            icon: ShoppingBagIcon,
-                            current: route().current('online-orders.index')
-                        },
-                        {
-                            name: 'Bildiriş Kanalları',
-                            href: '/notification-channels',
-                            icon: BellIcon,
-                            current: route().current('notification-channels.*')
-                        }
-                    ]
-                }] : []),
-                {
-                    name: 'Müştərilər',
-                    href: '/customers',
-                    icon: UserGroupIcon,
-                    current: route().current('customers.*')
-                },
-                {
-                    name: 'SMS Göndər',
-                    href: '/sms/send-sms',
-                    icon: PaperAirplaneIcon,
-                    current: route().current('sms.send-page')
-                },
-                ...(loyaltyEnabled ? [{
-                    name: 'Loyallıq Proqramı',
-                    href: '/loyalty-program',
-                    icon: GiftIcon,
-                    current: route().current('loyalty-program.*')
-                }] : [])
-            ]
+            name: 'Satışlar və Müştərilər',
+            href: '/sales',
+            icon: ShoppingCartIcon,
+            current: route().current('sales.*') || route().current('returns.*') || route().current('shift-management.*') || route().current('online-orders.*') || route().current('customers.*') || route().current('sms.*')
         },
-        ...(rentEnabled ? [{
-            name: 'İcarə İdarəetməsi',
-            icon: ClockIcon,
+        {
+            name: 'Məhsullar',
+            href: '/products',
+            icon: CubeIcon,
+            current: route().current('products.*') || route().current('categories.*') || route().current('loyalty-program.*')
+        },
+        {
+            name: 'Anbar İdarəetməsi',
+            icon: BuildingStorefrontIcon,
             children: [
                 {
-                    name: 'İcarə Siyahısı',
-                    href: '/rentals',
-                    icon: ClockIcon,
-                    current: route().current('rentals.*') && !route().current('rental-templates.*') && !route().current('rental-categories.*') && !route().current('rentals.calendar')
+                    name: 'Mal Qəbulu',
+                    href: '/goods-receipts',
+                    icon: ArrowDownTrayIcon,
+                    current: route().current('goods-receipts.*')
                 },
                 {
-                    name: 'Təqvim',
-                    href: '/rentals/calendar',
-                    icon: CalendarIcon,
-                    current: route().current('rentals.calendar')
+                    name: 'Stok Hərəkətləri',
+                    href: '/stock-movements',
+                    icon: ArrowsRightLeftIcon,
+                    current: route().current('stock-movements.*')
                 },
                 {
-                    name: 'İcarə İnventarı',
-                    href: '/rental-inventory',
-                    icon: CubeIcon,
-                    current: route().current('rental-inventory.*')
+                    name: 'İnventar',
+                    href: '/inventory',
+                    icon: ClipboardDocumentListIcon,
+                    current: route().current('inventory.*') && !route().current('rental-inventory.*')
                 },
                 {
-                    name: 'İcarə Kateqoriyaları',
-                    href: '/rental-categories',
-                    icon: TagIcon,
-                    current: route().current('rental-categories.*')
+                    name: 'Təchizatçılar',
+                    href: '/suppliers',
+                    icon: TruckIcon,
+                    current: route().current('suppliers.*')
                 },
                 {
-                    name: 'Müqavilə Şablonları',
-                    href: '/rental-templates',
-                    icon: DocumentTextIcon,
-                    current: route().current('rental-templates.*')
+                    name: 'Məhsul Qaytarmaları',
+                    href: '/product-returns',
+                    icon: ArrowUturnLeftIcon,
+                    current: route().current('product-returns.*')
                 }
             ]
-        }] : []),
+        },
         ...(servicesEnabled ? [{
             name: 'Xidmətlər',
             icon: WrenchScrewdriverIcon,
@@ -882,183 +556,75 @@ export default function Authenticated({
                 }
             ]
         }] : []),
-        {
-            name: 'Anbar və Stok',
-            icon: CubeIcon,
+        ...(rentEnabled ? [{
+            name: 'İcarə İdarəetməsi',
+            icon: ClockIcon,
             children: [
                 {
-                    name: 'Daxil Olan',
-                    icon: ArrowDownTrayIcon,
-                    children: [
-                        {
-                            name: 'Mal Qəbulu',
-                            href: '/goods-receipts',
-                            icon: ArrowDownTrayIcon,
-                            current: route().current('goods-receipts.*')
-                        },
-                        {
-                            name: 'Təchizatçılar',
-                            href: '/suppliers',
-                            icon: TruckIcon,
-                            current: route().current('suppliers.*')
-                        }
-                    ]
+                    name: 'İcarə Siyahısı',
+                    href: '/rentals',
+                    icon: ClockIcon,
+                    current: route().current('rentals.*') && !route().current('rentals.calendar')
                 },
                 {
-                    name: 'İdarəetmə',
-                    icon: CubeIcon,
-                    children: [
-                        {
-                            name: 'Məhsullar',
-                            href: '/products',
-                            icon: CubeIcon,
-                            current: route().current('products.index') || route().current('products.show') || route().current('products.edit') || route().current('products.create')
-                        },
-                        {
-                            name: 'Kateqoriyalar',
-                            href: '/categories',
-                            icon: TagIcon,
-                            current: route().current('categories.*')
-                        },
-                        {
-                            name: 'İnventar',
-                            href: '/inventory',
-                            icon: InboxIcon,
-                            current: route().current('inventory.*')
-                        },
-                        {
-                            name: 'Stok Hərəkətləri',
-                            href: '/stock-movements',
-                            icon: ClipboardDocumentListIcon,
-                            current: route().current('stock-movements.*')
-                        },
-                        {
-                            name: 'Məhsul Tarixi',
-                            href: '/product-activity/timeline',
-                            icon: ClockIcon,
-                            current: route().current('product-activity.timeline')
-                        },
-                        {
-                            name: 'Fərq Araşdırması',
-                            href: '/product-activity/discrepancy',
-                            icon: MagnifyingGlassCircleIcon,
-                            current: route().current('product-activity.discrepancy')
-                        }
-                    ]
+                    name: 'Təqvim',
+                    href: '/rentals/calendar',
+                    icon: CalendarIcon,
+                    current: route().current('rentals.calendar')
                 },
                 {
-                    name: 'Çıxan',
-                    icon: ArrowsRightLeftIcon,
-                    children: [
-                        {
-                            name: 'Anbar Transferləri',
-                            href: '/warehouse-transfers',
-                            icon: ArrowsRightLeftIcon,
-                            current: route().current('warehouse-transfers.*')
-                        },
-                        {
-                            name: 'Məhsul Qaytarmaları',
-                            href: '/product-returns',
-                            icon: ArrowUturnLeftIcon,
-                            current: route().current('product-returns.*')
-                        },
-                        {
-                            name: 'Stok Xəbərdarlıqları',
-                            href: '/alerts',
-                            icon: ExclamationTriangleIcon,
-                            current: route().current('alerts.*')
-                        }
-                    ]
+                    name: 'İcarə İnventarı',
+                    href: '/rental-inventory',
+                    icon: ArchiveBoxIcon,
+                    current: route().current('rental-inventory.*')
+                },
+                {
+                    name: 'İcarə Kateqoriyaları',
+                    href: '/rental-categories',
+                    icon: TagIcon,
+                    current: route().current('rental-categories.*')
                 }
             ]
-        },
+        }] : []),
         {
-            name: 'Maliyyə',
+            name: 'Maliyyə və Hesabatlar',
             icon: CurrencyDollarIcon,
             children: [
                 {
                     name: 'Xərclər',
                     href: '/expenses',
-                    icon: CurrencyDollarIcon,
+                    icon: BanknotesIcon,
                     current: route().current('expenses.*')
-                },
-                {
-                    name: 'Xərc Kateqoriyaları',
-                    href: '/expense-categories',
-                    icon: TagIcon,
-                    current: route().current('expense-categories.*')
                 },
                 {
                     name: 'İşçi Maaşları',
                     href: '/employee-salaries',
                     icon: UsersIcon,
                     current: route().current('employee-salaries.*')
-                }
-            ]
-        },
-        {
-            name: 'Hesabatlar və Analitika',
-            icon: ChartBarIcon,
-            children: [
+                },
                 {
                     name: 'Hesabat Mərkəzi',
                     href: '/reports',
                     icon: ChartBarIcon,
                     current: route().current('reports.*')
-                },
-                {
-                    name: 'SMS Logları',
-                    href: '/sms/logs',
-                    icon: ChatBubbleLeftRightIcon,
-                    current: route().current('sms.logs')
-                },
-                {
-                    name: 'Telegram Logları',
-                    href: '/telegram/logs',
-                    icon: PaperAirplaneIcon,
-                    current: route().current('telegram.logs')
-                },
-                {
-                    name: 'Audit Logları',
-                    href: '/audit-logs',
-                    icon: DocumentTextIcon,
-                    current: route().current('audit-logs.*')
-                },
-                {
-                    name: 'Fiskal Printer Növbəsi',
-                    href: '/fiscal-printer-jobs',
-                    icon: PrinterIcon,
-                    current: route().current('fiscal-printer-jobs.*')
                 }
             ]
         },
         {
             name: 'Tətbiqlər',
+            href: '/integrations',
             icon: PuzzlePieceIcon,
-            children: [
-                {
-                    name: 'Bütün Tətbiqlər',
-                    href: '/integrations',
-                    icon: PuzzlePieceIcon,
-                    current: route().current('integrations.*')
-                }
-            ]
+            current: route().current('integrations.*')
         },
         {
             name: 'Parametrlər',
             icon: CogIcon,
             children: [
                 {
-                    name: 'Şirkət Məlumatları',
+                    name: 'Şirkət və Filiallar',
                     href: '/companies',
                     icon: BuildingOffice2Icon,
-                    current: route().current('companies.*')
-                },
-                {
-                    name: 'Filiallar',
-                    href: '/branches',
-                    icon: BuildingOffice2Icon,
-                    current: route().current('branches.*')
+                    current: route().current('companies.*') || route().current('branches.*')
                 },
                 {
                     name: 'İstifadəçilər',
@@ -1067,34 +633,10 @@ export default function Authenticated({
                     current: route().current('users.*')
                 },
                 {
-                    name: 'Anbarlar',
-                    href: '/warehouses',
-                    icon: HomeModernIcon,
-                    current: route().current('warehouses.*')
-                },
-                {
-                    name: 'Printer Konfiqurasiyası',
-                    href: '/printer-configs',
-                    icon: PrinterIcon,
-                    current: route().current('printer-configs.*')
-                },
-                {
-                    name: 'Qəbz Şablonları',
-                    href: '/receipt-templates',
-                    icon: PrinterIcon,
-                    current: route().current('receipt-templates.*')
-                },
-                {
                     name: 'Sistem Parametrləri',
                     href: '/settings',
-                    icon: CogIcon,
-                    current: route().current('settings.*')
-                },
-                {
-                    name: 'Bridge Tokenlər',
-                    href: '/bridge-tokens',
-                    icon: KeyIcon,
-                    current: route().current('bridge-tokens.*')
+                    icon: Cog6ToothIcon,
+                    current: route().current('settings.*') || route().current('printer-configs.*') || route().current('receipt-templates.*') || route().current('bridge-tokens.*')
                 }
             ]
         }
@@ -1125,7 +667,7 @@ export default function Authenticated({
                         className={`
                             group relative flex w-full items-center rounded-xl px-3 py-3 text-left text-base font-semibold transition-all duration-200
                             ${item.current
-                                ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30'
                                 : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 hover:text-slate-900 hover:shadow-md'
                             }
                             ${sidebarCollapsed ? 'justify-center' : ''}
@@ -1163,7 +705,7 @@ export default function Authenticated({
                 className={`
                     group relative flex items-center rounded-xl px-3 py-3 text-base font-semibold transition-all duration-200
                     ${item.current
-                        ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30'
                         : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 hover:text-slate-900 hover:shadow-md'
                     }
                     ${sidebarCollapsed ? 'justify-center' : ''}
@@ -1214,7 +756,7 @@ export default function Authenticated({
                             className="flex items-center justify-center w-full group"
                             title="Genişlət"
                         >
-                            <div className="flex h-10 w-10 items-center justify-center bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white text-xl font-bold shadow-lg shadow-blue-500/30 group-hover:shadow-cyan-500/50 group-hover:scale-105 transition-all duration-200 rounded-xl">
+                            <div className="flex h-10 w-10 items-center justify-center bg-gradient-to-br from-blue-600 to-blue-700 text-white text-xl font-bold shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-105 transition-all duration-200 rounded-xl">
                                 X
                             </div>
                         </button>
@@ -1248,7 +790,7 @@ export default function Authenticated({
                         <Dropdown.Trigger>
                             {sidebarCollapsed ? (
                                 <button
-                                    className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-base font-bold text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105 transition-all duration-200 mx-auto ring-2 ring-cyan-400/20"
+                                    className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-base font-bold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105 transition-all duration-200 mx-auto ring-2 ring-blue-400/20"
                                     title={`${user.name}\n${user.email}`}
                                 >
                                     {user.name?.charAt(0).toUpperCase() || '?'}
@@ -1256,7 +798,7 @@ export default function Authenticated({
                             ) : (
                                 <button className="group block w-full rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 px-3 py-2.5 text-left transition-all duration-200 shadow-sm hover:shadow-md border border-slate-200">
                                     <div className="flex items-center">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-sm font-bold text-white shadow-md shadow-cyan-500/30 ring-2 ring-cyan-400/20">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-bold text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-400/20">
                                             {user.name?.charAt(0).toUpperCase() || '?'}
                                         </div>
                                         <div className="ml-3 flex-1 min-w-0">

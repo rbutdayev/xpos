@@ -4,9 +4,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { PageProps } from '@/types';
 import {
-    ArrowLeftIcon,
-    PrinterIcon,
-    XCircleIcon,
     CheckCircleIcon,
     ClockIcon,
 } from '@heroicons/react/24/outline';
@@ -125,53 +122,7 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                        <button
-                            onClick={() => router.visit(route('returns.index'))}
-                            className="text-gray-600 hover:text-gray-900"
-                        >
-                            <ArrowLeftIcon className="h-6 w-6" />
-                        </button>
-                        <div>
-                            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                                Qaytarma #{returnData.return_number}
-                            </h2>
-                            <p className="text-sm text-gray-600">
-                                Orijinal satış:{' '}
-                                <Link
-                                    href={route('sales.show', returnData.sale_id)}
-                                    className="text-blue-600 hover:underline"
-                                >
-                                    {returnData.sale.sale_number}
-                                </Link>
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                        {getStatusBadge(returnData.status)}
-                        <button
-                            onClick={handlePrint}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                            <PrinterIcon className="h-5 w-5 mr-2" />
-                            Çap et
-                        </button>
-                        {returnData.status === 'completed' && (
-                            <button
-                                onClick={handleCancel}
-                                className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50"
-                            >
-                                <XCircleIcon className="h-5 w-5 mr-2" />
-                                Ləğv et
-                            </button>
-                        )}
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Qaytarma #${returnData.return_number}`} />
 
             <div className="py-6">

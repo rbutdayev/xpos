@@ -7,6 +7,7 @@ use App\Models\Warehouse;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\ProductVariant;
+use App\Models\StockHistory;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -114,7 +115,9 @@ class WarehouseTransferController extends Controller
                 $transfer->product_id,
                 $transfer->variant_id,
                 $transfer->from_warehouse_id,
-                -$transfer->quantity
+                -$transfer->quantity,
+                $transfer,
+                'source'
             );
 
             // 2. Add stock to destination warehouse
@@ -122,7 +125,9 @@ class WarehouseTransferController extends Controller
                 $transfer->product_id,
                 $transfer->variant_id,
                 $transfer->to_warehouse_id,
-                $transfer->quantity
+                $transfer->quantity,
+                $transfer,
+                'destination'
             );
 
             // 3. Create stock movement records
@@ -257,7 +262,7 @@ class WarehouseTransferController extends Controller
 
 
 
-    private function updateWarehouseStock(int $productId, ?int $variantId, int $warehouseId, float $quantityChange): void
+    private function updateWarehouseStock(int $productId, ?int $variantId, int $warehouseId, float $quantityChange, WarehouseTransfer $transfer, string $direction): void
     {
         $stock = ProductStock::firstOrCreate([
             'product_id' => $productId,
@@ -270,7 +275,33 @@ class WarehouseTransferController extends Controller
             'min_level' => 3,
         ]);
 
+        $quantityBefore = $stock->quantity;
         $stock->increment('quantity', $quantityChange);
+
+        // Determine the type and notes based on the change
+        $type = $quantityChange > 0 ? 'daxil_olma' : 'xaric_olma';
+
+        if ($direction === 'source') {
+            $notes = "Transfer {$transfer->toWarehouse->name} anbarına";
+        } else {
+            $notes = "Transfer {$transfer->fromWarehouse->name} anbarından";
+        }
+
+        // Create stock history record
+        StockHistory::create([
+            'product_id' => $productId,
+            'variant_id' => $variantId,
+            'warehouse_id' => $warehouseId,
+            'quantity_before' => $quantityBefore,
+            'quantity_change' => $quantityChange,
+            'quantity_after' => $quantityBefore + $quantityChange,
+            'type' => $type,
+            'reference_type' => 'warehouse_transfer',
+            'reference_id' => $transfer->transfer_id,
+            'user_id' => $transfer->requested_by,
+            'notes' => $notes,
+            'occurred_at' => $transfer->completed_at ?? now(),
+        ]);
     }
 
     private function createStockMovements(WarehouseTransfer $transfer): void

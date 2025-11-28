@@ -45,28 +45,43 @@ export default function AdminLayout({
                     </div>
                 </div>
 
-                {/* Tabs */}
+                {/* Tabs - Enterprise Style Navigation */}
                 {tabs && tabs.length > 0 && (
-                    <div className="border-b border-gray-200 mb-8">
-                        <nav className="-mb-px flex space-x-8">
-                            {tabs.map((tab) => {
-                                const IconComponent = tab.icon;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={tab.onClick}
-                                        className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-                                            tab.current
-                                                ? 'border-blue-500 text-blue-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }`}
-                                    >
-                                        {IconComponent && <IconComponent className="h-5 w-5" />}
-                                        <span>{tab.name}</span>
-                                    </button>
-                                );
-                            })}
-                        </nav>
+                    <div className="mb-8">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                            <nav className="flex flex-wrap gap-1">
+                                {tabs.map((tab) => {
+                                    const IconComponent = tab.icon;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={tab.onClick}
+                                            className={`
+                                                relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                                font-medium text-sm transition-all duration-200 ease-in-out
+                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                                ${tab.current
+                                                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
+                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                                                }
+                                            `}
+                                        >
+                                            {IconComponent && (
+                                                <IconComponent
+                                                    className={`h-5 w-5 ${
+                                                        tab.current ? 'text-white' : 'text-gray-400'
+                                                    }`}
+                                                />
+                                            )}
+                                            <span className="font-semibold">{tab.name}</span>
+                                            {tab.current && (
+                                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+                        </div>
                     </div>
                 )}
 

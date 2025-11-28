@@ -57,19 +57,6 @@ export default function Create({ categories, branches, paymentMethods }: Props) 
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-lg sm:text-xl font-semibold leading-tight text-gray-800">
-                        Yeni Xərc
-                    </h2>
-                    <Link
-                        href="/expenses"
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        ← Xərclərə qayıt
-                    </Link>
-                </div>
-            }
         >
             <Head title="Yeni Xərc" />
 

@@ -63,15 +63,6 @@ export default function Show({ employee_salary }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Maaş Detalları
-                    </h2>
-                    <div className="flex space-x-3">
-                        {!employee_salary.paid && (
-                            <button
-                                onClick={handleMarkAsPaid}
                                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                             >
                                 Ödənildi qeyd et

@@ -25,6 +25,10 @@ class FiscalPrinterConfig extends Model
         'show_in_terminal',
         'settings',
         'is_active',
+        'shift_open',
+        'shift_opened_at',
+        'last_z_report_at',
+        'current_shift_duration_hours',
     ];
 
     protected $casts = [
@@ -32,8 +36,12 @@ class FiscalPrinterConfig extends Model
         'is_active' => 'boolean',
         'auto_send' => 'boolean',
         'show_in_terminal' => 'boolean',
+        'shift_open' => 'boolean',
         'port' => 'integer',
         'default_tax_rate' => 'decimal:2',
+        'shift_opened_at' => 'datetime',
+        'last_z_report_at' => 'datetime',
+        'current_shift_duration_hours' => 'integer',
     ];
 
     public function account(): BelongsTo
@@ -113,6 +121,82 @@ class FiscalPrinterConfig extends Model
             'azsmart' => 8008,
             default => 8080,
         };
+    }
+
+    /**
+     * Check if shift is currently open
+     */
+    public function isShiftOpen(): bool
+    {
+        return $this->shift_open && $this->shift_opened_at !== null;
+    }
+
+    /**
+     * Get shift duration in hours
+     */
+    public function getShiftDurationHours(): ?int
+    {
+        if (!$this->shift_opened_at) {
+            return null;
+        }
+
+        return (int) $this->shift_opened_at->diffInHours(now());
+    }
+
+    /**
+     * Check if shift has exceeded 24 hours
+     */
+    public function isShiftExpired(): bool
+    {
+        if (!$this->isShiftOpen()) {
+            return false;
+        }
+
+        $hours = $this->getShiftDurationHours();
+        return $hours !== null && $hours >= 24;
+    }
+
+    /**
+     * Check if shift is approaching expiration (>= 23 hours)
+     */
+    public function isShiftNearExpiration(): bool
+    {
+        if (!$this->isShiftOpen()) {
+            return false;
+        }
+
+        $hours = $this->getShiftDurationHours();
+        return $hours !== null && $hours >= 23;
+    }
+
+    /**
+     * Check if shift is valid for creating fiscal receipts
+     */
+    public function isShiftValid(): bool
+    {
+        return $this->isShiftOpen() && !$this->isShiftExpired();
+    }
+
+    /**
+     * Get shift status message
+     */
+    public function getShiftStatusMessage(): string
+    {
+        if (!$this->isShiftOpen()) {
+            return 'Növbə bağlıdır';
+        }
+
+        $hours = $this->getShiftDurationHours();
+
+        if ($this->isShiftExpired()) {
+            return "Növbə vaxtı bitib! ({$hours} saat)";
+        }
+
+        if ($this->isShiftNearExpiration()) {
+            return "Diqqət: Növbə tezliklə bitəcək! ({$hours} saat)";
+        }
+
+        return "Növbə açıqdır ({$hours} saat)";
     }
 }
 

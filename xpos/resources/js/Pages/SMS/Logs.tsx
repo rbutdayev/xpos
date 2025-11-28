@@ -59,13 +59,6 @@ export default function Logs({ auth, logs }: SmsLogsProps) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        SMS Logları
-                    </h2>
-                </div>
-            }
         >
             <Head title="SMS Logları" />
 

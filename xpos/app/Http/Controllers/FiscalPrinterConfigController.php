@@ -194,4 +194,64 @@ class FiscalPrinterConfigController extends Controller
             'statistics' => $statistics,
         ]);
     }
+
+    /**
+     * Get shift status
+     */
+    public function getShiftStatus()
+    {
+        Gate::authorize('access-account-data');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->getShiftStatus($accountId);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Open shift
+     */
+    public function openShift()
+    {
+        Gate::authorize('manage-products');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->openShift($accountId);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Close shift (Z-Report)
+     */
+    public function closeShift()
+    {
+        Gate::authorize('manage-products');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->closeShift($accountId);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Print X-Report
+     */
+    public function printXReport()
+    {
+        Gate::authorize('manage-products');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printXReport($accountId);
+
+        return response()->json($result);
+    }
 }

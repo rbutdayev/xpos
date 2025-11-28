@@ -258,44 +258,43 @@ export default function Index({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="font-semibold text-lg sm:text-xl text-gray-800 leading-tight">
-                            Tətbiqlər və İnteqrasiyalar
-                        </h2>
-                        <p className="mt-1 text-xs sm:text-sm text-gray-500">
-                            Biznesinizi genişləndirmək üçün xidmətləri inteqrasiya edin
-                        </p>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Tətbiqlər və İnteqrasiyalar" />
 
             <div className="py-6 sm:py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Category Filter */}
+                    {/* Category Filter - Enterprise Style */}
                     <div className="mb-6">
-                        <div className="border-b border-gray-200 overflow-x-auto">
-                            <nav className="-mb-px flex space-x-4 sm:space-x-8 min-w-max">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                            <nav className="flex flex-wrap gap-1">
                                 {categories.map((category) => (
                                     <button
                                         key={category.id}
                                         onClick={() => setSelectedCategory(category.id)}
                                         className={`
-                                            whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-sm
+                                            relative flex items-center gap-2.5 px-4 py-3 rounded-md
+                                            font-medium text-sm transition-all duration-200 ease-in-out
+                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                            whitespace-nowrap
                                             ${selectedCategory === category.id
-                                                ? 'border-blue-500 text-blue-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
                                             }
                                         `}
                                     >
-                                        {category.name}
-                                        <span className="ml-2 py-0.5 px-2 rounded-full text-xs bg-gray-100">
+                                        <span className="font-semibold">{category.name}</span>
+                                        <span className={`
+                                            py-0.5 px-2.5 rounded-full text-xs font-medium
+                                            ${selectedCategory === category.id
+                                                ? 'bg-white/20 text-white'
+                                                : 'bg-gray-100 text-gray-700'
+                                            }
+                                        `}>
                                             {category.count}
                                         </span>
+                                        {selectedCategory === category.id && (
+                                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                        )}
                                     </button>
                                 ))}
                             </nav>

@@ -137,16 +137,6 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                        <TruckIcon className="w-8 h-8 text-blue-600" />
-                        <h2 className="text-xl font-semibold text-gray-800">
-                            Təchizatçı Ödənişləri
-                        </h2>
-                    </div>
-                </div>
-            }
         >
             <Head title="Təchizatçı Ödənişləri" />
 

@@ -3,6 +3,16 @@ import { Customer, Branch } from '@/types';
 import { TrashIcon, UserIcon, BuildingStorefrontIcon, ArrowLeftIcon, HomeIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import { Link, router } from '@inertiajs/react';
 import SearchableCustomerSelect from '@/Components/SearchableCustomerSelect';
+import ShiftStatusWidget from '@/Components/ShiftStatusWidget';
+
+interface FiscalConfig {
+  id: number;
+  provider: string;
+  name: string;
+  shift_open: boolean;
+  shift_opened_at: string | null;
+  last_z_report_at: string | null;
+}
 
 interface Props {
   branches: Branch[];
@@ -13,6 +23,7 @@ interface Props {
   cartCount: number;
   onCustomerChange?: (customer: Customer | null) => void;
   onOpenReturn: () => void;
+  fiscalConfig?: FiscalConfig | null;
 }
 
 export default function TouchHeader({
@@ -24,6 +35,7 @@ export default function TouchHeader({
   cartCount,
   onCustomerChange,
   onOpenReturn,
+  fiscalConfig,
 }: Props) {
   return (
     <div className="bg-white border-b border-gray-200 p-4">
@@ -82,6 +94,9 @@ export default function TouchHeader({
 
         {/* Right - Actions */}
         <div className="flex items-center space-x-3">
+          {/* Shift Status Widget */}
+          {fiscalConfig && <ShiftStatusWidget fiscalConfig={fiscalConfig} compact={true} />}
+
           {/* Cart Count */}
           <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
             Məhsul: {cartCount}

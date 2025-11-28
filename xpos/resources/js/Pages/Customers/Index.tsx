@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SalesNavigation from '@/Components/SalesNavigation';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
-import PrimaryButton from '@/Components/PrimaryButton';
 import { Customer, PageProps } from '@/types';
 
 interface CustomersIndexProps extends PageProps {
@@ -276,22 +276,11 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Müştərilər
-                    </h2>
-                    <Link href={route('customers.create')}>
-                        <PrimaryButton>
-                            Yeni müştəri
-                        </PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Müştərilər" />
-
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <SalesNavigation currentRoute="customers" />
+            </div>
             <div className="py-12">
                 <div className="w-full">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">

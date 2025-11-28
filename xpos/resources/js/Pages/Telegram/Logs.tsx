@@ -58,13 +58,6 @@ export default function Logs({ auth, logs }: TelegramLogsProps) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Telegram Logları
-                    </h2>
-                </div>
-            }
         >
             <Head title="Telegram Logları" />
 

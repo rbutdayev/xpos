@@ -43,6 +43,7 @@ use App\Http\Controllers\CreditController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\FiscalPrinterConfigController;
 use App\Http\Controllers\FiscalPrinterJobController;
+use App\Http\Controllers\FiscalShiftController;
 use App\Http\Controllers\IntegrationsController;
 use App\Http\Controllers\RentalTemplateController;
 use App\Http\Controllers\ProductActivityController;
@@ -480,7 +481,10 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/pos/touch', [\App\Http\Controllers\POSController::class, 'touch'])->name('pos.touch');
     Route::post('/pos/sale', [\App\Http\Controllers\POSController::class, 'storeSale'])->name('pos.sale');
     Route::post('/pos/service', [\App\Http\Controllers\POSController::class, 'storeService'])->name('pos.service');
-    
+
+    // Shift Management
+    Route::get('/shift-management', [\App\Http\Controllers\FiscalShiftController::class, 'index'])->name('shift-management.index');
+
     // Redirect standalone sales create page to POS system
     Route::get('/sales/create', function() {
         return redirect()->route('pos.index');
@@ -618,6 +622,12 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::delete('/', [FiscalPrinterConfigController::class, 'destroy'])->name('destroy');
         Route::post('/test-connection', [FiscalPrinterConfigController::class, 'testConnection'])->name('test-connection');
         Route::get('/logs', [FiscalPrinterConfigController::class, 'logs'])->name('logs');
+
+        // Shift Management
+        Route::get('/shift/status', [FiscalPrinterConfigController::class, 'getShiftStatus'])->name('shift.status');
+        Route::post('/shift/open', [FiscalPrinterConfigController::class, 'openShift'])->name('shift.open');
+        Route::post('/shift/close', [FiscalPrinterConfigController::class, 'closeShift'])->name('shift.close');
+        Route::post('/shift/x-report', [FiscalPrinterConfigController::class, 'printXReport'])->name('shift.x-report');
     });
 
     // Bridge Token Management

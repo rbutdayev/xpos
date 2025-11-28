@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Branch;
 use App\Models\ProductStock;
+use App\Models\StockHistory;
 use App\Models\NegativeStockAlert;
 use App\Models\StockMovement;
 use App\Models\ReceiptTemplate;
@@ -486,7 +487,23 @@ class SaleController extends Controller
                 'min_level' => 3,
             ]);
 
+            $quantityBefore = $productStock->quantity;
             $productStock->decrement('quantity', $quantity);
+
+            // Create stock history record
+            StockHistory::create([
+                'product_id' => $productId,
+                'warehouse_id' => $warehouse->id,
+                'quantity_before' => $quantityBefore,
+                'quantity_change' => -$quantity,
+                'quantity_after' => $quantityBefore - $quantity,
+                'type' => 'xaric_olma',
+                'reference_type' => 'sale',
+                'reference_id' => $sale->sale_id,
+                'user_id' => auth()->id(),
+                'notes' => "Satış #{$sale->sale_number} üçün xaric olma",
+                'occurred_at' => $sale->created_at ?? now(),
+            ]);
 
             // Create stock movement record
             StockMovement::create([

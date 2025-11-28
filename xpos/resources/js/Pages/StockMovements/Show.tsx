@@ -4,7 +4,7 @@ import { ArrowLeftIcon, PrinterIcon } from '@heroicons/react/24/outline';
 
 
 interface StockMovement {
-    id: number;
+    movement_id: number;
     product: {
         id: number;
         name: string;
@@ -15,10 +15,11 @@ interface StockMovement {
         name: string;
     };
     employee?: {
-        employee_id: number;
+        id: number;
         name: string;
     };
     movement_type: string;
+    qaime_number?: string;
     quantity: number;
     unit_cost?: number;
     notes?: string;
@@ -64,7 +65,7 @@ export default function Show({ movement }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Stok Hərəkəti #${movement.id}`} />
+            <Head title={`Stok Hərəkəti #${movement.movement_id}`} />
 
             <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -79,7 +80,7 @@ export default function Show({ movement }: Props) {
                                 </Link>
                                 <div>
                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                        Stok Hərəkəti #{movement.id}
+                                        Stok Hərəkəti #{movement.movement_id}
                                     </h2>
                                     <p className="text-gray-600">Stok hərəkəti təfərrüatları</p>
                                 </div>
@@ -104,12 +105,24 @@ export default function Show({ movement }: Props) {
                                         Hərəkət məlumatları
                                     </h3>
                                     <dl className="space-y-3">
+                                        {movement.qaime_number && (
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">
+                                                    Qaime №
+                                                </dt>
+                                                <dd className="text-sm">
+                                                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                                                        {movement.qaime_number}
+                                                    </span>
+                                                </dd>
+                                            </div>
+                                        )}
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
                                                 Hərəkət ID
                                             </dt>
                                             <dd className="text-sm text-gray-900 font-mono">
-                                                #{movement.id}
+                                                #{movement.movement_id}
                                             </dd>
                                         </div>
                                         <div>
@@ -130,16 +143,14 @@ export default function Show({ movement }: Props) {
                                                 </span>
                                             </dd>
                                         </div>
-                                        {movement.employee && (
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500">
-                                                    İcraçı
-                                                </dt>
-                                                <dd className="text-sm text-gray-900">
-                                                    {movement.employee.name}
-                                                </dd>
-                                            </div>
-                                        )}
+                                        <div>
+                                            <dt className="text-sm font-medium text-gray-500">
+                                                İcraçı
+                                            </dt>
+                                            <dd className="text-sm text-gray-900">
+                                                {movement.employee?.name || '-'}
+                                            </dd>
+                                        </div>
                                     </dl>
                                 </div>
 

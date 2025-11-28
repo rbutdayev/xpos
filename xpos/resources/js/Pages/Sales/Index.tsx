@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import DailySalesSummary from '@/Components/DailySalesSummary';
 import { EyeIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { Sale, PageProps } from '@/types';
+import SalesNavigation from '@/Components/SalesNavigation';
 
 interface SalesIndexProps extends PageProps {
     sales: {
@@ -256,22 +257,11 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Satışlar
-                    </h2>
-                    <Link href={route('pos.index')}>
-                        <PrimaryButton>
-                            POS-da Satış Et
-                        </PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Satışlar" />
-
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <SalesNavigation />
+            </div>
             <div className="py-12">
                 <div className="w-full">
                     {/* Daily Summary Widget */}

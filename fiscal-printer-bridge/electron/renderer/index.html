@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XPOS Printer Bridge</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">🖨️</div>
+                    <div>
+                        <h1>XPOS Printer Bridge</h1>
+                        <p class="version">v2.0.0</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span class="status-text" id="statusText">Başlayır...</span>
+                    </div>
+                    <button class="btn btn-secondary" id="settingsBtn">⚙️ Parametrlər</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Info Cards -->
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="info-label">API URL</div>
+                    <div class="info-value" id="apiUrl">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Account ID</div>
+                    <div class="info-value" id="accountId">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Bridge Adı</div>
+                    <div class="info-value" id="bridgeName">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Son Görülmə</div>
+                    <div class="info-value" id="lastSeen">-</div>
+                </div>
+            </div>
+
+            <!-- Logs Section -->
+            <div class="logs-section">
+                <div class="logs-header">
+                    <h2>📋 Loglar</h2>
+                    <div class="logs-controls">
+                        <button class="btn btn-small" id="clearLogsBtn">Təmizlə</button>
+                        <button class="btn btn-small" id="scrollToggleBtn">Auto-scroll: ON</button>
+                    </div>
+                </div>
+                <div class="logs-container" id="logsContainer">
+                    <div class="log-line system">XPOS Fiscal Printer Bridge başladılır...</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <span>© 2025 ONYX xPos. Bütün hüquqlar qorunur.</span>
+            <span id="connectionStatus">Bağlanır...</span>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Parametrlər</h2>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label for="apiUrlInput">API URL</label>
+                        <input type="text" id="apiUrlInput" class="form-input" value="https://xpos.az" readonly>
+                        <small class="form-help">API server ünvanı</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tokenInput">Bridge Token <span class="required">*</span></label>
+                        <input type="password" id="tokenInput" class="form-input" placeholder="xpos_...">
+                        <small class="form-help">Admin paneldən əldə edilən token</small>
+                        <button type="button" class="btn btn-link" id="toggleTokenBtn">Göstər</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logLevelInput">Log Səviyyəsi</label>
+                        <select id="logLevelInput" class="form-input">
+                            <option value="error">Error (Yalnız xətalar)</option>
+                            <option value="info" selected>Info (Normal)</option>
+                            <option value="debug">Debug (Ətraflı)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoLaunchInput">
+                            Sistemi başladanda avtomatik işə sal
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">Ləğv et</button>
+                        <button type="submit" class="btn btn-primary">Yadda saxla və yenidən başlat</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

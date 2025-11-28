@@ -935,13 +935,13 @@ export interface StockMovement {
     unit_cost: number;
     reference_type?: string;
     reference_id?: number;
-    user_id?: number;
+    employee_id?: number;
     notes?: string;
     created_at?: string;
     updated_at?: string;
     warehouse?: Warehouse;
     product?: Product;
-    user?: User;
+    employee?: User;
 }
 
 // Loyalty Program Types

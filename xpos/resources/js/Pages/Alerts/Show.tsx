@@ -47,13 +47,6 @@ export default function Show({ alert }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                            Xəbərdarlıq təfərrüatları
-                        </h2>
-                </div>
-            }
         >
             <Head title={`Xəbərdarlıq #${alert.alert_id}`} />
 

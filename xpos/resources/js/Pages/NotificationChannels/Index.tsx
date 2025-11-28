@@ -127,16 +127,6 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
 
     return (
         <AuthenticatedLayout
-            header={
-                <div>
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Bildiriş Kanalları
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Online sifarişlər üçün bildiriş kanallarını konfiqurasiya edin
-                    </p>
-                </div>
-            }
         >
             <Head title="Bildiriş Kanalları" />
 

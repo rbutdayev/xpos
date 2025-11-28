@@ -5,6 +5,7 @@ import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedData
 import PrimaryButton from '@/Components/PrimaryButton';
 import { EyeIcon, ArrowUturnLeftIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { PageProps } from '@/types';
+import SalesNavigation from '@/Components/SalesNavigation';
 
 interface SaleReturn {
     return_id: number;
@@ -216,17 +217,11 @@ export default function Index({ auth, returns, filters, statistics }: ReturnsInd
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Mal Qaytarma
-                    </h2>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Mal Qaytarma" />
-
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <SalesNavigation currentRoute="returns" />
+            </div>
             <div className="py-6">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     {/* Statistics Cards */}

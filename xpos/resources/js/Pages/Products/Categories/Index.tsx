@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ProductsNavigation from '@/Components/ProductsNavigation';
 import { Category } from '@/types';
-import { 
+import {
     PlusIcon,
     FolderIcon,
     FolderOpenIcon,
@@ -157,6 +158,10 @@ export default function Index({ categories }: Props) {
     return (
         <AuthenticatedLayout>
             <Head title="Kateqoriyalar" />
+
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <ProductsNavigation currentRoute="categories" />
+            </div>
 
             <div className="mx-auto sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">

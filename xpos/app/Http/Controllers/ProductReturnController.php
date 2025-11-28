@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProductReturn;
 use App\Models\ProductVariant;
+use App\Models\StockHistory;
 use App\Models\StockMovement;
 use App\Models\ProductStock;
 use Illuminate\Http\Request;
@@ -256,7 +257,24 @@ class ProductReturnController extends Controller
             ->first();
 
         if ($productStock) {
+            $quantityBefore = $productStock->quantity;
             $productStock->decrement('quantity', $return->quantity);
+
+            // Create stock history record
+            StockHistory::create([
+                'product_id' => $return->product_id,
+                'variant_id' => $return->variant_id,
+                'warehouse_id' => $return->warehouse_id,
+                'quantity_before' => $quantityBefore,
+                'quantity_change' => -$return->quantity,
+                'quantity_after' => $quantityBefore - $return->quantity,
+                'type' => 'qaytarma',
+                'reference_type' => 'product_return',
+                'reference_id' => $return->return_id,
+                'user_id' => $return->requested_by,
+                'notes' => "Təchizatçıya qaytarma: {$return->reason}",
+                'occurred_at' => $return->return_date ?? now(),
+            ]);
         }
 
         // Create StockMovement record

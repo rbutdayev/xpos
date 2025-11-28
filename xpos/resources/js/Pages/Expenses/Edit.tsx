@@ -82,19 +82,6 @@ export default function Edit({ expense, categories, branches, paymentMethods }: 
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Xərci Düzəliş Et
-                    </h2>
-                    <Link
-                        href="/expenses"
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        ← Xərclərə qayıt
-                    </Link>
-                </div>
-            }
         >
             <Head title="Xərci Düzəliş Et" />
 

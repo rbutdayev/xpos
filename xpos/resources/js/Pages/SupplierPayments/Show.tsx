@@ -69,19 +69,6 @@ export default function Show({ payment: supplier_payment }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Ödəniş Detalları
-                    </h2>
-                    <Link
-                        href="/supplier-payments"
-                        className="text-gray-600 hover:text-gray-900"
-                    >
-                        ← Ödənişlərə qayıt
-                    </Link>
-                </div>
-            }
         >
             <Head title={`Ödəniş - ${supplier_payment.supplier.name}`} />
 

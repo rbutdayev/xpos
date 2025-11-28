@@ -87,11 +87,6 @@ export default function Show({ service, serviceType }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                            Xidmət {service.service_number}
                         </h2>
                         <p className="text-sm text-gray-500 mt-1">
                             Yaradılıb: {new Date(service.created_at).toLocaleString('az-AZ')}

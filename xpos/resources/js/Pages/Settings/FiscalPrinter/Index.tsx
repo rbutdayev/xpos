@@ -144,23 +144,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Fiskal Printer (E-Kassa) Parametrləri
-                    </h2>
-                    {config && (
-                        <a
-                            href={route('fiscal-printer.logs')}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                        >
-                            Logları Göstər
-                        </a>
-                    )}
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Fiskal Printer Parametrləri" />
 
             <div className="py-12">

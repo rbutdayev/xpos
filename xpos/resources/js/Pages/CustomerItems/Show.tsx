@@ -7,10 +7,7 @@ import {
     ShoppingBagIcon,
     ScissorsIcon,
     PlusIcon,
-    PencilIcon,
-    TrashIcon,
-    ArrowLeftIcon,
-    PrinterIcon
+    TrashIcon
 } from '@heroicons/react/24/outline';
 
 interface Props {
@@ -44,43 +41,7 @@ export default function Show({ item, tailorServices }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                            {item.display_name}
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            {item.reference_number} • {item.customer.name}
-                        </p>
-                    </div>
-                    <div className="flex space-x-4">
-                        <button
-                            onClick={() => setShowPrintModal(true)}
-                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
-                        >
-                            <PrinterIcon className="w-4 h-4 mr-2" />
-                            Çap et
-                        </button>
-                        <Link
-                            href={`/customer-items/${item.id}/edit`}
-                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-                        >
-                            <PencilIcon className="w-4 h-4 mr-2" />
-                            Düzəliş et
-                        </Link>
-                        <Link
-                            href="/customer-items"
-                            className="text-gray-600 hover:text-gray-900"
-                        >
-                            <ArrowLeftIcon className="w-5 h-5 inline mr-1" />
-                            Geyimlərə qayıt
-                        </Link>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Məhsul: ${item.display_name}`} />
 
             <div className="py-12">

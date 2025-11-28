@@ -198,42 +198,7 @@ export default function Show({ auth, sale }: SalesShowProps) {
     const remainingBalance = (Number(sale.total) || 0) - totalPaid;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        Satış #{sale.sale_number}
-                    </h2>
-                    <div className="flex gap-2">
-                        <Link href={route('sales.index')}>
-                            <SecondaryButton>
-                                Siyahıya qayıt
-                            </SecondaryButton>
-                        </Link>
-                        {sale.status === 'pending' && (
-                            <Link href={route('sales.edit', sale.sale_id)}>
-                                <PrimaryButton>
-                                    Düzəliş et
-                                </PrimaryButton>
-                            </Link>
-                        )}
-                        <PrimaryButton onClick={() => setShowPrintModal(true)}>
-                            Çap et
-                        </PrimaryButton>
-                        {sale.status === 'completed' && (
-                            <Link href={route('returns.create', { sale_id: sale.sale_id })}>
-                                <button
-                                    type="button"
-                                    className="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 transition ease-in-out duration-150"
-                                >
-                                    Mal Qaytarma
-                                </button>
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Satış #${sale.sale_number}`} />
 
             <div className="py-12">

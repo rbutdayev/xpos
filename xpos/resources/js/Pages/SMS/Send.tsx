@@ -1,6 +1,7 @@
 import { FormEventHandler, useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SalesNavigation from '@/Components/SalesNavigation';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -87,13 +88,11 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
     if (!hasCredentials) {
         return (
             <AuthenticatedLayout
-                header={
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        SMS Göndər
-                    </h2>
-                }
             >
                 <Head title="SMS Göndər" />
+                <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                    <SalesNavigation currentRoute="sms" />
+                </div>
 
                 <div className="py-12">
                     <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -118,14 +117,11 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
     }
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    SMS Göndər
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="SMS Göndər" />
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <SalesNavigation currentRoute="sms" />
+            </div>
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

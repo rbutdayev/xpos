@@ -184,43 +184,66 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                         </p>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-                        <nav className="-mb-px flex space-x-8">
-                            <button
-                                onClick={() => setActiveTab('channels')}
-                                className={`${
-                                    activeTab === 'channels'
-                                        ? 'border-indigo-500 text-indigo-600'
-                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-                            >
-                                <BellIcon className="inline-block w-5 h-5 mr-2" />
-                                Bildiriş Kanalları
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('sms')}
-                                className={`${
-                                    activeTab === 'sms'
-                                        ? 'border-indigo-500 text-indigo-600'
-                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-                            >
-                                <DevicePhoneMobileIcon className="inline-block w-5 h-5 mr-2" />
-                                SMS Parametrləri
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('telegram')}
-                                className={`${
-                                    activeTab === 'telegram'
-                                        ? 'border-indigo-500 text-indigo-600'
-                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-                            >
-                                <ChatBubbleLeftRightIcon className="inline-block w-5 h-5 mr-2" />
-                                Telegram Parametrləri
-                            </button>
-                        </nav>
+                    {/* Tabs - Enterprise Style */}
+                    <div className="mb-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+                            <nav className="flex flex-wrap gap-1">
+                                <button
+                                    onClick={() => setActiveTab('channels')}
+                                    className={`
+                                        relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                        font-medium text-sm transition-all duration-200 ease-in-out
+                                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                        ${activeTab === 'channels'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
+                                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-600'
+                                        }
+                                    `}
+                                >
+                                    <BellIcon className={`w-5 h-5 ${activeTab === 'channels' ? 'text-white' : 'text-gray-400'}`} />
+                                    <span className="font-semibold">Bildiriş Kanalları</span>
+                                    {activeTab === 'channels' && (
+                                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('sms')}
+                                    className={`
+                                        relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                        font-medium text-sm transition-all duration-200 ease-in-out
+                                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                        ${activeTab === 'sms'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
+                                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-600'
+                                        }
+                                    `}
+                                >
+                                    <DevicePhoneMobileIcon className={`w-5 h-5 ${activeTab === 'sms' ? 'text-white' : 'text-gray-400'}`} />
+                                    <span className="font-semibold">SMS Parametrləri</span>
+                                    {activeTab === 'sms' && (
+                                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('telegram')}
+                                    className={`
+                                        relative flex items-center gap-2.5 px-5 py-3 rounded-md
+                                        font-medium text-sm transition-all duration-200 ease-in-out
+                                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                        ${activeTab === 'telegram'
+                                            ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
+                                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-600'
+                                        }
+                                    `}
+                                >
+                                    <ChatBubbleLeftRightIcon className={`w-5 h-5 ${activeTab === 'telegram' ? 'text-white' : 'text-gray-400'}`} />
+                                    <span className="font-semibold">Telegram Parametrləri</span>
+                                    {activeTab === 'telegram' && (
+                                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                                    )}
+                                </button>
+                            </nav>
+                        </div>
                     </div>
 
                     {/* Notification Channels Tab */}

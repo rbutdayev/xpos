@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import { 
+import SecondaryButton from '@/Components/SecondaryButton';
+import {
     CurrencyDollarIcon,
     CalendarIcon,
     BuildingOfficeIcon,
@@ -10,7 +11,8 @@ import {
     TagIcon,
     EyeIcon,
     PencilIcon,
-    TrashIcon
+    TrashIcon,
+    FolderIcon
 } from '@heroicons/react/24/outline';
 
 interface Expense {
@@ -302,12 +304,6 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
 
             <div className="py-6">
                 <div className="w-full">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-semibold text-gray-900">
-                            Xərclər
-                        </h1>
-                    </div>
-
                     <SharedDataTable
                         data={expenses}
                         columns={columns}

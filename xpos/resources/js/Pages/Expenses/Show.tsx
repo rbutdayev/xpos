@@ -56,15 +56,7 @@ export default function Show({ expense }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Xərc Detalları
-                    </h2>
-                    <div className="flex space-x-3">
-                        <Link
-                            href={`/expenses/${expense.expense_id}/edit`}
+        <AuthenticatedLayout/edit`}
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         >
                             Düzəliş et

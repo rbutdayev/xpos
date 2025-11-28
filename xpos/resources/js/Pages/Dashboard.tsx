@@ -12,7 +12,6 @@ import {
     ChartBarIcon,
     HomeModernIcon,
     ExclamationTriangleIcon,
-    PlusIcon,
     DocumentTextIcon,
     TruckIcon,
     ShoppingCartIcon,
@@ -24,11 +23,11 @@ import {
     ClockIcon,
 } from '@heroicons/react/24/outline';
 import {
-    ArrowUpIcon,
-    ArrowDownIcon,
     InformationCircleIcon,
 } from '@heroicons/react/20/solid';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { KPICard } from '@/Components/Dashboard/KPICard';
+import { QuickActionButton, QuickActionGrid } from '@/Components/Dashboard/QuickActionButton';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -193,50 +192,7 @@ const formatNumber = (num: number, decimals: number = 0): string => {
     }).format(num);
 };
 
-// Color type for action buttons
-type ActionButtonColor = 'blue' | 'green' | 'purple' | 'orange' | 'indigo';
-
-// Quick Action Button Component
-const QuickActionButton = ({ href, icon, title, color, description }: { href: string; icon: React.ReactNode; title: string; color: ActionButtonColor; description: string }) => {
-    const colorClasses: Record<ActionButtonColor, string> = {
-        blue: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
-        green: 'bg-green-600 hover:bg-green-700 focus:ring-green-500',
-        purple: 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500',
-        orange: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500',
-        indigo: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500',
-    };
-
-    return (
-        <Link
-            href={href}
-            className={`${colorClasses[color]} text-white rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2`}
-        >
-            <div className="flex items-start space-x-3 sm:space-x-4">
-                <div className="flex-shrink-0">
-                    <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
-                        {icon}
-                    </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-lg sm:text-xl font-semibold truncate">{title}</p>
-                    <p className="mt-1 text-xs sm:text-sm text-white/80 line-clamp-2">{description}</p>
-                </div>
-                <div className="flex-shrink-0 hidden sm:block">
-                    <PlusIcon className="h-6 w-6" />
-                </div>
-            </div>
-        </Link>
-    );
-};
-
-// Color type for KPI cards
-type KPICardColor = 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'indigo' | 'orange' | 'teal';
-
-// Trend type for KPI cards
-type Trend = {
-    value: string;
-    isPositive: boolean;
-};
+// Removed inline components - now using centralized components from @/Components/Dashboard
 
 // Section Header with Tooltip Component
 const SectionHeader = ({ title, tooltip }: { title: string; tooltip: string }) => {
@@ -257,52 +213,6 @@ const SectionHeader = ({ title, tooltip }: { title: string; tooltip: string }) =
                         {tooltip}
                     </div>
                 )}
-            </div>
-        </div>
-    );
-};
-
-// Modern KPI Card Component
-const ModernKPICard = ({ title, value, icon, color, trend, subtitle }: { title: string; value: string | number; icon: React.ReactNode; color: KPICardColor; trend?: Trend; subtitle?: string }) => {
-    const colorClasses: Record<KPICardColor, string> = {
-        blue: 'bg-gradient-to-br from-blue-500 to-blue-600 text-white',
-        green: 'bg-gradient-to-br from-green-500 to-green-600 text-white',
-        purple: 'bg-gradient-to-br from-purple-500 to-purple-600 text-white',
-        red: 'bg-gradient-to-br from-red-500 to-red-600 text-white',
-        yellow: 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white',
-        indigo: 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white',
-        orange: 'bg-gradient-to-br from-orange-500 to-orange-600 text-white',
-        teal: 'bg-gradient-to-br from-teal-500 to-teal-600 text-white',
-    };
-
-    return (
-        <div className={`${colorClasses[color]} rounded-xl shadow-lg p-4 sm:p-6 relative overflow-hidden`}>
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 sm:w-24 h-20 sm:h-24 bg-white/10 rounded-full"></div>
-            <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-16 sm:w-20 h-16 sm:h-20 bg-white/10 rounded-full"></div>
-
-            <div className="relative z-10">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
-                        {icon}
-                    </div>
-                    {trend && (
-                        <div className={`flex items-center space-x-1 text-xs sm:text-sm font-medium ${trend.isPositive ? 'text-white' : 'text-white/90'}`}>
-                            {trend.isPositive ? (
-                                <ArrowUpIcon className="h-3 sm:h-4 w-3 sm:w-4" />
-                            ) : (
-                                <ArrowDownIcon className="h-3 sm:h-4 w-3 sm:w-4" />
-                            )}
-                            <span>{trend.value}%</span>
-                        </div>
-                    )}
-                </div>
-                <div>
-                    <p className="text-xs sm:text-sm font-medium text-white/80 truncate">{title}</p>
-                    <p className="mt-1 sm:mt-2 text-xl sm:text-3xl font-bold truncate">{value}</p>
-                    {subtitle && (
-                        <p className="mt-1 text-xs sm:text-sm text-white/70 truncate">{subtitle}</p>
-                    )}
-                </div>
             </div>
         </div>
     );
@@ -498,36 +408,36 @@ export default function Dashboard({
                 )}
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <QuickActionGrid>
                     <QuickActionButton
                         href={route('pos.index')}
                         icon={<ShoppingCartIcon className="h-8 w-8" />}
                         title="Yeni Satış"
-                        color="blue"
+                        variant="primary"
                         description="POS sistemindən satış et"
                     />
                     <QuickActionButton
                         href={route('pos.index', { mode: 'service' })}
                         icon={<WrenchScrewdriverIcon className="h-8 w-8" />}
                         title="Yeni Servis"
-                        color="green"
+                        variant="success"
                         description="Servis qeydi yarat"
                     />
                     <QuickActionButton
                         href="/customers/create"
                         icon={<UserIcon className="h-8 w-8" />}
                         title="Yeni Müştəri"
-                        color="purple"
+                        variant="primary"
                         description="Müştəri əlavə et"
                     />
                     <QuickActionButton
                         href="/products/create"
                         icon={<CubeIcon className="h-8 w-8" />}
                         title="Yeni Məhsul"
-                        color="orange"
+                        variant="primary"
                         description="Məhsul kataloqa əlavə et"
                     />
-                </div>
+                </QuickActionGrid>
 
                 {/* Main KPI Cards */}
                 {!isSalesman ? (
@@ -539,40 +449,40 @@ export default function Dashboard({
                                 tooltip="Bu ay və ümumi maliyyə göstəriciləri: gəlirlər, xərclər, mənfəət və aktiv müştəri sayı. Bu statistika işinizin ümumi maliyyə vəziyyətini göstərir."
                             />
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                                <ModernKPICard
+                                <KPICard
                                     title="Bu Ay Gəlir"
                                     value={formatCurrency(financial_data.monthly_revenue)}
                                     icon={<BanknotesIcon className="h-8 w-8" />}
-                                    color="green"
+                                    variant="success"
                                     trend={{
-                                        value: Math.abs(financial_data.revenue_growth).toFixed(1),
+                                        value: Math.abs(financial_data.revenue_growth),
                                         isPositive: financial_data.revenue_growth >= 0,
                                     }}
                                     subtitle="Aylıq gəlir statistikası"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Bu Ay Xərclər"
                                     value={formatCurrency(financial_data.monthly_expenses)}
                                     icon={<DocumentTextIcon className="h-8 w-8" />}
-                                    color="orange"
+                                    variant="warning"
                                     trend={{
-                                        value: Math.abs(financial_data.expense_growth).toFixed(1),
+                                        value: Math.abs(financial_data.expense_growth),
                                         isPositive: financial_data.expense_growth < 0,
                                     }}
                                     subtitle="Aylıq xərc statistikası"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Ümumi Mənfəət"
                                     value={formatCurrency(financial_data.total_profit)}
                                     icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
-                                    color="indigo"
+                                    variant="primary"
                                     subtitle="Gəlir - Xərclər"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Aktiv Müştərilər"
                                     value={stats.active_customers}
                                     icon={<UserIcon className="h-8 w-8" />}
-                                    color="purple"
+                                    variant="primary"
                                     subtitle={`${stats.customers_count} ümumi müştəri`}
                                 />
                             </div>
@@ -585,32 +495,32 @@ export default function Dashboard({
                                 tooltip="İcarə xidmətləri üzrə statistika: aktiv icarələr, aylıq gəlir, gözlənilən qaytarmalar (3 gün ərzində) və gecikmiş icarələr. Bu məlumat icarə idarəçiliyinə kömək edir."
                             />
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                                <ModernKPICard
+                                <KPICard
                                     title="Aktiv İcarələr"
                                     value={rental_data.active_rentals_count}
                                     icon={<CubeIcon className="h-8 w-8" />}
-                                    color="blue"
+                                    variant="primary"
                                     subtitle="Hazırda icarədə"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Bu Ay İcarə Gəliri"
                                     value={formatCurrency(rental_data.monthly_rental_revenue)}
                                     icon={<CurrencyDollarIcon className="h-8 w-8" />}
-                                    color="teal"
+                                    variant="success"
                                     subtitle={`${rental_data.total_rentals_this_month} icarə`}
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Gözlənilən Qaytarmalar"
                                     value={rental_data.pending_returns_count}
                                     icon={<CalendarDaysIcon className="h-8 w-8" />}
-                                    color="orange"
+                                    variant="warning"
                                     subtitle="3 gün ərzində"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Gecikmiş İcarələr"
                                     value={rental_data.overdue_rentals_count}
                                     icon={<ClockIcon className="h-8 w-8" />}
-                                    color="red"
+                                    variant="danger"
                                     subtitle="Diqqət tələb edir"
                                 />
                             </div>
@@ -659,32 +569,32 @@ export default function Dashboard({
                                 tooltip="Müştərilərə verilən borcların ümumi vəziyyəti, aylıq borc verilişi və ödənişləri. Bu bölmə müştəri kreditlərini izləməyə kömək edir."
                             />
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                                <ModernKPICard
+                                <KPICard
                                     title="Ümumi Borc"
                                     value={formatCurrency(credits_data.total_outstanding)}
                                     icon={<BanknotesIcon className="h-8 w-8" />}
-                                    color="red"
+                                    variant="danger"
                                     subtitle="Ödənilməmiş borc"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Bu Ay Verilən Borc"
                                     value={formatCurrency(credits_data.total_credits_this_month)}
                                     icon={<ArrowTrendingDownIcon className="h-8 w-8" />}
-                                    color="orange"
+                                    variant="warning"
                                     subtitle="Aylıq borc məbləği"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Bu Ay Ödənilən"
                                     value={formatCurrency(credits_data.total_paid_this_month)}
                                     icon={<ArrowTrendingUpIcon className="h-8 w-8" />}
-                                    color="green"
+                                    variant="success"
                                     subtitle="Aylıq ödəniş"
                                 />
-                                <ModernKPICard
+                                <KPICard
                                     title="Borclu Müştərilər"
                                     value={credits_data.active_credit_customers_count}
                                     icon={<UserIcon className="h-8 w-8" />}
-                                    color="yellow"
+                                    variant="warning"
                                     subtitle="Aktiv borc olan"
                                 />
                             </div>
@@ -1024,32 +934,32 @@ export default function Dashboard({
                     /* Simplified view for sales staff */
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                            <ModernKPICard
+                            <KPICard
                                 title="Müştərilər"
                                 value={stats.customers_count}
                                 icon={<UserIcon className="h-8 w-8" />}
-                                color="green"
+                                variant="success"
                                 subtitle={`${stats.active_customers} aktiv`}
                             />
-                            <ModernKPICard
+                            <KPICard
                                 title="Servis Qeydləri"
                                 value={stats.service_records_count}
                                 icon={<WrenchScrewdriverIcon className="h-8 w-8" />}
-                                color="indigo"
+                                variant="primary"
                                 subtitle="Ümumi servislər"
                             />
-                            <ModernKPICard
+                            <KPICard
                                 title="Bu Ay Servislər"
                                 value={stats.service_records_this_month}
                                 icon={<DocumentTextIcon className="h-8 w-8" />}
-                                color="blue"
+                                variant="primary"
                                 subtitle="Bu ay tamamlanan"
                             />
-                            <ModernKPICard
+                            <KPICard
                                 title="Gözləyən Servislər"
                                 value={stats.pending_services}
                                 icon={<ExclamationTriangleIcon className="h-8 w-8" />}
-                                color="yellow"
+                                variant="warning"
                                 subtitle="Diqqət tələb edir"
                             />
                         </div>

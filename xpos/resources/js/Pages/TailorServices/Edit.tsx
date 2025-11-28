@@ -163,11 +163,7 @@ export default function Edit({ service, customers, customerItems, employees, pro
     const totalCost = parseFloat(data.labor_cost.toString()) + totalMaterials;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex justify-between items-center">
-                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                        {serviceConfig.nameSingular} Redaktə Et
+        <AuthenticatedLayout Redaktə Et
                     </h2>
                     <SecondaryButton onClick={() => router.visit(route('services.show', { serviceType: routeParam, tailorService: service.id }))}>
                         Geri

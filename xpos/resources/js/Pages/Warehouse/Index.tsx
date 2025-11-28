@@ -5,6 +5,7 @@ import SharedDataTable from '@/Components/SharedDataTable';
 import { warehouseTableConfig } from '@/Components/TableConfigurations';
 import { PlusIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline';
 import { Warehouse } from '@/types';
+import InventoryNavigation from '@/Components/InventoryNavigation';
 
 interface Props {
     warehouses: Warehouse[];
@@ -40,6 +41,9 @@ export default function Index({ warehouses }: Props) {
     return (
         <AuthenticatedLayout>
             <Head title="Anbarlar" />
+            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
+                <InventoryNavigation currentRoute="warehouses" />
+            </div>
             <div className="w-full">
                 <SharedDataTable
                     title="Anbarlar"

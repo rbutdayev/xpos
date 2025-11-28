@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StockMovement;
 use App\Models\Product;
 use App\Models\ProductStock;
+use App\Models\StockHistory;
 use App\Models\ProductVariant;
 use App\Models\Warehouse;
 use App\Models\User;
@@ -249,12 +250,30 @@ class StockMovementController extends Controller
             'min_level' => 3,
         ]);
 
+        $quantityBefore = $stock->quantity;
+
         $quantityChange = match ($movement->movement_type) {
             'daxil_olma', 'qaytarma' => $movement->quantity,
             'xaric_olma', 'transfer', 'itki_zerer' => -$movement->quantity,
         };
 
         $stock->increment('quantity', $quantityChange);
+
+        // Create stock history record
+        StockHistory::create([
+            'product_id' => $movement->product_id,
+            'variant_id' => $movement->variant_id,
+            'warehouse_id' => $movement->warehouse_id,
+            'quantity_before' => $quantityBefore,
+            'quantity_change' => $quantityChange,
+            'quantity_after' => $quantityBefore + $quantityChange,
+            'type' => $movement->movement_type,
+            'reference_type' => 'stock_movement',
+            'reference_id' => $movement->movement_id,
+            'user_id' => $movement->employee_id,
+            'notes' => $movement->notes,
+            'occurred_at' => $movement->created_at ?? now(),
+        ]);
     }
 
     private function reverseStockMovement(StockMovement $movement): void
@@ -274,6 +293,11 @@ class StockMovementController extends Controller
 
             $stock->increment('quantity', $quantityChange);
         }
+
+        // Delete the corresponding stock history record
+        StockHistory::where('reference_type', 'stock_movement')
+            ->where('reference_id', $movement->movement_id)
+            ->delete();
     }
 
     public function search(Request $request)

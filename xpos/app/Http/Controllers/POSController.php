@@ -11,6 +11,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Payment;
 use App\Models\ProductStock;
+use App\Models\StockHistory;
 use App\Models\StockMovement;
 use App\Models\NegativeStockAlert;
 use App\Models\Warehouse;
@@ -65,11 +66,17 @@ class POSController extends Controller
             $loyaltyService = app(LoyaltyService::class);
             $loyaltyProgram = $loyaltyService->getProgramForAccount($accountId);
 
+            // Get fiscal printer config for shift status
+            $fiscalConfig = \App\Models\FiscalPrinterConfig::where('account_id', $accountId)
+                ->where('is_active', true)
+                ->first();
+
             return Inertia::render('POS/Index', [
                 'employees' => $employees,
                 'services' => $services,
                 'branches' => $branches,
                 'fiscalPrinterEnabled' => Auth::user()->account->fiscal_printer_enabled ?? false,
+                'fiscalConfig' => $fiscalConfig,
                 'loyaltyProgram' => $loyaltyProgram,
                 'auth' => [
                     'user' => [
@@ -110,9 +117,15 @@ class POSController extends Controller
             $loyaltyService = app(LoyaltyService::class);
             $loyaltyProgram = $loyaltyService->getProgramForAccount($accountId);
 
+            // Get fiscal printer config for shift status
+            $fiscalConfig = \App\Models\FiscalPrinterConfig::where('account_id', $accountId)
+                ->where('is_active', true)
+                ->first();
+
             return Inertia::render('TouchPOS/Index', [
                 'customers' => $customers,
                 'branches' => $branches,
+                'fiscalConfig' => $fiscalConfig,
                 'loyaltyProgram' => $loyaltyProgram,
                 'auth' => [
                     'user' => [
@@ -370,25 +383,44 @@ class POSController extends Controller
                     ->first();
 
                 if ($config) {
-                    // Queue job for bridge to pick up
-                    $fiscalService = app(FiscalPrinterService::class);
-                    $requestData = $fiscalService->getFormattedRequestData($config, $sale);
+                    // Validate shift status before creating fiscal job
+                    if (!$config->isShiftValid()) {
+                        if (!$config->isShiftOpen()) {
+                            $fiscalError = 'Fiskal növbə bağlıdır. Zəhmət olmasa növbəni açın.';
+                        } elseif ($config->isShiftExpired()) {
+                            $fiscalError = 'Fiskal növbə vaxtı bitib (24 saat). Növbəni bağlayıb yeni növbə açın.';
+                        }
 
-                    FiscalPrinterJob::create([
-                        'account_id' => $account->id,
-                        'sale_id' => $sale->sale_id,
-                        'status' => FiscalPrinterJob::STATUS_PENDING,
-                        'request_data' => $requestData,
-                        'provider' => $config->provider,
-                    ]);
+                        \Log::warning('Fiscal shift validation failed', [
+                            'account_id' => $account->id,
+                            'sale_id' => $sale->sale_id,
+                            'shift_open' => $config->shift_open,
+                            'shift_hours' => $config->getShiftDurationHours(),
+                            'error' => $fiscalError
+                        ]);
 
-                    \Log::info('Fiscal print job queued', [
-                        'sale_id' => $sale->sale_id,
-                        'account_id' => $account->id,
-                    ]);
+                        // Don't create fiscal job if shift is invalid
+                    } else {
+                        // Shift is valid, queue job for bridge to pick up
+                        $fiscalService = app(FiscalPrinterService::class);
+                        $requestData = $fiscalService->getFormattedRequestData($config, $sale);
 
-                    // Job queued successfully - bridge will process it
-                    $fiscalPrinted = false; // Not yet printed, just queued
+                        FiscalPrinterJob::create([
+                            'account_id' => $account->id,
+                            'sale_id' => $sale->sale_id,
+                            'status' => FiscalPrinterJob::STATUS_PENDING,
+                            'request_data' => $requestData,
+                            'provider' => $config->provider,
+                        ]);
+
+                        \Log::info('Fiscal print job queued', [
+                            'sale_id' => $sale->sale_id,
+                            'account_id' => $account->id,
+                        ]);
+
+                        // Job queued successfully - bridge will process it
+                        $fiscalPrinted = false; // Not yet printed, just queued
+                    }
                 }
             }
 
@@ -474,7 +506,24 @@ class POSController extends Controller
                 'min_level' => 3,
             ]);
 
+            $quantityBefore = $productStock->quantity;
             $productStock->decrement('quantity', $quantity);
+
+            // Create stock history record
+            StockHistory::create([
+                'product_id' => $productId,
+                'variant_id' => $variantId,
+                'warehouse_id' => $warehouse->id,
+                'quantity_before' => $quantityBefore,
+                'quantity_change' => -$quantity,
+                'quantity_after' => $quantityBefore - $quantity,
+                'type' => 'xaric_olma',
+                'reference_type' => 'sale',
+                'reference_id' => $sale->sale_id,
+                'user_id' => auth()->id(),
+                'notes' => "POS Satış #{$sale->sale_number} üçün xaric olma",
+                'occurred_at' => $sale->created_at ?? now(),
+            ]);
 
             StockMovement::create([
                 'account_id' => $sale->account_id,
