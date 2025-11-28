@@ -25,6 +25,7 @@ import {
     CheckBadgeIcon,
     PlusIcon
 } from '@heroicons/react/24/outline';
+import { router } from '@inertiajs/react';
 import { Column, Filter, Action } from './SharedDataTable';
 import { formatQuantityWithUnit } from '@/utils/formatters';
 import { formatFullDateTime } from '@/utils/dateFormatters';
@@ -2410,9 +2411,8 @@ export const goodsReceiptsTableConfig = {
         {
             ...commonActions.delete,
             onClick: (r: GoodsReceipt) => {
-                if (confirm('Bu qəbulu silmək istədiyinizdən əminsiniz?')) {
-                    window.location.href = route('goods-receipts.destroy', r.id);
-                }
+                // Handler will be provided by the parent component
+                console.log('Delete should be handled by parent:', r.receipt_number);
             }
         }
     ] as Action[],

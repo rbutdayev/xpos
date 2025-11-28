@@ -12,16 +12,23 @@ import {
     EyeIcon,
     PencilIcon,
     TrashIcon,
-    FolderIcon
+    FolderIcon,
+    CheckCircleIcon,
+    XCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface Expense {
-    expense_id: number;
+    expense_id: number | null;
     description: string;
     amount: number;
+    remaining_amount?: number;
     expense_date: string;
+    due_date?: string;
     reference_number: string;
     payment_method: string;
+    status?: string;
+    type?: 'supplier_credit';
+    supplier_credit_id?: number;
     receipt_file_path: string | null;
     category: {
         category_id: number;
@@ -36,6 +43,7 @@ interface Expense {
         id: number;
         name: string;
     } | null;
+    supplier_id?: number;
     user: {
         id: number;
         name: string;
@@ -76,9 +84,14 @@ interface Props {
         date_from?: string;
         date_to?: string;
     };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
 }
 
-export default function Index({ expenses, categories, branches, paymentMethods, filters }: Props) {
+export default function Index({ expenses, categories, branches, paymentMethods, filters, flash, errors }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category_id || '');
     const [selectedBranch, setSelectedBranch] = useState(filters.branch_id || '');
@@ -122,11 +135,18 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             sortable: true,
             align: 'right',
             render: (expense: Expense) => (
-                <div className="text-sm font-medium text-gray-900">
-                    {expense.amount.toLocaleString('az-AZ')} ₼
+                <div className="text-sm">
+                    <div className="font-medium text-gray-900">
+                        {expense.amount.toLocaleString('az-AZ')} ₼
+                    </div>
+                    {expense.type === 'supplier_credit' && expense.remaining_amount !== undefined && expense.remaining_amount > 0 && (
+                        <div className="text-xs text-orange-600 mt-0.5">
+                            Qalıq: {expense.remaining_amount.toLocaleString('az-AZ')} ₼
+                        </div>
+                    )}
                 </div>
             ),
-            width: '120px'
+            width: '140px'
         },
         {
             key: 'expense_date',
@@ -252,19 +272,29 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             label: 'Bax',
             href: (expense: Expense) => `/expenses/${expense.expense_id}`,
             icon: <EyeIcon className="w-4 h-4" />,
-            variant: 'primary'
+            variant: 'primary',
+            condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide view for credits
+        },
+        {
+            label: 'Ödə',
+            href: (expense: Expense) => `/expenses/create?supplier_credit_id=${expense.supplier_credit_id}`,
+            icon: <CurrencyDollarIcon className="w-4 h-4" />,
+            variant: 'primary',
+            condition: (expense: Expense) => expense.type === 'supplier_credit' && expense.status !== 'paid'
         },
         {
             label: 'Düzəliş',
             href: (expense: Expense) => `/expenses/${expense.expense_id}/edit`,
             icon: <PencilIcon className="w-4 h-4" />,
-            variant: 'secondary'
+            variant: 'secondary',
+            condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide edit for credits
         },
         {
             label: 'Sil',
             onClick: (expense: Expense) => handleDelete(expense),
             icon: <TrashIcon className="w-4 h-4" />,
-            variant: 'danger'
+            variant: 'danger',
+            condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide delete for credits
         }
     ];
 
@@ -294,7 +324,9 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
 
     const handleDelete = (expense: Expense) => {
         if (confirm('Bu xərci silmək istədiyinizə əminsiniz?')) {
-            router.delete(`/expenses/${expense.expense_id}`);
+            router.delete(`/expenses/${expense.expense_id}`, {
+                preserveScroll: true,
+            });
         }
     };
 
@@ -304,6 +336,33 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
 
             <div className="py-6">
                 <div className="w-full">
+                    {/* Flash Messages */}
+                    {flash?.success && (
+                        <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <CheckCircleIcon className="h-5 w-5 text-green-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-green-800">{flash.success}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {(flash?.error || errors?.error) && (
+                        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <XCircleIcon className="h-5 w-5 text-red-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-red-800">{flash?.error || errors?.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <SharedDataTable
                         data={expenses}
                         columns={columns}

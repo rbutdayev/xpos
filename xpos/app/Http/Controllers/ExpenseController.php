@@ -71,17 +71,79 @@ class ExpenseController extends Controller
             $query->whereBetween('expense_date', [$request->date_from, $request->date_to]);
         }
 
-        $expenses = $query->latest('expense_date')->paginate(25);
+        $expenses = $query->latest('expense_date')->get();
+
+        // Get supplier credits (unpaid goods receipts) to show in expenses list
+        $supplierCreditsQuery = \App\Models\SupplierCredit::with(['supplier'])
+            ->where('account_id', Auth::user()->account_id)
+            ->where('status', '!=', 'paid'); // Show pending and partial
+
+        // Apply same filters to supplier credits
+        if ($request->filled('search')) {
+            $validated = $request->validated();
+            $searchTerm = $validated['search'];
+            $supplierCreditsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('description', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('reference_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('supplier', function ($subQ) use ($searchTerm) {
+                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $supplierCreditsQuery->whereBetween('credit_date', [$request->date_from, $request->date_to]);
+        }
+
+        $supplierCredits = $supplierCreditsQuery->latest('credit_date')->get();
+
+        // Transform supplier credits to match expense structure for display
+        $supplierCreditsAsExpenses = $supplierCredits->map(function ($credit) {
+            return (object) [
+                'expense_id' => null, // No expense_id for supplier credits
+                'reference_number' => $credit->reference_number,
+                'description' => $credit->description,
+                'amount' => $credit->amount,
+                'remaining_amount' => $credit->remaining_amount,
+                'expense_date' => $credit->credit_date,
+                'due_date' => $credit->due_date,
+                'payment_method' => 'borc', // Credit
+                'status' => $credit->status, // pending/partial/paid
+                'type' => 'supplier_credit', // Mark as supplier credit
+                'supplier' => $credit->supplier,
+                'supplier_id' => $credit->supplier_id,
+                'supplier_credit_id' => $credit->id,
+                'created_at' => $credit->created_at,
+            ];
+        });
+
+        // Merge expenses and supplier credits
+        $allExpenses = $expenses->concat($supplierCreditsAsExpenses)
+            ->sortByDesc('expense_date')
+            ->values();
+
+        // Paginate manually
+        $perPage = 25;
+        $currentPage = $request->input('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+
+        $paginatedExpenses = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allExpenses->slice($offset, $perPage)->values(),
+            $allExpenses->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         $categories = ExpenseCategory::byAccount(auth()->user()->account_id)
             ->active()
             ->with('parent')
             ->get();
-        
+
         $branches = Branch::byAccount(auth()->user()->account_id)->get();
 
         return Inertia::render('Expenses/Index', [
-            'expenses' => $expenses,
+            'expenses' => $paginatedExpenses,
             'categories' => $categories,
             'branches' => $branches,
             'paymentMethods' => Expense::getPaymentMethods(),
@@ -89,7 +151,7 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         Gate::authorize('manage-expenses');
 
@@ -116,12 +178,21 @@ class ExpenseController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        // Get supplier credit if passed via query param (from "Pay" button in expenses list)
+        $supplierCredit = null;
+        if ($request->has('supplier_credit_id')) {
+            $supplierCredit = \App\Models\SupplierCredit::with(['supplier'])
+                ->where('account_id', auth()->user()->account_id)
+                ->find($request->supplier_credit_id);
+        }
+
         return Inertia::render('Expenses/Create', [
             'categories' => $categories,
             'branches' => $branches,
             'paymentMethods' => Expense::getPaymentMethods(),
             'suppliers' => $suppliers,
             'unpaidGoodsReceipts' => $unpaidGoodsReceipts,
+            'supplierCredit' => $supplierCredit,
         ]);
     }
 
@@ -228,6 +299,13 @@ class ExpenseController extends Controller
         Gate::authorize('manage-expenses');
         Gate::authorize('access-account-data', $expense);
 
+        // Prevent editing expenses created from instant payment goods receipts
+        if ($expense->goods_receipt_id) {
+            return back()->withErrors([
+                'error' => 'Mal qəbulundan yaradılmış xərcləri redaktə etmək mümkün deyil. Mal qəbulunu redaktə edin.'
+            ]);
+        }
+
         $request->validate([
             'category_id' => 'required|exists:expense_categories,category_id',
             'branch_id' => 'required|exists:branches,id',
@@ -273,6 +351,13 @@ class ExpenseController extends Controller
     {
         Gate::authorize('manage-expenses');
         Gate::authorize('access-account-data', $expense);
+
+        // Prevent deletion of expenses created from instant payment goods receipts
+        if ($expense->goods_receipt_id) {
+            return back()->withErrors([
+                'error' => 'Mal qəbulundan yaradılmış xərcləri silmək mümkün deyil. Mal qəbulunu silin.'
+            ]);
+        }
 
         // Check if this expense is a vendor/supplier payment
         // Only admin or account_owner can delete vendor payment expenses

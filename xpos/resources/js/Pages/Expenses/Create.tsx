@@ -21,10 +21,23 @@ interface Branch {
     location?: string;
 }
 
+interface SupplierCredit {
+    id: number;
+    reference_number: string;
+    description: string;
+    amount: number;
+    remaining_amount: number;
+    supplier: {
+        id: number;
+        name: string;
+    };
+}
+
 interface Props {
     categories: ExpenseCategory[];
     branches: Branch[];
     paymentMethods: Record<string, string>;
+    supplierCredit?: SupplierCredit | null;
 }
 
 interface ExpenseFormData {
@@ -36,18 +49,36 @@ interface ExpenseFormData {
     payment_method: string;
     receipt_file?: File | null;
     notes: string;
+    supplier_credit_id?: number | null;
+    credit_payment_amount?: string | null;
 }
 
-export default function Create({ categories, branches, paymentMethods }: Props) {
+export default function Create({ categories, branches, paymentMethods, supplierCredit }: Props) {
+    // Extract receipt number from description (e.g., "Mal qəbulu üçün borc - MQ-2025-000004")
+    const extractReceiptNumber = (description: string): string => {
+        const match = description.match(/MQ-\d{4}-\d{6}/);
+        return match ? match[0] : '';
+    };
+
+    const receiptNumber = supplierCredit ? extractReceiptNumber(supplierCredit.description) : '';
+
     const { data, setData, post, processing, errors, reset } = useForm<ExpenseFormData>({
-        description: '',
-        amount: '',
+        description: supplierCredit
+            ? `${receiptNumber} üçün ödəniş`
+            : '',
+        amount: supplierCredit
+            ? supplierCredit.remaining_amount.toString()
+            : '',
         expense_date: new Date().toISOString().split('T')[0],
         category_id: '',
         branch_id: '',
         payment_method: '',
         receipt_file: null,
-        notes: '',
+        notes: supplierCredit
+            ? `Təchizatçı krediti: ${supplierCredit.reference_number}`
+            : '',
+        supplier_credit_id: supplierCredit?.id ?? null,
+        credit_payment_amount: supplierCredit?.remaining_amount.toString() ?? null,
     });
 
     const submit = (e: React.FormEvent) => {
@@ -91,7 +122,14 @@ export default function Create({ categories, branches, paymentMethods }: Props) 
                                     className="mt-1 block w-full"
                                     step="0.01"
                                     min="0"
-                                    onChange={(e) => setData('amount', e.target.value)}
+                                    onChange={(e) => {
+                                        const newAmount = e.target.value;
+                                        setData({
+                                            ...data,
+                                            amount: newAmount,
+                                            credit_payment_amount: supplierCredit ? newAmount : null
+                                        });
+                                    }}
                                     placeholder="0.00"
                                 />
                                 <InputError message={errors.amount} className="mt-2" />

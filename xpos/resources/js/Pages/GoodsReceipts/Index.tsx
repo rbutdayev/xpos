@@ -6,6 +6,8 @@ import { goodsReceiptsTableConfig } from '@/Components/TableConfigurations';
 import useInventoryUpdate from '@/Pages/GoodsReceipts/Hooks/useInventoryUpdate';
 import PayGoodsReceiptModal from '@/Components/Modals/PayGoodsReceiptModal';
 import { GoodsReceipt } from '@/types';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 
 interface Props {
     receipts: {
@@ -30,9 +32,14 @@ interface Props {
         date_from?: string;
         date_to?: string;
     };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
 }
 
-export default function Index({ receipts, warehouses, suppliers, categories, branches, paymentMethods, filters }: Props) {
+export default function Index({ receipts, warehouses, suppliers, categories, branches, paymentMethods, filters, flash, errors }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [warehouseId, setWarehouseId] = useState(filters.warehouse_id || '');
     const [supplierId, setSupplierId] = useState(filters.supplier_id || '');
@@ -50,6 +57,27 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
     const handleClosePaymentModal = () => {
         setShowPaymentModal(false);
         setSelectedReceipt(null);
+    };
+
+    const handleDelete = (receipt: GoodsReceipt) => {
+        const confirmMessage = 'Bu qəbulu silmək istədiyinizdən əminsiniz?';
+        if (confirm(confirmMessage)) {
+            router.delete(route('goods-receipts.destroy', receipt.id), {
+                onSuccess: () => {
+                    toast.success('Mal qəbulu uğurla silindi');
+                },
+                onError: (errors) => {
+                    // Display all error messages as toasts
+                    Object.values(errors).forEach((error) => {
+                        if (typeof error === 'string') {
+                            toast.error(error);
+                        } else if (Array.isArray(error)) {
+                            error.forEach((msg) => toast.error(msg));
+                        }
+                    });
+                }
+            });
+        }
     };
 
     const handleSearch = () => {
@@ -95,12 +123,18 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
         return unsubscribe;
     }, []);
 
-    // Create modified actions with pay button handler
+    // Create modified actions with pay button handler and delete handler
     const tableActions = goodsReceiptsTableConfig.actions.map(action => {
         if (action.label === 'Ödə') {
             return {
                 ...action,
                 onClick: handlePayClick
+            };
+        }
+        if (action.label === 'Sil') {
+            return {
+                ...action,
+                onClick: handleDelete
             };
         }
         return action;
@@ -111,6 +145,33 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
             <Head title="Mal Qəbulları" />
             <div className="w-full min-h-screen bg-gray-50 -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                 <div className="w-full max-w-full overflow-hidden">
+                    {/* Flash Messages */}
+                    {flash?.success && (
+                        <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <CheckCircleIcon className="h-5 w-5 text-green-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-green-800">{flash.success}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {(flash?.error || errors?.error) && (
+                        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <XCircleIcon className="h-5 w-5 text-red-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-red-800">{flash?.error || errors?.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <SharedDataTable
                         title="Mal Qəbulları"
                         data={receipts}

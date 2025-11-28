@@ -45,7 +45,7 @@ export function KPICard({
                     </div>
                 )}
                 {trend && (
-                    <TrendBadge value={trend.value} isPositive={trend.isPositive} variant={variant} />
+                    <TrendBadge value={trend.value} isPositive={trend.isPositive} />
                 )}
             </div>
 

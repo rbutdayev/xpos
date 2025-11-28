@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 interface Expense {
     expense_id: number;
@@ -33,6 +34,11 @@ interface Props {
     categories: ExpenseCategory[];
     branches: Branch[];
     paymentMethods: Record<string, string>;
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
 }
 
 interface ExpenseFormData {
@@ -46,7 +52,7 @@ interface ExpenseFormData {
     notes: string;
 }
 
-export default function Edit({ expense, categories, branches, paymentMethods }: Props) {
+export default function Edit({ expense, categories, branches, paymentMethods, flash, errors: pageErrors }: Props) {
     const { data, setData, put, processing, errors } = useForm<ExpenseFormData>({
         description: expense.description || '',
         amount: expense.amount.toString() || '',
@@ -74,7 +80,9 @@ export default function Edit({ expense, categories, branches, paymentMethods }: 
             formData.append('receipt_file', data.receipt_file);
             formData.append('_method', 'PUT');
             
-            router.post(`/expenses/${expense.expense_id}`, formData);
+            router.post(`/expenses/${expense.expense_id}`, formData, {
+                preserveScroll: true,
+            });
         } else {
             put(`/expenses/${expense.expense_id}`);
         }
@@ -87,6 +95,33 @@ export default function Edit({ expense, categories, branches, paymentMethods }: 
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                    {/* Flash Messages */}
+                    {flash?.success && (
+                        <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <CheckCircleIcon className="h-5 w-5 text-green-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-green-800">{flash.success}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {(flash?.error || pageErrors?.error) && (
+                        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <XCircleIcon className="h-5 w-5 text-red-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm font-medium text-red-800">{flash?.error || pageErrors?.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <form onSubmit={submit} className="p-6 space-y-6">
                             {/* Description */}
