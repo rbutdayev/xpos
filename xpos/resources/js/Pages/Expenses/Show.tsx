@@ -56,21 +56,7 @@ export default function Show({ expense }: Props) {
     };
 
     return (
-        <AuthenticatedLayout/edit`}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        >
-                            Düzəliş et
-                        </Link>
-                        <Link
-                            href="/expenses"
-                            className="text-gray-600 hover:text-gray-900"
-                        >
-                            ← Xərclərə qayıt
-                        </Link>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Xərc - ${expense.description}`} />
 
             <div className="py-12">

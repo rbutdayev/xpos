@@ -46,26 +46,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
     };
 
     return (
-        <AuthenticatedLayout
-                    </h2>
-                    <div className="flex space-x-4">
-                        <Link
-                            href={`/customers/${customer.id}/edit`}
-                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-                        >
-                            <PencilIcon className="w-4 h-4 mr-2" />
-                            Düzəliş et
-                        </Link>
-                        <Link
-                            href="/customers"
-                            className="text-gray-600 hover:text-gray-900"
-                        >
-                            ← Müştərilərə qayıt
-                        </Link>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Müştəri: ${customer.name}`} />
 
             <div className="py-12">

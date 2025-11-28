@@ -28,7 +28,7 @@ import {
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { KPICard } from '@/Components/Dashboard/KPICard';
 import { QuickActionButton, QuickActionGrid } from '@/Components/Dashboard/QuickActionButton';
-import { usePermissions } from '@/hooks/usePermissions';
+import { usePermissions } from '@/Hooks/usePermissions';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -361,7 +361,7 @@ export default function Dashboard({
                                         <span className="font-medium">{selectedWarehouse.name}</span>
                                     </div>
                                 )}
-                                {isSalesman && user.branch && (
+                                {user.branch && (
                                     <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
                                         <BuildingOfficeIcon className="h-5 w-5 mr-2" />
                                         <span className="font-medium">{user.branch.name}</span>

@@ -7,7 +7,7 @@ import { PropsWithChildren, ReactNode, useState, useEffect } from 'react';
 import { getAppVersion } from '@/utils/version';
 import { Toaster } from 'react-hot-toast';
 import { SERVICE_TYPES, getServiceRoute, serviceTypeToRouteParam } from '@/config/serviceTypes';
-import { useModuleAccess } from '@/hooks/useModuleAccess';
+import { useModuleAccess } from '@/Hooks/useModuleAccess';
 import {
     HomeIcon,
     CubeIcon,
@@ -519,7 +519,7 @@ export default function Authenticated({
                 }
             ]
         },
-        ...(servicesEnabled ? [{
+        ...(canAccessModule('services') ? [{
             name: 'Xidmətlər',
             icon: WrenchScrewdriverIcon,
             children: [
@@ -555,7 +555,7 @@ export default function Authenticated({
                 }
             ]
         }] : []),
-        ...(rentEnabled ? [{
+        ...(canAccessModule('rentals') ? [{
             name: 'İcarə İdarəetməsi',
             icon: ClockIcon,
             children: [

@@ -6,6 +6,7 @@ import { PageProps } from '@/types';
 import {
     CheckCircleIcon,
     ClockIcon,
+    XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface SaleReturn {

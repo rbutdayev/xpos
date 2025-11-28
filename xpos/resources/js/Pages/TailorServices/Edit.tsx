@@ -163,14 +163,7 @@ export default function Edit({ service, customers, customerItems, employees, pro
     const totalCost = parseFloat(data.labor_cost.toString()) + totalMaterials;
 
     return (
-        <AuthenticatedLayout Redaktə Et
-                    </h2>
-                    <SecondaryButton onClick={() => router.visit(route('services.show', { serviceType: routeParam, tailorService: service.id }))}>
-                        Geri
-                    </SecondaryButton>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`${serviceConfig.nameSingular} Redaktə Et`} />
 
             <div className="py-12">

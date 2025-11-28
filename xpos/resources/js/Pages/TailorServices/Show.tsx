@@ -86,37 +86,7 @@ export default function Show({ service, serviceType }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Yaradılıb: {new Date(service.created_at).toLocaleString('az-AZ')}
-                            {service.creator && ` - ${service.creator.name}`}
-                        </p>
-                    </div>
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => setShowPrintModal(true)}
-                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
-                        >
-                            <PrinterIcon className="w-4 h-4 mr-2" />
-                            Çap et
-                        </button>
-                        <Link
-                            href={route('services.edit', { serviceType: routeParam, tailorService: service.id })}
-                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-                        >
-                            Düzəliş et
-                        </Link>
-                        <Link
-                            href={route('services.index', { serviceType: routeParam })}
-                            className="text-gray-600 hover:text-gray-900 inline-flex items-center"
-                        >
-                            Geri
-                        </Link>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Xidmət ${service.service_number}`} />
 
             <div className="py-12">

@@ -5,6 +5,7 @@
  * Replaces hard-coded role checks with flexible permission-based checks.
  */
 
+import React from 'react';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { ROLE_PERMISSIONS } from '@/config/permissions';
@@ -126,29 +127,4 @@ export function usePermissions(): UsePermissionsReturn {
 export function usePermission(permission: string): boolean {
     const { can } = usePermissions();
     return can(permission);
-}
-
-/**
- * HOC for permission-based rendering
- *
- * Usage:
- * ```tsx
- * const FinancialSection = withPermission('view-financial-reports', () => (
- *   <div>Financial data...</div>
- * ));
- * ```
- */
-export function withPermission<P extends object>(
-    permission: string,
-    Component: React.ComponentType<P>
-): React.ComponentType<P> {
-    return (props: P) => {
-        const { can } = usePermissions();
-
-        if (!can(permission)) {
-            return null;
-        }
-
-        return <Component {...props} />;
-    };
 }

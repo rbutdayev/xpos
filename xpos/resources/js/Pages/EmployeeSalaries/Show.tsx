@@ -62,22 +62,7 @@ export default function Show({ employee_salary }: Props) {
     };
 
     return (
-        <AuthenticatedLayout
-                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Ödənildi qeyd et
-                            </button>
-                        )}
-                        <Link
-                            href="/employee-salaries"
-                            className="text-gray-600 hover:text-gray-900"
-                        >
-                            ← Maaşlara qayıt
-                        </Link>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={`Maaş - ${employee_salary.employee.name} - ${formatMonth(employee_salary.salary_month)}`} />
 
             <div className="py-12">

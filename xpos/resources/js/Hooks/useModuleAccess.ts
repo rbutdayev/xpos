@@ -68,11 +68,11 @@ export function useModuleAccess(): UseModuleAccessReturn {
 
     // Get module flags from Inertia props
     const flags: ModuleFlags = {
-        shopEnabled: page.props.shopEnabled,
-        loyaltyEnabled: page.props.loyaltyEnabled,
-        servicesEnabled: page.props.servicesEnabled,
-        rentEnabled: page.props.rentEnabled,
-        discountsEnabled: page.props.discountsEnabled,
+        shopEnabled: page.props.shopEnabled as boolean | undefined,
+        loyaltyEnabled: page.props.loyaltyEnabled as boolean | undefined,
+        servicesEnabled: page.props.servicesEnabled as boolean | undefined,
+        rentEnabled: page.props.rentEnabled as boolean | undefined,
+        discountsEnabled: page.props.discountsEnabled as boolean | undefined,
     };
 
     /**

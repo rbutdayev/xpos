@@ -278,16 +278,7 @@ export default function Index({ services, filters, branches, stats, serviceType 
     ];
 
     return (
-        <AuthenticatedLayout
-                    </h2>
-                    <Link href={route('services.create', { serviceType: routeParam })}>
-                        <PrimaryButton>
-                            Yeni {serviceConfig.nameSingular.toLowerCase()}
-                        </PrimaryButton>
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title={serviceConfig.name} />
 
             <div className="py-12">
