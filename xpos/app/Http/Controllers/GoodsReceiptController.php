@@ -664,6 +664,43 @@ class GoodsReceiptController extends Controller
     {
         Gate::authorize('access-account-data');
 
+        // Validation Check 1: Block if paid
+        if ($goodsReceipt->payment_status === 'paid') {
+            return back()->withErrors([
+                'error' => 'Ödənilmiş mal qəbulunu silmək mümkün deyil. Əvvəlcə ödəniş statusunu dəyişin.'
+            ]);
+        }
+
+        // Validation Check 2: Block if expenses exist
+        $linkedExpenses = \App\Models\Expense::where('goods_receipt_id', $goodsReceipt->id)->exists();
+        if ($linkedExpenses) {
+            return back()->withErrors([
+                'error' => 'Xərc qeydi ilə əlaqəli mal qəbulunu silmək mümkün deyil. Əvvəlcə xərci silin və ya əlaqəni kəsin.'
+            ]);
+        }
+
+        // Validation Check 3: Block if supplier credit exists
+        if ($goodsReceipt->supplier_credit_id) {
+            return back()->withErrors([
+                'error' => 'Təchizatçı krediti ilə əlaqəli mal qəbulunu silmək mümkün deyil. Əvvəlcə krediti ləğv edin.'
+            ]);
+        }
+
+        // Validation Check 4: Warn if stock likely sold
+        $receivedQuantity = $goodsReceipt->quantity;
+        $currentStock = ProductStock::where('product_id', $goodsReceipt->product_id)
+            ->where('warehouse_id', $goodsReceipt->warehouse_id)
+            ->where('variant_id', $goodsReceipt->variant_id)
+            ->where('account_id', $goodsReceipt->account_id)
+            ->first();
+
+        if ($currentStock && $currentStock->quantity < $receivedQuantity) {
+            return back()->withErrors([
+                'error' => 'Diqqət: Cari stok miqdarı (' . $currentStock->quantity . ') qəbul edilən miqdardan (' . $receivedQuantity . ') azdır. ' .
+                           'Stok satılmış ola bilər. Silmək təhlükəlidir və inventar məlumatlarını pozacaq.'
+            ]);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -682,7 +719,7 @@ class GoodsReceiptController extends Controller
                     $quantityBefore = $productStock->quantity;
                     $productStock->decrement('quantity', (float) $goodsReceipt->quantity);
 
-                    // Create stock history for deletion
+                    // Create stock history for deletion with enhanced audit trail
                     StockHistory::create([
                         'product_id' => $goodsReceipt->product_id,
                         'variant_id' => $goodsReceipt->variant_id,
@@ -694,7 +731,10 @@ class GoodsReceiptController extends Controller
                         'reference_type' => 'goods_receipt_delete',
                         'reference_id' => $goodsReceipt->id,
                         'user_id' => auth()->id(),
-                        'notes' => "Mal qəbulu silindi: {$goodsReceipt->receipt_number}",
+                        'notes' => "Mal qəbulu silindi (soft delete): {$goodsReceipt->receipt_number} | " .
+                                   "İstifadəçi: " . auth()->user()->name . " | " .
+                                   "Tarix: " . now()->format('Y-m-d H:i:s') . " | " .
+                                   "Səbəb: İstifadəçi tərəfindən silinmə tələbi",
                         'occurred_at' => now(),
                     ]);
                 }
@@ -706,6 +746,7 @@ class GoodsReceiptController extends Controller
                 $this->documentService->deleteFile($goodsReceipt->document_path);
             }
 
+            // Soft delete (sets deleted_at timestamp, record is preserved)
             $goodsReceipt->delete();
 
             DB::commit();
