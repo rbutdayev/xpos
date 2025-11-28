@@ -7,6 +7,7 @@ import { PropsWithChildren, ReactNode, useState, useEffect } from 'react';
 import { getAppVersion } from '@/utils/version';
 import { Toaster } from 'react-hot-toast';
 import { SERVICE_TYPES, getServiceRoute, serviceTypeToRouteParam } from '@/config/serviceTypes';
+import { useModuleAccess } from '@/hooks/useModuleAccess';
 import {
     HomeIcon,
     CubeIcon,
@@ -61,11 +62,9 @@ export default function Authenticated({
     const user = usePage().props.auth.user;
     const warehouses = usePage().props.warehouses as Array<{id: number, name: string, type: string}>;
     const selectedWarehouse = usePage().props.selectedWarehouse as number | null;
-    const shopEnabled = usePage().props.shopEnabled as boolean;
-    const loyaltyEnabled = usePage().props.loyaltyEnabled as boolean;
-    const servicesEnabled = usePage().props.servicesEnabled as boolean;
-    const rentEnabled = usePage().props.rentEnabled as boolean;
-    const discountsEnabled = usePage().props.discountsEnabled as boolean;
+
+    // Use centralized module access hook
+    const { canAccessModule } = useModuleAccess();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         // Load sidebar state from localStorage, default to false (expanded)
@@ -121,13 +120,13 @@ export default function Authenticated({
             openMenus.push('Anbar İdarəetməsi');
         }
 
-        if (servicesEnabled && (currentRoute?.includes('services') ||
+        if (canAccessModule('services') && (currentRoute?.includes('services') ||
             currentRoute?.includes('tailor-services') ||
             currentRoute?.includes('customer-items'))) {
             openMenus.push('Xidmətlər');
         }
 
-        if (rentEnabled && (currentRoute?.includes('rentals') ||
+        if (canAccessModule('rentals') && (currentRoute?.includes('rentals') ||
             currentRoute?.includes('rental-inventory') ||
             currentRoute?.includes('rental-categories'))) {
             openMenus.push('İcarə İdarəetməsi');
@@ -233,7 +232,7 @@ export default function Authenticated({
                     icon: CubeIcon,
                     current: route().current('products.*') || route().current('categories.*') || route().current('loyalty-program.*')
                 },
-                ...(servicesEnabled ? [{
+                ...(canAccessModule('services') ? [{
                     name: 'Xidmətlər',
                     icon: WrenchScrewdriverIcon,
                     children: [
@@ -269,7 +268,7 @@ export default function Authenticated({
                         }
                     ]
                 }] : []),
-                ...(rentEnabled ? [{
+                ...(canAccessModule('rentals') ? [{
                     name: 'İcarə İdarəetməsi',
                     icon: ClockIcon,
                     children: [
@@ -393,7 +392,7 @@ export default function Authenticated({
         if (user.role === 'tailor') {
             return [
                 ...baseNavigation,
-                ...(servicesEnabled ? [{
+                ...(canAccessModule('services') ? [{
                     name: 'Xidmətlər',
                     icon: WrenchScrewdriverIcon,
                     children: [
