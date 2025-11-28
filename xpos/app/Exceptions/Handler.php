@@ -27,4 +27,37 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    /**
+     * Render an exception into an HTTP response.
+     */
+    public function render($request, Throwable $e)
+    {
+        // Show detailed database errors in development (when APP_DEBUG=true)
+        if (config('app.debug')) {
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message' => 'Database Error',
+                        'error' => $e->getMessage(),
+                        'sql' => $e->getSql() ?? 'N/A',
+                        'bindings' => $e->getBindings() ?? [],
+                    ], 500);
+                }
+
+                return back()->withErrors([
+                    'error' => 'Database Error: ' . $e->getMessage()
+                ]);
+            }
+        } else {
+            // In production, hide detailed SQL errors
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                return back()->withErrors([
+                    'error' => 'Məlumat bazası xətası baş verdi. Zəhmət olmasa daha sonra yenidən cəhd edin.'
+                ]);
+            }
+        }
+
+        return parent::render($request, $e);
+    }
 }
