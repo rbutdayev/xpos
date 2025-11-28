@@ -28,6 +28,7 @@ import {
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { KPICard } from '@/Components/Dashboard/KPICard';
 import { QuickActionButton, QuickActionGrid } from '@/Components/Dashboard/QuickActionButton';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -279,7 +280,9 @@ export default function Dashboard({
 }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const user = auth.user as User;
-    const isSalesman = user.role === 'sales_staff';
+
+    // Use permission-based access control instead of role checks
+    const { can } = usePermissions();
 
     // Prepare chart data for sales
     const salesChartConfig = {
@@ -440,7 +443,7 @@ export default function Dashboard({
                 </QuickActionGrid>
 
                 {/* Main KPI Cards */}
-                {!isSalesman ? (
+                {can('view-financial-reports') ? (
                     <>
                         {/* Financial Overview */}
                         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
