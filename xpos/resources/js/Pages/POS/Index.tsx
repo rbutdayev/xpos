@@ -307,6 +307,14 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
       onError: (errs) => {
         console.error('Sale submission errors:', errs);
         setErrors(errs);
+        // Show toast notifications for all errors
+        Object.entries(errs).forEach(([field, message]) => {
+          if (typeof message === 'string') {
+            toast.error(message, { duration: 5000 });
+          } else if (Array.isArray(message)) {
+            (message as string[]).forEach((msg: string) => toast.error(msg, { duration: 5000 }));
+          }
+        });
         setProcessing(false);
       },
       onFinish: () => setProcessing(false),

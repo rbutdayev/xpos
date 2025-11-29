@@ -19,6 +19,7 @@ class SaleItem extends Model
         'variant_id',
         'quantity',
         'unit_price',
+        'purchase_price',
         'discount_amount',
         'total',
         'stock_level_at_sale',
@@ -29,6 +30,7 @@ class SaleItem extends Model
         return [
             'quantity' => 'decimal:3',
             'unit_price' => 'decimal:2',
+            'purchase_price' => 'decimal:2',
             'discount_amount' => 'decimal:2',
             'total' => 'decimal:2',
             'stock_level_at_sale' => 'decimal:3',

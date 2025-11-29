@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesNavigation from '@/Components/SalesNavigation';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import { Customer, PageProps } from '@/types';
+import { PlusCircleIcon } from '@heroicons/react/24/outline';
 
 interface CustomersIndexProps extends PageProps {
     customers: {
@@ -26,7 +27,7 @@ interface CustomersIndexProps extends PageProps {
     };
 }
 
-export default function Index({ auth, customers, filters }: CustomersIndexProps) {
+export default function Index({ auth, customers, filters, discountsEnabled }: CustomersIndexProps) {
     const [localFilters, setLocalFilters] = useState(filters);
 
     const handleSearch = (search: string) => {
@@ -279,7 +280,15 @@ export default function Index({ auth, customers, filters }: CustomersIndexProps)
         <AuthenticatedLayout>
             <Head title="Müştərilər" />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="customers" />
+                <SalesNavigation currentRoute="customers" showDiscounts={discountsEnabled}>
+                    <Link
+                        href={route('customers.create')}
+                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                    >
+                        <PlusCircleIcon className="w-5 h-5 text-white" />
+                        <span className="font-semibold">Yeni Müştəri Əlavə Et</span>
+                    </Link>
+                </SalesNavigation>
             </div>
             <div className="py-12">
                 <div className="w-full">

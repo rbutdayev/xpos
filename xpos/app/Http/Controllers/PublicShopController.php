@@ -407,12 +407,15 @@ class PublicShopController extends Controller
 
             // Create sale items
             foreach ($validated['items'] as $item) {
+                $product = \App\Models\Product::find($item['product_id']);
+
                 SaleItem::create([
                     'sale_id' => $sale->sale_id,
                     'product_id' => $item['product_id'],
                     'variant_id' => $item['variant_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['sale_price'],
+                    'purchase_price' => $product->purchase_price ?? null,
                     'discount_amount' => 0,
                     'total' => $item['sale_price'] * $item['quantity'],
                 ]);

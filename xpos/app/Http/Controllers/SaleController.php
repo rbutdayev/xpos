@@ -291,6 +291,7 @@ class SaleController extends Controller
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'], // Selling quantity (what customer buys)
                     'unit_price' => $item['unit_price'],
+                    'purchase_price' => $product->purchase_price ?? null,
                     'discount_amount' => $item['discount_amount'] ?? 0,
                     'total' => ($item['quantity'] * $item['unit_price']) - ($item['discount_amount'] ?? 0),
                     'stock_level_at_sale' => $currentStock,

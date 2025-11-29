@@ -86,45 +86,47 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                 />
             </div>
 
-            {/* Payment Method Selection */}
-            <div className="bg-yellow-50 rounded-lg p-4">
-                <InputLabel value="Ödəmə Metodu *" className="mb-3" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className={`flex items-center p-3 border rounded-lg cursor-pointer hover:bg-yellow-100 ${
-                        form.data.payment_method === 'instant' ? 'border-yellow-500 bg-yellow-100' : 'border-gray-300'
-                    }`}>
-                        <input 
-                            type="radio" 
-                            value="instant" 
-                            checked={form.data.payment_method === 'instant'}
-                            onChange={(e) => handlePaymentMethodChange(e.target.value as 'instant' | 'credit')}
-                            className="mr-3" 
-                        />
-                        <div>
-                            <div className="font-medium">Dərhal ödə</div>
-                            <div className="text-sm text-gray-600">Nağd ödəniş</div>
-                        </div>
-                    </label>
-                    <label className={`flex items-center p-3 border rounded-lg cursor-pointer hover:bg-yellow-100 ${
-                        form.data.payment_method === 'credit' ? 'border-yellow-500 bg-yellow-100' : 'border-gray-300'
-                    }`}>
-                        <input 
-                            type="radio" 
-                            value="credit" 
-                            checked={form.data.payment_method === 'credit'}
-                            onChange={(e) => handlePaymentMethodChange(e.target.value as 'instant' | 'credit')}
-                            className="mr-3" 
-                        />
-                        <div>
-                            <div className="font-medium">Borc (Müddətli ödəmə)</div>
-                            <div className="text-sm text-gray-600">Təchizatçı borcunda saxla</div>
-                        </div>
-                    </label>
+            {/* Payment Method Selection - Only show when creating */}
+            {!isEditing && (
+                <div className="bg-yellow-50 rounded-lg p-4">
+                    <InputLabel value="Ödəmə Metodu *" className="mb-3" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label className={`flex items-center p-3 border rounded-lg cursor-pointer hover:bg-yellow-100 ${
+                            form.data.payment_method === 'instant' ? 'border-yellow-500 bg-yellow-100' : 'border-gray-300'
+                        }`}>
+                            <input
+                                type="radio"
+                                value="instant"
+                                checked={form.data.payment_method === 'instant'}
+                                onChange={(e) => handlePaymentMethodChange(e.target.value as 'instant' | 'credit')}
+                                className="mr-3"
+                            />
+                            <div>
+                                <div className="font-medium">Dərhal ödə</div>
+                                <div className="text-sm text-gray-600">Nağd ödəniş</div>
+                            </div>
+                        </label>
+                        <label className={`flex items-center p-3 border rounded-lg cursor-pointer hover:bg-yellow-100 ${
+                            form.data.payment_method === 'credit' ? 'border-yellow-500 bg-yellow-100' : 'border-gray-300'
+                        }`}>
+                            <input
+                                type="radio"
+                                value="credit"
+                                checked={form.data.payment_method === 'credit'}
+                                onChange={(e) => handlePaymentMethodChange(e.target.value as 'instant' | 'credit')}
+                                className="mr-3"
+                            />
+                            <div>
+                                <div className="font-medium">Borc (Müddətli ödəmə)</div>
+                                <div className="text-sm text-gray-600">Təchizatçı borcunda saxla</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Payment Terms Information */}
-            {selectedSupplier && form.data.payment_method === 'credit' && (
+            {!isEditing && selectedSupplier && form.data.payment_method === 'credit' && (
                 <div className="bg-blue-50 rounded-lg p-4">
                     <h4 className="font-medium text-blue-900 mb-3">Ödəmə Şərtləri</h4>
                     

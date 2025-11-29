@@ -1,5 +1,6 @@
 import { FormEventHandler, useState, useEffect } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import { PlusCircleIcon } from '@heroicons/react/24/outline';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesNavigation from '@/Components/SalesNavigation';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -19,7 +20,7 @@ interface SMSSendProps extends PageProps {
     };
 }
 
-export default function Send({ customers, totalCustomersWithPhone, hasCredentials, filters }: SMSSendProps) {
+export default function Send({ customers, totalCustomersWithPhone, hasCredentials, filters, discountsEnabled }: SMSSendProps) {
     const [sendMode, setSendMode] = useState<'bulk' | 'all'>('bulk');
     const [selectedCustomersList, setSelectedCustomersList] = useState<Customer[]>([]);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
@@ -91,7 +92,7 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
             >
                 <Head title="SMS Göndər" />
                 <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                    <SalesNavigation currentRoute="sms" />
+                    <SalesNavigation currentRoute="sms" showDiscounts={discountsEnabled} />
                 </div>
 
                 <div className="py-12">
@@ -120,7 +121,15 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
         <AuthenticatedLayout>
             <Head title="SMS Göndər" />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="sms" />
+                <SalesNavigation currentRoute="sms" showDiscounts={discountsEnabled}>
+                    <Link
+                        href={route('pos.index')}
+                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                    >
+                        <PlusCircleIcon className="w-5 h-5 text-white" />
+                        <span className="font-semibold">Satış et</span>
+                    </Link>
+                </SalesNavigation>
             </div>
 
             <div className="py-12">

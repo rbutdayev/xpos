@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import toast from 'react-hot-toast';
 
 interface Props {
     customer: Customer;
@@ -26,7 +27,21 @@ export default function Edit({ customer }: Props) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/customers/${customer.id}`);
+        put(`/customers/${customer.id}`, {
+            onSuccess: () => {
+                toast.success('Müştəri məlumatları yeniləndi');
+            },
+            onError: (errs) => {
+                // Show toast notifications for all errors
+                Object.entries(errs).forEach(([field, message]) => {
+                    if (typeof message === 'string') {
+                        toast.error(message, { duration: 5000 });
+                    } else if (Array.isArray(message)) {
+                        (message as string[]).forEach((msg: string) => toast.error(msg, { duration: 5000 }));
+                    }
+                });
+            }
+        });
     };
 
     return (

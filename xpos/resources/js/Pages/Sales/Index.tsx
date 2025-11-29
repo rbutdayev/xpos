@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DailySalesSummary from '@/Components/DailySalesSummary';
-import { EyeIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 import { Sale, PageProps } from '@/types';
 import SalesNavigation from '@/Components/SalesNavigation';
 
@@ -42,7 +42,7 @@ interface SalesIndexProps extends PageProps {
     summaryDate: string;
 }
 
-export default function Index({ auth, sales, filters, branches, dailySummary, summaryDate }: SalesIndexProps) {
+export default function Index({ auth, sales, filters, branches, dailySummary, summaryDate, discountsEnabled }: SalesIndexProps) {
     const [localFilters, setLocalFilters] = useState(filters);
     const [searchInput, setSearchInput] = useState(filters.search || '');
     const [selectedSummaryDate, setSelectedSummaryDate] = useState(summaryDate);
@@ -260,7 +260,15 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
         <AuthenticatedLayout>
             <Head title="Satışlar" />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation />
+                <SalesNavigation currentRoute="sales" showDiscounts={discountsEnabled}>
+                    <Link
+                        href={route('pos.index')}
+                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                    >
+                        <PlusCircleIcon className="w-5 h-5 text-white" />
+                        <span className="font-semibold">Satış et</span>
+                    </Link>
+                </SalesNavigation>
             </div>
             <div className="py-12">
                 <div className="w-full">

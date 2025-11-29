@@ -5,7 +5,7 @@ import SharedDataTable from '@/Components/SharedDataTable';
 import { goodsReceiptsTableConfig } from '@/Components/TableConfigurations';
 import useInventoryUpdate from '@/Pages/GoodsReceipts/Hooks/useInventoryUpdate';
 import PayGoodsReceiptModal from '@/Components/Modals/PayGoodsReceiptModal';
-import { GoodsReceipt } from '@/types';
+import { GoodsReceipt, PageProps } from '@/types';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
@@ -68,11 +68,11 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                 },
                 onError: (errors) => {
                     // Display all error messages as toasts
-                    Object.values(errors).forEach((error) => {
+                    Object.values(errors).forEach((error: string | string[]) => {
                         if (typeof error === 'string') {
                             toast.error(error);
                         } else if (Array.isArray(error)) {
-                            error.forEach((msg) => toast.error(msg));
+                            error.forEach((msg: string) => toast.error(msg));
                         }
                     });
                 }

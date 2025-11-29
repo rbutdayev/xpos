@@ -44,8 +44,7 @@ class ExpenseController extends Controller
             ->where('account_id', Auth::user()->account_id);
 
         if ($request->filled('search')) {
-            $validated = $request->validated();
-            $searchTerm = $validated['search'];
+            $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('description', 'like', '%' . $searchTerm . '%')
                   ->orWhere('reference_number', 'like', '%' . $searchTerm . '%')
@@ -80,8 +79,7 @@ class ExpenseController extends Controller
 
         // Apply same filters to supplier credits
         if ($request->filled('search')) {
-            $validated = $request->validated();
-            $searchTerm = $validated['search'];
+            $searchTerm = $request->search;
             $supplierCreditsQuery->where(function ($q) use ($searchTerm) {
                 $q->where('description', 'like', '%' . $searchTerm . '%')
                   ->orWhere('reference_number', 'like', '%' . $searchTerm . '%')
@@ -142,11 +140,39 @@ class ExpenseController extends Controller
 
         $branches = Branch::byAccount(auth()->user()->account_id)->get();
 
+        // Get suppliers for the supplier payment modal
+        $suppliers = Supplier::byAccount(auth()->user()->account_id)
+            ->active()
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // Get unpaid and partially paid goods receipts for the supplier payment modal
+        $unpaidGoodsReceipts = GoodsReceipt::where('account_id', auth()->user()->account_id)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->with(['supplier:id,name', 'product:id,name', 'supplierCredit'])
+            ->orderBy('due_date')
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($receipt) {
+                // Ensure numeric values are properly set
+                $receipt->total_cost = $receipt->total_cost ?? 0;
+
+                // Ensure supplier_credit has remaining_amount
+                if ($receipt->supplierCredit) {
+                    $receipt->supplierCredit->remaining_amount = $receipt->supplierCredit->remaining_amount ?? 0;
+                }
+
+                return $receipt;
+            });
+
         return Inertia::render('Expenses/Index', [
             'expenses' => $paginatedExpenses,
             'categories' => $categories,
             'branches' => $branches,
             'paymentMethods' => Expense::getPaymentMethods(),
+            'suppliers' => $suppliers,
+            'unpaidGoodsReceipts' => $unpaidGoodsReceipts,
             'filters' => $request->only(['search', 'category_id', 'branch_id', 'payment_method', 'date_from', 'date_to']),
         ]);
     }
@@ -393,8 +419,7 @@ class ExpenseController extends Controller
             ->where('account_id', Auth::user()->account_id);
 
         if ($request->filled('search')) {
-            $validated = $request->validated();
-            $searchTerm = $validated['search'];
+            $searchTerm = $request->search;
             $query->where('description', 'like', '%' . $searchTerm . '%')
                   ->orWhere('reference_number', 'like', '%' . $searchTerm . '%')
                   ->orWhereHas('category', function ($q) use ($searchTerm) {

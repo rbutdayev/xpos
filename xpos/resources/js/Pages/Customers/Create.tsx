@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import toast from 'react-hot-toast';
 
 export default function Create() {
     const { data, setData, post, processing, errors, reset } = useForm<CustomerFormData>({
@@ -22,7 +23,21 @@ export default function Create() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/customers');
+        post('/customers', {
+            onSuccess: () => {
+                toast.success('Müştəri uğurla yaradıldı');
+            },
+            onError: (errs) => {
+                // Show toast notifications for all errors
+                Object.entries(errs).forEach(([field, message]) => {
+                    if (typeof message === 'string') {
+                        toast.error(message, { duration: 5000 });
+                    } else if (Array.isArray(message)) {
+                        (message as string[]).forEach((msg: string) => toast.error(msg, { duration: 5000 }));
+                    }
+                });
+            }
+        });
     };
 
     return (
