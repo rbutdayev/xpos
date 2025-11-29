@@ -68,11 +68,11 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                 },
                 onError: (errors) => {
                     // Display all error messages as toasts
-                    Object.values(errors).forEach((error) => {
+                    Object.values(errors).forEach((error: any) => {
                         if (typeof error === 'string') {
                             toast.error(error);
                         } else if (Array.isArray(error)) {
-                            error.forEach((msg) => toast.error(msg));
+                            error.forEach((msg: string) => toast.error(msg));
                         }
                     });
                 }
