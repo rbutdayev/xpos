@@ -60,14 +60,11 @@ RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libj
 COPY --from=php-builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=php-builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
-# Copy app files
+# Copy app files (includes .env from build context)
 COPY --from=php-builder /var/www /var/www
 
 # Copy built frontend assets from node-builder
 COPY --from=node-builder /var/www/public/build /var/www/public/build
-
-# Copy environment file (will be provided during build)
-COPY .env /var/www/.env
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/http.d/default.conf
