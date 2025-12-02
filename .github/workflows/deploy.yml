@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:
 
 jobs:
@@ -29,6 +30,19 @@ jobs:
         run: |
           docker save xpos-app:latest | gzip > xpos-app.tar.gz
 
+      - name: Set deployment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "container_name=xpos-prod" >> $GITHUB_OUTPUT
+            echo "port=8000" >> $GITHUB_OUTPUT
+            echo "env_file=/home/onyx/xpos/env.production" >> $GITHUB_OUTPUT
+          else
+            echo "container_name=xpos-dev" >> $GITHUB_OUTPUT
+            echo "port=8002" >> $GITHUB_OUTPUT
+            echo "env_file=/home/onyx/xpos/env.dev" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to server via SSH
         run: |
           # Install sshpass for password-based SSH
@@ -41,7 +55,7 @@ jobs:
 
           # Deploy on server
           sshpass -p 'vonqud-kiqze5-hyWtit' ssh -o StrictHostKeyChecking=no \
-            onyx@20.218.139.129 << 'ENDSSH'
+            onyx@20.218.139.129 bash << ENDSSH
           # Load the image
           docker load < /tmp/xpos-app.tar.gz
 
@@ -49,15 +63,15 @@ jobs:
           rm /tmp/xpos-app.tar.gz
 
           # Stop and remove old container (if exists)
-          docker stop xpos-prod || true
-          docker rm xpos-prod || true
+          docker stop ${{ steps.vars.outputs.container_name }} || true
+          docker rm ${{ steps.vars.outputs.container_name }} || true
 
           # Run new container
           docker run -d \
-            --name xpos-prod \
+            --name ${{ steps.vars.outputs.container_name }} \
             --restart unless-stopped \
-            -p 8000:80 \
-            --env-file /home/onyx/xpos/env.production \
+            -p ${{ steps.vars.outputs.port }}:80 \
+            --env-file ${{ steps.vars.outputs.env_file }} \
             xpos-app:latest
 
           # Clean up old images
@@ -69,4 +83,4 @@ jobs:
       - name: Verify deployment
         run: |
           sshpass -p 'vonqud-kiqze5-hyWtit' ssh -o StrictHostKeyChecking=no \
-            onyx@20.218.139.129 'docker ps | grep xpos-prod'
+            onyx@20.218.139.129 "docker ps | grep ${{ steps.vars.outputs.container_name }}"
