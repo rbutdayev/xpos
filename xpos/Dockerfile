@@ -66,6 +66,9 @@ COPY --from=php-builder /var/www /var/www
 # Copy built frontend assets from node-builder
 COPY --from=node-builder /var/www/public/build /var/www/public/build
 
+# Copy environment file (will be provided during build)
+COPY .env /var/www/.env
+
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
