@@ -11,8 +11,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    
-    :
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -45,6 +44,10 @@ jobs:
           fi
 
       - name: Deploy to server via SSH
+        env:
+          CONTAINER_NAME: ${{ steps.vars.outputs.container_name }}
+          PORT: ${{ steps.vars.outputs.port }}
+          ENV_FILE: ${{ steps.vars.outputs.env_file }}
         run: |
           # Install sshpass for password-based SSH
           sudo apt-get update
@@ -56,7 +59,7 @@ jobs:
 
           # Deploy on server
           sshpass -p 'vonqud-kiqze5-hyWtit' ssh -o StrictHostKeyChecking=no \
-            onyx@20.218.139.129 bash << ENDSSH
+            onyx@20.218.139.129 bash -s << ENDSSH
           # Load the image
           docker load < /tmp/xpos-app.tar.gz
 
@@ -64,15 +67,15 @@ jobs:
           rm /tmp/xpos-app.tar.gz
 
           # Stop and remove old container (if exists)
-          docker stop ${{ steps.vars.outputs.container_name }} || true
-          docker rm ${{ steps.vars.outputs.container_name }} || true
+          docker stop ${CONTAINER_NAME} || true
+          docker rm ${CONTAINER_NAME} || true
 
           # Run new container
           docker run -d \
-            --name ${{ steps.vars.outputs.container_name }} \
+            --name ${CONTAINER_NAME} \
             --restart unless-stopped \
-            -p ${{ steps.vars.outputs.port }}:80 \
-            --env-file ${{ steps.vars.outputs.env_file }} \
+            -p ${PORT}:80 \
+            --env-file ${ENV_FILE} \
             xpos-app:latest
 
           # Clean up old images
