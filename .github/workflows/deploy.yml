@@ -42,29 +42,29 @@ jobs:
           # Deploy on server
           sshpass -p 'vonqud-kiqze5-hyWtit' ssh -o StrictHostKeyChecking=no \
             onyx@20.218.139.129 << 'ENDSSH'
-            # Load the image
-            docker load < /tmp/xpos-app.tar.gz
+          # Load the image
+          docker load < /tmp/xpos-app.tar.gz
 
-            # Remove old image file
-            rm /tmp/xpos-app.tar.gz
+          # Remove old image file
+          rm /tmp/xpos-app.tar.gz
 
-            # Stop and remove old container (if exists)
-            docker stop xpos-prod || true
-            docker rm xpos-prod || true
+          # Stop and remove old container (if exists)
+          docker stop xpos-prod || true
+          docker rm xpos-prod || true
 
-            # Run new container
-            docker run -d \
-              --name xpos-prod \
-              --restart unless-stopped \
-              -p 8000:80 \
-              --env-file /home/onyx/xpos/env.production \
-              xpos-app:latest
+          # Run new container
+          docker run -d \
+            --name xpos-prod \
+            --restart unless-stopped \
+            -p 8000:80 \
+            --env-file /home/onyx/xpos/env.production \
+            xpos-app:latest
 
-            # Clean up old images
-            docker image prune -f
+          # Clean up old images
+          docker image prune -f
 
-            echo "Deployment completed!"
-ENDSSH
+          echo "Deployment completed!"
+          ENDSSH
 
       - name: Verify deployment
         run: |
