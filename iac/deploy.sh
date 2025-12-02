@@ -67,11 +67,16 @@ main() {
     log_info "Step 3: Setting up Nginx with SSL..."
     bash "$SCRIPT_DIR/scripts/03-setup-nginx.sh"
 
+    # Step 4: Setup Redis
+    log_info "Step 4: Setting up Redis..."
+    bash "$SCRIPT_DIR/scripts/04-setup-redis.sh"
+
     log_info "Infrastructure deployment completed successfully!"
     log_info ""
     log_info "Server is ready for your applications:"
     log_info "  - Docker and Docker Compose installed"
-    log_info "  - Nginx configured for xpos.az (port 8000) and eservis.az (port 8001)"
+    log_info "  - Nginx configured for dev and prod environments"
+    log_info "  - Redis running on localhost:6379"
     log_info "  - Firewall configured (ports 22, 80, 443)"
     log_info ""
     log_info "Next steps:"
