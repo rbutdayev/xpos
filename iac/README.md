@@ -1,11 +1,20 @@
 # Infrastructure as Code (IaC)
 
-Infrastructure automation scripts for deploying Docker and Nginx on your server.
+Infrastructure automation scripts for deploying Docker and Nginx with multi-environment support.
 
 ## Server Details
 - **IP**: 20.218.139.129
 - **User**: onyx
-- **Applications**: xpos.az (port 8000), eservis.az (port 8001)
+
+## Environment Setup
+
+### Development (Active by Default)
+- `dev.xpos.az` → port 8000
+- `dev.eservis.az` → port 8001
+
+### Production (Configured but Disabled)
+- `xpos.az` → port 8002
+- `eservis.az` → port 8003
 
 ## Prerequisites
 
@@ -39,45 +48,83 @@ This will:
 
 ## After Infrastructure Setup
 
-### 1. Configure SSL Certificates
+### 1. Configure SSL Certificates for Development
 
 SSH to the server and run:
 
 ```bash
 ssh onyx@20.218.139.129
 
-# For xpos.az
-sudo certbot --nginx -d xpos.az -d www.xpos.az
-
-# For eservis.az
-sudo certbot --nginx -d eservis.az -d www.eservis.az
+# For dev environment
+sudo certbot --nginx -d dev.xpos.az
+sudo certbot --nginx -d dev.eservis.az
 ```
 
-**Note**: Make sure your domains are pointing to the server IP before running certbot.
+**Note**: Make sure your dev subdomains are pointing to the server IP before running certbot.
 
 ### 2. Deploy Your Applications
 
-Deploy your applications using Docker on ports:
-- xpos.az → port 8000
-- eservis.az → port 8001
+Deploy your applications using Docker on the appropriate ports:
 
-Nginx will automatically proxy requests from https to your Docker containers.
+**Development Environment:**
+- dev.xpos.az → port 8000
+- dev.eservis.az → port 8001
+
+**Production Environment (when ready):**
+- xpos.az → port 8002
+- eservis.az → port 8003
+
+Nginx will automatically proxy HTTPS requests to your Docker containers.
+
+## Switching Environments
+
+Use the environment switcher script to toggle between dev and production:
+
+### Check Current Environment
+```bash
+./scripts/switch-environment.sh status
+```
+
+### Switch to Development
+```bash
+./scripts/switch-environment.sh dev
+```
+
+### Switch to Production
+```bash
+./scripts/switch-environment.sh prod
+```
+
+This will:
+1. Disable the current environment's nginx configs
+2. Enable the target environment's configs
+3. Reload nginx
+
+**Important**: When switching to production, you'll need to obtain SSL certificates:
+```bash
+ssh onyx@20.218.139.129
+sudo certbot --nginx -d xpos.az -d www.xpos.az
+sudo certbot --nginx -d eservis.az -d www.eservis.az
+```
 
 ## Directory Structure
 
 ```
 iac/
-├── deploy.sh                    # Main deployment script
+├── deploy.sh                       # Main deployment script
 ├── scripts/
-│   ├── 01-setup-server.sh      # Server setup
-│   ├── 02-setup-docker.sh      # Docker installation
-│   └── 03-setup-nginx.sh       # Nginx setup
+│   ├── 01-setup-server.sh         # Server setup
+│   ├── 02-setup-docker.sh         # Docker installation
+│   ├── 03-setup-nginx.sh          # Nginx setup
+│   └── switch-environment.sh      # Environment switcher
 └── configs/
     └── nginx/
-        ├── nginx.conf           # Main nginx config
+        ├── nginx.conf              # Main nginx config
         └── conf.d/
-            ├── xpos.conf        # xpos.az configuration
-            └── eservis.conf     # eservis.az configuration
+            ├── dev.xpos.conf       # dev.xpos.az config
+            ├── dev.eservis.conf    # dev.eservis.az config
+            ├── prod.xpos.conf      # xpos.az config (production)
+            └── prod.eservis.conf   # eservis.az config (production)
 ```
 
 ## Manual Steps (if needed)

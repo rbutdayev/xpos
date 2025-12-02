@@ -34,10 +34,11 @@ remote_exec "sudo apt-get install -y \
     lsb-release"
 
 log_info "Configuring firewall..."
-remote_exec "sudo ufw --force enable"
+# IMPORTANT: Allow SSH FIRST before enabling firewall!
 remote_exec "sudo ufw allow 22/tcp"    # SSH
 remote_exec "sudo ufw allow 80/tcp"    # HTTP
 remote_exec "sudo ufw allow 443/tcp"   # HTTPS
+remote_exec "sudo ufw --force enable"
 remote_exec "sudo ufw status"
 
 log_info "Creating application directories..."

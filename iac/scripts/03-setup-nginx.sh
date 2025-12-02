@@ -48,12 +48,20 @@ remote_exec "sudo systemctl stop nginx || true"
 # Copy configurations to Nginx directory
 log_info "Setting up Nginx configurations..."
 remote_exec "sudo cp ~/nginx/nginx.conf /etc/nginx/nginx.conf"
-remote_exec "sudo cp ~/nginx/conf.d/xpos.conf /etc/nginx/sites-available/xpos.conf"
-remote_exec "sudo cp ~/nginx/conf.d/eservis.conf /etc/nginx/sites-available/eservis.conf"
 
-# Create symlinks
-remote_exec "sudo ln -sf /etc/nginx/sites-available/xpos.conf /etc/nginx/sites-enabled/xpos.conf"
-remote_exec "sudo ln -sf /etc/nginx/sites-available/eservis.conf /etc/nginx/sites-enabled/eservis.conf"
+# Copy all environment configs
+remote_exec "sudo cp ~/nginx/conf.d/dev.xpos.conf /etc/nginx/sites-available/"
+remote_exec "sudo cp ~/nginx/conf.d/dev.eservis.conf /etc/nginx/sites-available/"
+remote_exec "sudo cp ~/nginx/conf.d/prod.xpos.conf /etc/nginx/sites-available/"
+remote_exec "sudo cp ~/nginx/conf.d/prod.eservis.conf /etc/nginx/sites-available/"
+
+# Enable DEV environment by default
+log_info "Enabling DEV environment (dev.xpos.az and dev.eservis.az)..."
+remote_exec "sudo ln -sf /etc/nginx/sites-available/dev.xpos.conf /etc/nginx/sites-enabled/dev.xpos.conf"
+remote_exec "sudo ln -sf /etc/nginx/sites-available/dev.eservis.conf /etc/nginx/sites-enabled/dev.eservis.conf"
+
+# Production configs are available but not enabled yet
+log_info "Production configs prepared but not enabled (will enable after testing)"
 
 # Remove default site
 remote_exec "sudo rm -f /etc/nginx/sites-enabled/default"
@@ -65,11 +73,25 @@ log_info "Starting Nginx..."
 remote_exec "sudo systemctl start nginx"
 remote_exec "sudo systemctl enable nginx"
 
-log_warn "SSL Certificate Setup:"
-log_warn "To obtain SSL certificates, run these commands on the server:"
+log_warn "=== DEVELOPMENT ENVIRONMENT SETUP ==="
+log_warn "Development subdomains are now active:"
+log_warn "  - dev.xpos.az → localhost:8000"
+log_warn "  - dev.eservis.az → localhost:8001"
+log_warn ""
+log_warn "SSL Certificate Setup for DEV:"
+log_warn "  sudo certbot --nginx -d dev.xpos.az"
+log_warn "  sudo certbot --nginx -d dev.eservis.az"
+log_warn ""
+log_warn "Production domains are configured but DISABLED:"
+log_warn "  - xpos.az → localhost:8002 (not active)"
+log_warn "  - eservis.az → localhost:8003 (not active)"
+log_warn ""
+log_warn "To switch to production later, run on the server:"
+log_warn "  sudo rm /etc/nginx/sites-enabled/dev.*"
+log_warn "  sudo ln -s /etc/nginx/sites-available/prod.xpos.conf /etc/nginx/sites-enabled/"
+log_warn "  sudo ln -s /etc/nginx/sites-available/prod.eservis.conf /etc/nginx/sites-enabled/"
 log_warn "  sudo certbot --nginx -d xpos.az -d www.xpos.az"
 log_warn "  sudo certbot --nginx -d eservis.az -d www.eservis.az"
-log_warn ""
-log_warn "Make sure your domains are pointing to the server IP ($SERVER_IP) before running certbot"
+log_warn "  sudo systemctl reload nginx"
 
 log_info "Nginx setup completed!"
