@@ -62,6 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'account.access' => \App\Http\Middleware\EnsureAccountAccess::class,
             'superadmin' => \App\Http\Middleware\SuperAdminAccess::class,
             'branch.access' => \App\Http\Middleware\BranchAccess::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
 
         // API routes don't need CSRF protection (stateless)

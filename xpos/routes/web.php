@@ -74,6 +74,14 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::put('/accounts/{account}', [SuperAdminController::class, 'updateAccount'])->name('accounts.update');
     Route::delete('/accounts/{account}', [SuperAdminController::class, 'deleteAccount'])->name('accounts.destroy');
     Route::patch('/accounts/{account}/toggle-status', [SuperAdminController::class, 'toggleAccountStatus'])->name('accounts.toggle-status');
+
+    // Account Payments Management
+    Route::get('/payments', [App\Http\Controllers\AccountPaymentsController::class, 'index'])->name('payments');
+    Route::post('/payments/{account}/mark-paid', [App\Http\Controllers\AccountPaymentsController::class, 'markAsPaid'])->name('payments.mark-paid');
+    Route::post('/payments/{account}/mark-unpaid', [App\Http\Controllers\AccountPaymentsController::class, 'markAsUnpaid'])->name('payments.mark-unpaid');
+    Route::put('/payments/{account}/settings', [App\Http\Controllers\AccountPaymentsController::class, 'updatePaymentSettings'])->name('payments.update-settings');
+    Route::patch('/payments/{account}/toggle-status', [App\Http\Controllers\AccountPaymentsController::class, 'toggleAccountStatus'])->name('payments.toggle-status');
+
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::delete('/users/{user}', [SuperAdminController::class, 'deleteUser'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-status', [SuperAdminController::class, 'toggleUserStatus'])->name('users.toggle-status');

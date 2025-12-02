@@ -11,21 +11,21 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class AuthenticatedSessionController extends Controller
+class SuperAdminAuthController extends Controller
 {
     /**
-     * Display the login view.
+     * Display the super admin login view.
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Login', [
+        return Inertia::render('Auth/AdminLogin', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
         ]);
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Handle an incoming super admin authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -33,33 +33,29 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Prevent super admin from logging in via tenant login
-        if ($user->isSuperAdmin()) {
+        // Verify the user is actually a super admin
+        if (!$user->isSuperAdmin()) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('admin.login')->withErrors([
-                'email' => 'Super admin istifadəçilər üçün ayrıca giriş səhifəsi var. Zəhmət olmasa /admin/login ünvanından istifadə edin.',
+            return back()->withErrors([
+                'email' => 'Bu giriş yalnız super admin istifadəçilər üçündür. Zəhmət olmasa adi giriş səhifəsindən istifadə edin.',
             ]);
         }
 
         // Regenerate session to get new CSRF token
         $request->session()->regenerate();
 
-        // Store user ID in session for cross-tab detection
-        // This will be read by frontend SessionManager component
+        // Store user ID in session
         $request->session()->put('user_id', $user->id);
         $request->session()->put('account_id', $user->account_id);
 
-        $redirectRoute = route('dashboard', absolute: false);
+        $redirectRoute = route('superadmin.dashboard', absolute: false);
 
         // Force a full page reload to refresh CSRF token in meta tag
-        // This prevents "page expired" errors when switching between accounts
         $response = redirect()->intended($redirectRoute);
 
-        // For Inertia requests, force a full page reload by setting X-Inertia-Location
-        // This ensures the new CSRF token is properly loaded
         if ($request->header('X-Inertia')) {
             $response->header('X-Inertia-Location', $redirectRoute);
         }
@@ -68,11 +64,10 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Destroy an authenticated session.
+     * Destroy a super admin authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
     {
-        // Get user ID before logging out (for cleaning localStorage)
         $userId = Auth::id();
 
         Auth::guard('web')->logout();
@@ -82,10 +77,9 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         // Store a flag to clear user data on client side
-        // SessionManager will detect this and clear localStorage
         $request->session()->flash('user_logged_out', true);
         $request->session()->flash('logged_out_user_id', $userId);
 
-        return redirect('/');
+        return redirect('/admin/login');
     }
 }

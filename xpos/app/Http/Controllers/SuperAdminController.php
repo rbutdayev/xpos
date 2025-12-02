@@ -196,6 +196,8 @@ class SuperAdminController extends Controller
             $validated = $request->validate([
                 'user_email' => 'required|email|unique:users,email',
                 'user_password' => 'required|string|min:8',
+                'monthly_payment_amount' => 'nullable|numeric|min:0',
+                'payment_start_date' => 'nullable|date',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Account validation failed', [
@@ -221,6 +223,8 @@ class SuperAdminController extends Controller
                     'subscription_plan' => 'başlanğıc', // Default plan
                     'is_active' => true,
                     'language' => 'az',
+                    'monthly_payment_amount' => $validated['monthly_payment_amount'] ?? null,
+                    'payment_start_date' => $validated['payment_start_date'] ?? null,
                     'settings' => [
                         'timezone' => 'Asia/Baku',
                         'currency' => 'AZN',
@@ -291,6 +295,8 @@ class SuperAdminController extends Controller
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'is_active' => 'required|boolean',
+            'monthly_payment_amount' => 'nullable|numeric|min:0',
+            'payment_start_date' => 'nullable|date',
         ]);
 
         $account->update($validated);

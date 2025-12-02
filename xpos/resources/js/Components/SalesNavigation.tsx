@@ -19,10 +19,8 @@ interface SalesNavigationProps {
 
 export default function SalesNavigation({ currentRoute, showDiscounts = false, children }: SalesNavigationProps) {
     const isActive = (routeName: string) => {
-        if (!currentRoute) {
-            currentRoute = route().current() || '';
-        }
-        return currentRoute.includes(routeName);
+        const activeRoute = currentRoute || route().current() || '';
+        return activeRoute.includes(routeName);
     };
 
     const navItems = [

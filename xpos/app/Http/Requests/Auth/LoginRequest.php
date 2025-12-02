@@ -70,6 +70,39 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Check if user's account is active (not super admin)
+        $user = Auth::user();
+        if (!$user->isSuperAdmin() && $user->account) {
+            if (!$user->account->is_active) {
+                Auth::logout();
+
+                \Log::warning('Login blocked - account deactivated', [
+                    'email' => $this->input('email'),
+                    'user_id' => $user->id,
+                    'account_id' => $user->account_id,
+                ]);
+
+                throw ValidationException::withMessages([
+                    'email' => 'Hesabınız dayandırılıb. Zəhmət olmasa dəstək ilə əlaqə saxlayın.',
+                ]);
+            }
+        }
+
+        // Check if user status is active
+        if ($user->status !== 'active') {
+            Auth::logout();
+
+            \Log::warning('Login blocked - user status not active', [
+                'email' => $this->input('email'),
+                'user_id' => $user->id,
+                'status' => $user->status,
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => 'İstifadəçi hesabınız aktiv deyil. Zəhmət olmasa dəstək ilə əlaqə saxlayın.',
+            ]);
+        }
+
         \Log::info('Login successful', [
             'email' => $this->input('email'),
             'user_id' => Auth::id(),

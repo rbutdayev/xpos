@@ -14,6 +14,9 @@ interface Account {
     is_active: boolean;
     users_count: number;
     created_at: string;
+    monthly_payment_amount?: number;
+    payment_start_date?: string;
+    address?: string;
 }
 
 interface Props {
@@ -41,10 +44,23 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
     const [searchTerm, setSearchTerm] = useState(search || '');
     const [planFilter, setPlanFilter] = useState(plan || '');
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         user_email: '',
         user_password: '',
+        monthly_payment_amount: '',
+        payment_start_date: '',
+    });
+
+    const { data: editData, setData: setEditData, put, processing: editProcessing, errors: editErrors, reset: resetEdit } = useForm({
+        company_name: '',
+        email: '',
+        phone: '',
+        address: '',
+        is_active: true,
+        monthly_payment_amount: '',
+        payment_start_date: '',
     });
 
     const handleSearch = (e: React.FormEvent) => {
@@ -77,6 +93,32 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
         const action = account.is_active ? 'dayandırmaq' : 'aktivləşdirmək';
         if (confirm(`${account.company_name} hesabını ${action} istədiyinizdən əminsiniz?`)) {
             router.patch(route('superadmin.accounts.toggle-status', account.id), {}, {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const handleEditAccount = (account: Account) => {
+        setEditingAccount(account);
+        setEditData({
+            company_name: account.company_name,
+            email: account.email,
+            phone: account.phone || '',
+            address: account.address || '',
+            is_active: account.is_active,
+            monthly_payment_amount: account.monthly_payment_amount?.toString() || '',
+            payment_start_date: account.payment_start_date || '',
+        });
+    };
+
+    const handleUpdateAccount = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (editingAccount) {
+            put(route('superadmin.accounts.update', editingAccount.id), {
+                onSuccess: () => {
+                    setEditingAccount(null);
+                    resetEdit();
+                },
                 preserveScroll: true,
             });
         }
@@ -165,6 +207,122 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                         </PrimaryButton>
                     </div>
 
+                    {/* Edit Account Modal */}
+                    {editingAccount && (
+                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                                <div className="px-4 py-5 sm:p-6">
+                                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                        Hesabı Redaktə Et
+                                    </h3>
+                                    <form onSubmit={handleUpdateAccount} className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Şirkət Adı *</label>
+                                                <TextInput
+                                                    type="text"
+                                                    value={editData.company_name}
+                                                    onChange={(e) => setEditData('company_name', e.target.value)}
+                                                    className={editErrors.company_name ? 'border-red-500' : ''}
+                                                    required
+                                                />
+                                                {editErrors.company_name && <span className="text-red-500 text-xs">{editErrors.company_name}</span>}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                                <TextInput
+                                                    type="email"
+                                                    value={editData.email}
+                                                    onChange={(e) => setEditData('email', e.target.value)}
+                                                    className={editErrors.email ? 'border-red-500' : ''}
+                                                    required
+                                                />
+                                                {editErrors.email && <span className="text-red-500 text-xs">{editErrors.email}</span>}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                                                <TextInput
+                                                    type="text"
+                                                    value={editData.phone}
+                                                    onChange={(e) => setEditData('phone', e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                                <select
+                                                    value={editData.is_active ? '1' : '0'}
+                                                    onChange={(e) => setEditData('is_active', e.target.value === '1')}
+                                                    className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full"
+                                                >
+                                                    <option value="1">Aktiv</option>
+                                                    <option value="0">Dayandırılıb</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Ünvan</label>
+                                            <TextInput
+                                                type="text"
+                                                value={editData.address}
+                                                onChange={(e) => setEditData('address', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="border-t pt-4">
+                                            <h4 className="text-md font-medium text-gray-900 mb-3">Ödəniş Təyinatları</h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Aylıq Ödəniş Məbləği (AZN)</label>
+                                                    <TextInput
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={editData.monthly_payment_amount}
+                                                        onChange={(e) => setEditData('monthly_payment_amount', e.target.value)}
+                                                        className={editErrors.monthly_payment_amount ? 'border-red-500' : ''}
+                                                        placeholder="0.00"
+                                                    />
+                                                    {editErrors.monthly_payment_amount && <span className="text-red-500 text-xs">{editErrors.monthly_payment_amount}</span>}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ödəniş Başlanğıc Tarixi</label>
+                                                    <TextInput
+                                                        type="date"
+                                                        value={editData.payment_start_date}
+                                                        onChange={(e) => setEditData('payment_start_date', e.target.value)}
+                                                        className={editErrors.payment_start_date ? 'border-red-500' : ''}
+                                                    />
+                                                    {editErrors.payment_start_date && <span className="text-red-500 text-xs">{editErrors.payment_start_date}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end space-x-2 pt-4">
+                                            <SecondaryButton
+                                                type="button"
+                                                onClick={() => {
+                                                    setEditingAccount(null);
+                                                    resetEdit();
+                                                }}
+                                            >
+                                                Ləğv et
+                                            </SecondaryButton>
+                                            <PrimaryButton type="submit" disabled={editProcessing}>
+                                                {editProcessing ? 'Yenilənir...' : 'Yenilə'}
+                                            </PrimaryButton>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Create Account Form */}
                     {showCreateForm && (
                         <div className="bg-white shadow rounded-lg mb-6">
@@ -202,6 +360,33 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                         />
                                         {errors.user_password && <span className="text-red-500 text-xs">{errors.user_password}</span>}
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Aylıq Ödəniş Məbləği (AZN)</label>
+                                            <TextInput
+                                                type="number"
+                                                step="0.01"
+                                                value={data.monthly_payment_amount}
+                                                onChange={(e) => setData('monthly_payment_amount', e.target.value)}
+                                                className={errors.monthly_payment_amount ? 'border-red-500' : ''}
+                                                placeholder="0.00"
+                                            />
+                                            {errors.monthly_payment_amount && <span className="text-red-500 text-xs">{errors.monthly_payment_amount}</span>}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Ödəniş Başlanğıc Tarixi</label>
+                                            <TextInput
+                                                type="date"
+                                                value={data.payment_start_date}
+                                                onChange={(e) => setData('payment_start_date', e.target.value)}
+                                                className={errors.payment_start_date ? 'border-red-500' : ''}
+                                            />
+                                            {errors.payment_start_date && <span className="text-red-500 text-xs">{errors.payment_start_date}</span>}
+                                        </div>
+                                    </div>
+
                                     <div className="flex justify-end space-x-2">
                                         <SecondaryButton
                                             type="button"
@@ -303,6 +488,12 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                                     >
                                                         Bax
                                                     </Link>
+                                                    <button
+                                                        onClick={() => handleEditAccount(account)}
+                                                        className="text-indigo-600 hover:text-indigo-900"
+                                                    >
+                                                        Redaktə
+                                                    </button>
                                                     <button
                                                         onClick={() => handleToggleStatus(account)}
                                                         className={`${

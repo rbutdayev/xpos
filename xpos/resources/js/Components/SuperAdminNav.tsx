@@ -17,6 +17,7 @@ export default function SuperAdminNav({ activePage }: Props) {
     const navItems = [
         { path: '/admin', label: 'Dashboard', exact: true },
         { path: '/admin/accounts', label: 'Hesablar' },
+        { path: '/admin/payments', label: 'Ödənişlər' },
         { path: '/admin/users', label: 'İstifadəçilər' },
         { path: '/admin/fiscal-printer-providers', label: 'Fiskal Printerlər' },
         { path: '/admin/system-stats', label: 'Sistem Statistikası' },

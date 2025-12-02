@@ -161,6 +161,12 @@ interface RentalData {
     total_rentals_this_month: number;
 }
 
+interface PaymentAlert {
+    amount: number;
+    due_date: string;
+    days_overdue: number;
+}
+
 interface DashboardProps extends PageProps {
     stats?: DashboardStats;
     sales_chart_data?: SalesData[];
@@ -174,6 +180,7 @@ interface DashboardProps extends PageProps {
     selectedWarehouse?: { id: number; name: string; type: string } | null;
     warehouseContext?: 'all' | 'specific';
     pending_online_orders?: number;
+    payment_alert?: PaymentAlert | null;
 }
 
 // Helper function to format currency
@@ -278,9 +285,11 @@ export default function Dashboard({
     selectedWarehouse,
     warehouseContext = 'all',
     pending_online_orders = 0,
+    payment_alert = null,
 }: DashboardProps) {
     const { auth, shopEnabled, rentEnabled } = usePage<PageProps>().props;
     const user = auth.user as User;
+    const [showPaymentAlert, setShowPaymentAlert] = useState(!!payment_alert);
 
     // Use permission-based access control instead of role checks
     const { can } = usePermissions();
@@ -346,6 +355,49 @@ export default function Dashboard({
     return (
         <AuthenticatedLayout>
             <Head title="İdarə Paneli" />
+
+            {/* Payment Overdue Modal */}
+            {showPaymentAlert && payment_alert && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-5">
+                            <div className="flex items-center justify-center mb-4">
+                                <div className="bg-red-100 rounded-full p-3">
+                                    <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+                                Ödəniş Gecikib
+                            </h3>
+                            <div className="text-center space-y-2 mb-6">
+                                <p className="text-gray-700">
+                                    Aylıq ödənişiniz gecikib. Zəhmət olmasa ödənişinizi edin.
+                                </p>
+                                <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-3">
+                                    <p className="text-sm text-gray-600">Məbləğ:</p>
+                                    <p className="text-2xl font-bold text-red-600">{payment_alert.amount} ₼</p>
+                                    <p className="text-sm text-gray-600 mt-2">Son ödəniş tarixi:</p>
+                                    <p className="text-lg font-semibold text-gray-900">{payment_alert.due_date}</p>
+                                    <p className="text-sm text-red-600 mt-2">
+                                        {payment_alert.days_overdue} gün gecikib
+                                    </p>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-3">
+                                    Dəstək üçün bizimlə əlaqə saxlayın
+                                </p>
+                            </div>
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={() => setShowPaymentAlert(false)}
+                                    className="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 font-medium"
+                                >
+                                    Başa Düşdüm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-2 sm:space-y-3">
                 {/* Pending Online Orders Notification - Only show if shop module is enabled */}

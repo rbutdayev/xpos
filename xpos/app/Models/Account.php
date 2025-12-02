@@ -20,6 +20,8 @@ class Account extends Model
         'email',
         'settings',
         'is_active',
+        'monthly_payment_amount',
+        'payment_start_date',
         'shop_slug',
         'shop_enabled',
         'shop_warehouse_id',
@@ -40,6 +42,8 @@ class Account extends Model
     protected $casts = [
         'settings' => 'array',
         'is_active' => 'boolean',
+        'monthly_payment_amount' => 'decimal:2',
+        'payment_start_date' => 'date',
         'shop_enabled' => 'boolean',
         'shop_settings' => 'array',
         'shop_sms_merchant_notifications' => 'boolean',
@@ -66,6 +70,11 @@ class Account extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(AccountPayment::class);
     }
 
     public function companies(): HasMany

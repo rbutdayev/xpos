@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
                 'account_id' => null,
                 'name' => 'System Administrator',
                 'email' => 'admin@xpos.az',
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make('sdxEZllh5Fsis0'),
                 'role' => 'super_admin',
                 'status' => 'active',
                 'phone' => '+994501234567',
@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
         } else {
             // Update password if super admin exists to ensure it's correct
             $superAdmin->update([
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make('sdxEZllh5Fsis0'),
             ]);
             echo "✓ Super Admin password updated (admin@xpos.az)\n";
         }
