@@ -66,14 +66,21 @@ jobs:
           # Remove old image file
           rm /tmp/xpos-app.tar.gz
 
+          # Ensure Docker network exists
+          docker network create xpos-network 2>/dev/null || echo "Network already exists"
+
+          # Ensure Redis is connected to the network
+          docker network connect xpos-network redis 2>/dev/null || echo "Redis already connected to network"
+
           # Stop and remove old container (if exists)
           docker stop ${CONTAINER_NAME} || true
           docker rm ${CONTAINER_NAME} || true
 
-          # Run new container
+          # Run new container with network
           docker run -d \
             --name ${CONTAINER_NAME} \
             --restart unless-stopped \
+            --network xpos-network \
             -p ${PORT}:80 \
             --env-file ${ENV_FILE} \
             xpos-app:latest

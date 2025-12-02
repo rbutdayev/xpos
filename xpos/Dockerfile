@@ -52,8 +52,9 @@ COPY . .
 FROM php:8.3-fpm-alpine
 WORKDIR /var/www
 
-# System runtime deps + Nginx + Supervisor
+# System runtime deps + Nginx + Supervisor + ICU for intl extension
 RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype \
+    icu-libs icu-data-full \
     nginx supervisor
 
 # Copy PHP extensions from builder
