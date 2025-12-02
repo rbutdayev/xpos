@@ -38,6 +38,9 @@ RUN apk add --no-cache --virtual .build-deps \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install -j$(nproc) pdo pdo_mysql zip gd bcmath intl mbstring pcntl opcache
 
+# Install Redis extension
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
