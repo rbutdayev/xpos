@@ -39,7 +39,7 @@ const roleTranslations: Record<string, string> = {
     'sales_staff': 'Satış işçisi',
     'cashier': 'Kassir',
     'accountant': 'Mühasib',
-    'tailor': 'Dərzi',
+    'tailor': 'Usta',
     'support_user': 'Dəstək istifadəçisi',
 };
 import { Customer, Vehicle, ServiceRecord, Product, Supplier, Employee, Branch, GoodsReceipt } from '@/types';
@@ -2102,6 +2102,7 @@ export const usersTableConfig = {
                         'mechanic': 'Mexanik',
                         'cashier': 'Kassir',
                         'accountant': 'Mühasib',
+                        'tailor': 'Usta',
                     };
                     return roles[role] || role;
                 };

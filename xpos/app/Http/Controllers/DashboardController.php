@@ -261,10 +261,11 @@ class DashboardController extends Controller
         $selectedWarehouseId = $request->session()->get('selected_warehouse_id');
         $selectedWarehouse = $selectedWarehouseId ? $account->warehouses()->find($selectedWarehouseId) : null;
 
-        $operational = $this->dashboardService->getOperationalMetrics($account, $selectedWarehouseId);
+        // Get metrics without pricing information for warehouse managers
+        $operational = $this->dashboardService->getOperationalMetricsForWarehouse($account, $selectedWarehouseId);
         $alerts = $this->dashboardService->getInventoryAlerts($account, $selectedWarehouseId);
         $stockByUnit = $this->getStockByUnit($account, $selectedWarehouseId);
-        $lowStockProducts = $this->getLowStockProducts($account, $selectedWarehouseId);
+        $lowStockProducts = $this->getLowStockProducts($account, $selectedWarehouseId, true); // Hide prices
 
         return [
             'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
@@ -291,19 +292,19 @@ class DashboardController extends Controller
         // Personal performance
         $currentMonth = Carbon::now();
         $mySales = Sale::where('account_id', $account->id)
-            ->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereYear('sale_date', $currentMonth->year)
             ->whereMonth('sale_date', $currentMonth->month)
             ->count();
 
         $mySalesRevenue = Sale::where('account_id', $account->id)
-            ->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereYear('sale_date', $currentMonth->year)
             ->whereMonth('sale_date', $currentMonth->month)
             ->sum('total') ?? 0;
 
         $myCustomers = Sale::where('account_id', $account->id)
-            ->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereYear('sale_date', $currentMonth->year)
             ->whereMonth('sale_date', $currentMonth->month)
             ->whereNotNull('customer_id')
@@ -424,17 +425,17 @@ class DashboardController extends Controller
         $today = Carbon::today();
 
         $mySalesToday = Sale::where('account_id', $account->id)
-            ->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereDate('sale_date', $today)
             ->count();
 
         $mySalesRevenue = Sale::where('account_id', $account->id)
-            ->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereDate('sale_date', $today)
             ->sum('total') ?? 0;
 
         $myCustomersToday = Sale::where('account_id', $account->id)
-            ->where('created_by', $user->id)
+            ->where('user_id', $user->id)
             ->whereDate('sale_date', $today)
             ->whereNotNull('customer_id')
             ->distinct()
@@ -444,7 +445,7 @@ class DashboardController extends Controller
         $cashCollected = DB::table('payments')
             ->join('sales', 'payments.sale_id', '=', 'sales.sale_id')
             ->where('sales.account_id', $account->id)
-            ->where('sales.created_by', $user->id)
+            ->where('sales.user_id', $user->id)
             ->whereDate('sales.sale_date', $today)
             ->where('payments.method', 'nağd')
             ->sum('payments.amount') ?? 0;
@@ -452,7 +453,7 @@ class DashboardController extends Controller
         $cardTransfers = DB::table('payments')
             ->join('sales', 'payments.sale_id', '=', 'sales.sale_id')
             ->where('sales.account_id', $account->id)
-            ->where('sales.created_by', $user->id)
+            ->where('sales.user_id', $user->id)
             ->whereDate('sales.sale_date', $today)
             ->whereIn('payments.method', ['kart', 'köçürmə'])
             ->sum('payments.amount') ?? 0;
@@ -566,7 +567,7 @@ class DashboardController extends Controller
             ->toArray();
     }
 
-    private function getLowStockProducts(Account $account, ?int $warehouseId): array
+    private function getLowStockProducts(Account $account, ?int $warehouseId, bool $hidePrices = false): array
     {
         return \App\Models\ProductStock::with(['product', 'warehouse'])
             ->whereHas('product', fn($q) => $q->where('account_id', $account->id))
@@ -582,6 +583,9 @@ class DashboardController extends Controller
                 'min' => (float) $stock->min_level,
                 'unit' => $stock->product->unit,
                 'warehouse' => $stock->warehouse->name ?? null,
+                // Hide prices for warehouse managers
+                'purchase_price' => $hidePrices ? null : (float) $stock->product->purchase_price,
+                'sale_price' => $hidePrices ? null : (float) $stock->product->sale_price,
             ])
             ->toArray();
     }

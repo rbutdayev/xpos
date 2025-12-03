@@ -284,7 +284,7 @@ class UserController extends Controller
             ['value' => 'sales_staff', 'label' => 'Satış işçisi'],
             ['value' => 'cashier', 'label' => 'Kassir'],
             ['value' => 'accountant', 'label' => 'Mühasib'],
-            ['value' => 'tailor', 'label' => 'Dərzi'],
+            ['value' => 'tailor', 'label' => 'Usta'],
         ];
     }
 
@@ -298,7 +298,7 @@ class UserController extends Controller
             'sales_staff' => 'Satış işçisi',
             'cashier' => 'Kassir',
             'accountant' => 'Mühasib',
-            'tailor' => 'Dərzi',
+            'tailor' => 'Usta',
         ];
 
         return $roles[$role] ?? $role;

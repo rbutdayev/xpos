@@ -120,7 +120,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="role" value="Sistem Rolu *" />
+                                        <InputLabel htmlFor="role" value="Usta *" />
                                         <select
                                             id="role"
                                             name="role"
@@ -129,7 +129,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                             required
                                         >
-                                            <option value="">Sistem rolu seçin...</option>
+                                            <option value="">Rol seçin...</option>
                                             {roleOptions.map((role) => (
                                                 <option key={role.value} value={role.value}>
                                                     {role.label}
@@ -307,7 +307,7 @@ export default function Create({ roleOptions, branches }: Props) {
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h3 className="text-sm font-medium text-blue-900 mb-2">Məlumat</h3>
                         <ul className="text-sm text-blue-700 space-y-1">
-                            <li>• <strong>Sistem Rolu:</strong> İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir (məsələn: Admin, Kassir)</li>
+                            <li>• <strong>Usta:</strong> İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir (məsələn: Admin, Kassir)</li>
                             <li>• <strong>Vəzifə:</strong> İşçinin konkret iş yerindəki vəzifəsi (məsələn: Baş Mexanik, Satış Meneceri)</li>
                             <li>• Şifrə minimum 8 simvoldan ibarət olmalıdır</li>
                             <li>• Satış işçisi rolunu seçərsəniz, filial təyin etmək məcburidir</li>

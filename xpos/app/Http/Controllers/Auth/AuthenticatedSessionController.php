@@ -81,6 +81,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
+        // Clear the intended URL to prevent redirect issues when logging in as different user
+        $request->session()->forget('url.intended');
+
         // Store a flag to clear user data on client side
         // SessionManager will detect this and clear localStorage
         $request->session()->flash('user_logged_out', true);

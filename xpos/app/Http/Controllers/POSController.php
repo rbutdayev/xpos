@@ -36,14 +36,14 @@ class POSController extends Controller
 
     public function index()
     {
-        Gate::authorize('create-account-data');
+        Gate::authorize('access-pos');
 
         try {
             $accountId = Auth::user()->account_id;
 
             $employees = User::where('account_id', $accountId)
                 ->where('status', 'active')
-                ->whereIn('role', ['account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'accountant', 'tailor'])
+                ->whereIn('role', ['account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'accountant'])
                 ->orderBy('name')
                 ->get(['id', 'name', 'position', 'role']);
 
@@ -93,7 +93,7 @@ class POSController extends Controller
 
     public function touch()
     {
-        Gate::authorize('create-account-data');
+        Gate::authorize('access-pos');
 
         try {
             $accountId = Auth::user()->account_id;
@@ -142,7 +142,7 @@ class POSController extends Controller
 
     public function storeSale(Request $request)
     {
-        Gate::authorize('create-account-data');
+        Gate::authorize('access-pos');
 
         \Log::info('POS Sale submission received', ['data' => $request->all()]);
 

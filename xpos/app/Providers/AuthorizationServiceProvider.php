@@ -186,17 +186,17 @@ class AuthorizationServiceProvider extends ServiceProvider
             return true;
         });
 
-        // Create data in account
+        // Create data in account (accountant excluded - they can only view)
         Gate::define('create-account-data', function (User $user) {
             return $user->isActive() && $user->account->isActive() && in_array($user->role, [
-                'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'accountant', 'tailor'
+                'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'tailor'
             ]);
         });
 
-        // Edit data in account
+        // Edit data in account (accountant excluded - they can only view)
         Gate::define('edit-account-data', function (User $user) {
             return $user->isActive() && $user->account->isActive() && in_array($user->role, [
-                'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'accountant', 'tailor'
+                'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'tailor'
             ]);
         });
 
@@ -204,6 +204,13 @@ class AuthorizationServiceProvider extends ServiceProvider
         Gate::define('delete-account-data', function (User $user) {
             return $user->isActive() && $user->account->isActive() && in_array($user->role, [
                 'account_owner', 'admin'
+            ]);
+        });
+
+        // Access POS system (excludes tailor and accountant roles)
+        Gate::define('access-pos', function (User $user) {
+            return $user->isActive() && $user->account->isActive() && in_array($user->role, [
+                'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier'
             ]);
         });
 

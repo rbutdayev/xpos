@@ -231,6 +231,44 @@ class DashboardService
     }
 
     /**
+     * Get operational metrics for warehouse managers (without pricing)
+     */
+    public function getOperationalMetricsForWarehouse(Account $account, ?int $warehouseId = null): array
+    {
+        $cacheKey = "dashboard:operational_warehouse:{$account->id}:" . ($warehouseId ?? 'all') . ':' . Carbon::now()->format('Y-m-d-H');
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
+            // Products in stock
+            $productsInStock = DB::table('product_stock')
+                ->join('products', 'product_stock.product_id', '=', 'products.id')
+                ->where('products.account_id', $account->id)
+                ->when($warehouseId, fn($q) => $q->where('product_stock.warehouse_id', $warehouseId))
+                ->where('product_stock.quantity', '>', 0)
+                ->distinct()
+                ->count('product_stock.product_id');
+
+            // Total products count
+            $productsCount = $account->products()->count();
+
+            // Total quantity in stock (all units)
+            $totalQuantity = DB::table('product_stock')
+                ->join('products', 'product_stock.product_id', '=', 'products.id')
+                ->where('products.account_id', $account->id)
+                ->when($warehouseId, fn($q) => $q->where('product_stock.warehouse_id', $warehouseId))
+                ->sum('product_stock.quantity') ?? 0;
+
+            return [
+                'products_in_stock' => $productsInStock,
+                'products_count' => $productsCount,
+                'total_quantity' => round($totalQuantity, 2),
+                // Pricing information hidden for warehouse managers
+                'stock_value' => null,
+                'stock_turnover' => null,
+            ];
+        });
+    }
+
+    /**
      * Get inventory alerts
      */
     public function getInventoryAlerts(Account $account, ?int $warehouseId = null): array
@@ -275,7 +313,7 @@ class DashboardService
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $userId) {
             $baseQuery = \App\Models\TailorService::where('account_id', $account->id)
-                ->when($userId, fn($q) => $q->where('assigned_to', $userId));
+                ->when($userId, fn($q) => $q->where('employee_id', $userId));
 
             $currentMonth = Carbon::now();
             $previousMonth = Carbon::now()->subMonth();
@@ -336,7 +374,7 @@ class DashboardService
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $userId) {
             $baseQuery = \App\Models\Rental::where('account_id', $account->id)
-                ->when($userId, fn($q) => $q->where('created_by', $userId));
+                ->when($userId, fn($q) => $q->where('user_id', $userId));
 
             $currentMonth = Carbon::now();
 

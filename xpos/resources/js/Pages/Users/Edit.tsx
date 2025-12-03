@@ -157,7 +157,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     required
                                                 >
-                                                    <option value="">Sistem rolu seçin...</option>
+                                                    <option value="">Rol seçin...</option>
                                                     {(roleOptions || []).map((role) => (
                                                         <option key={role.value} value={role.value}>
                                                             {role.label}

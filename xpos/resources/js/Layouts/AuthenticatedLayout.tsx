@@ -225,9 +225,14 @@ export default function Authenticated({
         ];
         
         // Filter out TouchPOS on mobile
-        const baseNavigation = isMobile 
+        let baseNavigation = isMobile
             ? allNavItems.filter(item => item.name !== 'TouchPOS')
             : allNavItems;
+
+        // Filter out POS for tailors (they have their own service management)
+        const tailorBaseNavigation = allNavItems.filter(item =>
+            item.name !== 'POS Satış' && item.name !== 'TouchPOS'
+        );
 
         // If user is sales_staff, only show Dashboard, Products (read-only), Sales, and Customer Services
         if (user.role === 'sales_staff') {
@@ -314,10 +319,33 @@ export default function Authenticated({
             ];
         }
 
-        // Accountant role - Finance and Reports only
+        // Accountant role - Finance, Reports, and view-only Sales
         if (user.role === 'accountant') {
             return [
-                ...baseNavigation,
+                {
+                    name: 'Dashboard',
+                    href: '/dashboard',
+                    icon: HomeIcon,
+                    current: route().current('dashboard')
+                },
+                {
+                    name: 'Satışlar',
+                    icon: ShoppingCartIcon,
+                    children: [
+                        {
+                            name: 'Satış Siyahısı',
+                            href: '/sales',
+                            icon: ShoppingCartIcon,
+                            current: route().current('sales.index') || route().current('sales.show')
+                        },
+                        {
+                            name: 'Müştərilər',
+                            href: '/customers',
+                            icon: UserGroupIcon,
+                            current: route().current('customers.*')
+                        }
+                    ]
+                },
                 {
                     name: 'Maliyyə və Hesabatlar',
                     icon: CurrencyDollarIcon,
@@ -378,7 +406,12 @@ export default function Authenticated({
         // Warehouse Manager role - Warehouse and Stock operations only
         if (user.role === 'warehouse_manager') {
             return [
-                ...baseNavigation,
+                {
+                    name: 'Dashboard',
+                    href: '/dashboard',
+                    icon: HomeIcon,
+                    current: route().current('dashboard')
+                },
                 {
                     name: 'Məhsullar',
                     href: '/products',
@@ -434,7 +467,7 @@ export default function Authenticated({
         // Tailor role - Services and Customers only
         if (user.role === 'tailor') {
             return [
-                ...baseNavigation,
+                ...tailorBaseNavigation,
                 ...(canAccessModule('services') ? [{
                     name: 'Xidmətlər',
                     icon: WrenchScrewdriverIcon,

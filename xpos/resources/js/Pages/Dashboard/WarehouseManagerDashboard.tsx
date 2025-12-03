@@ -16,8 +16,9 @@ interface Props {
     operational: {
         products_in_stock: number;
         products_count: number;
-        stock_value: { cost: number; sale: number; potential_profit: number };
-        stock_turnover: number;
+        total_quantity?: number;
+        stock_value: { cost: number; sale: number; potential_profit: number } | null;
+        stock_turnover: number | null;
     };
     alerts: {
         low_stock: number;
@@ -61,27 +62,40 @@ export default function WarehouseManagerDashboard({ operational, alerts, stock_b
                     variant="primary"
                     subtitle={`${operational.products_count} ümumi`}
                 />
-                <CompactKPICard
-                    title="Stok Dəyəri (Maya)"
-                    value={formatCurrency(operational.stock_value.cost)}
-                    icon={<BanknotesIcon />}
-                    variant="primary"
-                    subtitle="Alış qiyməti"
-                />
-                <CompactKPICard
-                    title="Satış Dəyəri"
-                    value={formatCurrency(operational.stock_value.sale)}
-                    icon={<BanknotesIcon />}
-                    variant="success"
-                    subtitle="Potensial gəlir"
-                />
-                <CompactKPICard
-                    title="Potensial Mənfəət"
-                    value={formatCurrency(operational.stock_value.potential_profit)}
-                    icon={<BanknotesIcon />}
-                    variant="success"
-                    subtitle="Satış - Maya"
-                />
+                {operational.total_quantity !== undefined && (
+                    <CompactKPICard
+                        title="Ümumi Miqdar"
+                        value={formatNumber(operational.total_quantity, 2)}
+                        icon={<CubeIcon />}
+                        variant="primary"
+                        subtitle="Bütün vahidlər"
+                    />
+                )}
+                {operational.stock_value && (
+                    <>
+                        <CompactKPICard
+                            title="Stok Dəyəri (Maya)"
+                            value={formatCurrency(operational.stock_value.cost)}
+                            icon={<BanknotesIcon />}
+                            variant="primary"
+                            subtitle="Alış qiyməti"
+                        />
+                        <CompactKPICard
+                            title="Satış Dəyəri"
+                            value={formatCurrency(operational.stock_value.sale)}
+                            icon={<BanknotesIcon />}
+                            variant="success"
+                            subtitle="Potensial gəlir"
+                        />
+                        <CompactKPICard
+                            title="Potensial Mənfəət"
+                            value={formatCurrency(operational.stock_value.potential_profit)}
+                            icon={<BanknotesIcon />}
+                            variant="success"
+                            subtitle="Satış - Maya"
+                        />
+                    </>
+                )}
             </SectionGroup>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -175,7 +189,9 @@ export default function WarehouseManagerDashboard({ operational, alerts, stock_b
                                     <div className="text-lg font-bold text-gray-900">{formatNumber(item.quantity, 2)}</div>
                                     <div className="text-xs font-medium text-gray-600 mt-0.5">{item.unit}</div>
                                     <div className="text-xs text-gray-500 mt-0.5">{item.sku_count} məhsul</div>
-                                    <div className="text-xs text-gray-500">{formatCurrency(item.value)}</div>
+                                    {operational.stock_value && (
+                                        <div className="text-xs text-gray-500">{formatCurrency(item.value)}</div>
+                                    )}
                                 </div>
                             </div>
                         ))}
