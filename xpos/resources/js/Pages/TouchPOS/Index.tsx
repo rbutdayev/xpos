@@ -18,6 +18,7 @@ interface FiscalConfig {
   shift_open: boolean;
   shift_opened_at: string | null;
   last_z_report_at: string | null;
+  credit_contract_number?: string;
 }
 
 interface TouchPOSProps extends PageProps {
@@ -49,7 +50,7 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
     discount_amount: 0,
     notes: '',
     payment_status: 'paid' as 'paid' | 'credit' | 'partial',
-    payment_method: 'nağd' as 'nağd' | 'kart' | 'köçürmə',
+    payment_method: 'nağd' as 'nağd' | 'kart' | 'köçürmə' | 'bank_kredit',
     paid_amount: 0,
     credit_amount: 0,
     credit_due_date: '',
@@ -347,6 +348,7 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
                 onSubmit={handleSubmit}
                 errors={errors}
                 cartCount={cart.length}
+                fiscalConfig={fiscalConfig}
                 loyaltyProgram={loyaltyProgram}
                 selectedCustomer={selectedCustomer}
               />

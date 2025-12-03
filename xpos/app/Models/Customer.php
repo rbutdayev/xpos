@@ -27,6 +27,7 @@ class Customer extends Model
         'is_active',
         'current_points',
         'lifetime_points',
+        'loyalty_card_id',
     ];
 
     protected $appends = [
@@ -78,6 +79,11 @@ class Customer extends Model
         return $this->hasMany(CustomerPoint::class);
     }
 
+    public function loyaltyCard(): BelongsTo
+    {
+        return $this->belongsTo(LoyaltyCard::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
@@ -90,12 +96,15 @@ class Customer extends Model
         if (strlen($cleanSearch) > 255) {
             $cleanSearch = substr($cleanSearch, 0, 255);
         }
-        
+
         return $query->where(function ($q) use ($cleanSearch) {
             $q->where('name', 'like', '%' . $cleanSearch . '%')
               ->orWhere('email', 'like', '%' . $cleanSearch . '%')
               ->orWhere('phone', 'like', '%' . $cleanSearch . '%')
-              ->orWhere('tax_number', 'like', '%' . $cleanSearch . '%');
+              ->orWhere('tax_number', 'like', '%' . $cleanSearch . '%')
+              ->orWhereHas('loyaltyCard', function ($cardQuery) use ($cleanSearch) {
+                  $cardQuery->where('card_number', 'like', '%' . strtoupper($cleanSearch) . '%');
+              });
         });
     }
 

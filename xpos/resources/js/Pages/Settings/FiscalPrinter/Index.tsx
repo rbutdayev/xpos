@@ -21,6 +21,7 @@ interface FiscalPrinterConfig {
     security_key?: string;
     device_serial?: string;
     bank_port?: string;
+    credit_contract_number?: string;
     default_tax_name: string;
     default_tax_rate: number;
     auto_send: boolean;
@@ -67,6 +68,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
         security_key: config?.security_key || '',
         device_serial: config?.device_serial || '',
         bank_port: config?.bank_port || '',
+        credit_contract_number: config?.credit_contract_number || '',
         default_tax_name: config?.default_tax_name || 'ƏDV',
         default_tax_rate: config?.default_tax_rate || 18,
         auto_send: config?.auto_send ?? true,
@@ -89,6 +91,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
             security_key: '',
             device_serial: '',
             bank_port: '',
+            credit_contract_number: '',
         });
     };
 
@@ -356,6 +359,24 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                                 <InputError message={errors[field as keyof typeof errors]} className="mt-2" />
                                             </div>
                                         ))}
+
+                                        {/* Credit Contract Number - for bank credit sales */}
+                                        <div className="md:col-span-2">
+                                            <InputLabel htmlFor="credit_contract_number" value="Bank Kredit Müqaviləsi" />
+                                            <TextInput
+                                                id="credit_contract_number"
+                                                type="text"
+                                                value={data.credit_contract_number}
+                                                onChange={(e) => setData('credit_contract_number', e.target.value)}
+                                                className="mt-1 block w-full"
+                                                disabled={!isEditing}
+                                                placeholder="Məsələn: BirKart müqavilə nömrəsi"
+                                            />
+                                            <InputError message={errors.credit_contract_number} className="mt-2" />
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Bank kredit satışları üçün lazımdır. Bu xana dolmadığı halda "Bank Kredit" ödəniş növü POS ekranında görünməyəcək.
+                                            </p>
+                                        </div>
 
                                         {/* Tax Name */}
                                         <div>

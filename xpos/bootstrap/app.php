@@ -23,32 +23,132 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             // Custom route model bindings for models with custom primary keys
+            // Security: All bindings verify account_id to prevent IDOR attacks
+
             Route::bind('expense', function ($value) {
-                return \App\Models\Expense::where('expense_id', $value)->firstOrFail();
+                $expense = \App\Models\Expense::where('expense_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this expense's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($expense->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $expense;
             });
+
             Route::bind('expense_category', function ($value) {
-                return \App\Models\ExpenseCategory::where('category_id', $value)->firstOrFail();
+                $category = \App\Models\ExpenseCategory::where('category_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this category's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($category->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $category;
             });
+
             Route::bind('product_return', function ($value) {
-                return \App\Models\ProductReturn::where('return_id', $value)->firstOrFail();
+                $return = \App\Models\ProductReturn::where('return_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this return's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($return->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $return;
             });
+
             Route::bind('employee_salary', function ($value) {
-                return \App\Models\EmployeeSalary::where('salary_id', $value)->firstOrFail();
+                $salary = \App\Models\EmployeeSalary::where('salary_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this salary's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($salary->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $salary;
             });
+
             Route::bind('supplier_payment', function ($value) {
-                return \App\Models\SupplierPayment::where('payment_id', $value)->firstOrFail();
+                $payment = \App\Models\SupplierPayment::where('payment_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this payment's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($payment->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $payment;
             });
+
             Route::bind('sale', function ($value) {
-                return \App\Models\Sale::where('sale_id', $value)->firstOrFail();
+                $sale = \App\Models\Sale::where('sale_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this sale's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($sale->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $sale;
             });
+
             Route::bind('warehouse_transfer', function ($value) {
-                return \App\Models\WarehouseTransfer::where('transfer_id', $value)->firstOrFail();
+                $transfer = \App\Models\WarehouseTransfer::where('transfer_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this transfer's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($transfer->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $transfer;
             });
+
             Route::bind('printer_config', function ($value) {
-                return \App\Models\PrinterConfig::where('config_id', $value)->firstOrFail();
+                $config = \App\Models\PrinterConfig::where('config_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this config's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($config->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $config;
             });
+
             Route::bind('receipt_template', function ($value) {
-                return \App\Models\ReceiptTemplate::where('template_id', $value)->firstOrFail();
+                $template = \App\Models\ReceiptTemplate::where('template_id', $value)->firstOrFail();
+
+                // Security: Verify user has access to this template's account
+                if (\Illuminate\Support\Facades\Auth::check() &&
+                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
+                    if ($template->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
+                        abort(403, 'Access denied');
+                    }
+                }
+
+                return $template;
             });
         },
     )
@@ -56,12 +156,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\SecurityHeaders::class,  // Security: Add security headers to all responses
         ]);
 
         $middleware->alias([
             'account.access' => \App\Http\Middleware\EnsureAccountAccess::class,
             'superadmin' => \App\Http\Middleware\SuperAdminAccess::class,
             'branch.access' => \App\Http\Middleware\BranchAccess::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
 
         // API routes don't need CSRF protection (stateless)

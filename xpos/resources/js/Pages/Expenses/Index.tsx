@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import SecondaryButton from '@/Components/SecondaryButton';
+import ExpensesNavigation from '@/Components/ExpensesNavigation';
+import CreateExpenseModal from '@/Components/Modals/CreateExpenseModal';
+import PaySupplierCreditModal from '@/Components/Modals/PaySupplierCreditModal';
+import CreateSupplierPaymentModal from '@/Components/Modals/CreateSupplierPaymentModal';
+import { GoodsReceipt } from '@/types';
 import {
     CurrencyDollarIcon,
     CalendarIcon,
     BuildingOfficeIcon,
     DocumentTextIcon,
-    TagIcon,
     EyeIcon,
     PencilIcon,
     TrashIcon,
-    FolderIcon,
     CheckCircleIcon,
     XCircleIcon
 } from '@heroicons/react/24/outline';
@@ -51,6 +53,24 @@ interface Expense {
     created_at: string;
 }
 
+interface SupplierCredit {
+    supplier_credit_id: number;
+    reference_number: string;
+    description: string;
+    amount: number;
+    remaining_amount: number;
+    supplier: {
+        id: number;
+        name: string;
+    };
+}
+
+interface Supplier {
+    id: number;
+    name: string;
+    company?: string | null;
+}
+
 interface Props {
     expenses: {
         data: Expense[];
@@ -76,6 +96,8 @@ interface Props {
         name: string;
     }>;
     paymentMethods: Record<string, string>;
+    suppliers: Supplier[];
+    unpaidGoodsReceipts: GoodsReceipt[];
     filters: {
         search?: string;
         category_id?: string;
@@ -91,11 +113,15 @@ interface Props {
     errors?: Record<string, string>;
 }
 
-export default function Index({ expenses, categories, branches, paymentMethods, filters, flash, errors }: Props) {
+export default function Index({ expenses, categories, branches, paymentMethods, suppliers, unpaidGoodsReceipts, filters, flash, errors }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category_id || '');
     const [selectedBranch, setSelectedBranch] = useState(filters.branch_id || '');
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(filters.payment_method || '');
+    const [showCreateExpenseModal, setShowCreateExpenseModal] = useState(false);
+    const [showPaySupplierCreditModal, setShowPaySupplierCreditModal] = useState(false);
+    const [showSupplierPaymentModal, setShowSupplierPaymentModal] = useState(false);
+    const [selectedSupplierCredit, setSelectedSupplierCredit] = useState<SupplierCredit | null>(null);
 
     // Define columns for the table
     const columns: Column[] = [
@@ -163,22 +189,34 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             key: 'payment_method',
-            label: 'Ödəniş üsulu',
+            label: 'Ödəniş',
             mobileLabel: 'Ödəniş',
             align: 'center',
             hideOnMobile: true,
-            render: (expense: Expense) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    expense.payment_method === 'nağd'
-                        ? 'bg-green-100 text-green-800'
-                        : expense.payment_method === 'kart'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
-                }`}>
-                    {expense.payment_method === 'nağd' ? 'Nağd' :
-                     expense.payment_method === 'kart' ? 'Kart' : 'Köçürmə'}
-                </span>
-            ),
+            render: (expense: Expense) => {
+                // For supplier credits that are not paid, show "Ödənilməyib"
+                if (expense.type === 'supplier_credit' && expense.status !== 'paid') {
+                    return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Ödənilməyib
+                        </span>
+                    );
+                }
+
+                // For paid expenses (regular or paid supplier credits), show payment method
+                return (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        expense.payment_method === 'nağd'
+                            ? 'bg-green-100 text-green-800'
+                            : expense.payment_method === 'kart'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-purple-100 text-purple-800'
+                    }`}>
+                        {expense.payment_method === 'nağd' ? 'Nağd' :
+                         expense.payment_method === 'kart' ? 'Kart' : 'Köçürmə'}
+                    </span>
+                );
+            },
             width: '120px'
         },
         {
@@ -277,7 +315,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             label: 'Ödə',
-            href: (expense: Expense) => `/expenses/create?supplier_credit_id=${expense.supplier_credit_id}`,
+            onClick: (expense: Expense) => handlePaySupplierCredit(expense),
             icon: <CurrencyDollarIcon className="w-4 h-4" />,
             variant: 'primary',
             condition: (expense: Expense) => expense.type === 'supplier_credit' && expense.status !== 'paid'
@@ -330,11 +368,33 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         }
     };
 
+    const handlePaySupplierCredit = (expense: Expense) => {
+        if (expense.supplier_credit_id && expense.supplier) {
+            setSelectedSupplierCredit({
+                supplier_credit_id: expense.supplier_credit_id,
+                reference_number: expense.reference_number,
+                description: expense.description,
+                amount: expense.amount,
+                remaining_amount: expense.remaining_amount || expense.amount,
+                supplier: expense.supplier
+            });
+            setShowPaySupplierCreditModal(true);
+        }
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Xərclər" />
 
             <div className="py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Expense Navigation */}
+                    <ExpensesNavigation
+                        currentRoute={route().current()}
+                        onCreateExpense={() => setShowCreateExpenseModal(true)}
+                        onCreateSupplierPayment={() => setShowSupplierPaymentModal(true)}
+                    />
+
                 <div className="w-full">
                     {/* Flash Messages */}
                     {flash?.success && (
@@ -373,10 +433,6 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         searchPlaceholder="Təsvir, nömrə və ya kateqoriya ilə axtar..."
                         onSearch={handleSearch}
                         onReset={handleReset}
-                        createButton={{
-                            label: 'Xərc əlavə et',
-                            href: '/expenses/create'
-                        }}
                         emptyState={{
                             title: 'Heç bir xərc tapılmadı',
                             description: 'İlk xərcinizi əlavə etməklə başlayın.',
@@ -387,7 +443,36 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         hideMobileActions={true}
                     />
                 </div>
+                </div>
             </div>
+
+            {/* Modals */}
+            <CreateExpenseModal
+                show={showCreateExpenseModal}
+                onClose={() => setShowCreateExpenseModal(false)}
+                categories={categories}
+                branches={branches}
+                paymentMethods={paymentMethods}
+            />
+
+            <PaySupplierCreditModal
+                show={showPaySupplierCreditModal}
+                onClose={() => setShowPaySupplierCreditModal(false)}
+                supplierCredit={selectedSupplierCredit}
+                categories={categories}
+                branches={branches}
+                paymentMethods={paymentMethods}
+            />
+
+            <CreateSupplierPaymentModal
+                show={showSupplierPaymentModal}
+                onClose={() => setShowSupplierPaymentModal(false)}
+                suppliers={suppliers}
+                paymentMethods={paymentMethods}
+                unpaidGoodsReceipts={unpaidGoodsReceipts}
+                branches={branches}
+                categories={categories}
+            />
         </AuthenticatedLayout>
     );
 }

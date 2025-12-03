@@ -10,16 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Account extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'company_name',
-        'subscription_plan',
         'language',
         'address',
         'tax_number',
         'phone',
         'email',
         'settings',
-        'is_active',
         'shop_slug',
         'shop_enabled',
         'shop_warehouse_id',
@@ -31,15 +30,31 @@ class Account extends Model
         'notification_settings',
         'auto_print_receipt',
         'fiscal_printer_enabled',
-        'loyalty_module_enabled',
-        'services_module_enabled',
-        'rent_module_enabled',
-        'discounts_module_enabled',
+    ];
+
+    /**
+     * The attributes that aren't mass assignable.
+     * Security: Protect sensitive administrative fields
+     *
+     * @var list<string>
+     */
+    protected $guarded = [
+        'id',
+        'is_active',                   // Only super admin can activate/deactivate
+        'monthly_payment_amount',      // Only super admin can set payment amount
+        'payment_start_date',          // Only super admin can set payment dates
+        'subscription_plan',           // Only super admin can change plans
+        'loyalty_module_enabled',      // Paid features - only super admin
+        'services_module_enabled',     // Paid features - only super admin
+        'rent_module_enabled',         // Paid features - only super admin
+        'discounts_module_enabled',    // Paid features - only super admin
     ];
 
     protected $casts = [
         'settings' => 'array',
         'is_active' => 'boolean',
+        'monthly_payment_amount' => 'decimal:2',
+        'payment_start_date' => 'date',
         'shop_enabled' => 'boolean',
         'shop_settings' => 'array',
         'shop_sms_merchant_notifications' => 'boolean',
@@ -66,6 +81,11 @@ class Account extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(AccountPayment::class);
     }
 
     public function companies(): HasMany
@@ -162,25 +182,25 @@ class Account extends Model
     // Loyalty-related helper methods
     public function isLoyaltyModuleEnabled(): bool
     {
-        return $this->loyalty_module_enabled ?? true;
+        return $this->loyalty_module_enabled ?? false;
     }
 
     // Services module helper methods
     public function isServicesModuleEnabled(): bool
     {
-        return $this->services_module_enabled ?? true;
+        return $this->services_module_enabled ?? false;
     }
 
     // Rent module helper methods
     public function isRentModuleEnabled(): bool
     {
-        return $this->rent_module_enabled ?? true;
+        return $this->rent_module_enabled ?? false;
     }
 
     // Discounts module helper methods
     public function isDiscountsModuleEnabled(): bool
     {
-        return $this->discounts_module_enabled ?? true;
+        return $this->discounts_module_enabled ?? false;
     }
 
     public function hasSmsConfigured(): bool

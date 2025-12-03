@@ -81,6 +81,7 @@ class FiscalPrinterConfigController extends Controller
             'ip_address' => 'required|ip',
             'port' => 'required|integer|min:1|max:65535',
             'api_path' => 'nullable|string|max:255',
+            'credit_contract_number' => 'nullable|string|max:255',
             'default_tax_name' => 'required|string|max:50',
             'default_tax_rate' => 'required|numeric|min:0|max:100',
             'auto_send' => 'boolean',
@@ -273,6 +274,215 @@ class FiscalPrinterConfigController extends Controller
         $fiscalService = app(FiscalPrinterService::class);
 
         $result = $fiscalService->printXReport($accountId);
+
+        return response()->json($result);
+    }
+
+    // ============================================================
+    // PAYMENT OPERATIONS
+    // ============================================================
+
+    /**
+     * Print Credit Pay receipt (bank credit repayment)
+     */
+    public function printCreditPay(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255',
+            'sale_id' => 'nullable|integer|exists:sales,sale_id',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printCreditPayReceipt($accountId, $validated);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Print Advance Sale receipt (prepayment)
+     */
+    public function printAdvanceSale(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $validated = $request->validate([
+            'cash_amount' => 'nullable|numeric|min:0',
+            'card_amount' => 'nullable|numeric|min:0',
+            'client_name' => 'nullable|string|max:255',
+            'note' => 'nullable|string|max:255',
+            'sale_id' => 'nullable|integer|exists:sales,sale_id',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printAdvanceSaleReceipt($accountId, $validated);
+
+        return response()->json($result);
+    }
+
+    // ============================================================
+    // CASH DRAWER OPERATIONS
+    // ============================================================
+
+    /**
+     * Print Deposit receipt (add money to drawer)
+     */
+    public function printDeposit(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printDepositReceipt($accountId, $validated);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Print Withdraw receipt (remove money from drawer)
+     */
+    public function printWithdraw(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printWithdrawReceipt($accountId, $validated);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Open cash box (no receipt)
+     */
+    public function openCashBox()
+    {
+        Gate::authorize('manage-products');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->openCashBox($accountId);
+
+        return response()->json($result);
+    }
+
+    // ============================================================
+    // UTILITY OPERATIONS
+    // ============================================================
+
+    /**
+     * Print Correction receipt (offline transactions)
+     */
+    public function printCorrection(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $validated = $request->validate([
+            'cash_amount' => 'nullable|numeric|min:0',
+            'card_amount' => 'nullable|numeric|min:0',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printCorrectionReceipt($accountId, $validated);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Print RollBack receipt (cancel receipt)
+     */
+    public function printRollBack(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $validated = $request->validate([
+            'document_id' => 'required|string',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printRollBackReceipt($accountId, $validated);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Print last receipt (reprint)
+     */
+    public function printLastReceipt()
+    {
+        Gate::authorize('access-account-data');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->printLastReceipt($accountId);
+
+        return response()->json($result);
+    }
+
+    // ============================================================
+    // REPORT OPERATIONS
+    // ============================================================
+
+    /**
+     * Get periodic report (date range)
+     */
+    public function getPeriodicReport(Request $request)
+    {
+        Gate::authorize('access-account-data');
+
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->getPeriodicReport(
+            $accountId,
+            $validated['start_date'],
+            $validated['end_date']
+        );
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get control tape (shift details)
+     */
+    public function getControlTape()
+    {
+        Gate::authorize('access-account-data');
+
+        $accountId = Auth::user()->account_id;
+        $fiscalService = app(FiscalPrinterService::class);
+
+        $result = $fiscalService->getControlTape($accountId);
 
         return response()->json($result);
     }

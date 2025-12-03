@@ -48,6 +48,20 @@ class FiscalPrinterJob extends Model
     const OPERATION_SHIFT_CLOSE = 'shift_close';
     const OPERATION_SHIFT_STATUS = 'shift_status';
     const OPERATION_SHIFT_X_REPORT = 'shift_x_report';
+    const OPERATION_CREDIT_PAY = 'credit_pay';
+    const OPERATION_ADVANCE_SALE = 'advance_sale';
+    const OPERATION_ADVANCE_SALE_ITEMS = 'advance_sale_items';
+    const OPERATION_ADVANCE_PAY = 'advance_pay';
+    const OPERATION_DEPOSIT = 'deposit';
+    const OPERATION_WITHDRAW = 'withdraw';
+    const OPERATION_OPEN_CASHBOX = 'open_cashbox';
+    const OPERATION_CORRECTION = 'correction';
+    const OPERATION_ROLLBACK = 'rollback';
+    const OPERATION_PRINT_LAST = 'print_last';
+    const OPERATION_PRINTER_CONNECTION = 'printer_connection';
+    const OPERATION_PERIODIC_REPORT = 'periodic_report';
+    const OPERATION_CONTROL_TAPE = 'control_tape';
+    const OPERATION_LOGOUT = 'logout';
 
     /**
      * Mark job as picked up by bridge

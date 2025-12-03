@@ -493,10 +493,21 @@ async function printToFiscalPrinter(requestData) {
 // Process a single job
 async function processJob(job) {
     const operationType = job.operation_type || 'sale';
+
+    // Operations that don't return fiscal numbers (like shift operations)
+    const nonFiscalOperations = [
+        'shift_open', 'shift_close', 'shift_status', 'shift_x_report',
+        'deposit', 'withdraw', 'open_cashbox',
+        'print_last', 'rollback',
+        'periodic_report', 'control_tape',
+        'printer_connection', 'logout'
+    ];
+
+    const isNonFiscalOperation = nonFiscalOperations.includes(operationType);
     const isShiftOperation = ['shift_open', 'shift_close', 'shift_status', 'shift_x_report'].includes(operationType);
 
-    if (isShiftOperation) {
-        log.info(`📝 Növbə əməliyyatı işlənir: #${job.id} (${operationType})`);
+    if (isNonFiscalOperation) {
+        log.info(`📝 Əməliyyat işlənir: #${job.id} (${operationType})`);
     } else {
         log.info(`📝 İş işlənir: #${job.id} (Satış #${job.sale_id})`);
     }
@@ -506,9 +517,9 @@ async function processJob(job) {
         const result = await printToFiscalPrinter(job.request_data);
 
         if (result.success) {
-            // Handle shift operations differently - they don't have fiscal numbers
-            if (isShiftOperation) {
-                // For shift operations, just send the response data
+            // Handle non-fiscal operations - they don't have fiscal numbers
+            if (isNonFiscalOperation) {
+                // For non-fiscal operations, just send the response data
                 const completionData = {
                     response: result.data,
                     response_data: result.data
@@ -517,10 +528,12 @@ async function processJob(job) {
                 // Report success to server
                 await api.post(`/api/bridge/job/${job.id}/complete-shift`, completionData);
 
-                log.success(`✓ Növbə əməliyyatı tamamlandı: #${job.id} (${operationType})`);
+                log.success(`✓ Əməliyyat tamamlandı: #${job.id} (${operationType})`);
 
-                // Immediately push updated shift status to server (don't wait for next periodic check)
-                await checkAndPushShiftStatus();
+                // For shift operations, immediately push updated shift status
+                if (isShiftOperation) {
+                    await checkAndPushShiftStatus();
+                }
 
                 return true;
             }

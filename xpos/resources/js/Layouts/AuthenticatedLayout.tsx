@@ -44,7 +44,10 @@ import {
     BuildingStorefrontIcon,
     FolderIcon,
     ArchiveBoxIcon,
-    Cog6ToothIcon
+    Cog6ToothIcon,
+    QueueListIcon,
+    ChatBubbleLeftRightIcon,
+    DocumentMagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarItem {
@@ -143,8 +146,18 @@ export default function Authenticated({
             currentRoute?.includes('branches') ||
             (currentRoute?.includes('users') && !currentRoute?.includes('customers')) ||
             currentRoute?.includes('warehouses') ||
-            currentRoute?.includes('settings')) {
+            currentRoute?.includes('settings') ||
+            currentRoute?.includes('printer-configs') ||
+            currentRoute?.includes('receipt-templates') ||
+            currentRoute?.includes('bridge-tokens')) {
             openMenus.push('Parametrlər');
+        }
+
+        if (currentRoute?.includes('fiscal-printer-jobs') ||
+            currentRoute === 'sms.logs' ||
+            currentRoute === 'telegram.logs' ||
+            currentRoute?.includes('audit-logs')) {
+            openMenus.push('Sistem Monitorinqi');
         }
 
         return openMenus;
@@ -328,6 +341,36 @@ export default function Authenticated({
                             current: route().current('reports.*')
                         }
                     ]
+                },
+                {
+                    name: 'Sistem Monitorinqi',
+                    icon: DocumentMagnifyingGlassIcon,
+                    children: [
+                        {
+                            name: 'Fiskal Printer Növbəsi',
+                            href: '/fiscal-printer-jobs',
+                            icon: QueueListIcon,
+                            current: route().current('fiscal-printer-jobs.*')
+                        },
+                        {
+                            name: 'SMS Logları',
+                            href: '/sms/logs',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('sms.logs')
+                        },
+                        {
+                            name: 'Telegram Logları',
+                            href: '/telegram/logs',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('telegram.logs')
+                        },
+                        {
+                            name: 'Audit Logları',
+                            href: '/audit-logs',
+                            icon: ClockIcon,
+                            current: route().current('audit-logs.*')
+                        }
+                    ]
                 }
             ];
         }
@@ -444,6 +487,36 @@ export default function Authenticated({
                             href: '/reports',
                             icon: ChartBarIcon,
                             current: route().current('reports.*')
+                        }
+                    ]
+                },
+                {
+                    name: 'Sistem Monitorinqi',
+                    icon: DocumentMagnifyingGlassIcon,
+                    children: [
+                        {
+                            name: 'Fiskal Printer Növbəsi',
+                            href: '/fiscal-printer-jobs',
+                            icon: QueueListIcon,
+                            current: route().current('fiscal-printer-jobs.*')
+                        },
+                        {
+                            name: 'SMS Logları',
+                            href: '/sms/logs',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('sms.logs')
+                        },
+                        {
+                            name: 'Telegram Logları',
+                            href: '/telegram/logs',
+                            icon: ChatBubbleLeftRightIcon,
+                            current: route().current('telegram.logs')
+                        },
+                        {
+                            name: 'Audit Logları',
+                            href: '/audit-logs',
+                            icon: ClockIcon,
+                            current: route().current('audit-logs.*')
                         }
                     ]
                 },
@@ -614,6 +687,36 @@ export default function Authenticated({
             href: '/integrations',
             icon: PuzzlePieceIcon,
             current: route().current('integrations.*')
+        },
+        {
+            name: 'Sistem Monitorinqi',
+            icon: DocumentMagnifyingGlassIcon,
+            children: [
+                {
+                    name: 'Fiskal Printer Növbəsi',
+                    href: '/fiscal-printer-jobs',
+                    icon: QueueListIcon,
+                    current: route().current('fiscal-printer-jobs.*')
+                },
+                {
+                    name: 'SMS Logları',
+                    href: '/sms/logs',
+                    icon: ChatBubbleLeftRightIcon,
+                    current: route().current('sms.logs')
+                },
+                {
+                    name: 'Telegram Logları',
+                    href: '/telegram/logs',
+                    icon: ChatBubbleLeftRightIcon,
+                    current: route().current('telegram.logs')
+                },
+                {
+                    name: 'Audit Logları',
+                    href: '/audit-logs',
+                    icon: ClockIcon,
+                    current: route().current('audit-logs.*')
+                }
+            ]
         },
         {
             name: 'Parametrlər',

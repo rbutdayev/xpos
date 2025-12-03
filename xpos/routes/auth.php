@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\SuperAdminAuthController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -11,6 +12,21 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
+// Super Admin Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('admin/login', [SuperAdminAuthController::class, 'create'])
+        ->name('admin.login');
+
+    Route::post('admin/login', [SuperAdminAuthController::class, 'store'])
+        ->name('admin.login.store');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('admin/logout', [SuperAdminAuthController::class, 'destroy'])
+        ->name('admin.logout');
+});
+
+// Regular Tenant Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');

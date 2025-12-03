@@ -19,6 +19,7 @@ class FiscalPrinterConfig extends Model
         'security_key',
         'device_serial',
         'bank_port',
+        'credit_contract_number',
         'default_tax_name',
         'default_tax_rate',
         'auto_send',

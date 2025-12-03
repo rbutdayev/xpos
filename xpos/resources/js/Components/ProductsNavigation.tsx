@@ -13,10 +13,8 @@ interface ProductsNavigationProps {
 
 export default function ProductsNavigation({ currentRoute, onImportClick }: ProductsNavigationProps) {
     const isActive = (routeName: string) => {
-        if (!currentRoute) {
-            currentRoute = route().current() || '';
-        }
-        return currentRoute.includes(routeName);
+        const cr: string = currentRoute ?? (route().current() ?? '');
+        return cr.includes(routeName);
     };
 
     return (

@@ -5,6 +5,16 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { LoyaltyProgram, Customer } from '@/types';
 
+interface FiscalConfig {
+  id: number;
+  provider: string;
+  name: string;
+  shift_open: boolean;
+  shift_opened_at: string | null;
+  last_z_report_at: string | null;
+  credit_contract_number?: string;
+}
+
 interface Props {
   processing: boolean;
   subtotal: number;
@@ -16,6 +26,7 @@ interface Props {
   errors: Record<string, string>;
   cartCount: number;
   fiscalPrinterEnabled?: boolean;
+  fiscalConfig?: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
   selectedCustomer?: Customer | null;
 }
@@ -31,6 +42,7 @@ function SummaryPaymentSection({
   errors,
   cartCount,
   fiscalPrinterEnabled = false,
+  fiscalConfig,
   loyaltyProgram,
   selectedCustomer,
 }: Props) {
@@ -244,6 +256,24 @@ function SummaryPaymentSection({
                     </svg>
                     <span className="font-medium">Kart</span>
                   </button>
+                  {/* Bank Kredit - Only show if fiscal config has credit contract number */}
+                  {fiscalConfig?.credit_contract_number && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'bank_kredit' }))}
+                      className={`flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
+                        formData.payment_method === 'bank_kredit'
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                      disabled={processing}
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <span className="font-medium">Bank Kredit</span>
+                    </button>
+                  )}
                 </div>
                 <InputError message={errors.payment_method} className="mt-2" />
               </div>

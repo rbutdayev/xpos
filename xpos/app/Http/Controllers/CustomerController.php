@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\LoyaltyCard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -197,14 +199,49 @@ class CustomerController extends Controller
             'tax_number' => 'nullable|string|max:50|unique:customers,tax_number,NULL,id,account_id,' . Auth::user()->account_id,
             'notes' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
+            'card_number' => 'nullable|string|size:14',
         ]);
 
-        $validated['account_id'] = Auth::user()->account_id;
+        DB::beginTransaction();
+        try {
+            $loyaltyCard = null;
+            $accountId = Auth::user()->account_id;
 
-        $customer = Customer::create($validated);
+            if ($request->filled('card_number')) {
+                $cardNumber = strtoupper(trim($request->card_number));
 
-        return redirect()->route('customers.show', $customer)
-            ->with('success', 'Müştəri uğurla yaradıldı.');
+                $loyaltyCard = LoyaltyCard::where('card_number', $cardNumber)->first();
+
+                if (!$loyaltyCard) {
+                    return back()->withErrors(['card_number' => 'Loaylıq kartı tapılmadı.'])->withInput();
+                }
+
+                // Check if card belongs to this account
+                if ($loyaltyCard->account_id !== $accountId) {
+                    return back()->withErrors(['card_number' => 'Bu kart sizin hesabınıza aid deyil.'])->withInput();
+                }
+
+                if (!$loyaltyCard->isFree()) {
+                    return back()->withErrors(['card_number' => 'Bu kart artıq təyin olunub və ya qeyri-aktivdir.'])->withInput();
+                }
+            }
+
+            $validated['account_id'] = $accountId;
+            $customer = Customer::create($validated);
+
+            if ($loyaltyCard) {
+                $loyaltyCard->markAsUsed($customer->id, $accountId);
+                $customer->update(['loyalty_card_id' => $loyaltyCard->id]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('customers.show', $customer)
+                ->with('success', 'Müştəri uğurla yaradıldı.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Müştəri yaradılarkən xəta baş verdi: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function show(Customer $customer)
@@ -215,6 +252,9 @@ class CustomerController extends Controller
         if ($customer->account_id !== Auth::user()->account_id) {
             abort(403);
         }
+
+        // Load loyalty card relationship
+        $customer->load('loyaltyCard');
 
         // Load customer items
         $customerItems = $customer->customerItems()
@@ -260,6 +300,9 @@ class CustomerController extends Controller
             abort(403);
         }
 
+        // Load loyalty card relationship
+        $customer->load('loyaltyCard');
+
         return Inertia::render('Customers/Edit', [
             'customer' => $customer,
         ]);
@@ -291,12 +334,57 @@ class CustomerController extends Controller
             ],
             'notes' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
+            'card_number' => 'nullable|string|size:14',
         ]);
 
-        $customer->update($validated);
+        DB::beginTransaction();
+        try {
+            $newLoyaltyCard = null;
+            $oldLoyaltyCardId = $customer->loyalty_card_id;
+            $accountId = Auth::user()->account_id;
 
-        return redirect()->route('customers.show', $customer)
-            ->with('success', 'Müştəri məlumatları yeniləndi.');
+            if ($request->filled('card_number')) {
+                $cardNumber = strtoupper(trim($request->card_number));
+
+                $newLoyaltyCard = LoyaltyCard::where('card_number', $cardNumber)->first();
+
+                if (!$newLoyaltyCard) {
+                    return back()->withErrors(['card_number' => 'Loaylıq kartı tapılmadı.'])->withInput();
+                }
+
+                // Check if card belongs to this account
+                if ($newLoyaltyCard->account_id !== $accountId) {
+                    return back()->withErrors(['card_number' => 'Bu kart sizin hesabınıza aid deyil.'])->withInput();
+                }
+
+                if (!$newLoyaltyCard->isFree() && $newLoyaltyCard->id !== $oldLoyaltyCardId) {
+                    return back()->withErrors(['card_number' => 'Bu kart artıq təyin olunub və ya qeyri-aktivdir.'])->withInput();
+                }
+            }
+
+            if ($oldLoyaltyCardId && (!$request->filled('card_number') || ($newLoyaltyCard && $newLoyaltyCard->id !== $oldLoyaltyCardId))) {
+                $oldCard = LoyaltyCard::find($oldLoyaltyCardId);
+                if ($oldCard) {
+                    $oldCard->markAsFree();
+                }
+                $customer->update(['loyalty_card_id' => null]);
+            }
+
+            if ($newLoyaltyCard && $newLoyaltyCard->id !== $oldLoyaltyCardId) {
+                $newLoyaltyCard->markAsUsed($customer->id, $accountId);
+                $validated['loyalty_card_id'] = $newLoyaltyCard->id;
+            }
+
+            $customer->update($validated);
+
+            DB::commit();
+
+            return redirect()->route('customers.show', $customer)
+                ->with('success', 'Müştəri məlumatları yeniləndi.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Müştəri yenilənərkən xəta baş verdi: ' . $e->getMessage()])->withInput();
+        }
     }
 
     public function destroy(Customer $customer)
@@ -308,9 +396,82 @@ class CustomerController extends Controller
             abort(403);
         }
 
-        $customer->delete();
+        DB::beginTransaction();
+        try {
+            if ($customer->loyalty_card_id) {
+                $card = LoyaltyCard::find($customer->loyalty_card_id);
+                if ($card) {
+                    $card->markAsFree();
+                }
+            }
 
-        return redirect()->route('customers.index')
-            ->with('success', 'Müştəri silindi.');
+            $customer->delete();
+
+            DB::commit();
+
+            return redirect()->route('customers.index')
+                ->with('success', 'Müştəri silindi.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Müştəri silinərkən xəta baş verdi: ' . $e->getMessage()]);
+        }
+    }
+
+    public function validateLoyaltyCard(Request $request)
+    {
+        Gate::authorize('assign-loyalty-cards');
+
+        $request->validate([
+            'card_number' => 'required|string|size:14',
+        ]);
+
+        $cardNumber = strtoupper(trim($request->card_number));
+        $accountId = auth()->user()->account_id;
+
+        $card = LoyaltyCard::where('card_number', $cardNumber)->first();
+
+        if (!$card) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Kart sistemdə tapılmadı.',
+            ], 404);
+        }
+
+        // Check if card belongs to this account
+        if ($card->account_id !== $accountId) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Bu kart sizin hesabınıza aid deyil.',
+            ], 403);
+        }
+
+        if ($card->isInactive()) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Bu kart qeyri-aktivdir.',
+            ], 400);
+        }
+
+        if ($card->isUsed()) {
+            $customer = $card->customer;
+            return response()->json([
+                'valid' => false,
+                'message' => 'Bu kart artıq təyin olunub: ' . ($customer ? $customer->name : 'başqa müştəri'),
+                'assigned_to' => $customer ? [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->phone,
+                ] : null,
+            ], 400);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'Kart əlçatandır və istifadəyə hazırdır.',
+            'card' => [
+                'id' => $card->id,
+                'card_number' => $card->card_number,
+            ],
+        ]);
     }
 }

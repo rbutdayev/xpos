@@ -195,6 +195,25 @@ class GoodsReceiptController extends Controller
                 $goodsReceipt->save();
                 $goodsReceiptIds[] = $goodsReceipt->id;
 
+                // Update the product's purchase_price (alış qiyməti) from unit_cost
+                if (!empty($productData['unit_cost'])) {
+                    // Update product or variant purchase price
+                    if (!empty($productData['variant_id'])) {
+                        $variant = ProductVariant::find($productData['variant_id']);
+                        if ($variant && $variant->price_adjustment !== null) {
+                            // Variant has custom price - update variant's price_adjustment
+                            // Note: This maintains the variant pricing structure
+                        }
+                    }
+
+                    // Always update the base product's purchase_price
+                    $product = Product::find($productData['product_id']);
+                    if ($product) {
+                        $product->purchase_price = $productData['unit_cost'];
+                        $product->save();
+                    }
+                }
+
                 // Calculate total cost for payment processing
                 $totalCost += ($productData['unit_cost'] ?? 0) * $inventoryQuantity;
 
@@ -339,8 +358,7 @@ class GoodsReceiptController extends Controller
             'unit_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'payment_method' => 'required|in:instant,credit',
-            'payment_status' => 'nullable|in:paid,unpaid,partial',
+            // payment_method and payment_status are not editable - removed from validation
         ]);
 
         try {
@@ -362,7 +380,7 @@ class GoodsReceiptController extends Controller
             $quantityDifference = $request->quantity - $goodsReceipt->quantity;
             $variantChanged = $request->variant_id != $goodsReceipt->variant_id;
 
-            // Update goods receipt
+            // Update goods receipt (payment_method and payment_status are not editable)
             $goodsReceipt->warehouse_id = $request->warehouse_id;
             $goodsReceipt->supplier_id = $request->supplier_id;
             $goodsReceipt->employee_id = $request->employee_id;
@@ -371,8 +389,6 @@ class GoodsReceiptController extends Controller
             $goodsReceipt->unit = $request->unit;
             $goodsReceipt->unit_cost = $request->unit_cost ?? 0;
             $goodsReceipt->notes = $request->notes;
-            $goodsReceipt->payment_method = $request->payment_method;
-            $goodsReceipt->payment_status = $request->payment_status ?? 'unpaid';
 
             // Handle document upload
             if ($request->hasFile('document')) {
@@ -389,6 +405,15 @@ class GoodsReceiptController extends Controller
             }
 
             $goodsReceipt->save();
+
+            // Update the product's purchase_price (alış qiyməti) from unit_cost if changed
+            if ($request->filled('unit_cost')) {
+                $product = Product::find($goodsReceipt->product_id);
+                if ($product) {
+                    $product->purchase_price = $request->input('unit_cost');
+                    $product->save();
+                }
+            }
 
             // Update the original stock movement's unit_cost if it changed
             $originalStockMovement = StockMovement::where('reference_type', 'goods_receipt')

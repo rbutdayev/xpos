@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { CreditCardIcon, BanknotesIcon, ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { LoyaltyProgram, Customer } from '@/types';
 
+interface FiscalConfig {
+  id: number;
+  provider: string;
+  name: string;
+  shift_open: boolean;
+  shift_opened_at: string | null;
+  last_z_report_at: string | null;
+  credit_contract_number?: string;
+}
+
 interface Props {
   processing: boolean;
   subtotal: number;
@@ -13,6 +23,7 @@ interface Props {
   onSubmit: () => void;
   errors: Record<string, string>;
   cartCount: number;
+  fiscalConfig?: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
   selectedCustomer?: Customer | null;
 }
@@ -28,6 +39,7 @@ export default function TouchPayment({
   onSubmit,
   errors,
   cartCount,
+  fiscalConfig,
   loyaltyProgram,
   selectedCustomer,
 }: Props) {
@@ -293,6 +305,25 @@ export default function TouchPayment({
               </svg>
               <span className="text-lg">Kart</span>
             </button>
+            {/* Bank Kredit - Only show if fiscal config has credit contract number */}
+            {fiscalConfig?.credit_contract_number && (
+              <button
+                type="button"
+                onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'bank_kredit' }))}
+                className={`
+                  flex flex-col items-center justify-center p-4 rounded-lg font-semibold transition-all duration-150
+                  ${formData.payment_method === 'bank_kredit'
+                    ? 'bg-indigo-600 text-white ring-2 ring-offset-2 ring-indigo-500'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }
+                `}
+              >
+                <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <span className="text-lg">Bank Kredit</span>
+              </button>
+            )}
           </div>
         </div>
       )}

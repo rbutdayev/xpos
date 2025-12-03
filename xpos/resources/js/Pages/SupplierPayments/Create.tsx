@@ -15,10 +15,22 @@ interface Supplier {
     company: string | null;
 }
 
+interface Branch {
+    id: number;
+    name: string;
+}
+
+interface ExpenseCategory {
+    category_id: number;
+    name: string;
+}
+
 interface Props {
     suppliers: Supplier[];
     paymentMethods: Record<string, string>;
     unpaidGoodsReceipts: GoodsReceipt[];
+    branches: Branch[];
+    categories: ExpenseCategory[];
 }
 
 interface PaymentFormData {
@@ -31,9 +43,11 @@ interface PaymentFormData {
     notes: string;
     goods_receipt_id: string;
     payment_amount: string;
+    branch_id: string;
+    category_id: string;
 }
 
-export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts }: Props) {
+export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts, branches, categories }: Props) {
     const [goodsReceiptSearch, setGoodsReceiptSearch] = useState('');
     const [showGoodsReceiptDropdown, setShowGoodsReceiptDropdown] = useState(false);
 
@@ -47,6 +61,8 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts 
         notes: '',
         goods_receipt_id: '',
         payment_amount: '',
+        branch_id: branches.length > 0 ? branches[0].id.toString() : '',
+        category_id: '',
     });
 
     const filteredGoodsReceipts = useMemo(() => {
@@ -298,6 +314,46 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts 
                                 <InputError message={errors.payment_method} className="mt-2" />
                             </div>
 
+                            {/* Branch Selection */}
+                            <div>
+                                <InputLabel htmlFor="branch_id" value="Filial *" />
+                                <select
+                                    id="branch_id"
+                                    name="branch_id"
+                                    value={data.branch_id}
+                                    onChange={(e) => setData('branch_id', e.target.value)}
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    required
+                                >
+                                    <option value="">Filial seçin</option>
+                                    {branches.map((branch) => (
+                                        <option key={branch.id} value={branch.id}>
+                                            {branch.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.branch_id} className="mt-2" />
+                            </div>
+
+                            {/* Category Selection */}
+                            <div>
+                                <InputLabel htmlFor="category_id" value="Xərc kateqoriyası" />
+                                <select
+                                    id="category_id"
+                                    name="category_id"
+                                    value={data.category_id}
+                                    onChange={(e) => setData('category_id', e.target.value)}
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                >
+                                    <option value="">Kateqoriya seçin (istəyə bağlı)</option>
+                                    {categories.map((category) => (
+                                        <option key={category.category_id} value={category.category_id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.category_id} className="mt-2" />
+                            </div>
 
                             {/* Invoice Number */}
                             <div>

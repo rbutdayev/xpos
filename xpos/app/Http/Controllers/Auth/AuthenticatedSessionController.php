@@ -31,21 +31,28 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        // Regenerate session to get new CSRF token
-        $request->session()->regenerate();
-
-        // Get the authenticated user
         $user = Auth::user();
 
-        // Determine redirect route
-        $redirectRoute = $user->isSuperAdmin()
-            ? route('superadmin.dashboard', absolute: false)
-            : route('dashboard', absolute: false);
+        // Prevent super admin from logging in via tenant login
+        if ($user->isSuperAdmin()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('admin.login')->withErrors([
+                'email' => 'Super admin istifadəçilər üçün ayrıca giriş səhifəsi var. Zəhmət olmasa /admin/login ünvanından istifadə edin.',
+            ]);
+        }
+
+        // Regenerate session to get new CSRF token
+        $request->session()->regenerate();
 
         // Store user ID in session for cross-tab detection
         // This will be read by frontend SessionManager component
         $request->session()->put('user_id', $user->id);
         $request->session()->put('account_id', $user->account_id);
+
+        $redirectRoute = route('dashboard', absolute: false);
 
         // Force a full page reload to refresh CSRF token in meta tag
         // This prevents "page expired" errors when switching between accounts

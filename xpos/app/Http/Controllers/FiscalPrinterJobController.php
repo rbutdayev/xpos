@@ -15,7 +15,7 @@ class FiscalPrinterJobController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('access-account-data');
+        Gate::authorize('view-reports');
 
         $accountId = auth()->user()->account_id;
 
@@ -63,6 +63,7 @@ class FiscalPrinterJobController extends Controller
      */
     public function retry(FiscalPrinterJob $job)
     {
+        Gate::authorize('view-reports');
         Gate::authorize('access-account-data', $job);
 
         if (!$job->canRetry()) {
@@ -79,7 +80,8 @@ class FiscalPrinterJobController extends Controller
      */
     public function destroy(FiscalPrinterJob $job)
     {
-        Gate::authorize('delete-account-data', $job);
+        Gate::authorize('view-reports');
+        Gate::authorize('delete-account-data');
 
         // Don't allow deleting completed jobs
         if ($job->status === FiscalPrinterJob::STATUS_COMPLETED) {
@@ -96,6 +98,7 @@ class FiscalPrinterJobController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        Gate::authorize('view-reports');
         Gate::authorize('delete-account-data');
 
         $validated = $request->validate([

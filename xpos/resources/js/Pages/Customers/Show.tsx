@@ -103,6 +103,15 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                             <span className="text-gray-900">{customer.tax_number}</span>
                                         </div>
                                     )}
+                                    {customer.loyalty_card && (
+                                        <div className="flex items-center">
+                                            <CreditCardIcon className="w-5 h-5 text-gray-400 mr-3" />
+                                            <div>
+                                                <span className="text-gray-500 text-sm">Loaylıq Kartı: </span>
+                                                <span className="font-mono font-semibold text-indigo-600">{customer.loyalty_card.card_number}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-4">

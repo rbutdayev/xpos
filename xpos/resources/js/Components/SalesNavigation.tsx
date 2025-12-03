@@ -6,19 +6,21 @@ import {
     ShoppingBagIcon,
     UserGroupIcon,
     PlusCircleIcon,
-    PaperAirplaneIcon
+    PaperAirplaneIcon,
+    TagIcon
 } from '@heroicons/react/24/outline';
+import React from 'react';
 
 interface SalesNavigationProps {
     currentRoute?: string;
+    showDiscounts?: boolean;
+    children?: React.ReactNode; // Allow custom action buttons
 }
 
-export default function SalesNavigation({ currentRoute }: SalesNavigationProps) {
+export default function SalesNavigation({ currentRoute, showDiscounts = false, children }: SalesNavigationProps) {
     const isActive = (routeName: string) => {
-        if (!currentRoute) {
-            currentRoute = route().current() || '';
-        }
-        return currentRoute.includes(routeName);
+        const activeRoute = currentRoute || route().current() || '';
+        return activeRoute.includes(routeName);
     };
 
     const navItems = [
@@ -48,6 +50,14 @@ export default function SalesNavigation({ currentRoute }: SalesNavigationProps) 
             conditional: true // Will check if shop is enabled
         },
         {
+            href: route('products.discounts'),
+            icon: TagIcon,
+            label: 'Endirimlər',
+            isActive: isActive('products.discounts'),
+            conditional: true,
+            show: showDiscounts // Only show if discounts module is enabled
+        },
+        {
             href: route('customers.index'),
             icon: UserGroupIcon,
             label: 'Müştərilər',
@@ -58,14 +68,21 @@ export default function SalesNavigation({ currentRoute }: SalesNavigationProps) 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1 mb-6">
             <nav className="flex flex-wrap gap-1">
-                <Link
-                    href={route('pos.index')}
-                    className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                >
-                    <PlusCircleIcon className="w-5 h-5 text-white" />
-                    <span className="font-semibold">POS-da Satış et</span>
-                </Link>
-                {navItems.filter(item => !item.conditional).map((item) => {
+                {/* Default POS action button - only show if no custom children */}
+                {!children && (
+                    <Link
+                        href={route('pos.index')}
+                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                    >
+                        <PlusCircleIcon className="w-5 h-5 text-white" />
+                        <span className="font-semibold">POS-da Satış et</span>
+                    </Link>
+                )}
+
+                {/* Custom action buttons from parent component */}
+                {children}
+
+                {navItems.filter(item => !item.conditional || item.show).map((item) => {
                     const Icon = item.icon;
                     const baseClasses = "relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1";
 

@@ -37,6 +37,7 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdmin\FiscalPrinterProviderController;
 use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\LoyaltyCardController as AdminLoyaltyCardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\CreditController;
@@ -74,6 +75,14 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::put('/accounts/{account}', [SuperAdminController::class, 'updateAccount'])->name('accounts.update');
     Route::delete('/accounts/{account}', [SuperAdminController::class, 'deleteAccount'])->name('accounts.destroy');
     Route::patch('/accounts/{account}/toggle-status', [SuperAdminController::class, 'toggleAccountStatus'])->name('accounts.toggle-status');
+
+    // Account Payments Management
+    Route::get('/payments', [App\Http\Controllers\AccountPaymentsController::class, 'index'])->name('payments');
+    Route::post('/payments/{account}/mark-paid', [App\Http\Controllers\AccountPaymentsController::class, 'markAsPaid'])->name('payments.mark-paid');
+    Route::post('/payments/{account}/mark-unpaid', [App\Http\Controllers\AccountPaymentsController::class, 'markAsUnpaid'])->name('payments.mark-unpaid');
+    Route::put('/payments/{account}/settings', [App\Http\Controllers\AccountPaymentsController::class, 'updatePaymentSettings'])->name('payments.update-settings');
+    Route::patch('/payments/{account}/toggle-status', [App\Http\Controllers\AccountPaymentsController::class, 'toggleAccountStatus'])->name('payments.toggle-status');
+
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::delete('/users/{user}', [SuperAdminController::class, 'deleteUser'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-status', [SuperAdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
@@ -118,6 +127,16 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
         Route::post('/export-report', [SecurityController::class, 'exportSecurityReport'])->name('export-report');
         Route::get('/audit-logs', [SecurityController::class, 'getAuditLogs'])->name('audit-logs');
     });
+
+    // Loyalty Cards Management
+    Route::prefix('loyalty-cards')->name('loyalty-cards.')->group(function () {
+        Route::get('/', [AdminLoyaltyCardController::class, 'index'])->name('index');
+        Route::post('/generate', [AdminLoyaltyCardController::class, 'generate'])->name('generate');
+        Route::post('/{card}/deactivate', [AdminLoyaltyCardController::class, 'deactivate'])->name('deactivate');
+        Route::post('/{card}/activate', [AdminLoyaltyCardController::class, 'activate'])->name('activate');
+        Route::post('/{card}/unassign', [AdminLoyaltyCardController::class, 'unassign'])->name('unassign');
+        Route::get('/reports', [AdminLoyaltyCardController::class, 'reports'])->name('reports');
+    });
 });
 
 // Main Dashboard
@@ -139,8 +158,48 @@ Route::get('/debug-translations', function () {
 Route::get('/photos/serve/{path}', function (Request $request, string $path) {
     $decodedPath = base64_decode($path);
 
+    // Security: Prevent directory traversal attacks
+    if (str_contains($decodedPath, '..') ||
+        str_contains($decodedPath, './') ||
+        str_contains($decodedPath, '\\')) {
+        abort(403, 'Invalid path');
+    }
+
+    // Security: Ensure path is within allowed directories
+    $allowedPrefixes = ['products/', 'photos/', 'companies/'];
+    $hasValidPrefix = false;
+    foreach ($allowedPrefixes as $prefix) {
+        if (str_starts_with($decodedPath, $prefix)) {
+            $hasValidPrefix = true;
+            break;
+        }
+    }
+
+    if (!$hasValidPrefix) {
+        abort(403, 'Access denied');
+    }
+
     if (!Storage::disk('documents')->exists($decodedPath)) {
         abort(404, 'Photo not found');
+    }
+
+    // Security: Verify the resolved path is within the storage directory
+    try {
+        $fullPath = Storage::disk('documents')->path($decodedPath);
+        $basePath = Storage::disk('documents')->path('');
+
+        // Only check if both paths can be resolved
+        if (file_exists($fullPath) && file_exists($basePath)) {
+            $realPath = realpath($fullPath);
+            $realBasePath = realpath($basePath);
+
+            if (!$realPath || !$realBasePath || !str_starts_with($realPath, $realBasePath)) {
+                abort(403, 'Access denied');
+            }
+        }
+    } catch (\Exception $e) {
+        \Log::warning('Path validation error: ' . $e->getMessage());
+        abort(403, 'Access denied');
     }
 
     $mimeType = Storage::disk('documents')->mimeType($decodedPath);
@@ -181,13 +240,20 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Warehouse Context Selection
     Route::post('/set-warehouse', function(\Illuminate\Http\Request $request) {
+        $user = Auth::user();
+
+        // Security: Validate warehouse belongs to user's account
         $request->validate([
-            'warehouse_id' => 'nullable|exists:warehouses,id'
+            'warehouse_id' => [
+                'nullable',
+                'integer',
+                \Illuminate\Validation\Rule::exists('warehouses', 'id')->where(function ($query) use ($user) {
+                    $query->where('account_id', $user->account_id);
+                })
+            ]
         ]);
-        
+
         if ($request->warehouse_id) {
-            $user = Auth::user();
-            
             // Base verification: warehouse belongs to user's account
             $warehouse = \App\Models\Warehouse::where('id', $request->warehouse_id)
                 ->where('account_id', $user->account_id)
@@ -317,35 +383,76 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Generic file serving route for uploaded files (company logos, etc.)
     Route::get('/files/{path}', function (Request $request, $path) {
         Gate::authorize('access-account-data');
-        
+
         $filePath = base64_decode($path);
+
+        // Security: Prevent directory traversal attacks
+        if (str_contains($filePath, '..') ||
+            str_contains($filePath, './') ||
+            str_contains($filePath, '\\')) {
+            abort(403, 'Invalid path');
+        }
+
+        // Security: Ensure path is within allowed directories
+        $allowedPrefixes = ['products/', 'photos/', 'companies/', 'documents/', 'receipts/', 'expenses/'];
+        $hasValidPrefix = false;
+        foreach ($allowedPrefixes as $prefix) {
+            if (str_starts_with($filePath, $prefix)) {
+                $hasValidPrefix = true;
+                break;
+            }
+        }
+
+        if (!$hasValidPrefix) {
+            abort(403, 'Access denied');
+        }
+
         $documentService = app(\App\Services\DocumentUploadService::class);
-        
+
         if (!$documentService->fileExists($filePath)) {
             abort(404, 'Fayl tapılmadı');
         }
-        
+
         $download = $request->boolean('download', false);
-        
+
         if (!Storage::disk('documents')->exists($filePath)) {
             abort(404, 'Fayl tapılmadı');
         }
-        
+
+        // Security: Verify the resolved path is within the storage directory
+        try {
+            $fullPath = Storage::disk('documents')->path($filePath);
+            $basePath = Storage::disk('documents')->path('');
+
+            // Only check if both paths can be resolved
+            if (file_exists($fullPath) && file_exists($basePath)) {
+                $realPath = realpath($fullPath);
+                $realBasePath = realpath($basePath);
+
+                if (!$realPath || !$realBasePath || !str_starts_with($realPath, $realBasePath)) {
+                    abort(403, 'Access denied');
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Path validation error: ' . $e->getMessage());
+            abort(403, 'Access denied');
+        }
+
         $mimeType = Storage::disk('documents')->mimeType($filePath);
         $size = Storage::disk('documents')->size($filePath);
         $filename = basename($filePath);
-        
+
         $headers = [
             'Content-Type' => $mimeType,
             'Content-Length' => $size,
         ];
-        
+
         if ($download) {
             $headers['Content-Disposition'] = 'attachment; filename="' . $filename . '"';
         } else {
             $headers['Content-Disposition'] = 'inline; filename="' . $filename . '"';
         }
-        
+
         return new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($filePath) {
             $stream = Storage::disk('documents')->readStream($filePath);
             fpassthru($stream);
@@ -365,6 +472,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::get('/customers/{id}/get', [CustomerController::class, 'getById'])->name('customers.get-by-id');
     Route::post('/customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quick-store');
+    Route::post('/customers/validate-loyalty-card', [CustomerController::class, 'validateLoyaltyCard'])->name('customers.validate-loyalty-card');
     Route::resource('customers', CustomerController::class);
 
     // Customer Items Management (clothing, fabrics for tailor services)
@@ -633,6 +741,24 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/shift/open', [FiscalPrinterConfigController::class, 'openShift'])->name('shift.open');
         Route::post('/shift/close', [FiscalPrinterConfigController::class, 'closeShift'])->name('shift.close');
         Route::post('/shift/x-report', [FiscalPrinterConfigController::class, 'printXReport'])->name('shift.x-report');
+
+        // Payment Operations
+        Route::post('/credit-pay', [FiscalPrinterConfigController::class, 'printCreditPay'])->name('credit-pay');
+        Route::post('/advance-sale', [FiscalPrinterConfigController::class, 'printAdvanceSale'])->name('advance-sale');
+
+        // Cash Drawer Operations
+        Route::post('/deposit', [FiscalPrinterConfigController::class, 'printDeposit'])->name('deposit');
+        Route::post('/withdraw', [FiscalPrinterConfigController::class, 'printWithdraw'])->name('withdraw');
+        Route::post('/open-cashbox', [FiscalPrinterConfigController::class, 'openCashBox'])->name('open-cashbox');
+
+        // Utility Operations
+        Route::post('/correction', [FiscalPrinterConfigController::class, 'printCorrection'])->name('correction');
+        Route::post('/rollback', [FiscalPrinterConfigController::class, 'printRollBack'])->name('rollback');
+        Route::post('/print-last', [FiscalPrinterConfigController::class, 'printLastReceipt'])->name('print-last');
+
+        // Report Operations
+        Route::post('/periodic-report', [FiscalPrinterConfigController::class, 'getPeriodicReport'])->name('periodic-report');
+        Route::post('/control-tape', [FiscalPrinterConfigController::class, 'getControlTape'])->name('control-tape');
     });
 
     // Bridge Token Management

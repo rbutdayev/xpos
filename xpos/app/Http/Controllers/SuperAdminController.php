@@ -31,6 +31,26 @@ class SuperAdminController extends Controller
                 'active_accounts' => Account::where('is_active', true)->count(),
                 'total_users' => User::count(),
                 'active_users' => User::where('status', 'active')->count(),
+
+                // Detailed statistics
+                'accounts' => [
+                    'total' => Account::count(),
+                    'active' => Account::where('is_active', true)->count(),
+                    'suspended' => Account::where('is_active', false)->count(),
+                    'created_this_month' => Account::whereMonth('created_at', now()->month)->count(),
+                ],
+
+                'users' => [
+                    'total' => User::count(),
+                    'active' => User::where('status', 'active')->count(),
+                    'inactive' => User::where('status', 'inactive')->count(),
+                    'created_this_month' => User::whereMonth('created_at', now()->month)->count(),
+                ],
+
+                'roles' => User::select('role', DB::raw('count(*) as count'))
+                              ->groupBy('role')
+                              ->pluck('count', 'role')
+                              ->toArray(),
             ];
 
             return Inertia::render('SuperAdmin/Dashboard', [
@@ -44,6 +64,9 @@ class SuperAdminController extends Controller
                     'active_accounts' => 0,
                     'total_users' => 0,
                     'active_users' => 0,
+                    'accounts' => ['total' => 0, 'active' => 0, 'suspended' => 0, 'created_this_month' => 0],
+                    'users' => ['total' => 0, 'active' => 0, 'inactive' => 0, 'created_this_month' => 0],
+                    'roles' => [],
                 ],
                 'error' => 'Məlumat bazası xətası: ' . $e->getMessage()
             ]);
@@ -196,6 +219,8 @@ class SuperAdminController extends Controller
             $validated = $request->validate([
                 'user_email' => 'required|email|unique:users,email',
                 'user_password' => 'required|string|min:8',
+                'monthly_payment_amount' => 'nullable|numeric|min:0',
+                'payment_start_date' => 'nullable|date',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Account validation failed', [
@@ -221,6 +246,8 @@ class SuperAdminController extends Controller
                     'subscription_plan' => 'başlanğıc', // Default plan
                     'is_active' => true,
                     'language' => 'az',
+                    'monthly_payment_amount' => $validated['monthly_payment_amount'] ?? null,
+                    'payment_start_date' => $validated['payment_start_date'] ?? null,
                     'settings' => [
                         'timezone' => 'Asia/Baku',
                         'currency' => 'AZN',
@@ -291,6 +318,8 @@ class SuperAdminController extends Controller
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'is_active' => 'required|boolean',
+            'monthly_payment_amount' => 'nullable|numeric|min:0',
+            'payment_start_date' => 'nullable|date',
         ]);
 
         $account->update($validated);

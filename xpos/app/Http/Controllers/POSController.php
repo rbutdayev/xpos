@@ -161,7 +161,7 @@ class POSController extends Controller
             'discount_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'payment_status' => 'required|in:paid,credit,partial',
-            'payment_method' => 'nullable|in:nağd,kart,köçürmə',
+            'payment_method' => 'nullable|in:nağd,kart,köçürmə,bank_kredit',
             'paid_amount' => 'nullable|numeric|min:0',
             'credit_amount' => 'nullable|numeric|min:0',
             'credit_due_date' => 'nullable|date|after:today',
@@ -235,12 +235,15 @@ class POSController extends Controller
 
                 // Create sale items
                 foreach ($validated['items'] as $item) {
+                    $product = \App\Models\Product::find($item['product_id']);
+
                     SaleItem::create([
                         'sale_id' => $sale->sale_id,
                         'product_id' => $item['product_id'],
                         'variant_id' => $item['variant_id'] ?? null,
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
+                        'purchase_price' => $product->purchase_price ?? null,
                         'discount_amount' => $item['discount_amount'] ?? 0,
                         'total' => ($item['quantity'] * $item['unit_price']) - ($item['discount_amount'] ?? 0),
                     ]);

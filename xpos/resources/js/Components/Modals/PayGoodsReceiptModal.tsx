@@ -1,4 +1,4 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
@@ -30,14 +30,32 @@ export default function PayGoodsReceiptModal({
 
     const remainingAmount = parseFloat(String(goodsReceipt.supplier_credit?.remaining_amount || goodsReceipt.total_cost || 0));
 
+    // Use the first branch as default (user can change if needed)
+    const defaultBranchId = branches.length > 0 ? String(branches[0].id) : '';
+
     const [formData, setFormData] = useState({
         goods_receipt_id: goodsReceipt.id,
         payment_amount: remainingAmount,
         category_id: '',
-        branch_id: '',
+        branch_id: defaultBranchId,
         payment_method: 'nağd',
         notes: ''
     });
+
+    // Reset form data when modal opens with a new receipt
+    useEffect(() => {
+        if (show) {
+            setFormData({
+                goods_receipt_id: goodsReceipt.id,
+                payment_amount: remainingAmount,
+                category_id: '',
+                branch_id: branches.length > 0 ? String(branches[0].id) : '',
+                payment_method: 'nağd',
+                notes: ''
+            });
+            setErrors({});
+        }
+    }, [show, goodsReceipt.id, remainingAmount, branches]);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();

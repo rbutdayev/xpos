@@ -381,6 +381,12 @@ export interface Customer {
     is_active: boolean;
     current_points?: number;
     lifetime_points?: number;
+    loyalty_card_id?: number;
+    loyalty_card?: {
+        id: number;
+        card_number: string;
+        status: string;
+    };
     created_at?: string;
     updated_at?: string;
     deleted_at?: string;
@@ -611,6 +617,7 @@ export interface CustomerFormData {
     tax_number: string;
     notes: string;
     is_active: boolean;
+    card_number?: string;
 }
 
 export interface VehicleFormData {
@@ -717,6 +724,8 @@ export interface Sale {
     customer_credit_id?: number;
     is_credit_sale?: boolean;
     customer_credit?: CustomerCredit;
+    fiscal_number?: string;
+    fiscal_document_id?: string;
 }
 
 export interface CustomerCredit {

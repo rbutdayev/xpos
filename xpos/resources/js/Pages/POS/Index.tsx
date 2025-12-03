@@ -21,6 +21,7 @@ interface FiscalConfig {
   shift_open: boolean;
   shift_opened_at: string | null;
   last_z_report_at: string | null;
+  credit_contract_number?: string;
 }
 
 interface POSIndexProps extends PageProps {
@@ -53,7 +54,7 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
     discount_amount: 0,
     notes: '',
     payment_status: 'paid' as 'paid' | 'credit' | 'partial',
-    payment_method: 'nağd' as 'nağd' | 'kart' | 'köçürmə',
+    payment_method: 'nağd' as 'nağd' | 'kart' | 'köçürmə' | 'bank_kredit',
     paid_amount: 0,
     credit_amount: 0,
     credit_due_date: '',
@@ -307,6 +308,14 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
       onError: (errs) => {
         console.error('Sale submission errors:', errs);
         setErrors(errs);
+        // Show toast notifications for all errors
+        Object.entries(errs).forEach(([field, message]) => {
+          if (typeof message === 'string') {
+            toast.error(message, { duration: 5000 });
+          } else if (Array.isArray(message)) {
+            (message as string[]).forEach((msg: string) => toast.error(msg, { duration: 5000 }));
+          }
+        });
         setProcessing(false);
       },
       onFinish: () => setProcessing(false),
@@ -443,6 +452,7 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
                   errors={errors}
                   cartCount={cart.length}
                   fiscalPrinterEnabled={fiscalPrinterEnabled}
+                  fiscalConfig={fiscalConfig}
                   loyaltyProgram={loyaltyProgram}
                   selectedCustomer={selectedCustomer}
                 />

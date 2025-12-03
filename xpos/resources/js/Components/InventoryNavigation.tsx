@@ -13,10 +13,8 @@ interface InventoryNavigationProps {
 
 export default function InventoryNavigation({ currentRoute }: InventoryNavigationProps) {
     const isActive = (routeName: string) => {
-        if (!currentRoute) {
-            currentRoute = route().current() || '';
-        }
-        return currentRoute.includes(routeName);
+        const cr: string = currentRoute ?? (route().current() ?? '');
+        return cr.includes(routeName);
     };
 
     const navItems = [

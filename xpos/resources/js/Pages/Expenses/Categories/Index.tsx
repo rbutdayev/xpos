@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import { 
+import ExpensesNavigation from '@/Components/ExpensesNavigation';
+import {
     TagIcon,
     FolderIcon,
     EyeIcon,
@@ -251,14 +252,12 @@ export default function Index({ categories, types }: Props) {
             <Head title="Xərc kateqoriyaları" />
 
             <div className="py-6">
-                <div className="mx-auto sm:px-6 lg:px-8">
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-semibold text-gray-900">
-                            Xərc kateqoriyaları
-                        </h1>
-                    </div>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Expense Navigation */}
+                    <ExpensesNavigation currentRoute={route().current()} />
 
-                    <SharedDataTable
+                    <div className="w-full">
+                        <SharedDataTable
                         data={tableData}
                         columns={columns}
                         actions={actions}
@@ -278,6 +277,7 @@ export default function Index({ categories, types }: Props) {
                             icon: <TagIcon className="w-12 h-12 text-gray-400" />
                         }}
                     />
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

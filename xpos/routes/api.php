@@ -25,8 +25,8 @@ Route::prefix('bridge')->name('bridge.')->group(function () {
     Route::post('/push-status', [\App\Http\Controllers\Api\FiscalPrinterBridgeController::class, 'pushStatus'])->name('push-status');
 });
 
-// Job Status API (for frontend polling)
-Route::middleware('auth:sanctum')->group(function () {
+// Job Status API (for frontend polling - using web session auth)
+Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/jobs/sale/{saleId}/status', [\App\Http\Controllers\Api\JobStatusController::class, 'getSaleJobStatus'])->name('jobs.sale.status');
     Route::get('/shift-status', [\App\Http\Controllers\Api\ShiftStatusController::class, 'getStatus'])->name('shift.status');
 });

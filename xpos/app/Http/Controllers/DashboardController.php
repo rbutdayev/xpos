@@ -568,6 +568,49 @@ class DashboardController extends Controller
                 ->count();
         }
 
+        // Check for overdue account payment
+        $paymentAlert = null;
+        if ($account->monthly_payment_amount && $account->payment_start_date) {
+            $startDate = Carbon::parse($account->payment_start_date);
+            $today = Carbon::today();
+
+            if ($today->gte($startDate)) {
+                // Find the next unpaid period
+                $latestPaidPayment = \App\Models\AccountPayment::where('account_id', $account->id)
+                    ->where('status', 'paid')
+                    ->latest('due_date')
+                    ->first();
+
+                $nextDueDate = $latestPaidPayment
+                    ? Carbon::parse($latestPaidPayment->due_date)->addMonth()
+                    : $startDate->copy()->addMonth();
+
+                // Check if this period is overdue
+                $isOverdue = $today->gte($nextDueDate);
+
+                // Check if there's already an overdue payment record
+                $overduePayment = \App\Models\AccountPayment::where('account_id', $account->id)
+                    ->where('status', 'overdue')
+                    ->orderBy('due_date')
+                    ->first();
+
+                if ($overduePayment) {
+                    $isOverdue = true;
+                    $nextDueDate = Carbon::parse($overduePayment->due_date);
+                }
+
+                if ($isOverdue && !$request->session()->get('payment_alert_shown')) {
+                    $paymentAlert = [
+                        'amount' => $account->monthly_payment_amount,
+                        'due_date' => $nextDueDate->format('d.m.Y'),
+                        'days_overdue' => $today->diffInDays($nextDueDate),
+                    ];
+                    // Mark as shown for this session
+                    $request->session()->put('payment_alert_shown', true);
+                }
+            }
+        }
+
         return Inertia::render('Dashboard', [
             'stats' => $stats,
             'sales_chart_data' => $salesChartData,
@@ -582,6 +625,7 @@ class DashboardController extends Controller
             'selectedWarehouse' => $selectedWarehouse,
             'warehouseContext' => $selectedWarehouseId ? 'specific' : 'all',
             'pending_online_orders' => $pendingOnlineOrders,
+            'payment_alert' => $paymentAlert,
         ]);
     }
 }

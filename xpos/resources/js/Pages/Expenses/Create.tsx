@@ -71,8 +71,8 @@ export default function Create({ categories, branches, paymentMethods, supplierC
             : '',
         expense_date: new Date().toISOString().split('T')[0],
         category_id: '',
-        branch_id: '',
-        payment_method: '',
+        branch_id: branches.length > 0 ? branches[0].id.toString() : '',
+        payment_method: 'nağd',
         receipt_file: null,
         notes: supplierCredit
             ? `Təchizatçı krediti: ${supplierCredit.reference_number}`
