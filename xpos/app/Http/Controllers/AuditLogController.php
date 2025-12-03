@@ -18,7 +18,7 @@ class AuditLogController extends Controller
 
     public function index(Request $request)
     {
-        Gate::authorize('access-account-data');
+        Gate::authorize('view-reports');
 
         $query = AuditLog::with(['user', 'account'])
             ->where('account_id', auth()->user()->account_id)
@@ -92,7 +92,7 @@ class AuditLogController extends Controller
 
     public function show(AuditLog $auditLog)
     {
-        Gate::authorize('access-account-data');
+        Gate::authorize('view-reports');
         
         if ($auditLog->account_id !== auth()->user()->account_id) {
             abort(403);

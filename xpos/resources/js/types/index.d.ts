@@ -717,6 +717,8 @@ export interface Sale {
     customer_credit_id?: number;
     is_credit_sale?: boolean;
     customer_credit?: CustomerCredit;
+    fiscal_number?: string;
+    fiscal_document_id?: string;
 }
 
 export interface CustomerCredit {

@@ -41,7 +41,7 @@ class IntegrationsController extends Controller
 
         // Check Loyalty Program configuration
         $loyaltyProgram = LoyaltyProgram::where('account_id', $accountId)->first();
-        $loyaltyModuleEnabled = $account->loyalty_module_enabled ?? true;
+        $loyaltyModuleEnabled = $account->loyalty_module_enabled ?? false;
         $loyaltyProgramConfigured = $loyaltyProgram !== null && $loyaltyModuleEnabled;
         $loyaltyProgramActive = $loyaltyProgram?->is_active ?? false;
 
@@ -50,13 +50,13 @@ class IntegrationsController extends Controller
         $shopConfigured = !empty($account->shop_slug);
 
         // Check Services module
-        $servicesModuleEnabled = $account->services_module_enabled ?? true;
+        $servicesModuleEnabled = $account->services_module_enabled ?? false;
 
         // Check Rent module
-        $rentModuleEnabled = $account->rent_module_enabled ?? true;
+        $rentModuleEnabled = $account->rent_module_enabled ?? false;
 
         // Check Discounts module
-        $discountsModuleEnabled = $account->discounts_module_enabled ?? true;
+        $discountsModuleEnabled = $account->discounts_module_enabled ?? false;
 
         return Inertia::render('Integrations/Index', [
             'smsConfigured' => $smsConfigured,

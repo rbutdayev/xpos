@@ -636,6 +636,24 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/shift/open', [FiscalPrinterConfigController::class, 'openShift'])->name('shift.open');
         Route::post('/shift/close', [FiscalPrinterConfigController::class, 'closeShift'])->name('shift.close');
         Route::post('/shift/x-report', [FiscalPrinterConfigController::class, 'printXReport'])->name('shift.x-report');
+
+        // Payment Operations
+        Route::post('/credit-pay', [FiscalPrinterConfigController::class, 'printCreditPay'])->name('credit-pay');
+        Route::post('/advance-sale', [FiscalPrinterConfigController::class, 'printAdvanceSale'])->name('advance-sale');
+
+        // Cash Drawer Operations
+        Route::post('/deposit', [FiscalPrinterConfigController::class, 'printDeposit'])->name('deposit');
+        Route::post('/withdraw', [FiscalPrinterConfigController::class, 'printWithdraw'])->name('withdraw');
+        Route::post('/open-cashbox', [FiscalPrinterConfigController::class, 'openCashBox'])->name('open-cashbox');
+
+        // Utility Operations
+        Route::post('/correction', [FiscalPrinterConfigController::class, 'printCorrection'])->name('correction');
+        Route::post('/rollback', [FiscalPrinterConfigController::class, 'printRollBack'])->name('rollback');
+        Route::post('/print-last', [FiscalPrinterConfigController::class, 'printLastReceipt'])->name('print-last');
+
+        // Report Operations
+        Route::post('/periodic-report', [FiscalPrinterConfigController::class, 'getPeriodicReport'])->name('periodic-report');
+        Route::post('/control-tape', [FiscalPrinterConfigController::class, 'getControlTape'])->name('control-tape');
     });
 
     // Bridge Token Management

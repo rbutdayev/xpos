@@ -593,6 +593,7 @@ class FiscalPrinterService
                         break;
                     case 'credit':
                     case 'kredit':
+                    case 'bank_kredit':
                         $creditPayment += $amount;
                         break;
                     case 'bonus':
@@ -640,27 +641,35 @@ class FiscalPrinterService
             }
         }
 
+        // Prepare data array
+        $data = [
+            'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+            'cashPayment' => number_format($cashPayment, 2, '.', ''),
+            'creditPayment' => number_format($creditPayment, 2, '.', ''),
+            'depositPayment' => number_format(0.0, 2, '.', ''),
+            'cardPayment' => number_format($cardPayment, 2, '.', ''),
+            'bonusPayment' => number_format($bonusPayment, 2, '.', ''),
+            'items' => $items,
+            'clientName' => $sale->customer?->name ?? null,
+            'clientTotalBonus' => $sale->customer?->loyalty_points ?? 0.0,
+            'clientEarnedBonus' => 0.0,
+            'clientBonusCardNumber' => $sale->customer?->loyalty_card_number ?? null,
+            'cashierName' => $this->getCashierDisplayName($sale->user),
+            'note' => 'Satış №: ' . $sale->sale_number . ($sale->notes ? ' | ' . $sale->notes : ''),
+            'currency' => 'AZN',
+        ];
+
+        // Add creditContract if bank credit payment is used and contract number is configured
+        if ($creditPayment > 0 && !empty($config->credit_contract_number)) {
+            $data['creditContract'] = $config->credit_contract_number;
+        }
+
         // Format according to Caspos API: {"operation": "sale", "data": {...}, "username": "...", "password": "..."}
         return [
             'operation' => 'sale',
             'username' => $config->username,
             'password' => $config->password,
-            'data' => [
-                'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
-                'cashPayment' => number_format($cashPayment, 2, '.', ''),
-                'creditPayment' => number_format($creditPayment, 2, '.', ''),
-                'depositPayment' => number_format(0.0, 2, '.', ''),
-                'cardPayment' => number_format($cardPayment, 2, '.', ''),
-                'bonusPayment' => number_format($bonusPayment, 2, '.', ''),
-                'items' => $items,
-                'clientName' => $sale->customer?->name ?? null,
-                'clientTotalBonus' => $sale->customer?->loyalty_points ?? 0.0,
-                'clientEarnedBonus' => 0.0,
-                'clientBonusCardNumber' => $sale->customer?->loyalty_card_number ?? null,
-                'cashierName' => $this->getCashierDisplayName($sale->user),
-                'note' => 'Satış №: ' . $sale->sale_number . ($sale->notes ? ' | ' . $sale->notes : ''),
-                'currency' => 'AZN',
-            ],
+            'data' => $data,
         ];
     }
 
@@ -804,6 +813,7 @@ class FiscalPrinterService
                         break;
                     case 'credit':
                     case 'kredit':
+                    case 'bank_kredit':
                         $creditSum += $amount;
                         break;
                     case 'bonus':
@@ -843,6 +853,26 @@ class FiscalPrinterService
             ]
         ];
 
+        // Prepare data array
+        $data = [
+            'cashier' => $this->getCashierDisplayName($sale->user),
+            'currency' => 'AZN',
+            'items' => $items,
+            'sum' => $totalSum,
+            'cashSum' => $cashSum,
+            'cashlessSum' => $cashlessSum,
+            'prepaymentSum' => $prepaymentSum,
+            'creditSum' => $creditSum,
+            'bonusSum' => $bonusSum,
+            'incomingSum' => $cashSum, // Amount of cash buyer pays for change calculation
+            'vatAmounts' => $vatAmounts,
+        ];
+
+        // Add creditContract if bank credit payment is used and contract number is configured
+        if ($creditSum > 0 && !empty($config->credit_contract_number)) {
+            $data['creditContract'] = $config->credit_contract_number;
+        }
+
         // Format according to Omnitech API v2:
         // POST to http://ip:8989/v2
         // {"requestData": {"access_token": "...", "tokenData": {...}, "checkData": {...}}}
@@ -851,19 +881,7 @@ class FiscalPrinterService
                 'tokenData' => [
                     'parameters' => [
                         'doc_type' => 'sale',
-                        'data' => [
-                            'cashier' => $this->getCashierDisplayName($sale->user),
-                            'currency' => 'AZN',
-                            'items' => $items,
-                            'sum' => $totalSum,
-                            'cashSum' => $cashSum,
-                            'cashlessSum' => $cashlessSum,
-                            'prepaymentSum' => $prepaymentSum,
-                            'creditSum' => $creditSum,
-                            'bonusSum' => $bonusSum,
-                            'incomingSum' => $cashSum, // Amount of cash buyer pays for change calculation
-                            'vatAmounts' => $vatAmounts,
-                        ],
+                        'data' => $data,
                     ],
                     'operationId' => 'createDocument',
                     'version' => 1,
@@ -1227,6 +1245,637 @@ class FiscalPrinterService
         throw new \Exception('Unsupported provider: ' . $config->provider);
     }
 
+    // ============================================================
+    // FORMAT REQUEST METHODS FOR NEW CASPOS OPERATIONS
+    // ============================================================
+
+    /**
+     * Format Credit Pay request (bank credit repayment)
+     * Caspos API: "credit" operation
+     */
+    protected function formatCreditPayRequest(FiscalPrinterConfig $config, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'credit',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                        'paymentSum' => number_format((float) $data['amount'], 2, '.', ''),
+                        'cashierName' => $this->getCashierDisplayName(auth()->user()),
+                        'note' => $data['note'] ?? 'Kredit ödənişi',
+                        'currency' => 'AZN',
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Credit Pay - check_type: 31
+            $requestData = [
+                'cashier' => $this->getCashierDisplayName(auth()->user()),
+                'currency' => 'AZN',
+                'sum' => (float) $data['amount'],
+                'cashSum' => (float) $data['amount'],
+                'cashlessSum' => 0.0,
+                'prepaymentSum' => 0.0,
+                'creditSum' => 0.0,
+                'bonusSum' => 0.0,
+                'incomingSum' => (float) $data['amount'],
+            ];
+
+            // Add creditContract if configured
+            if (!empty($config->credit_contract_number)) {
+                $requestData['creditContract'] = $config->credit_contract_number;
+            }
+
+            // Add parentDocument if sale_id provided
+            if (isset($data['sale_id'])) {
+                $sale = \App\Models\Sale::find($data['sale_id']);
+                if ($sale && $sale->fiscal_document_id) {
+                    $requestData['parentDocument'] = $sale->fiscal_document_id;
+                }
+            }
+
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'creditpay',
+                                'data' => $requestData,
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 31, // Credit Pay
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Credit Pay only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Advance Sale request (prepayment)
+     * Caspos API: "prepayment" operation
+     */
+    protected function formatAdvanceSaleRequest(FiscalPrinterConfig $config, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'prepayment',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                        'cashPayment' => number_format((float) ($data['cash_amount'] ?? 0), 2, '.', ''),
+                        'cardPayment' => number_format((float) ($data['card_amount'] ?? 0), 2, '.', ''),
+                        'clientName' => $data['client_name'] ?? null,
+                        'cashierName' => $this->getCashierDisplayName(auth()->user()),
+                        'note' => $data['note'] ?? 'Avans ödənişi',
+                        'currency' => 'AZN',
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Prepay - check_type: 34
+            $cashSum = (float) ($data['cash_amount'] ?? 0);
+            $cardSum = (float) ($data['card_amount'] ?? 0);
+            $totalSum = $cashSum + $cardSum;
+
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'prepay',
+                                'data' => [
+                                    'cashier' => $this->getCashierDisplayName(auth()->user()),
+                                    'currency' => 'AZN',
+                                    'sum' => $totalSum,
+                                    'cashSum' => $cashSum,
+                                    'cashlessSum' => $cardSum,
+                                    'prepaymentSum' => 0.0,
+                                    'creditSum' => 0.0,
+                                    'bonusSum' => 0.0,
+                                    'incomingSum' => $cashSum,
+                                    'items' => [
+                                        [
+                                            'itemName' => $data['note'] ?? 'Avans ödənişi',
+                                            'itemCode' => '0',
+                                            'itemCodeType' => 0,
+                                            'itemQuantityType' => 0,
+                                            'itemQuantity' => 1.0,
+                                            'itemPrice' => $totalSum,
+                                            'itemSum' => $totalSum,
+                                            'itemVatPercent' => $config->default_tax_rate ?? 18,
+                                        ],
+                                    ],
+                                    'vatAmounts' => [
+                                        [
+                                            'vatSum' => $totalSum,
+                                            'vatPercent' => $config->default_tax_rate ?? 18,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 34, // Prepay
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Advance Sale only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Deposit request (add money to drawer)
+     * Caspos API: "deposit" operation
+     */
+    protected function formatDepositRequest(FiscalPrinterConfig $config, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'deposit',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                        'sum' => number_format((float) $data['amount'], 2, '.', ''),
+                        'cashierName' => $this->getCashierDisplayName(auth()->user()),
+                        'note' => $data['note'] ?? 'Kassaya pul əlavə edilməsi',
+                        'currency' => 'AZN',
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Deposit - check_type: 7
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'deposit',
+                                'data' => [
+                                    'cashier' => $this->getCashierDisplayName(auth()->user()),
+                                    'currency' => 'AZN',
+                                    'sum' => (float) $data['amount'],
+                                    'note' => $data['note'] ?? 'Kassaya pul əlavə edilməsi',
+                                ],
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 7, // Deposit
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Deposit only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Withdraw request (remove money from drawer)
+     * Caspos API: "withDraw" operation
+     */
+    protected function formatWithdrawRequest(FiscalPrinterConfig $config, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'withDraw',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                        'sum' => number_format((float) $data['amount'], 2, '.', ''),
+                        'cashierName' => $this->getCashierDisplayName(auth()->user()),
+                        'note' => $data['note'] ?? 'Kassadan pul götürülməsi',
+                        'currency' => 'AZN',
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Withdraw - check_type: 8
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'withdraw',
+                                'data' => [
+                                    'cashier' => $this->getCashierDisplayName(auth()->user()),
+                                    'currency' => 'AZN',
+                                    'sum' => (float) $data['amount'],
+                                    'note' => $data['note'] ?? 'Kassadan pul götürülməsi',
+                                ],
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 8, // Withdraw
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Withdraw only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Open CashBox request
+     * Caspos API: "openCashbox" operation
+     */
+    protected function formatOpenCashBoxRequest(FiscalPrinterConfig $config): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'openCashbox',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Open CashBox - check_type: 28
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'checkData' => [
+                            'check_type' => 28, // Open cashbox
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Open CashBox only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Correction request (offline transactions)
+     * Caspos API: "correction" operation
+     */
+    protected function formatCorrectionRequest(FiscalPrinterConfig $config, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'correction',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                        'cashPayment' => number_format((float) ($data['cash_amount'] ?? 0), 2, '.', ''),
+                        'cardPayment' => number_format((float) ($data['card_amount'] ?? 0), 2, '.', ''),
+                        'cashierName' => $this->getCashierDisplayName(auth()->user()),
+                        'note' => $data['note'] ?? 'Düzəliş qəbzi',
+                        'currency' => 'AZN',
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Correction - check_type: 19
+            $cashSum = (float) ($data['cash_amount'] ?? 0);
+            $cardSum = (float) ($data['card_amount'] ?? 0);
+            $totalSum = $cashSum + $cardSum;
+
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'correction',
+                                'data' => [
+                                    'cashier' => $this->getCashierDisplayName(auth()->user()),
+                                    'currency' => 'AZN',
+                                    'sum' => $totalSum,
+                                    'cashSum' => $cashSum,
+                                    'cashlessSum' => $cardSum,
+                                    'prepaymentSum' => 0.0,
+                                    'creditSum' => 0.0,
+                                    'bonusSum' => 0.0,
+                                    'note' => $data['note'] ?? 'Düzəliş qəbzi',
+                                    'vatAmounts' => [
+                                        [
+                                            'vatSum' => $totalSum,
+                                            'vatPercent' => $config->default_tax_rate ?? 18,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 19, // Correction
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Correction only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format RollBack request (cancel receipt)
+     * Caspos API: "rollBack" operation
+     */
+    protected function formatRollBackRequest(FiscalPrinterConfig $config, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'rollBack',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentId' => $data['document_id'],
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Rollback - check_type: 10 or 32 (for credit rollback)
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'rollback',
+                                'data' => [
+                                    'cashier' => $this->getCashierDisplayName(auth()->user()),
+                                    'currency' => 'AZN',
+                                    'parentDocument' => $data['document_id'], // fiscal_document_id
+                                ],
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 10, // Rollback
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('RollBack only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Print Last request (reprint last receipt)
+     * Caspos API: "printLastCheque" operation
+     */
+    protected function formatPrintLastRequest(FiscalPrinterConfig $config): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'printLastCheque',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Receipt Copy - check_type: 11
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'checkData' => [
+                            'check_type' => 11, // Receipt copy
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Print Last only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Periodic Report request
+     * Caspos API: "getPeriodicZReport" operation
+     */
+    protected function formatPeriodicReportRequest(FiscalPrinterConfig $config, string $startDate, string $endDate): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'getPeriodicZReport',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'beginDate' => $startDate,
+                        'endDate' => $endDate,
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech Transaction History - check_type: 17
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'date_start' => $startDate,
+                        'date_end' => $endDate,
+                        'checkData' => [
+                            'check_type' => 17, // Transaction history
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Periodic Report only supported for Caspos and Omnitech');
+    }
+
+    /**
+     * Format Control Tape request
+     * Caspos API: "getControlTape" operation
+     */
+    protected function formatControlTapeRequest(FiscalPrinterConfig $config): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'getControlTape',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                ],
+            ];
+        }
+
+        throw new \Exception('Control Tape only supported for Caspos');
+    }
+
     /**
      * Test connection to fiscal printer
      */
@@ -1485,6 +2134,452 @@ class FiscalPrinterService
         }
 
         return $name;
+    }
+
+    // ============================================================
+    // PAYMENT OPERATIONS (Priority 1)
+    // ============================================================
+
+    /**
+     * Print Credit Pay receipt (for bank credit repayments like BirKart/Tamkart)
+     * Caspos API: "credit" operation
+     */
+    public function printCreditPayReceipt(int $accountId, array $data): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatCreditPayRequest($config, $data);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => $data['sale_id'] ?? null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_CREDIT_PAY,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Kredit ödəniş qəbzi növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Credit pay receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print credit pay receipt: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Print Advance Sale receipt (prepayment/deposit from customer)
+     * Caspos API: "prepayment" operation
+     */
+    public function printAdvanceSaleReceipt(int $accountId, array $data): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatAdvanceSaleRequest($config, $data);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => $data['sale_id'] ?? null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_ADVANCE_SALE,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Avans qəbzi növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Advance sale receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print advance sale receipt: ' . $e->getMessage()];
+        }
+    }
+
+    // ============================================================
+    // CASH DRAWER OPERATIONS (Priority 2)
+    // ============================================================
+
+    /**
+     * Print Deposit receipt (add money to cash drawer)
+     * Caspos API: "deposit" operation
+     */
+    public function printDepositReceipt(int $accountId, array $data): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatDepositRequest($config, $data);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_DEPOSIT,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Kassaya pul əlavə edilməsi növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Deposit receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print deposit receipt: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Print Withdraw receipt (remove money from cash drawer)
+     * Caspos API: "withDraw" operation
+     */
+    public function printWithdrawReceipt(int $accountId, array $data): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatWithdrawRequest($config, $data);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_WITHDRAW,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Kassadan pul götürülməsi növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Withdraw receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print withdraw receipt: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Open cash box (no receipt printed)
+     * Caspos API: "openCashbox" operation
+     */
+    public function openCashBox(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatOpenCashBoxRequest($config);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_OPEN_CASHBOX,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Kassa açma əməliyyatı növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Open cashbox failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to open cashbox: ' . $e->getMessage()];
+        }
+    }
+
+    // ============================================================
+    // UTILITY OPERATIONS (Priority 3)
+    // ============================================================
+
+    /**
+     * Print Correction receipt (for offline transactions)
+     * Caspos API: "correction" operation
+     */
+    public function printCorrectionReceipt(int $accountId, array $data): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatCorrectionRequest($config, $data);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_CORRECTION,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Düzəliş qəbzi növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Correction receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print correction receipt: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Print RollBack receipt (cancel receipt from current shift)
+     * Caspos API: "rollBack" operation
+     */
+    public function printRollBackReceipt(int $accountId, array $data): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatRollBackRequest($config, $data);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_ROLLBACK,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Ləğv qəbzi növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('RollBack receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print rollback receipt: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Print last receipt (reprint)
+     * Caspos API: "printLastCheque" operation
+     */
+    public function printLastReceipt(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatPrintLastRequest($config);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_PRINT_LAST,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Son qəbzin təkrar çapı növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Print last receipt failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to print last receipt: ' . $e->getMessage()];
+        }
+    }
+
+    // ============================================================
+    // REPORT OPERATIONS (Priority 4)
+    // ============================================================
+
+    /**
+     * Get periodic report (for date range)
+     * Caspos API: "getPeriodicZReport" operation
+     */
+    public function getPeriodicReport(int $accountId, string $startDate, string $endDate): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatPeriodicReportRequest($config, $startDate, $endDate);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_PERIODIC_REPORT,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Dövri hesabat növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Periodic report failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to get periodic report: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get control tape (detailed shift transactions)
+     * Caspos API: "getControlTape" operation
+     */
+    public function getControlTape(int $accountId): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return ['success' => false, 'error' => 'Fiscal printer not configured'];
+        }
+
+        if (!$config->isConfigured()) {
+            return ['success' => false, 'error' => 'Fiscal printer is not active or IP address not set'];
+        }
+
+        try {
+            $requestData = $this->formatControlTapeRequest($config);
+
+            FiscalPrinterJob::create([
+                'account_id' => $accountId,
+                'sale_id' => null,
+                'return_id' => null,
+                'status' => FiscalPrinterJob::STATUS_PENDING,
+                'operation_type' => FiscalPrinterJob::OPERATION_CONTROL_TAPE,
+                'request_data' => $requestData,
+                'provider' => $config->provider,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Kontrol lenti növbəyə əlavə edildi',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Control tape failed', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => 'Failed to get control tape: ' . $e->getMessage()];
+        }
     }
 
     /**

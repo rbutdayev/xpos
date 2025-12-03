@@ -171,25 +171,25 @@ class Account extends Model
     // Loyalty-related helper methods
     public function isLoyaltyModuleEnabled(): bool
     {
-        return $this->loyalty_module_enabled ?? true;
+        return $this->loyalty_module_enabled ?? false;
     }
 
     // Services module helper methods
     public function isServicesModuleEnabled(): bool
     {
-        return $this->services_module_enabled ?? true;
+        return $this->services_module_enabled ?? false;
     }
 
     // Rent module helper methods
     public function isRentModuleEnabled(): bool
     {
-        return $this->rent_module_enabled ?? true;
+        return $this->rent_module_enabled ?? false;
     }
 
     // Discounts module helper methods
     public function isDiscountsModuleEnabled(): bool
     {
-        return $this->discounts_module_enabled ?? true;
+        return $this->discounts_module_enabled ?? false;
     }
 
     public function hasSmsConfigured(): bool

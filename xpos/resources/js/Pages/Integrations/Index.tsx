@@ -25,6 +25,7 @@ interface Integration {
     color: string;
     features: string[];
     requiresOwner?: boolean;
+    isSimpleToggle?: boolean; // For modules that don't have configuration
 }
 
 interface IntegrationsProps extends PageProps {
@@ -153,7 +154,8 @@ export default function Index({
                 'Telefon təmiri',
                 'Elektronika təmiri',
                 'Ümumi xidmətlər'
-            ]
+            ],
+            isSimpleToggle: true
         },
         {
             id: 'rent',
@@ -169,7 +171,8 @@ export default function Index({
                 'İcarə təqvimi',
                 'İcarə inventarı',
                 'Müqavilə şablonları'
-            ]
+            ],
+            isSimpleToggle: true
         },
         {
             id: 'discounts',
@@ -185,7 +188,8 @@ export default function Index({
                 'Endirim faizləri',
                 'Tarix aralığı ilə endirimlər',
                 'Filial üzrə endirimlər'
-            ]
+            ],
+            isSimpleToggle: true
         }
     ];
 
@@ -204,7 +208,7 @@ export default function Index({
         ? integrations
         : integrations.filter(i => i.category === selectedCategory);
 
-    const getStatusBadge = (status: Integration['status']) => {
+    const getStatusBadge = (status: Integration['status'], isSimpleToggle?: boolean) => {
         switch (status) {
             case 'active':
                 return (
@@ -215,8 +219,8 @@ export default function Index({
                 );
             case 'inactive':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        Konfiqurasiya edilib
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {isSimpleToggle ? 'Deaktiv' : 'Konfiqurasiya edilib'}
                     </span>
                 );
             case 'not_configured':
@@ -323,7 +327,7 @@ export default function Index({
                                             <div className={`p-2 sm:p-3 rounded-lg ${getColorClasses(integration.color, 'text')} bg-white`}>
                                                 <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                                             </div>
-                                            {getStatusBadge(integration.status)}
+                                            {getStatusBadge(integration.status, integration.isSimpleToggle)}
                                         </div>
 
                                         <div className="mt-3 sm:mt-4">

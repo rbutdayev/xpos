@@ -233,24 +233,16 @@ print_success "Dependencies installed and assets built successfully"
 # =====================================================
 print_status "Configuring application..."
 
-# Restore or use production .env file
-if [ -f "/tmp/.env.backup" ]; then
-    sudo mv /tmp/.env.backup \$APP_PATH/.env
-    print_status "Restored existing .env configuration"
-    # Ensure production settings are correct
-    sudo sed -i 's/^APP_ENV=.*/APP_ENV=production/' .env
-    sudo sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+# Always use .env.production for deployment
+# Keep backup for emergency rollback only
+if [ -f ".env.production" ]; then
+    sudo cp .env.production .env
+    # Replace domain placeholder if exists
+    sudo sed -i "s/DOMAIN_NAME_PLACEHOLDER/\$DOMAIN_NAME/g" .env
+    print_success "Using .env.production file with domain: \$DOMAIN_NAME"
 else
-    # Use .env.production from deployment and customize for domain
-    if [ -f ".env.production" ]; then
-        sudo cp .env.production .env
-        # Replace domain placeholder
-        sudo sed -i "s/DOMAIN_NAME_PLACEHOLDER/\$DOMAIN_NAME/g" .env
-        print_success "Used .env.production file with domain: \$DOMAIN_NAME"
-    else
-        print_error ".env.production file not found in deployment!"
-        exit 1
-    fi
+    print_error ".env.production file not found in deployment!"
+    exit 1
 fi
 
 # Ensure Redis configuration is applied (overrides old database settings)

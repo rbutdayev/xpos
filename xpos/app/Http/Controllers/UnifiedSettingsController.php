@@ -7,6 +7,7 @@ use App\Models\TelegramCredential;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 /**
@@ -216,6 +217,8 @@ class UnifiedSettingsController extends Controller
      */
     public function telegramLogs(Request $request)
     {
+        Gate::authorize('view-reports');
+
         $accountId = $request->user()->account_id;
         $limit = $request->input('limit', 50);
 

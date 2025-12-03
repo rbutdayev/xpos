@@ -4,9 +4,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DailySalesSummary from '@/Components/DailySalesSummary';
-import { EyeIcon, PencilIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilIcon, PlusCircleIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { Sale, PageProps } from '@/types';
 import SalesNavigation from '@/Components/SalesNavigation';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 interface SalesIndexProps extends PageProps {
     sales: {
@@ -240,6 +242,23 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
         },
     ];
 
+    const handleReprintFiscal = async (sale: Sale) => {
+        if (!confirm(`Fiskal qəbzi təkrar çap etmək istədiyinizə əminsiniz?\n\nSatış №: ${sale.sale_number}\nFiskal №: ${sale.fiscal_number}`)) {
+            return;
+        }
+
+        try {
+            const response = await axios.post('/fiscal-printer/print-last');
+            if (response.data.success) {
+                toast.success(response.data.message);
+            } else {
+                toast.error(response.data.message || 'Çap uğursuz oldu');
+            }
+        } catch (error: any) {
+            toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     const actions: Action[] = [
         {
             label: 'Bax',
@@ -253,6 +272,13 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
             variant: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
             condition: (sale: Sale) => sale.status !== 'refunded', // Allow edit for all except refunded
+        },
+        {
+            label: 'Fiskal Çap',
+            onClick: (sale: Sale) => handleReprintFiscal(sale),
+            variant: 'secondary',
+            icon: <PrinterIcon className="w-4 h-4" />,
+            condition: (sale: Sale) => !!sale.fiscal_number, // Only show if sale has fiscal number
         },
     ];
 

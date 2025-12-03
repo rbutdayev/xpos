@@ -161,7 +161,7 @@ class POSController extends Controller
             'discount_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'payment_status' => 'required|in:paid,credit,partial',
-            'payment_method' => 'nullable|in:nağd,kart,köçürmə',
+            'payment_method' => 'nullable|in:nağd,kart,köçürmə,bank_kredit',
             'paid_amount' => 'nullable|numeric|min:0',
             'credit_amount' => 'nullable|numeric|min:0',
             'credit_due_date' => 'nullable|date|after:today',

@@ -389,6 +389,249 @@ export default function Index({ auth, fiscalConfig, discountsEnabled }: ShiftMan
                         </div>
                     </div>
 
+                    {/* Cash Drawer Section */}
+                    {canManageShift && (
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                            <div className="p-6">
+                                <h3 className="text-lg font-medium text-gray-900 mb-6">
+                                    Kassa İdarəetməsi
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Deposit */}
+                                    <div>
+                                        <SecondaryButton
+                                            onClick={async () => {
+                                                const amount = prompt('Əlavə ediləcək məbləğ (AZN):');
+                                                const note = prompt('Qeyd (opsional):');
+
+                                                if (!amount || parseFloat(amount) <= 0) {
+                                                    toast.error('Düzgün məbləğ daxil edin');
+                                                    return;
+                                                }
+
+                                                setLoading(true);
+                                                try {
+                                                    const response = await axios.post('/fiscal-printer/deposit', {
+                                                        amount: parseFloat(amount),
+                                                        note: note || undefined
+                                                    });
+                                                    if (response.data.success) {
+                                                        toast.success(response.data.message);
+                                                    } else {
+                                                        toast.error(response.data.message);
+                                                    }
+                                                } catch (error: any) {
+                                                    toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }}
+                                            disabled={loading}
+                                            className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                        >
+                                            <PlusCircleIcon className="h-6 w-6" />
+                                            Pul Əlavə Et
+                                        </SecondaryButton>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Kassaya pul əlavə et
+                                        </p>
+                                    </div>
+
+                                    {/* Withdraw */}
+                                    <div>
+                                        <SecondaryButton
+                                            onClick={async () => {
+                                                const amount = prompt('Götürüləcək məbləğ (AZN):');
+                                                const note = prompt('Qeyd (opsional):');
+
+                                                if (!amount || parseFloat(amount) <= 0) {
+                                                    toast.error('Düzgün məbləğ daxil edin');
+                                                    return;
+                                                }
+
+                                                setLoading(true);
+                                                try {
+                                                    const response = await axios.post('/fiscal-printer/withdraw', {
+                                                        amount: parseFloat(amount),
+                                                        note: note || undefined
+                                                    });
+                                                    if (response.data.success) {
+                                                        toast.success(response.data.message);
+                                                    } else {
+                                                        toast.error(response.data.message);
+                                                    }
+                                                } catch (error: any) {
+                                                    toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }}
+                                            disabled={loading}
+                                            className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                        >
+                                            <DocumentTextIcon className="h-6 w-6" />
+                                            Pul Götür
+                                        </SecondaryButton>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Kassadan pul götür
+                                        </p>
+                                    </div>
+
+                                    {/* Open CashBox */}
+                                    <div>
+                                        <SecondaryButton
+                                            onClick={async () => {
+                                                if (!confirm('Kassanı açmaq istədiyinizə əminsiniz?')) return;
+
+                                                setLoading(true);
+                                                try {
+                                                    const response = await axios.post('/fiscal-printer/open-cashbox');
+                                                    if (response.data.success) {
+                                                        toast.success(response.data.message);
+                                                    } else {
+                                                        toast.error(response.data.message);
+                                                    }
+                                                } catch (error: any) {
+                                                    toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }}
+                                            disabled={loading}
+                                            className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                        >
+                                            <DocumentTextIcon className="h-6 w-6" />
+                                            Kassanı Aç
+                                        </SecondaryButton>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Kassa siyirtməsini aç
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Utilities Section */}
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-6">
+                                Utilities
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Print Last Receipt */}
+                                <div>
+                                    <SecondaryButton
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            try {
+                                                const response = await axios.post('/fiscal-printer/print-last');
+                                                if (response.data.success) {
+                                                    toast.success(response.data.message);
+                                                } else {
+                                                    toast.error(response.data.message);
+                                                }
+                                            } catch (error: any) {
+                                                toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        }}
+                                        disabled={loading}
+                                        className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                    >
+                                        <DocumentTextIcon className="h-6 w-6" />
+                                        Son Qəbzi Təkrar Çap Et
+                                    </SecondaryButton>
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        Son çap edilmiş qəbzi yenidən çap et
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Reports Section */}
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-6">
+                                Hesabatlar
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Periodic Report */}
+                                <div>
+                                    <SecondaryButton
+                                        onClick={async () => {
+                                            const startDate = prompt('Başlanğıc tarixi (YYYY-MM-DD):');
+                                            const endDate = prompt('Son tarix (YYYY-MM-DD):');
+
+                                            if (!startDate || !endDate) return;
+
+                                            setLoading(true);
+                                            try {
+                                                const response = await axios.post('/fiscal-printer/periodic-report', {
+                                                    start_date: startDate,
+                                                    end_date: endDate
+                                                });
+                                                if (response.data.success) {
+                                                    toast.success(response.data.message);
+                                                } else {
+                                                    toast.error(response.data.message);
+                                                }
+                                            } catch (error: any) {
+                                                toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        }}
+                                        disabled={loading}
+                                        className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                    >
+                                        <DocumentTextIcon className="h-6 w-6" />
+                                        Dövri Hesabat
+                                    </SecondaryButton>
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        Tarix aralığına görə hesabat
+                                    </p>
+                                </div>
+
+                                {/* Control Tape */}
+                                <div>
+                                    <SecondaryButton
+                                        onClick={async () => {
+                                            if (!confirm('Kontrol lentini çap etmək istədiyinizə əminsiniz?')) return;
+
+                                            setLoading(true);
+                                            try {
+                                                const response = await axios.post('/fiscal-printer/control-tape');
+                                                if (response.data.success) {
+                                                    toast.success(response.data.message);
+                                                } else {
+                                                    toast.error(response.data.message);
+                                                }
+                                            } catch (error: any) {
+                                                toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        }}
+                                        disabled={loading}
+                                        className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                    >
+                                        <DocumentTextIcon className="h-6 w-6" />
+                                        Kontrol Lenti
+                                    </SecondaryButton>
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        Növbədəki bütün əməliyyatlar
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Info Section */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                         <h4 className="text-sm font-medium text-blue-900 mb-3">
