@@ -197,18 +197,14 @@ class UserController extends Controller
             return back()->withErrors(['error' => 'Sistem istifadəçilərini redaktə etmək mümkün deyil.']);
         }
 
-        // Prevent changing the role of account_owner
-        if ($user->role === 'account_owner') {
-            return back()->withErrors([
-                'role' => 'Hesab sahibinin rolunu dəyişdirmək mümkün deyil. Hesab sahibi həmişə "account_owner" rolunda qalmalıdır.'
-            ]);
-        }
+        // Determine validation rules based on whether user is account_owner
+        $isAccountOwner = $user->role === 'account_owner';
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,branch_manager,warehouse_manager,sales_staff,cashier,accountant,tailor',
+            'role' => $isAccountOwner ? 'sometimes' : 'required|in:admin,branch_manager,warehouse_manager,sales_staff,cashier,accountant,tailor',
             'status' => 'required|in:active,inactive',
             'password' => 'nullable|string|min:8|confirmed',
             'position' => 'nullable|string|max:255',
@@ -218,6 +214,13 @@ class UserController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        // Prevent changing the role of account_owner
+        if ($isAccountOwner && isset($validated['role']) && $validated['role'] !== 'account_owner') {
+            return back()->withErrors([
+                'role' => 'Hesab sahibinin rolunu dəyişdirmək mümkün deyil. Hesab sahibi həmişə "account_owner" rolunda qalmalıdır.'
+            ]);
+        }
+
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
@@ -226,7 +229,7 @@ class UserController extends Controller
 
         // Security: Explicitly set protected fields (not mass assignable)
         // Remove protected fields from $validated before mass update
-        $role = $validated['role'];
+        $role = $isAccountOwner ? 'account_owner' : $validated['role'];
         $status = $validated['status'];
         unset($validated['role'], $validated['status']);
 

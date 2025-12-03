@@ -139,7 +139,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     });
 });
 
-// Main Dashboard 
+// Main Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

@@ -7,7 +7,7 @@ export interface QuickActionButtonProps {
     href: string;
     icon: React.ReactNode;
     title: string;
-    description: string;
+    description?: string;
     variant?: ColorVariant;
 }
 
@@ -21,7 +21,7 @@ export function QuickActionButton({
     href,
     icon,
     title,
-    description,
+    description = '',
     variant = 'primary',
 }: QuickActionButtonProps) {
     const colorConfig = COLORS[variant];
