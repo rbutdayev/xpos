@@ -2,11 +2,28 @@ import { Head } from '@inertiajs/react';
 import StatCard from '@/Components/StatCard';
 import SuperAdminNav from '@/Components/SuperAdminNav';
 
+interface AccountStats {
+    total: number;
+    active: number;
+    suspended: number;
+    created_this_month: number;
+}
+
+interface UserStats {
+    total: number;
+    active: number;
+    inactive: number;
+    created_this_month: number;
+}
+
 interface Stats {
     total_accounts: number;
     active_accounts: number;
     total_users: number;
     active_users: number;
+    accounts: AccountStats;
+    users: UserStats;
+    roles: Record<string, number>;
 }
 
 interface Props {
@@ -77,6 +94,84 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                         />
                     </div>
 
+                    {/* Detailed Statistics */}
+                    <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Account Statistics */}
+                        <div className="bg-white shadow rounded-lg overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
+                                <h3 className="text-lg font-semibold text-gray-900">Hesab Statistikası</h3>
+                            </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-blue-600">{stats.accounts.total}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Ümumi</div>
+                                    </div>
+                                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-green-600">{stats.accounts.active}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Aktiv</div>
+                                    </div>
+                                    <div className="text-center p-4 bg-red-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-red-600">{stats.accounts.suspended}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Dayandırılmış</div>
+                                    </div>
+                                    <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-indigo-600">{stats.accounts.created_this_month}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Bu ay yaradılan</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* User Statistics */}
+                        <div className="bg-white shadow rounded-lg overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200 bg-purple-50">
+                                <h3 className="text-lg font-semibold text-gray-900">İstifadəçi Statistikası</h3>
+                            </div>
+                            <div className="p-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-purple-600">{stats.users.total}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Ümumi</div>
+                                    </div>
+                                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-green-600">{stats.users.active}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Aktiv</div>
+                                    </div>
+                                    <div className="text-center p-4 bg-gray-100 rounded-lg">
+                                        <div className="text-2xl font-bold text-gray-600">{stats.users.inactive}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Qeyri-aktiv</div>
+                                    </div>
+                                    <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-indigo-600">{stats.users.created_this_month}</div>
+                                        <div className="text-sm text-gray-600 mt-1">Bu ay əlavə olundu</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Role Distribution */}
+                    {Object.keys(stats.roles).length > 0 && (
+                        <div className="mb-8">
+                            <div className="bg-white shadow rounded-lg overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-900">Rol Paylanması</h3>
+                                </div>
+                                <div className="p-6">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                        {Object.entries(stats.roles).map(([role, count]) => (
+                                            <div key={role} className="text-center p-4 bg-gray-50 rounded-lg">
+                                                <div className="text-xl font-bold text-gray-900">{count as number}</div>
+                                                <div className="text-xs text-gray-600 mt-1 capitalize">{role.replace('_', ' ')}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Quick Actions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -91,6 +186,23 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                                     >
                                         Hesabları Gör
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                            <div className="px-4 py-5 sm:p-6">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Ödənişlər</h3>
+                                <p className="mt-2 text-sm text-gray-600">
+                                    Hesab ödənişlərini idarə et və izlə
+                                </p>
+                                <div className="mt-4">
+                                    <a
+                                        href="/admin/payments"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                    >
+                                        Ödənişlər
                                     </a>
                                 </div>
                             </div>
@@ -115,16 +227,33 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
 
                         <div className="bg-white overflow-hidden shadow rounded-lg">
                             <div className="px-4 py-5 sm:p-6">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Sistem Statistikası</h3>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Loaylıq Kartları</h3>
                                 <p className="mt-2 text-sm text-gray-600">
-                                    Detallı sistem performans məlumatları
+                                    Fiziki loaylıq kartlarını yaradın və idarə edin
                                 </p>
                                 <div className="mt-4">
                                     <a
-                                        href="/admin/system-stats"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+                                        href="/admin/loyalty-cards"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
                                     >
-                                        Statistikalar
+                                        Kartlar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                            <div className="px-4 py-5 sm:p-6">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Fiskal Printerlər</h3>
+                                <p className="mt-2 text-sm text-gray-600">
+                                    Fiskal printer provayderləri və inteqrasiyalar
+                                </p>
+                                <div className="mt-4">
+                                    <a
+                                        href="/admin/fiscal-printer-providers"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700"
+                                    >
+                                        Printerlər
                                     </a>
                                 </div>
                             </div>
@@ -166,34 +295,17 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
 
                         <div className="bg-white overflow-hidden shadow rounded-lg">
                             <div className="px-4 py-5 sm:p-6">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Azure Storage</h3>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Object Store</h3>
                                 <p className="mt-2 text-sm text-gray-600">
-                                    Microsoft Azure Blob Storage parametrlərini konfiqurasiya et
+                                    Object storage parametrlərini konfiqurasiya et
                                 </p>
                                 <div className="mt-4">
                                     <a
                                         href="/admin/storage-settings"
                                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                                     >
-                                        Azure Parametrləri
+                                        Storage Parametrləri
                                     </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white overflow-hidden shadow rounded-lg">
-                            <div className="px-4 py-5 sm:p-6">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Sistem Təmizliyi</h3>
-                                <p className="mt-2 text-sm text-gray-600">
-                                    Cache və log fayllarını təmizlə
-                                </p>
-                                <div className="mt-4 space-y-2">
-                                    <button
-                                        onClick={() => window.open('/admin/cache/clear', '_blank')}
-                                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                    >
-                                        Cache Təmizlə
-                                    </button>
                                 </div>
                             </div>
                         </div>

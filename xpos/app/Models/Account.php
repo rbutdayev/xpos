@@ -10,18 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Account extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'company_name',
-        'subscription_plan',
         'language',
         'address',
         'tax_number',
         'phone',
         'email',
         'settings',
-        'is_active',
-        'monthly_payment_amount',
-        'payment_start_date',
         'shop_slug',
         'shop_enabled',
         'shop_warehouse_id',
@@ -33,10 +30,24 @@ class Account extends Model
         'notification_settings',
         'auto_print_receipt',
         'fiscal_printer_enabled',
-        'loyalty_module_enabled',
-        'services_module_enabled',
-        'rent_module_enabled',
-        'discounts_module_enabled',
+    ];
+
+    /**
+     * The attributes that aren't mass assignable.
+     * Security: Protect sensitive administrative fields
+     *
+     * @var list<string>
+     */
+    protected $guarded = [
+        'id',
+        'is_active',                   // Only super admin can activate/deactivate
+        'monthly_payment_amount',      // Only super admin can set payment amount
+        'payment_start_date',          // Only super admin can set payment dates
+        'subscription_plan',           // Only super admin can change plans
+        'loyalty_module_enabled',      // Paid features - only super admin
+        'services_module_enabled',     // Paid features - only super admin
+        'rent_module_enabled',         // Paid features - only super admin
+        'discounts_module_enabled',    // Paid features - only super admin
     ];
 
     protected $casts = [

@@ -25,6 +25,7 @@ class AuthorizationServiceProvider extends ServiceProvider
         \App\Models\Expense::class => \App\Policies\ExpensePolicy::class,
         \App\Models\ExpenseCategory::class => \App\Policies\ExpenseCategoryPolicy::class,
         \App\Models\AuditLog::class => \App\Policies\AuditLogPolicy::class,
+        \App\Models\LoyaltyCard::class => \App\Policies\LoyaltyCardPolicy::class,
     ];
 
     /**
@@ -204,6 +205,16 @@ class AuthorizationServiceProvider extends ServiceProvider
             return $user->isActive() && $user->account->isActive() && in_array($user->role, [
                 'account_owner', 'admin'
             ]);
+        });
+
+        // Loyalty Cards Management (Super Admin only)
+        Gate::define('manage-loyalty-cards', function (User $user) {
+            return $user->isSuperAdmin();
+        });
+
+        // Assign Loyalty Cards (All active users can assign cards to their customers)
+        Gate::define('assign-loyalty-cards', function (User $user) {
+            return $user->isActive() && $user->account->isActive();
         });
     }
 }

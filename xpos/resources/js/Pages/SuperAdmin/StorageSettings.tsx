@@ -58,21 +58,21 @@ export default function StorageSettings({ currentSettings }: Props) {
 
     const driverOptions = [
         { value: 'local', label: 'Lokal Yaddaş', icon: '💾', description: 'Serverdə lokal olaraq saxlayın (inkişaf üçün)' },
-        { value: 'azure', label: 'Azure Blob Storage', icon: '☁️', description: 'Microsoft Azure Blob Storage' },
+        { value: 'azure', label: 'Azure Object Storage', icon: '☁️', description: 'Microsoft Azure Blob Storage' },
         { value: 's3', label: 'AWS S3', icon: '📦', description: 'Amazon Web Services S3' },
         { value: 's3-compatible', label: 'S3-uyğun (Backblaze)', icon: '🔗', description: 'Backblaze B2, MinIO və s.' },
     ];
 
     return (
         <>
-            <Head title="Yaddaş Parametrləri" />
+            <Head title="Object Store Parametrləri" />
 
             <div className="min-h-screen bg-gray-50">
                 <div className="bg-white shadow">
                     <div className="mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="py-6">
                             <h1 className="text-3xl font-bold text-gray-900">
-                                Yaddaş Parametrləri
+                                Object Store Parametrləri
                             </h1>
                             <p className="mt-2 text-sm text-gray-600">
                                 Fayl yaddaşı konfiqurasiyasını idarə edin
@@ -135,7 +135,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                 <div className="space-y-6 border-t pt-6">
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                         <h3 className="text-lg font-medium text-blue-900">
-                                            Azure Blob Storage Parametrləri
+                                            Azure Object Storage Parametrləri
                                         </h3>
                                         <p className="mt-1 text-sm text-blue-700">
                                             Microsoft Azure Portal-dan bağlantı məlumatlarını əldə edin

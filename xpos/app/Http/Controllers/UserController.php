@@ -115,9 +115,13 @@ class UserController extends Controller
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['account_id'] = Auth::user()->account_id;
 
-        User::create($validated);
+        // Security: Explicitly set protected fields (not mass assignable)
+        $user = new User($validated);
+        $user->account_id = Auth::user()->account_id;
+        $user->role = $validated['role'];
+        $user->status = $validated['status'];
+        $user->save();
 
         return redirect()->route('users.index')
             ->with('success', 'İstifadəçi uğurla yaradıldı.');
@@ -220,7 +224,16 @@ class UserController extends Controller
             unset($validated['password']);
         }
 
+        // Security: Explicitly set protected fields (not mass assignable)
+        // Remove protected fields from $validated before mass update
+        $role = $validated['role'];
+        $status = $validated['status'];
+        unset($validated['role'], $validated['status']);
+
         $user->update($validated);
+        $user->role = $role;
+        $user->status = $status;
+        $user->save();
 
         return redirect()->route('users.show', $user)
             ->with('success', 'İstifadəçi məlumatları yeniləndi.');

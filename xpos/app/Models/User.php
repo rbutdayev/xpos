@@ -23,17 +23,28 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'account_id',
-        'role',
-        'status',
         'phone',
         'position',
         'hire_date',
         'hourly_rate',
         'branch_id',
         'notes',
-        'permissions',
         'last_login_at',
+    ];
+
+    /**
+     * The attributes that aren't mass assignable.
+     * Security: Protect sensitive fields from mass assignment
+     *
+     * @var list<string>
+     */
+    protected $guarded = [
+        'id',
+        'account_id',      // Prevent account switching
+        'role',            // Prevent privilege escalation
+        'status',          // Prevent self-activation
+        'permissions',     // Prevent permission manipulation
+        'remember_token',
     ];
 
     /**

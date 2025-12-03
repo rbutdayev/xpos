@@ -270,14 +270,51 @@ class DocumentUploadService
 
     private function validateFile(UploadedFile $file): void
     {
+        // Basic validation
         if (!$file->isValid()) {
             throw new \InvalidArgumentException(__('Invalid file upload'));
         }
 
-        if (!in_array($file->getMimeType(), $this->allowedMimeTypes)) {
+        // Security: Check MIME type from HTTP header
+        $mimeType = $file->getMimeType();
+        if (!in_array($mimeType, $this->allowedMimeTypes)) {
             throw new \InvalidArgumentException(__('File type not supported'));
         }
 
+        // Security: Verify file content matches MIME type (prevents spoofing)
+        try {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $actualMimeType = finfo_file($finfo, $file->getRealPath());
+            finfo_close($finfo);
+
+            if ($actualMimeType !== $mimeType) {
+                throw new \InvalidArgumentException(__('File content does not match declared type. Upload rejected for security reasons.'));
+            }
+
+            // Additional check: verify against allowed list
+            if (!in_array($actualMimeType, $this->allowedMimeTypes)) {
+                throw new \InvalidArgumentException(__('File content type not supported'));
+            }
+        } catch (\Exception $e) {
+            \Log::warning('File validation error: ' . $e->getMessage());
+            throw new \InvalidArgumentException(__('File validation failed'));
+        }
+
+        // Security: Validate file extension
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv'];
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        if (!in_array($extension, $allowedExtensions)) {
+            throw new \InvalidArgumentException(__('File extension not allowed'));
+        }
+
+        // Security: Check for double extensions (e.g., file.php.jpg)
+        $originalName = $file->getClientOriginalName();
+        if (preg_match('/\.php|\.phtml|\.php3|\.php4|\.php5|\.phar|\.exe|\.sh|\.bat|\.cmd/i', $originalName)) {
+            throw new \InvalidArgumentException(__('Potentially dangerous file name detected'));
+        }
+
+        // Size validation
         $fileType = $this->getFileType($file);
         $maxSize = $this->maxFileSizes[$fileType] ?? $this->maxFileSizes['default'];
 
