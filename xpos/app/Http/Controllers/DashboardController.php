@@ -4,39 +4,42 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use App\Models\Product;
-use App\Models\Customer;
-use App\Models\Supplier;
-use App\Models\Warehouse;
-use App\Models\Branch;
+use App\Services\DashboardService;
+use App\Models\Account;
+use App\Models\User;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\SaleReturn;
-use App\Models\Expense;
-use App\Models\CustomerCredit;
-use App\Models\SupplierPayment;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __construct()
+    private DashboardService $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
     {
         $this->middleware(['auth', 'account.access']);
+        $this->dashboardService = $dashboardService;
     }
 
+    /**
+     * Main dashboard entry point
+     * Routes to role-specific dashboard based on user role
+     */
     public function index(Request $request)
     {
+        Gate::authorize('access-dashboard');
+
         $user = Auth::user();
-        
+
         // Redirect super admins to their panel
         if ($user->role === 'super_admin') {
             return redirect()->route('superadmin.dashboard');
         }
-        
+
         $account = $user->account;
-        $selectedWarehouseId = $request->session()->get('selected_warehouse_id');
 
         // Check if user needs to complete company setup
         if (!$account->companies()->exists()) {
@@ -44,430 +47,567 @@ class DashboardController extends Controller
         }
 
         // Validate warehouse access for sales_staff
+        $selectedWarehouseId = $request->session()->get('selected_warehouse_id');
         if ($user->role === 'sales_staff' && $user->branch_id && $selectedWarehouseId) {
             $hasAccess = \App\Models\WarehouseBranchAccess::where('warehouse_id', $selectedWarehouseId)
                 ->where('branch_id', $user->branch_id)
                 ->where('can_view_stock', true)
                 ->exists();
-                
+
             if (!$hasAccess) {
-                // Clear invalid warehouse selection and redirect
                 $request->session()->forget('selected_warehouse_id');
                 return redirect()->route('dashboard');
             }
         }
 
-        // Get warehouse-specific statistics
-        $warehouseQuery = $account->warehouses();
-        if ($selectedWarehouseId) {
-            $warehouseQuery->where('id', $selectedWarehouseId);
-            $selectedWarehouse = $account->warehouses()->find($selectedWarehouseId);
-        } else {
-            $selectedWarehouse = null;
+        // Route to role-specific dashboard data
+        $data = match($user->role) {
+            'account_owner', 'admin' => $this->getFullDashboard($account, $user, $request),
+            'accountant' => $this->getFinancialDashboard($account, $user, $request),
+            'warehouse_manager' => $this->getInventoryDashboard($account, $user, $request),
+            'sales_staff' => $this->getSalesDashboard($account, $user, $request),
+            'tailor' => $this->getServiceDashboard($account, $user, $request),
+            'branch_manager' => $this->getBranchDashboard($account, $user, $request),
+            'cashier' => $this->getCashierDashboard($account, $user, $request),
+            default => abort(403, 'Unauthorized role')
+        };
+
+        // Use DashboardNew (Cuba-style) for account owners/admins
+        $viewName = in_array($user->role, ['account_owner', 'admin']) ? 'DashboardNew' : 'Dashboard';
+
+        return Inertia::render($viewName, $data);
+    }
+
+    /**
+     * Account Owner / Admin Dashboard - Full access
+     */
+    private function getFullDashboard(Account $account, User $user, Request $request): array
+    {
+        $selectedWarehouseId = $request->session()->get('selected_warehouse_id');
+        $selectedWarehouse = $selectedWarehouseId ? $account->warehouses()->find($selectedWarehouseId) : null;
+
+        // Get all KPIs
+        $financial = $this->dashboardService->getFinancialMetrics($account);
+        $operational = $this->dashboardService->getOperationalMetrics($account, $selectedWarehouseId);
+        $alerts = $this->dashboardService->getInventoryAlerts($account, $selectedWarehouseId);
+        $credits = $this->dashboardService->getCreditStatistics($account);
+
+        // Get primary company
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
+
+        // Module-based metrics
+        $services = $account->isServicesModuleEnabled()
+            ? $this->dashboardService->getServiceMetrics($account)
+            : null;
+
+        $rentals = $account->isRentModuleEnabled()
+            ? $this->dashboardService->getRentalMetrics($account)
+            : null;
+
+        // Online orders alert (if shop enabled)
+        $onlineOrders = ['pending' => 0];
+        if ($account->isShopEnabled()) {
+            $onlineOrders['pending'] = Sale::where('account_id', $account->id)
+                ->onlineOrders()
+                ->where('payment_status', 'credit')
+                ->count();
         }
 
-        
-        // Get dashboard statistics - these remain account-wide regardless of warehouse selection
-        $stats = [
-            'products_count' => $account->products()->count(),
-            'customers_count' => $account->customers()->count(),
-            'suppliers_count' => $account->suppliers()->count(),
-            'warehouses_count' => $account->warehouses()->count(),
-            'branches_count' => $account->branches()->count(),
-            'active_customers' => $account->customers()->where('is_active', true)->count(),
+        // Charts and tables
+        $timeRange = $request->get('timeRange', '30days');
+        $salesTrend = $this->getSalesTrendData($account, $timeRange);
+        $topProducts = $this->getTopProducts($account, $timeRange);
+        $recentSales = $this->getRecentSales($account, $timeRange);
+        $lowStockProducts = $this->getLowStockProducts($account, $selectedWarehouseId);
+        $stockByUnit = $this->getStockByUnit($account, $selectedWarehouseId);
+        $paymentMethods = $this->getPaymentMethodsBreakdown($account);
+        $expenseBreakdown = $this->getExpenseBreakdown($account);
+
+        // Payment alert
+        $paymentAlert = $this->checkAccountPaymentAlert($account, $request);
+
+        return [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role,
+            ],
+            'account' => [
+                'name' => $company->name ?? $account->name,
+                'modules' => [
+                    'services_enabled' => $account->isServicesModuleEnabled(),
+                    'rentals_enabled' => $account->isRentModuleEnabled(),
+                    'shop_enabled' => $account->isShopEnabled(),
+                    'loyalty_enabled' => $account->isLoyaltyModuleEnabled(),
+                    'discounts_enabled' => $account->isDiscountsModuleEnabled(),
+                ],
+            ],
+            'financial' => $financial,
+            'operational' => $operational,
+            'services' => $services,
+            'rentals' => $rentals,
+            'alerts' => $alerts,
+            'online_orders' => $onlineOrders,
+            'credits' => $credits,
+            'stock_by_unit' => $stockByUnit,
+            'charts' => [
+                'sales_trend' => $salesTrend,
+                'payment_methods' => $paymentMethods,
+                'top_products' => $topProducts,
+                'expense_breakdown' => $expenseBreakdown,
+            ],
+            'tables' => [
+                'recent_sales' => $recentSales,
+                'low_stock_products' => $lowStockProducts,
+            ],
+            'selected_warehouse' => $selectedWarehouse,
+            'warehouse_context' => $selectedWarehouseId ? 'specific' : 'all',
+            'payment_alert' => $paymentAlert,
+        ];
+    }
+
+    /**
+     * Accountant Dashboard - Financial focus
+     */
+    private function getFinancialDashboard(Account $account, User $user, Request $request): array
+    {
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
+
+        $financial = $this->dashboardService->getFinancialMetrics($account);
+        $credits = $this->dashboardService->getCreditStatistics($account);
+
+        // Revenue breakdown by source
+        $currentMonth = Carbon::now();
+        $salesRevenue = Sale::where('account_id', $account->id)
+            ->countable()
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
+            ->sum('total') ?? 0;
+
+        $revenueBreakdown = ['sales' => $salesRevenue];
+
+        if ($account->isServicesModuleEnabled()) {
+            $serviceRevenue = \App\Models\TailorService::where('account_id', $account->id)
+                ->where('status', 'completed')
+                ->whereYear('updated_at', $currentMonth->year)
+                ->whereMonth('updated_at', $currentMonth->month)
+                ->sum('total_cost') ?? 0;
+            $revenueBreakdown['services'] = $serviceRevenue;
+        }
+
+        if ($account->isRentModuleEnabled()) {
+            $rentalRevenue = \App\Models\Rental::where('account_id', $account->id)
+                ->whereYear('rental_start_date', $currentMonth->year)
+                ->whereMonth('rental_start_date', $currentMonth->month)
+                ->sum('rental_price') ?? 0;
+            $revenueBreakdown['rentals'] = $rentalRevenue;
+        }
+
+        // Expense breakdown
+        $expenseBreakdown = $this->getExpenseBreakdown($account);
+
+        // Inventory valuation
+        $stockValueCost = DB::table('product_stock')
+            ->join('products', 'product_stock.product_id', '=', 'products.id')
+            ->where('products.account_id', $account->id)
+            ->sum(DB::raw('product_stock.quantity * products.purchase_price')) ?? 0;
+
+        $stockValueSale = DB::table('product_stock')
+            ->join('products', 'product_stock.product_id', '=', 'products.id')
+            ->where('products.account_id', $account->id)
+            ->sum(DB::raw('product_stock.quantity * products.sale_price')) ?? 0;
+
+        $stockCount = DB::table('product_stock')
+            ->join('products', 'product_stock.product_id', '=', 'products.id')
+            ->where('products.account_id', $account->id)
+            ->where('product_stock.quantity', '>', 0)
+            ->count();
+
+        return [
+            'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'account' => [
+                'name' => $company->name ?? $account->name,
+                'modules' => [
+                    'services_enabled' => $account->isServicesModuleEnabled(),
+                    'rentals_enabled' => $account->isRentModuleEnabled(),
+                ],
+            ],
+            'financial' => $financial,
+            'revenue_breakdown' => $revenueBreakdown,
+            'expense_breakdown' => $expenseBreakdown,
+            'credits' => $credits,
+            'inventory_valuation' => [
+                'cost' => round($stockValueCost, 2),
+                'sale' => round($stockValueSale, 2),
+                'potential_profit' => round($stockValueSale - $stockValueCost, 2),
+                'items_count' => $stockCount,
+            ],
+            'charts' => [
+                'payment_methods' => $this->getPaymentMethodsBreakdown($account),
+            ],
+        ];
+    }
+
+    /**
+     * Warehouse Manager Dashboard - Inventory focus
+     */
+    private function getInventoryDashboard(Account $account, User $user, Request $request): array
+    {
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
+
+        $selectedWarehouseId = $request->session()->get('selected_warehouse_id');
+        $selectedWarehouse = $selectedWarehouseId ? $account->warehouses()->find($selectedWarehouseId) : null;
+
+        $operational = $this->dashboardService->getOperationalMetrics($account, $selectedWarehouseId);
+        $alerts = $this->dashboardService->getInventoryAlerts($account, $selectedWarehouseId);
+        $stockByUnit = $this->getStockByUnit($account, $selectedWarehouseId);
+        $lowStockProducts = $this->getLowStockProducts($account, $selectedWarehouseId);
+
+        return [
+            'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'account' => ['name' => $company->name ?? $account->name],
+            'operational' => $operational,
+            'alerts' => $alerts,
+            'stock_by_unit' => $stockByUnit,
+            'tables' => [
+                'low_stock_products' => $lowStockProducts,
+            ],
+            'selected_warehouse' => $selectedWarehouse,
+            'warehouse_context' => $selectedWarehouseId ? 'specific' : 'all',
+        ];
+    }
+
+    /**
+     * Sales Staff Dashboard - Sales and service queue focus
+     */
+    private function getSalesDashboard(Account $account, User $user, Request $request): array
+    {
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
+
+        // Personal performance
+        $currentMonth = Carbon::now();
+        $mySales = Sale::where('account_id', $account->id)
+            ->where('created_by', $user->id)
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
+            ->count();
+
+        $mySalesRevenue = Sale::where('account_id', $account->id)
+            ->where('created_by', $user->id)
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
+            ->sum('total') ?? 0;
+
+        $myCustomers = Sale::where('account_id', $account->id)
+            ->where('created_by', $user->id)
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
+            ->whereNotNull('customer_id')
+            ->distinct()
+            ->count('customer_id');
+
+        $avgTicket = $mySales > 0 ? $mySalesRevenue / $mySales : 0;
+
+        $performance = [
+            'my_sales_count' => $mySales,
+            'my_sales_revenue' => round($mySalesRevenue, 2),
+            'my_customers_served' => $myCustomers,
+            'avg_ticket_size' => round($avgTicket, 2),
         ];
 
-        // Warehouse-specific stock statistics
-        // Unified approach for consistent stock calculations across all widgets
-        
-        // Stock value calculation - respects warehouse selection
-        $stats['total_stock_value'] = DB::table('product_stock')
-            ->join('products', 'product_stock.product_id', '=', 'products.id')
-            ->where('products.account_id', $account->id)
-            ->where('product_stock.account_id', $account->id)
-            ->when($selectedWarehouseId, function ($query) use ($selectedWarehouseId) {
-                return $query->where('product_stock.warehouse_id', $selectedWarehouseId);
-            })
-            ->sum(DB::raw('product_stock.quantity * products.purchase_price')) ?? 0;
-        
-        // Product count - unique products in selected warehouse(s)
-        $stats['total_product_count'] = DB::table('product_stock')
-            ->join('products', 'product_stock.product_id', '=', 'products.id')
-            ->where('products.account_id', $account->id)
-            ->where('product_stock.account_id', $account->id)
-            ->when($selectedWarehouseId, function ($query) use ($selectedWarehouseId) {
-                return $query->where('product_stock.warehouse_id', $selectedWarehouseId);
-            })
-            ->distinct('product_stock.product_id')
-            ->count('product_stock.product_id');
-        
-        // Low stock count - products below minimum level
-        $stats['low_stock_count'] = DB::table('product_stock')
-            ->join('products', 'product_stock.product_id', '=', 'products.id')
-            ->where('products.account_id', $account->id)
-            ->where('product_stock.account_id', $account->id)
-            ->whereColumn('product_stock.quantity', '<=', 'product_stock.min_level')
-            ->where('product_stock.min_level', '>', 0) // Only count items with valid min levels
-            ->when($selectedWarehouseId, function ($query) use ($selectedWarehouseId) {
-                return $query->where('product_stock.warehouse_id', $selectedWarehouseId);
-            })
+        // Service queue (if enabled and assigned)
+        $services = null;
+        if ($account->isServicesModuleEnabled()) {
+            $services = $this->dashboardService->getServiceMetrics($account, $user->id);
+        }
+
+        // Stock alerts (read-only awareness)
+        $alerts = $this->dashboardService->getInventoryAlerts($account);
+
+        return [
+            'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'account' => [
+                'name' => $company->name ?? $account->name,
+                'modules' => ['services_enabled' => $account->isServicesModuleEnabled()],
+            ],
+            'performance' => $performance,
+            'services' => $services,
+            'alerts' => [
+                'low_stock' => $alerts['low_stock'],
+                'out_of_stock' => $alerts['out_of_stock'],
+            ],
+        ];
+    }
+
+    /**
+     * Tailor / Service Staff Dashboard - Service queue focus
+     */
+    private function getServiceDashboard(Account $account, User $user, Request $request): array
+    {
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
+
+        if (!$account->isServicesModuleEnabled()) {
+            abort(403, 'Services module is not enabled');
+        }
+
+        $services = $this->dashboardService->getServiceMetrics($account, $user->id);
+
+        return [
+            'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'account' => ['name' => $company->name ?? $account->name],
+            'services' => $services,
+        ];
+    }
+
+    /**
+     * Branch Manager Dashboard - Branch operations focus
+     */
+    private function getBranchDashboard(Account $account, User $user, Request $request): array
+    {
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
+
+        $branchId = $user->branch_id;
+        $currentMonth = Carbon::now();
+
+        // Branch performance
+        $branchRevenue = Sale::where('account_id', $account->id)
+            ->where('branch_id', $branchId)
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
+            ->sum('total') ?? 0;
+
+        $branchSalesCount = Sale::where('account_id', $account->id)
+            ->where('branch_id', $branchId)
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
             ->count();
-        
-        // Out of stock count - products with zero or negative quantity
-        $stats['out_of_stock_count'] = DB::table('product_stock')
-            ->join('products', 'product_stock.product_id', '=', 'products.id')
-            ->where('products.account_id', $account->id)
-            ->where('product_stock.account_id', $account->id)
-            ->where('product_stock.quantity', '<=', 0)
-            ->when($selectedWarehouseId, function ($query) use ($selectedWarehouseId) {
-                return $query->where('product_stock.warehouse_id', $selectedWarehouseId);
-            })
+
+        $branchStaff = User::where('account_id', $account->id)
+            ->where('branch_id', $branchId)
+            ->where('status', 'active')
             ->count();
-        
-        // Get stock quantities grouped by unit type - respects warehouse selection
-        $stockByUnits = DB::table('product_stock')
-            ->join('products', 'product_stock.product_id', '=', 'products.id')
-            ->where('products.account_id', $account->id)
-            ->where('product_stock.account_id', $account->id)
-            ->when($selectedWarehouseId, function ($query) use ($selectedWarehouseId) {
-                return $query->where('product_stock.warehouse_id', $selectedWarehouseId);
-            })
-            ->selectRaw('products.unit, SUM(product_stock.quantity) as total_quantity')
-            ->groupBy('products.unit')
-            ->orderByRaw('CASE 
-                WHEN products.unit = "ədəd" THEN 1 
-                WHEN products.unit = "dənə" THEN 2 
-                WHEN products.unit = "paket" THEN 3 
-                WHEN products.unit = "qutu" THEN 4 
-                WHEN products.unit = "litr" THEN 5 
-                WHEN products.unit = "kq" THEN 6 
-                ELSE 7 
-            END')
-            ->get();
-            
-        $stats['stock_by_units'] = $stockByUnits->map(function ($item) {
-            return [
-                'unit' => $item->unit,
-                'quantity' => (float) $item->total_quantity
-            ];
-        })->toArray();
 
-        // Recent activity
-        $recentCustomers = $account->customers()
-            ->latest()
-            ->limit(5)
-            ->get();
+        $branchCustomers = Sale::where('account_id', $account->id)
+            ->where('branch_id', $branchId)
+            ->whereYear('sale_date', $currentMonth->year)
+            ->whereMonth('sale_date', $currentMonth->month)
+            ->whereNotNull('customer_id')
+            ->distinct()
+            ->count('customer_id');
 
-        // Low stock alerts with warehouse context - consistent with stats calculation
-        $lowStockQuery = \App\Models\ProductStock::with(['product.category', 'warehouse'])
-            ->whereHas('product', function ($q) use ($account) {
-                $q->where('account_id', $account->id);
-            })
-            ->whereColumn('quantity', '<=', 'min_level')
-            ->where('min_level', '>', 0); // Only show items with valid min levels
+        return [
+            'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'account' => ['name' => $company->name ?? $account->name],
+            'branch_performance' => [
+                'revenue' => round($branchRevenue, 2),
+                'sales_count' => $branchSalesCount,
+                'staff_count' => $branchStaff,
+                'customers_count' => $branchCustomers,
+            ],
+        ];
+    }
 
-        if ($selectedWarehouseId) {
-            $lowStockQuery->where('warehouse_id', $selectedWarehouseId);
-        }
+    /**
+     * Cashier Dashboard - Minimal POS focus
+     */
+    private function getCashierDashboard(Account $account, User $user, Request $request): array
+    {
+        $company = $account->companies()->where('is_active', true)->first()
+            ?? $account->companies()->first();
 
-        $lowStockData = $lowStockQuery->limit(10)->get();
-        
-        // Transform the data to match frontend expectations
-        $lowStockProducts = $lowStockData->map(function ($stock) {
-            return [
-                'id' => $stock->product->id,
-                'name' => $stock->product->name,
-                'sku' => $stock->product->sku,
-                'stock_quantity' => (int) $stock->quantity,
-                'min_stock_level' => (int) $stock->min_level,
-                'category_name' => $stock->product->category->name ?? null,
-                'price' => $stock->product->sale_price ?? $stock->product->purchase_price ?? 0,
-                'warehouse_name' => $stock->warehouse->name ?? null,
-            ];
-        });
+        $today = Carbon::today();
 
-        // Sales chart data based on selected time range
-        $timeRange = $request->get('timeRange', '30days');
-        $salesChartData = [];
-        
-        switch ($timeRange) {
-            case '1day':
-                // Hourly data for today
-                for ($i = 23; $i >= 0; $i--) {
-                    $hour = Carbon::now()->subHours($i);
-                    $salesQuery = Sale::where('account_id', $account->id)
-                        ->countable() // Only include POS sales + completed online orders
-                        ->whereBetween('sale_date', [
-                            $hour->copy()->startOfHour(),
-                            $hour->copy()->endOfHour()
-                        ]);
-                    
-                    // Note: Sales are linked to branches, not warehouses directly
-                    // If a warehouse is selected, we may need to filter by associated branch
-                    if ($selectedWarehouseId) {
-                        // For now, we'll still show all sales since warehouse-branch relationship 
-                        // may not be 1:1. This can be refined based on your business logic.
-                        // $salesQuery->where('branch_id', $selectedWarehouseId);
-                    }
-                    
-                    $salesData = $salesQuery->selectRaw('COUNT(*) as sales, COALESCE(SUM(total), 0) as revenue')->first();
+        $mySalesToday = Sale::where('account_id', $account->id)
+            ->where('created_by', $user->id)
+            ->whereDate('sale_date', $today)
+            ->count();
 
-                    $salesChartData[] = [
-                        'date' => $hour->format('Y-m-d H:i'),
-                        'sales' => $salesData->sales ?? 0,
-                        'revenue' => $salesData->revenue ?? 0,
-                    ];
-                }
-                break;
-            case '7days':
-                $days = 7;
-                break;
-            case '30days':
-                $days = 30;
-                break;
-            case '90days':
-                $days = 90;
-                break;
-            default:
-                $days = 30;
-        }
-        
-        // Daily data for multi-day periods
-        if ($timeRange !== '1day') {
-            for ($i = $days - 1; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $salesQuery = Sale::where('account_id', $account->id)
-                    ->countable() // Only include POS sales + completed online orders
-                    ->whereDate('sale_date', $date);
-                
-                // Note: Sales filtering by warehouse commented out as sales are branch-based
-                // if ($selectedWarehouseId) {
-                //     $salesQuery->where('branch_id', $selectedWarehouseId);
-                // }
-                
-                $salesData = $salesQuery->selectRaw('COUNT(*) as sales, COALESCE(SUM(total), 0) as revenue')->first();
+        $mySalesRevenue = Sale::where('account_id', $account->id)
+            ->where('created_by', $user->id)
+            ->whereDate('sale_date', $today)
+            ->sum('total') ?? 0;
 
-                $salesChartData[] = [
-                    'date' => $date->format('Y-m-d'),
-                    'sales' => $salesData->sales ?? 0,
-                    'revenue' => $salesData->revenue ?? 0,
-                ];
-            }
-        }
+        $myCustomersToday = Sale::where('account_id', $account->id)
+            ->where('created_by', $user->id)
+            ->whereDate('sale_date', $today)
+            ->whereNotNull('customer_id')
+            ->distinct()
+            ->count('customer_id');
 
-        // Top products based on selected time range
-        $topProductsDays = match($timeRange) {
+        // Cash in hand (from payments)
+        $cashCollected = DB::table('payments')
+            ->join('sales', 'payments.sale_id', '=', 'sales.sale_id')
+            ->where('sales.account_id', $account->id)
+            ->where('sales.created_by', $user->id)
+            ->whereDate('sales.sale_date', $today)
+            ->where('payments.method', 'nağd')
+            ->sum('payments.amount') ?? 0;
+
+        $cardTransfers = DB::table('payments')
+            ->join('sales', 'payments.sale_id', '=', 'sales.sale_id')
+            ->where('sales.account_id', $account->id)
+            ->where('sales.created_by', $user->id)
+            ->whereDate('sales.sale_date', $today)
+            ->whereIn('payments.method', ['kart', 'köçürmə'])
+            ->sum('payments.amount') ?? 0;
+
+        return [
+            'user' => ['id' => $user->id, 'name' => $user->name, 'role' => $user->role],
+            'account' => ['name' => $company->name ?? $account->name],
+            'shift_summary' => [
+                'sales_count' => $mySalesToday,
+                'sales_revenue' => round($mySalesRevenue, 2),
+                'customers_served' => $myCustomersToday,
+                'cash_collected' => round($cashCollected, 2),
+                'card_transfers' => round($cardTransfers, 2),
+            ],
+        ];
+    }
+
+    // ========== HELPER METHODS ==========
+
+    private function getSalesTrendData(Account $account, string $timeRange): array
+    {
+        $days = match($timeRange) {
             '1day' => 1,
             '7days' => 7,
             '30days' => 30,
             '90days' => 90,
             default => 30
         };
-        
-        $topProducts = SaleItem::whereHas('sale', function ($query) use ($account, $topProductsDays) {
-                $query->where('account_id', $account->id)
-                      ->where('sale_date', '>=', Carbon::now()->subDays($topProductsDays));
-                // Note: Warehouse filtering removed as sales are branch-based
+
+        $data = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+
+            $salesCount = Sale::where('account_id', $account->id)
+                ->countable()
+                ->whereDate('sale_date', $date)
+                ->count();
+
+            $revenue = Sale::where('account_id', $account->id)
+                ->countable()
+                ->whereDate('sale_date', $date)
+                ->sum('total') ?? 0;
+
+            $data[] = [
+                'date' => $date->format('Y-m-d'),
+                'sales_count' => $salesCount,
+                'revenue' => (float) $revenue,
+            ];
+        }
+
+        return $data;
+    }
+
+    private function getTopProducts(Account $account, string $timeRange): array
+    {
+        $days = match($timeRange) {
+            '1day' => 1,
+            '7days' => 7,
+            '30days' => 30,
+            '90days' => 90,
+            default => 30
+        };
+
+        return SaleItem::whereHas('sale', function ($q) use ($account, $days) {
+                $q->where('account_id', $account->id)
+                    ->where('sale_date', '>=', Carbon::now()->subDays($days));
             })
-            ->with(['product.category'])
-            ->selectRaw('product_id, SUM(quantity) as total_sold, SUM(total) as total_revenue')
+            ->with('product')
+            ->selectRaw('product_id, SUM(quantity) as total_sold, SUM(total) as revenue')
             ->groupBy('product_id')
-            ->orderBy('total_sold', 'desc')
+            ->orderBy('revenue', 'desc')
             ->limit(5)
             ->get()
-            ->map(function ($item) {
-                $stockQuantity = $item->product->productStocks()->sum('quantity') ?? 0;
-                return [
-                    'id' => $item->product->id,
-                    'name' => $item->product->name,
-                    'category_name' => $item->product->category->name ?? null,
-                    'total_sold' => (int) $item->total_sold,
-                    'total_revenue' => (float) $item->total_revenue,
-                    'stock_quantity' => (int) $stockQuantity,
-                ];
-            });
+            ->filter(fn($item) => $item->product !== null)
+            ->map(fn($item) => [
+                'id' => $item->product->id,
+                'name' => $item->product->name,
+                'total_sold' => (int) $item->total_sold,
+                'revenue' => (float) $item->revenue,
+            ])
+            ->values()
+            ->toArray();
+    }
 
-        // Recent sales based on selected time range
-        $recentSalesQuery = Sale::where('account_id', $account->id)
-            ->countable() // Only include POS sales + completed online orders
-            ->where('sale_date', '>=', Carbon::now()->subDays($topProductsDays));
-        
-        // Note: Warehouse filtering removed as sales are branch-based
-        // if ($selectedWarehouseId) {
-        //     $recentSalesQuery->where('branch_id', $selectedWarehouseId);
-        // }
-        
-        $recentSales = $recentSalesQuery
+    private function getRecentSales(Account $account, string $timeRange): array
+    {
+        $days = match($timeRange) {
+            '1day' => 1,
+            '7days' => 7,
+            '30days' => 30,
+            '90days' => 90,
+            default => 30
+        };
+
+        return Sale::where('account_id', $account->id)
+            ->countable()
+            ->where('sale_date', '>=', Carbon::now()->subDays($days))
             ->with(['customer', 'items'])
-            ->latest()
+            ->latest('sale_date')
             ->limit(10)
             ->get()
-            ->map(function ($sale) {
-                return [
-                    'id' => $sale->sale_id,
-                    'customer_name' => $sale->customer->name ?? null,
-                    'total_amount' => (float) $sale->total,
-                    'sale_date' => $sale->sale_date,
-                    'status' => $sale->status ?? 'completed',
-                    'items_count' => $sale->items->count(),
-                ];
-            });
+            ->map(fn($sale) => [
+                'id' => $sale->sale_id,
+                'customer' => $sale->customer->name ?? 'Anonim müştəri',
+                'amount' => (float) $sale->total,
+                'date' => $sale->sale_date,
+                'time' => Carbon::parse($sale->sale_date)->format('H:i'),
+                'status' => $sale->payment_status === 'paid' ? 'Ödənilib' : 'Borc',
+                'items_count' => $sale->items->count(),
+            ])
+            ->toArray();
+    }
 
-        // Financial data
+    private function getLowStockProducts(Account $account, ?int $warehouseId): array
+    {
+        return \App\Models\ProductStock::with(['product', 'warehouse'])
+            ->whereHas('product', fn($q) => $q->where('account_id', $account->id))
+            ->whereColumn('quantity', '<=', 'min_level')
+            ->where('min_level', '>', 0)
+            ->when($warehouseId, fn($q) => $q->where('warehouse_id', $warehouseId))
+            ->limit(10)
+            ->get()
+            ->map(fn($stock) => [
+                'id' => $stock->product->id,
+                'name' => $stock->product->name,
+                'current' => (float) $stock->quantity,
+                'min' => (float) $stock->min_level,
+                'unit' => $stock->product->unit,
+                'warehouse' => $stock->warehouse->name ?? null,
+            ])
+            ->toArray();
+    }
+
+    private function getStockByUnit(Account $account, ?int $warehouseId): array
+    {
+        return DB::table('product_stock')
+            ->join('products', 'product_stock.product_id', '=', 'products.id')
+            ->where('products.account_id', $account->id)
+            ->when($warehouseId, fn($q) => $q->where('product_stock.warehouse_id', $warehouseId))
+            ->selectRaw('products.unit, SUM(product_stock.quantity) as total_quantity, COUNT(DISTINCT product_stock.product_id) as sku_count, SUM(product_stock.quantity * products.sale_price) as value')
+            ->groupBy('products.unit')
+            ->get()
+            ->map(fn($item) => [
+                'unit' => $item->unit,
+                'quantity' => (float) $item->total_quantity,
+                'sku_count' => (int) $item->sku_count,
+                'value' => (float) $item->value,
+            ])
+            ->toArray();
+    }
+
+    private function getPaymentMethodsBreakdown(Account $account): array
+    {
         $currentMonth = Carbon::now();
-        $previousMonth = Carbon::now()->subMonth();
-
-        // Current month revenue and expenses
-        $monthlyRevenue = Sale::where('account_id', $account->id)
-            ->countable() // Only include POS sales + completed online orders
-            ->whereYear('sale_date', $currentMonth->year)
-            ->whereMonth('sale_date', $currentMonth->month)
-            ->sum('total') ?? 0;
-
-        // Subtract returns from monthly revenue
-        $monthlyReturns = SaleReturn::where('account_id', $account->id)
-            ->where('status', 'completed')
-            ->whereYear('return_date', $currentMonth->year)
-            ->whereMonth('return_date', $currentMonth->month)
-            ->sum('total') ?? 0;
-
-        $monthlyRevenue -= $monthlyReturns;
-
-        // Add rental revenue to monthly revenue - Only if rent module is enabled
-        if ($account->isRentModuleEnabled()) {
-            $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-                ->whereYear('rental_start_date', $currentMonth->year)
-                ->whereMonth('rental_start_date', $currentMonth->month)
-                ->sum('rental_price') ?? 0;
-            $monthlyRevenue += $monthlyRentalRevenue;
-        }
-
-        // Add service revenue to monthly revenue - Only if services module is enabled
-        if ($account->isServicesModuleEnabled()) {
-            $monthlyServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
-                ->whereIn('status', ['completed'])
-                ->whereYear('updated_at', $currentMonth->year)
-                ->whereMonth('updated_at', $currentMonth->month)
-                ->sum('total_cost') ?? 0;
-            $monthlyRevenue += $monthlyServiceRevenue;
-        }
-
-        $monthlyExpenses = Expense::where('account_id', $account->id)
-            ->whereYear('expense_date', $currentMonth->year)
-            ->whereMonth('expense_date', $currentMonth->month)
-            ->sum('amount') ?? 0;
-
-        $monthlySupplierPayments = SupplierPayment::where('account_id', $account->id)
-            ->whereYear('payment_date', $currentMonth->year)
-            ->whereMonth('payment_date', $currentMonth->month)
-            ->sum('amount') ?? 0;
-
-        $monthlyExpenses += $monthlySupplierPayments;
-
-        // Previous month for growth calculation
-        $prevMonthRevenue = Sale::where('account_id', $account->id)
-            ->countable() // Only include POS sales + completed online orders
-            ->whereYear('sale_date', $previousMonth->year)
-            ->whereMonth('sale_date', $previousMonth->month)
-            ->sum('total') ?? 0;
-
-        // Subtract returns from previous month revenue
-        $prevMonthReturns = SaleReturn::where('account_id', $account->id)
-            ->where('status', 'completed')
-            ->whereYear('return_date', $previousMonth->year)
-            ->whereMonth('return_date', $previousMonth->month)
-            ->sum('total') ?? 0;
-
-        $prevMonthRevenue -= $prevMonthReturns;
-
-        // Add rental revenue to previous month revenue - Only if rent module is enabled
-        if ($account->isRentModuleEnabled()) {
-            $prevMonthRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-                ->whereYear('rental_start_date', $previousMonth->year)
-                ->whereMonth('rental_start_date', $previousMonth->month)
-                ->sum('rental_price') ?? 0;
-            $prevMonthRevenue += $prevMonthRentalRevenue;
-        }
-
-        // Add service revenue to previous month revenue - Only if services module is enabled
-        if ($account->isServicesModuleEnabled()) {
-            $prevMonthServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
-                ->whereIn('status', ['completed'])
-                ->whereYear('updated_at', $previousMonth->year)
-                ->whereMonth('updated_at', $previousMonth->month)
-                ->sum('total_cost') ?? 0;
-            $prevMonthRevenue += $prevMonthServiceRevenue;
-        }
-
-        $prevMonthExpenses = Expense::where('account_id', $account->id)
-            ->whereYear('expense_date', $previousMonth->year)
-            ->whereMonth('expense_date', $previousMonth->month)
-            ->sum('amount') ?? 0;
-
-        $prevMonthSupplierPayments = SupplierPayment::where('account_id', $account->id)
-            ->whereYear('payment_date', $previousMonth->year)
-            ->whereMonth('payment_date', $previousMonth->month)
-            ->sum('amount') ?? 0;
-
-        $prevMonthExpenses += $prevMonthSupplierPayments;
-
-        // Total revenue and expenses (all time)
-        $totalRevenue = Sale::where('account_id', $account->id)
-            ->countable() // Only include POS sales + completed online orders
-            ->sum('total') ?? 0;
-
-        // Subtract all returns from total revenue
-        $totalReturns = SaleReturn::where('account_id', $account->id)
-            ->where('status', 'completed')
-            ->sum('total') ?? 0;
-
-        $totalRevenue -= $totalReturns;
-
-        // Add rental revenue to total revenue - Only if rent module is enabled
-        if ($account->isRentModuleEnabled()) {
-            $totalRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-                ->sum('rental_price') ?? 0;
-            $totalRevenue += $totalRentalRevenue;
-        }
-
-        // Add service revenue to total revenue - Only if services module is enabled
-        if ($account->isServicesModuleEnabled()) {
-            $totalServiceRevenue = \App\Models\TailorService::where('account_id', $account->id)
-                ->whereIn('status', ['completed'])
-                ->sum('total_cost') ?? 0;
-            $totalRevenue += $totalServiceRevenue;
-        }
-
-        $totalExpenses = Expense::where('account_id', $account->id)
-            ->sum('amount') ?? 0;
-
-        $totalSupplierPayments = SupplierPayment::where('account_id', $account->id)
-            ->sum('amount') ?? 0;
-
-        $totalExpenses += $totalSupplierPayments;
-
-        // Calculate growth percentages
-        $revenueGrowth = $prevMonthRevenue > 0 
-            ? (($monthlyRevenue - $prevMonthRevenue) / $prevMonthRevenue) * 100 
-            : 0;
-
-        $expenseGrowth = $prevMonthExpenses > 0 
-            ? (($monthlyExpenses - $prevMonthExpenses) / $prevMonthExpenses) * 100 
-            : 0;
-
-        $financialData = [
-            'total_revenue' => $totalRevenue,
-            'total_expenses' => $totalExpenses,
-            'total_profit' => $totalRevenue - $totalExpenses,
-            'pending_payments' => 0, // Could be implemented if needed
-            'monthly_revenue' => $monthlyRevenue,
-            'monthly_expenses' => $monthlyExpenses,
-            'revenue_growth' => round($revenueGrowth, 1),
-            'expense_growth' => round($expenseGrowth, 1),
-        ];
-
-        // Payment methods breakdown - real data from payments table
-        $paymentMethodsData = DB::table('payments')
+        $data = DB::table('payments')
             ->join('sales', 'payments.sale_id', '=', 'sales.sale_id')
             ->where('sales.account_id', $account->id)
             ->whereYear('sales.sale_date', $currentMonth->year)
@@ -475,157 +615,69 @@ class DashboardController extends Controller
             ->selectRaw('payments.method, SUM(payments.amount) as total')
             ->groupBy('payments.method')
             ->get()
-            ->mapWithKeys(function ($item) {
-                return [$item->method => (float) $item->total];
-            })
+            ->pluck('total', 'method')
             ->toArray();
 
-        // Ensure all payment methods are present (even if zero)
-        $paymentMethodsBreakdown = [
-            'nağd' => $paymentMethodsData['nağd'] ?? 0,
-            'kart' => $paymentMethodsData['kart'] ?? 0,
-            'köçürmə' => $paymentMethodsData['köçürmə'] ?? 0,
+        return [
+            'labels' => ['Nağd', 'Kart', 'Köçürmə'],
+            'values' => [
+                $data['nağd'] ?? 0,
+                $data['kart'] ?? 0,
+                $data['köçürmə'] ?? 0,
+            ],
         ];
+    }
 
-        // Credit statistics - from customer_credits table only
-        $totalOutstandingCredit = CustomerCredit::where('account_id', $account->id)
-            ->where('remaining_amount', '>', 0)
-            ->sum('remaining_amount') ?? 0;
+    private function getExpenseBreakdown(Account $account): array
+    {
+        $currentMonth = Carbon::now();
+        return \App\Models\Expense::where('account_id', $account->id)
+            ->whereYear('expense_date', $currentMonth->year)
+            ->whereMonth('expense_date', $currentMonth->month)
+            ->with('category')
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->get()
+            ->map(fn($item) => [
+                'category' => $item->category->name ?? 'Digər',
+                'amount' => (float) $item->total,
+            ])
+            ->toArray();
+    }
 
-        // Credits given this month
-        $totalCreditsThisMonth = CustomerCredit::where('account_id', $account->id)
-            ->whereYear('credit_date', $currentMonth->year)
-            ->whereMonth('credit_date', $currentMonth->month)
-            ->sum('amount') ?? 0;
+    private function checkAccountPaymentAlert(Account $account, Request $request): ?array
+    {
+        if (!$account->monthly_payment_amount || !$account->payment_start_date) {
+            return null;
+        }
 
-        // Credits paid this month
-        $totalCreditsPaidThisMonth = CustomerCredit::where('account_id', $account->id)
-            ->whereYear('updated_at', $currentMonth->year)
-            ->whereMonth('updated_at', $currentMonth->month)
-            ->sum(DB::raw('amount - remaining_amount')) ?? 0;
+        $startDate = Carbon::parse($account->payment_start_date);
+        $today = Carbon::today();
 
-        // Active credit customers count
-        $activeCreditCustomersCount = CustomerCredit::where('account_id', $account->id)
-            ->where('remaining_amount', '>', 0)
-            ->distinct('customer_id')
-            ->count('customer_id');
+        if ($today->lt($startDate)) {
+            return null;
+        }
 
-        $creditsData = [
-            'total_outstanding' => $totalOutstandingCredit,
-            'total_credits_this_month' => $totalCreditsThisMonth,
-            'total_paid_this_month' => $totalCreditsPaidThisMonth,
-            'active_credit_customers_count' => $activeCreditCustomersCount,
-        ];
+        $latestPaidPayment = \App\Models\AccountPayment::where('account_id', $account->id)
+            ->where('status', 'paid')
+            ->latest('due_date')
+            ->first();
 
-        // Rental statistics - Only calculate if rent module is enabled
-        $rentalData = [
-            'active_rentals_count' => 0,
-            'monthly_rental_revenue' => 0,
-            'pending_returns_count' => 0,
-            'overdue_rentals_count' => 0,
-            'total_rentals_this_month' => 0,
-        ];
+        $nextDueDate = $latestPaidPayment
+            ? Carbon::parse($latestPaidPayment->due_date)->addMonth()
+            : $startDate->copy()->addMonth();
 
-        if ($account->isRentModuleEnabled()) {
-            $activeRentalsCount = \App\Models\Rental::where('account_id', $account->id)
-                ->where('status', 'active')
-                ->count();
+        $isOverdue = $today->gte($nextDueDate);
 
-            $monthlyRentalRevenue = \App\Models\Rental::where('account_id', $account->id)
-                ->whereYear('rental_start_date', $currentMonth->year)
-                ->whereMonth('rental_start_date', $currentMonth->month)
-                ->sum('rental_price') ?? 0;
-
-            $pendingReturnsCount = \App\Models\Rental::where('account_id', $account->id)
-                ->whereIn('status', ['reserved', 'active'])
-                ->whereBetween('rental_end_date', [today(), today()->addDays(3)])
-                ->count();
-
-            $overdueRentalsCount = \App\Models\Rental::where('account_id', $account->id)
-                ->where('status', 'overdue')
-                ->count();
-
-            $totalRentalsThisMonth = \App\Models\Rental::where('account_id', $account->id)
-                ->whereYear('rental_start_date', $currentMonth->year)
-                ->whereMonth('rental_start_date', $currentMonth->month)
-                ->count();
-
-            $rentalData = [
-                'active_rentals_count' => $activeRentalsCount,
-                'monthly_rental_revenue' => $monthlyRentalRevenue,
-                'pending_returns_count' => $pendingReturnsCount,
-                'overdue_rentals_count' => $overdueRentalsCount,
-                'total_rentals_this_month' => $totalRentalsThisMonth,
+        if ($isOverdue && !$request->session()->get('payment_alert_shown')) {
+            $request->session()->put('payment_alert_shown', true);
+            return [
+                'amount' => $account->monthly_payment_amount,
+                'due_date' => $nextDueDate->format('d.m.Y'),
+                'days_overdue' => $today->diffInDays($nextDueDate),
             ];
         }
 
-        // MULTI-TENANT: Count pending online orders for notification banner - Only if shop is enabled
-        $pendingOnlineOrders = 0;
-        if ($account->isShopEnabled()) {
-            $pendingOnlineOrders = Sale::where('account_id', $account->id)
-                ->onlineOrders() // Scope for is_online_order = true
-                ->where('payment_status', 'credit') // Unpaid orders
-                ->count();
-        }
-
-        // Check for overdue account payment
-        $paymentAlert = null;
-        if ($account->monthly_payment_amount && $account->payment_start_date) {
-            $startDate = Carbon::parse($account->payment_start_date);
-            $today = Carbon::today();
-
-            if ($today->gte($startDate)) {
-                // Find the next unpaid period
-                $latestPaidPayment = \App\Models\AccountPayment::where('account_id', $account->id)
-                    ->where('status', 'paid')
-                    ->latest('due_date')
-                    ->first();
-
-                $nextDueDate = $latestPaidPayment
-                    ? Carbon::parse($latestPaidPayment->due_date)->addMonth()
-                    : $startDate->copy()->addMonth();
-
-                // Check if this period is overdue
-                $isOverdue = $today->gte($nextDueDate);
-
-                // Check if there's already an overdue payment record
-                $overduePayment = \App\Models\AccountPayment::where('account_id', $account->id)
-                    ->where('status', 'overdue')
-                    ->orderBy('due_date')
-                    ->first();
-
-                if ($overduePayment) {
-                    $isOverdue = true;
-                    $nextDueDate = Carbon::parse($overduePayment->due_date);
-                }
-
-                if ($isOverdue && !$request->session()->get('payment_alert_shown')) {
-                    $paymentAlert = [
-                        'amount' => $account->monthly_payment_amount,
-                        'due_date' => $nextDueDate->format('d.m.Y'),
-                        'days_overdue' => $today->diffInDays($nextDueDate),
-                    ];
-                    // Mark as shown for this session
-                    $request->session()->put('payment_alert_shown', true);
-                }
-            }
-        }
-
-        return Inertia::render('Dashboard', [
-            'stats' => $stats,
-            'sales_chart_data' => $salesChartData,
-            'top_products' => $topProducts,
-            'recent_sales' => $recentSales,
-            'financial_data' => $financialData,
-            'payment_methods_data' => $paymentMethodsBreakdown,
-            'credits_data' => $creditsData,
-            'rental_data' => $rentalData,
-            'recent_customers' => $recentCustomers,
-            'low_stock_products' => $lowStockProducts,
-            'selectedWarehouse' => $selectedWarehouse,
-            'warehouseContext' => $selectedWarehouseId ? 'specific' : 'all',
-            'pending_online_orders' => $pendingOnlineOrders,
-            'payment_alert' => $paymentAlert,
-        ]);
+        return null;
     }
 }

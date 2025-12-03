@@ -144,11 +144,6 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// New Dashboard Design (Mockup)
-Route::get('/dashboard-new', function () {
-    return Inertia::render('DashboardNew');
-})->middleware(['auth', 'verified'])->name('dashboard.new');
-
 // Debug route for translations
 Route::get('/debug-translations', function () {
     return \Inertia\Inertia::render('DebugTranslations');

@@ -33,7 +33,26 @@ import {
     Filler,
 } from 'chart.js';
 import { AlertBanner, AlertBannerStack } from '@/Components/Dashboard/AlertBanner';
-import { accountOwnerDashboardMock, formatCurrency, formatNumber, formatDate } from '@/mockData/dashboardMockData';
+
+// Helper functions
+const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('az-AZ', {
+        style: 'currency',
+        currency: 'AZN',
+        minimumFractionDigits: 2,
+    }).format(amount);
+};
+
+const formatNumber = (num: number, decimals: number = 0): string => {
+    return new Intl.NumberFormat('az-AZ', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    }).format(num);
+};
+
+const formatDate = (date: string): string => {
+    return new Date(date).toLocaleDateString('az-AZ');
+};
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
@@ -179,11 +198,112 @@ const QuickActionBtn = ({
 };
 
 /**
- * Account Owner Dashboard - Specification Structure + Cuba Design
+ * Account Owner Dashboard - Real Data from Controller
  */
-export default function DashboardNew({ auth }: PageProps) {
-    const data = accountOwnerDashboardMock;
-    const { user, account, financial, operational, services, rentals, alerts, onlineOrders } = data;
+interface DashboardNewProps extends PageProps {
+    user: {
+        id: number;
+        name: string;
+        role: string;
+    };
+    account: {
+        name: string;
+        modules: {
+            services_enabled: boolean;
+            rentals_enabled: boolean;
+            shop_enabled: boolean;
+        };
+    };
+    financial: {
+        revenue: { value: number; growth: number };
+        expenses: { value: number; growth: number };
+        profit: { value: number; growth: number; margin: number };
+        pending_payments: { value: number; count: number };
+    };
+    operational: {
+        active_customers: number;
+        new_customers: number;
+        products_in_stock: number;
+        products_count: number;
+        stock_value: {
+            cost: number;
+            sale: number;
+            potential_profit: number;
+        };
+        stock_turnover: number;
+    };
+    services?: {
+        pending: number;
+        in_progress: number;
+        completed_this_month: number;
+        revenue: number;
+    };
+    rentals?: {
+        active: number;
+        monthly_revenue: number;
+        pending_returns: number;
+        overdue: number;
+    };
+    alerts: {
+        low_stock: number;
+        out_of_stock: number;
+        negative_stock: number;
+        pending_goods_receipts: number;
+    };
+    online_orders: {
+        pending: number;
+    };
+    credits: {
+        total_outstanding: number;
+        credits_given_this_month: number;
+        payments_received_this_month: number;
+        active_credit_customers: number;
+    };
+    stock_by_unit: Array<{
+        unit: string;
+        quantity: number;
+        sku_count: number;
+        value: number;
+    }>;
+    charts: {
+        sales_trend: Array<{ date: string; sales_count: number; revenue: number }>;
+        payment_methods: { labels: string[]; values: number[] };
+        top_products: Array<{ id: number; name: string; total_sold: number; revenue: number }>;
+        expense_breakdown: Array<{ category: string; amount: number }>;
+    };
+    tables: {
+        recent_sales: Array<{
+            id: number;
+            customer: string;
+            amount: number;
+            date: string;
+            status: string;
+        }>;
+        low_stock_products: Array<{
+            id: number;
+            name: string;
+            current: number;
+            min: number;
+            unit: string;
+            warehouse: string | null;
+        }>;
+    };
+}
+
+export default function DashboardNew({
+    user,
+    account,
+    financial,
+    operational,
+    services,
+    rentals,
+    alerts,
+    online_orders,
+    credits,
+    stock_by_unit,
+    charts,
+    tables,
+}: DashboardNewProps) {
 
     const chartConfig = {
         responsive: true,
@@ -232,15 +352,15 @@ export default function DashboardNew({ auth }: PageProps) {
                         </div>
 
                         {/* ALERT BANNERS */}
-                        {(onlineOrders.pending > 0 || alerts.lowStock > 0 || rentals.overdue > 0) && (
+                        {(online_orders.pending > 0 || alerts.low_stock > 0 || (rentals && rentals.overdue > 0)) && (
                             <AlertBannerStack>
-                                {onlineOrders.pending > 0 && (
-                                    <AlertBanner type="warning" message={`Sizdə ${onlineOrders.pending} gözləyən online sifariş var`} actionLabel="Sifarişlərə baxın" actionHref="/online-orders" />
+                                {online_orders.pending > 0 && (
+                                    <AlertBanner type="warning" message={`Sizdə ${online_orders.pending} gözləyən online sifariş var`} actionLabel="Sifarişlərə baxın" actionHref="/online-orders" />
                                 )}
-                                {alerts.lowStock > 0 && (
-                                    <AlertBanner type="warning" message={`${alerts.lowStock} məhsulun stoku azaldı`} actionLabel="Stoku yoxlayın" actionHref="/alerts" />
+                                {alerts.low_stock > 0 && (
+                                    <AlertBanner type="warning" message={`${alerts.low_stock} məhsulun stoku azaldı`} actionLabel="Stoku yoxlayın" actionHref="/alerts" />
                                 )}
-                                {rentals.overdue > 0 && (
+                                {rentals && rentals.overdue > 0 && (
                                     <AlertBanner type="danger" message={`${rentals.overdue} icarə gecikib`} actionLabel="İcarələrə baxın" actionHref="/rentals" />
                                 )}
                             </AlertBannerStack>
@@ -291,8 +411,8 @@ export default function DashboardNew({ auth }: PageProps) {
                                     icon={ClockIcon}
                                     iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
                                     label="Gözləyən Ödəniş"
-                                    value={formatCurrency(financial.pendingPayments.value)}
-                                    subtitle={`${financial.pendingPayments.count} müştəri`}
+                                    value={formatCurrency(financial.pending_payments.value)}
+                                    subtitle={`${financial.pending_payments.count} müştəri`}
                                 />
                             </div>
                         </div>
@@ -303,28 +423,28 @@ export default function DashboardNew({ auth }: PageProps) {
                                 <MiniStatCard
                                     icon={UserIcon}
                                     label="Aktiv Müştərilər"
-                                    value={operational.activeCustomers.toLocaleString()}
-                                    subtitle={`+${operational.newCustomers} yeni`}
+                                    value={operational.active_customers.toLocaleString()}
+                                    subtitle={`+${operational.new_customers} yeni`}
                                     color="blue"
                                 />
                                 <MiniStatCard
                                     icon={CubeIcon}
                                     label="Stokda Məhsullar"
-                                    value={operational.productsInStock.toLocaleString()}
-                                    subtitle={`${operational.productsCount} ümumi`}
+                                    value={operational.products_in_stock.toLocaleString()}
+                                    subtitle={`${operational.products_count} ümumi`}
                                     color="purple"
                                 />
                                 <MiniStatCard
                                     icon={BanknotesIcon}
                                     label="Stok Dəyəri"
-                                    value={formatCurrency(operational.stockValue.sale)}
+                                    value={formatCurrency(operational.stock_value.sale)}
                                     subtitle="Satış qiyməti"
                                     color="green"
                                 />
                                 <MiniStatCard
                                     icon={ChartBarIcon}
                                     label="Dövriyyə Nisbəti"
-                                    value={`${operational.stockTurnover}x`}
+                                    value={`${operational.stock_turnover}x`}
                                     subtitle="İllik dövriyyə"
                                     color="blue"
                                 />
@@ -332,24 +452,24 @@ export default function DashboardNew({ auth }: PageProps) {
                         </SectionCard>
 
                         {/* SERVICE METRICS (conditional) */}
-                        {account.modules.servicesEnabled && (
+                        {account.modules.services_enabled && services && (
                             <SectionCard title="Servis Göstəriciləri" subtitle="Servis əməliyyatları və gəlir">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                                     <MiniStatCard icon={ClockIcon} label="Gözləyən Servislər" value={services.pending} subtitle="Növbədə" color="orange" />
-                                    <MiniStatCard icon={WrenchScrewdriverIcon} label="Davam Edən" value={services.inProgress} subtitle="İşləniyor" color="blue" />
-                                    <MiniStatCard icon={ChartBarIcon} label="Bu Ay Tamamlanan" value={services.completedThisMonth} subtitle={`+${services.completedGrowth} vs keçən ay`} color="green" />
-                                    <MiniStatCard icon={BanknotesIcon} label="Servis Gəliri" value={formatCurrency(services.revenue)} subtitle={`+${services.revenueGrowth}%`} color="green" />
+                                    <MiniStatCard icon={WrenchScrewdriverIcon} label="Davam Edən" value={services.in_progress} subtitle="İşləniyor" color="blue" />
+                                    <MiniStatCard icon={ChartBarIcon} label="Bu Ay Tamamlanan" value={services.completed_this_month} subtitle="Bu ay tamamlanan" color="green" />
+                                    <MiniStatCard icon={BanknotesIcon} label="Servis Gəliri" value={formatCurrency(services.revenue)} subtitle="Aylıq gəlir" color="green" />
                                 </div>
                             </SectionCard>
                         )}
 
                         {/* RENTAL METRICS (conditional) */}
-                        {account.modules.rentalsEnabled && (
+                        {account.modules.rentals_enabled && rentals && (
                             <SectionCard title="İcarə Göstəriciləri" subtitle="İcarə əməliyyatları və gəlir">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                                     <MiniStatCard icon={HomeModernIcon} label="Aktiv İcarələr" value={rentals.active} subtitle="Hazırda icarədə" color="blue" />
-                                    <MiniStatCard icon={BanknotesIcon} label="Aylıq Gəlir" value={formatCurrency(rentals.monthlyRevenue)} subtitle="İcarə gəliri" color="green" />
-                                    <MiniStatCard icon={CalendarDaysIcon} label="Gözlənilən Qaytarma" value={rentals.pendingReturns} subtitle="3 gün ərzində" color="orange" />
+                                    <MiniStatCard icon={BanknotesIcon} label="Aylıq Gəlir" value={formatCurrency(rentals.monthly_revenue)} subtitle="İcarə gəliri" color="green" />
+                                    <MiniStatCard icon={CalendarDaysIcon} label="Gözlənilən Qaytarma" value={rentals.pending_returns} subtitle="3 gün ərzində" color="orange" />
                                     <MiniStatCard icon={ExclamationTriangleIcon} label="Gecikmiş İcarələr" value={rentals.overdue} subtitle="Təcili!" color="red" />
                                 </div>
                             </SectionCard>
@@ -362,104 +482,128 @@ export default function DashboardNew({ auth }: PageProps) {
                                     <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600" />
                                     <span className="text-xs font-medium text-yellow-800">Az Stok</span>
                                 </div>
-                                <p className="text-2xl font-bold text-yellow-900">{alerts.lowStock} məhsul</p>
+                                <p className="text-2xl font-bold text-yellow-900">{alerts.low_stock} məhsul</p>
                             </div>
                             <div className="bg-red-50 border-l-4 border-red-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
                                     <span className="text-xs font-medium text-red-800">Tükənmiş</span>
                                 </div>
-                                <p className="text-2xl font-bold text-red-900">{alerts.outOfStock} məhsul</p>
+                                <p className="text-2xl font-bold text-red-900">{alerts.out_of_stock} məhsul</p>
                             </div>
                             <div className="bg-purple-50 border-l-4 border-purple-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <ExclamationTriangleIcon className="w-5 h-5 text-purple-600" />
                                     <span className="text-xs font-medium text-purple-800">Mənfi Stok</span>
                                 </div>
-                                <p className="text-2xl font-bold text-purple-900">{alerts.negativeStock} məhsul</p>
+                                <p className="text-2xl font-bold text-purple-900">{alerts.negative_stock} məhsul</p>
                             </div>
                             <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <TruckIcon className="w-5 h-5 text-blue-600" />
                                     <span className="text-xs font-medium text-blue-800">Gözləyən MQ</span>
                                 </div>
-                                <p className="text-2xl font-bold text-blue-900">{alerts.pendingGoodsReceipts} qəbul</p>
+                                <p className="text-2xl font-bold text-blue-900">{alerts.pending_goods_receipts} qəbul</p>
                             </div>
                         </div>
 
                         {/* CHARTS & ANALYTICS */}
                         <div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                                <ChartCard title="Gəlir Trendi (10 gün)">
-                                    <div className="h-64 sm:h-72">
-                                        <Line
-                                            data={{
-                                                labels: data.salesTrend.map(d => formatDate(d.date).split(' ')[0]),
-                                                datasets: [{
-                                                    data: data.salesTrend.map(d => d.revenue),
-                                                    borderColor: '#6366f1',
-                                                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                                    borderWidth: 2.5,
-                                                    fill: true,
-                                                    tension: 0.4,
-                                                }],
-                                            }}
-                                            options={chartConfig}
-                                        />
-                                    </div>
+                                <ChartCard title="Gəlir Trendi">
+                                    {charts.sales_trend && charts.sales_trend.length > 0 ? (
+                                        <div className="h-64 sm:h-72">
+                                            <Line
+                                                data={{
+                                                    labels: charts.sales_trend.map(d => formatDate(d.date).split(' ')[0]),
+                                                    datasets: [{
+                                                        data: charts.sales_trend.map(d => d.revenue),
+                                                        borderColor: '#6366f1',
+                                                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                                        borderWidth: 2.5,
+                                                        fill: true,
+                                                        tension: 0.4,
+                                                    }],
+                                                }}
+                                                options={chartConfig}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
+                                            <p className="text-sm">Məlumat yoxdur</p>
+                                        </div>
+                                    )}
                                 </ChartCard>
 
                                 <ChartCard title="Ödəniş Üsulları">
-                                    <div className="h-64 sm:h-72 flex items-center justify-center">
-                                        <Doughnut
-                                            data={{
-                                                labels: data.paymentMethods.labels,
-                                                datasets: [{
-                                                    data: data.paymentMethods.values,
-                                                    backgroundColor: ['#10b981', '#6366f1', '#f59e0b'],
-                                                }],
-                                            }}
-                                            options={{
-                                                ...chartConfig,
-                                                plugins: {
-                                                    legend: { display: true, position: 'bottom' },
-                                                },
-                                            }}
-                                        />
-                                    </div>
+                                    {charts.payment_methods && charts.payment_methods.values.some(v => v > 0) ? (
+                                        <div className="h-64 sm:h-72 flex items-center justify-center">
+                                            <Doughnut
+                                                data={{
+                                                    labels: charts.payment_methods.labels,
+                                                    datasets: [{
+                                                        data: charts.payment_methods.values,
+                                                        backgroundColor: ['#10b981', '#6366f1', '#f59e0b'],
+                                                    }],
+                                                }}
+                                                options={{
+                                                    ...chartConfig,
+                                                    plugins: {
+                                                        legend: { display: true, position: 'bottom' },
+                                                    },
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
+                                            <p className="text-sm">Məlumat yoxdur</p>
+                                        </div>
+                                    )}
                                 </ChartCard>
 
                                 <ChartCard title="Top 5 Məhsullar">
-                                    <div className="h-64 sm:h-72">
-                                        <Bar
-                                            data={{
-                                                labels: data.topProducts.map(p => p.name.substring(0, 15)),
-                                                datasets: [{
-                                                    data: data.topProducts.map(p => p.revenue),
-                                                    backgroundColor: '#6366f1',
-                                                }],
-                                            }}
-                                            options={{ ...chartConfig, indexAxis: 'y' as const }}
-                                        />
-                                    </div>
+                                    {charts.top_products && charts.top_products.length > 0 ? (
+                                        <div className="h-64 sm:h-72">
+                                            <Bar
+                                                data={{
+                                                    labels: charts.top_products.map(p => p.name.substring(0, 15)),
+                                                    datasets: [{
+                                                        data: charts.top_products.map(p => p.revenue),
+                                                        backgroundColor: '#6366f1',
+                                                    }],
+                                                }}
+                                                options={{ ...chartConfig, indexAxis: 'y' as const }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
+                                            <p className="text-sm">Məlumat yoxdur</p>
+                                        </div>
+                                    )}
                                 </ChartCard>
 
                                 <ChartCard title="Xərc Bölgüsü">
-                                    <div className="h-64 sm:h-72 flex items-center justify-center">
-                                        <Pie
-                                            data={{
-                                                labels: data.expenseBreakdown.map(e => e.category),
-                                                datasets: [{
-                                                    data: data.expenseBreakdown.map(e => e.amount),
-                                                    backgroundColor: ['#ef4444', '#fb923c', '#eab308', '#a855f7'],
-                                                }],
-                                            }}
-                                            options={{
-                                                ...chartConfig,
-                                                plugins: { legend: { display: true, position: 'bottom' } },
-                                            }}
-                                        />
-                                    </div>
+                                    {charts.expense_breakdown && charts.expense_breakdown.length > 0 ? (
+                                        <div className="h-64 sm:h-72 flex items-center justify-center">
+                                            <Pie
+                                                data={{
+                                                    labels: charts.expense_breakdown.map(e => e.category),
+                                                    datasets: [{
+                                                        data: charts.expense_breakdown.map(e => e.amount),
+                                                        backgroundColor: ['#ef4444', '#fb923c', '#eab308', '#a855f7'],
+                                                    }],
+                                                }}
+                                                options={{
+                                                    ...chartConfig,
+                                                    plugins: { legend: { display: true, position: 'bottom' } },
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
+                                            <p className="text-sm">Məlumat yoxdur</p>
+                                        </div>
+                                    )}
                                 </ChartCard>
                             </div>
                         </div>
@@ -467,10 +611,10 @@ export default function DashboardNew({ auth }: PageProps) {
                         {/* CREDIT STATISTICS */}
                         <SectionCard title="Borc Statistikaları" subtitle="Müştəri borcları və ödənişlər">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                <MiniStatCard icon={BanknotesIcon} label="Ümumi Borc" value={formatCurrency(data.credits.totalOutstanding)} color="red" />
-                                <MiniStatCard icon={ArrowTrendingUpIcon} label="Bu Ay Verilən" value={formatCurrency(data.credits.creditsGivenThisMonth)} color="orange" />
-                                <MiniStatCard icon={ArrowTrendingDownIcon} label="Bu Ay Ödənilən" value={formatCurrency(data.credits.paymentsReceivedThisMonth)} color="green" />
-                                <MiniStatCard icon={UserIcon} label="Borclu Müştərilər" value={data.credits.activeCreditCustomers} color="orange" />
+                                <MiniStatCard icon={BanknotesIcon} label="Ümumi Borc" value={formatCurrency(credits.total_outstanding)} color="red" />
+                                <MiniStatCard icon={ArrowTrendingUpIcon} label="Bu Ay Verilən" value={formatCurrency(credits.credits_given_this_month)} color="orange" />
+                                <MiniStatCard icon={ArrowTrendingDownIcon} label="Bu Ay Ödənilən" value={formatCurrency(credits.payments_received_this_month)} color="green" />
+                                <MiniStatCard icon={UserIcon} label="Borclu Müştərilər" value={credits.active_credit_customers} color="orange" />
                             </div>
                         </SectionCard>
 
@@ -483,22 +627,28 @@ export default function DashboardNew({ auth }: PageProps) {
                                     <Link href="/sales" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">Hamısı →</Link>
                                 </div>
                                 <div className="divide-y divide-gray-100">
-                                    {data.recentSales.slice(0, 5).map((sale) => (
-                                        <div key={sale.id} className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-gray-900">{sale.customer}</p>
-                                                    <p className="text-xs text-gray-500">{formatDate(sale.date)} {sale.time}</p>
-                                                </div>
-                                                <div className="text-right ml-4">
-                                                    <p className="font-bold text-gray-900">{formatCurrency(sale.amount)}</p>
-                                                    <span className={`text-xs ${sale.status === 'Ödənilib' ? 'text-green-600' : 'text-orange-600'}`}>
-                                                        {sale.status}
-                                                    </span>
+                                    {tables.recent_sales && tables.recent_sales.length > 0 ? (
+                                        tables.recent_sales.slice(0, 5).map((sale) => (
+                                            <div key={sale.id} className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-gray-900">{sale.customer}</p>
+                                                        <p className="text-xs text-gray-500">{formatDate(sale.date)}</p>
+                                                    </div>
+                                                    <div className="text-right ml-4">
+                                                        <p className="font-bold text-gray-900">{formatCurrency(sale.amount)}</p>
+                                                        <span className={`text-xs ${sale.status === 'Ödənilib' ? 'text-green-600' : 'text-orange-600'}`}>
+                                                            {sale.status}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 sm:px-6 py-8 text-center text-gray-500">
+                                            <p className="text-sm">Hələ ki satış yoxdur</p>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             </div>
 
@@ -508,30 +658,36 @@ export default function DashboardNew({ auth }: PageProps) {
                                     <h3 className="text-sm sm:text-base font-semibold text-gray-800">Az Stoklu Məhsullar (Təcili)</h3>
                                 </div>
                                 <div className="divide-y divide-gray-100">
-                                    {data.lowStockProducts.slice(0, 5).map((product) => (
-                                        <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-gray-900 text-sm">{product.name}</p>
-                                                    <p className="text-xs text-gray-500">{product.warehouse}</p>
-                                                </div>
-                                                <div className="text-right ml-4">
-                                                    <p className="text-sm font-semibold text-gray-900">
-                                                        {formatNumber(product.current, 2)} / {formatNumber(product.min, 2)} {product.unit}
-                                                    </p>
-                                                    <div className="w-20 bg-gray-200 rounded-full h-1.5 mt-1">
-                                                        <div
-                                                            className={`h-1.5 rounded-full ${
-                                                                (product.current / product.min) * 100 < 25 ? 'bg-red-600' :
-                                                                (product.current / product.min) * 100 < 50 ? 'bg-orange-500' : 'bg-yellow-500'
-                                                            }`}
-                                                            style={{ width: `${Math.min((product.current / product.min) * 100, 100)}%` }}
-                                                        ></div>
+                                    {tables.low_stock_products && tables.low_stock_products.length > 0 ? (
+                                        tables.low_stock_products.slice(0, 5).map((product) => (
+                                            <div key={product.id} className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-gray-900 text-sm">{product.name}</p>
+                                                        <p className="text-xs text-gray-500">{product.warehouse || 'Bütün anbarlar'}</p>
+                                                    </div>
+                                                    <div className="text-right ml-4">
+                                                        <p className="text-sm font-semibold text-gray-900">
+                                                            {formatNumber(product.current, 2)} / {formatNumber(product.min, 2)} {product.unit}
+                                                        </p>
+                                                        <div className="w-20 bg-gray-200 rounded-full h-1.5 mt-1">
+                                                            <div
+                                                                className={`h-1.5 rounded-full ${
+                                                                    (product.current / product.min) * 100 < 25 ? 'bg-red-600' :
+                                                                    (product.current / product.min) * 100 < 50 ? 'bg-orange-500' : 'bg-yellow-500'
+                                                                }`}
+                                                                style={{ width: `${Math.min((product.current / product.min) * 100, 100)}%` }}
+                                                            ></div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 sm:px-6 py-8 text-center text-gray-500">
+                                            <p className="text-sm">Az stoklu məhsul yoxdur</p>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             </div>
                         </div>
