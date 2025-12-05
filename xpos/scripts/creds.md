@@ -1,0 +1,1 @@
+ ssh: pass:QFxOxVYJ4SPiPC   server ip: 20.218.170.234  user: onyx 

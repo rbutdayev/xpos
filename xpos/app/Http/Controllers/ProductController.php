@@ -875,7 +875,7 @@ class ProductController extends Controller
             }
 
             $products = $productsQuery
-                ->select('id', 'name', 'sku', 'barcode', 'unit', 'base_unit', 'packaging_quantity', 'sale_price', 'unit_price', 'packaging_size', 'allow_negative_stock', 'type')
+                ->select('id', 'name', 'sku', 'barcode', 'unit', 'base_unit', 'packaging_quantity', 'purchase_price', 'sale_price', 'unit_price', 'packaging_size', 'allow_negative_stock', 'type')
                 ->with(['stock' => function ($stockQuery) use ($branchId) {
                     $stockQuery->select('product_id', 'quantity', 'warehouse_id');
 

@@ -52,6 +52,12 @@ export default function Login({
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
+        // CRITICAL: Clear localStorage before login to prevent stale account data
+        // This ensures clean state when switching between accounts
+        localStorage.removeItem('current_user_id');
+        localStorage.removeItem('current_account_id');
+        localStorage.removeItem('wizard_form_data');
+
         post(route('login'), {
             onFinish: () => reset('password'),
         });

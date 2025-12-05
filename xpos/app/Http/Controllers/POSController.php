@@ -53,6 +53,12 @@ class POSController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'sku as code', 'sale_price as price']);
 
+            // Get customers for gift card sales
+            $customers = Customer::where('account_id', $accountId)
+                ->select('id', 'name', 'phone')
+                ->orderBy('name')
+                ->get();
+
             // Branch filtering based on user role
             if (Auth::user()->role === 'sales_staff') {
                 $branches = Branch::where('id', Auth::user()->branch_id)
@@ -74,6 +80,7 @@ class POSController extends Controller
             return Inertia::render('POS/Index', [
                 'employees' => $employees,
                 'services' => $services,
+                'customers' => $customers,
                 'branches' => $branches,
                 'fiscalPrinterEnabled' => Auth::user()->account->fiscal_printer_enabled ?? false,
                 'fiscalConfig' => $fiscalConfig,
@@ -168,11 +175,22 @@ class POSController extends Controller
             'credit_description' => 'nullable|string|max:500',
             'points_to_redeem' => 'nullable|integer|min:0',
             'use_fiscal_printer' => 'nullable|boolean',
+            // Gift card payment fields
+            'gift_card_code' => 'nullable|string|min:4',
+            'gift_card_amount' => 'nullable|numeric|min:0',
+            // Gift card sale fields
+            'gift_card_expiry_months' => 'nullable|integer|min:1|max:60', // 1-60 months validity
         ];
 
         // For credit or partial payment, customer is required
         if (in_array($request->payment_status, ['credit', 'partial'])) {
             $rules['customer_id'] = 'required|exists:customers,id';
+        }
+
+        // If gift card code is provided, validate amount is also provided
+        if ($request->gift_card_code) {
+            $rules['gift_card_code'] = 'required|string|min:4';
+            $rules['gift_card_amount'] = 'required|numeric|min:0.01';
         }
 
         $validated = $request->validate($rules);
@@ -259,6 +277,120 @@ class POSController extends Controller
                     }
                 }
 
+                // Handle gift card product sales
+                foreach ($validated['items'] as $item) {
+                    $product = \App\Models\Product::find($item['product_id']);
+
+                    if ($product && $product->isGiftCard()) {
+                        \Log::info('Gift card product detected in sale', [
+                            'product_id' => $product->id,
+                            'denomination' => $product->gift_card_denomination,
+                            'quantity' => $item['quantity']
+                        ]);
+
+                        // Process each gift card (in case quantity > 1)
+                        $quantity = (int) $item['quantity'];
+                        for ($i = 0; $i < $quantity; $i++) {
+                            // Find a configured gift card with matching denomination
+                            $giftCard = \App\Models\GiftCard::where('account_id', $accountId)
+                                ->where('status', \App\Models\GiftCard::STATUS_CONFIGURED)
+                                ->where('denomination', $product->gift_card_denomination)
+                                ->first();
+
+                            if (!$giftCard) {
+                                throw new \Exception("Konfiqurasiya olunmuş {$product->gift_card_denomination} AZN məbləğli hədiyyə kartı tapılmadı. Zəhmət olmasa əvvəlcə kartları konfiqurasiya edin.");
+                            }
+
+                            // Queue fiscal prepayment job for gift card sale (uses bridge)
+                            if ($account->fiscal_printer_enabled) {
+                                $config = \App\Models\FiscalPrinterConfig::where('account_id', $accountId)
+                                    ->where('is_active', true)
+                                    ->first();
+
+                                if ($config) {
+                                    // Validate shift status before creating fiscal job
+                                    if (!$config->isShiftValid()) {
+                                        \Log::warning('Gift card fiscal shift validation failed', [
+                                            'account_id' => $accountId,
+                                            'sale_id' => $sale->sale_id,
+                                            'gift_card_id' => $giftCard->id,
+                                            'shift_open' => $config->shift_open,
+                                        ]);
+
+                                        // Don't create fiscal job, but allow sale to continue
+                                    } else {
+                                        $fiscalService = app(\App\Services\FiscalPrinterService::class);
+
+                                        // Prepare payment data from the sale
+                                        $paymentData = [
+                                            'cash_amount' => $validated['payment_method'] === 'nağd' ? $giftCard->denomination : 0,
+                                            'card_amount' => ($validated['payment_method'] === 'kart' || $validated['payment_method'] === 'köçürmə') ? $giftCard->denomination : 0,
+                                            'client_name' => $validated['customer_id'] ? Customer::find($validated['customer_id'])?->name : null,
+                                        ];
+
+                                        // Format request data for bridge queue
+                                        $requestData = $fiscalService->getFormattedGiftCardPrepaymentRequestData(
+                                            $config,
+                                            $giftCard,
+                                            $paymentData
+                                        );
+
+                                        // Add gift card ID to request data for later reference
+                                        $requestData['gift_card_id'] = $giftCard->id;
+
+                                        // Create job for bridge to process
+                                        \App\Models\FiscalPrinterJob::create([
+                                            'account_id' => $accountId,
+                                            'sale_id' => $sale->sale_id,
+                                            'operation_type' => 'gift_card_prepayment',
+                                            'status' => \App\Models\FiscalPrinterJob::STATUS_PENDING,
+                                            'request_data' => $requestData,
+                                            'provider' => $config->provider,
+                                        ]);
+
+                                        \Log::info('Gift card fiscal prepayment job queued', [
+                                            'sale_id' => $sale->sale_id,
+                                            'gift_card_id' => $giftCard->id,
+                                            'account_id' => $accountId,
+                                        ]);
+                                    }
+                                }
+                            }
+
+                            // Activate the gift card
+                            // Use custom expiry months if provided, otherwise default to 12 months
+                            $expiryMonths = $validated['gift_card_expiry_months'] ?? 12;
+
+                            $giftCard->update([
+                                'status' => \App\Models\GiftCard::STATUS_ACTIVE,
+                                'initial_balance' => $giftCard->denomination,
+                                'current_balance' => $giftCard->denomination,
+                                'customer_id' => $validated['customer_id'],
+                                'activated_at' => now(),
+                                'expiry_date' => now()->addMonths($expiryMonths),
+                            ]);
+
+                            // Create transaction record for activation
+                            \App\Models\GiftCardTransaction::create([
+                                'gift_card_id' => $giftCard->id,
+                                'type' => 'activation',
+                                'amount' => $giftCard->denomination,
+                                'balance_before' => 0,
+                                'balance_after' => $giftCard->denomination,
+                                'sale_id' => $sale->sale_id,
+                                'user_id' => $userId,
+                                'notes' => "Aktivləşdirildi - Satış #{$sale->sale_number}",
+                            ]);
+
+                            \Log::info('Gift card activated', [
+                                'gift_card_id' => $giftCard->id,
+                                'card_number' => $giftCard->card_number,
+                                'sale_id' => $sale->sale_id,
+                            ]);
+                        }
+                    }
+                }
+
                 // Handle credit sale if specified
                 if (($validated['payment_status'] === 'credit' || $validated['payment_status'] === 'partial') &&
                     ($validated['credit_amount'] ?? 0) > 0) {
@@ -284,29 +416,121 @@ class POSController extends Controller
                     ]);
                 }
 
-                // Create payment records based on payment status
-                $paymentMethod = $validated['payment_method'] ?? 'nağd'; // Default to cash if not specified
+                // Handle gift card payment FIRST (if provided)
+                $giftCardAmount = 0;
+                if (!empty($validated['gift_card_code']) && ($validated['gift_card_amount'] ?? 0) > 0) {
+                    $giftCardCode = strtoupper(trim($validated['gift_card_code']));
+                    $giftCardAmount = (float) $validated['gift_card_amount'];
 
-                if ($validated['payment_status'] === 'paid') {
-                    // Full payment - create payment record for full amount
+                    \Log::info('Processing gift card payment', [
+                        'sale_id' => $sale->sale_id,
+                        'gift_card_code' => $giftCardCode,
+                        'amount' => $giftCardAmount
+                    ]);
+
+                    // Find the gift card
+                    $giftCard = \App\Models\GiftCard::where('card_number', $giftCardCode)
+                        ->where('account_id', $accountId)
+                        ->first();
+
+                    if (!$giftCard) {
+                        throw new \Exception("Hədiyyə kartı tapılmadı: {$giftCardCode}");
+                    }
+
+                    // Validate gift card can be used
+                    if (!$giftCard->canBeUsed()) {
+                        $reason = $giftCard->isExpired() ? 'vaxtı bitib' :
+                                 ($giftCard->current_balance <= 0 ? 'balansı yoxdur' : 'aktiv deyil');
+                        throw new \Exception("Hədiyyə kartı istifadə oluna bilməz: {$reason}");
+                    }
+
+                    // Validate amount doesn't exceed card balance
+                    if ($giftCardAmount > $giftCard->current_balance) {
+                        throw new \Exception("Hədiyyə kartı balansı kifayət deyil. Mövcud balans: ₼{$giftCard->current_balance}");
+                    }
+
+                    // Validate amount doesn't exceed sale total
+                    if ($giftCardAmount > $total) {
+                        throw new \Exception("Hədiyyə kartı məbləği satış məbləğindən çox ola bilməz.");
+                    }
+
+                    // Deduct amount from gift card
+                    $balanceBefore = $giftCard->current_balance;
+                    $balanceAfter = $balanceBefore - $giftCardAmount;
+
+                    $giftCard->current_balance = $balanceAfter;
+
+                    // If balance reaches zero, mark as depleted
+                    if ($balanceAfter <= 0) {
+                        $giftCard->status = \App\Models\GiftCard::STATUS_DEPLETED;
+                    }
+
+                    $giftCard->save();
+
+                    // Create payment record for gift card
+                    Payment::create([
+                        'sale_id' => $sale->sale_id,
+                        'method' => 'hədiyyə_kartı',
+                        'amount' => $giftCardAmount,
+                        'gift_card_id' => $giftCard->id,
+                        'notes' => "Hədiyyə kartı: {$giftCard->card_number}",
+                    ]);
+
+                    // Create gift card transaction record
+                    \App\Models\GiftCardTransaction::create([
+                        'gift_card_id' => $giftCard->id,
+                        'type' => 'payment',
+                        'amount' => $giftCardAmount,
+                        'balance_before' => $balanceBefore,
+                        'balance_after' => $balanceAfter,
+                        'sale_id' => $sale->sale_id,
+                        'user_id' => $userId,
+                        'notes' => "Ödəniş - Satış #{$sale->sale_number}",
+                    ]);
+
+                    \Log::info('Gift card payment processed', [
+                        'gift_card_id' => $giftCard->id,
+                        'amount' => $giftCardAmount,
+                        'balance_before' => $balanceBefore,
+                        'balance_after' => $balanceAfter,
+                        'sale_id' => $sale->sale_id,
+                    ]);
+                }
+
+                // Create payment records for remaining amount (after gift card deduction)
+                $paymentMethod = $validated['payment_method'] ?? 'nağd';
+                $remainingAmount = $total - $giftCardAmount; // Amount left to pay after gift card
+
+                if ($validated['payment_status'] === 'paid' && $remainingAmount > 0) {
+                    // Paid status - create payment for remaining amount
                     Payment::create([
                         'sale_id' => $sale->sale_id,
                         'method' => $paymentMethod,
-                        'amount' => $total,
-                        'notes' => 'POS satışı - tam ödəniş',
+                        'amount' => $remainingAmount,
+                        'notes' => $giftCardAmount > 0
+                            ? "POS satışı - tam ödəniş (Hədiyyə kartı: ₼{$giftCardAmount})"
+                            : 'POS satışı - tam ödəniş',
                     ]);
-                    \Log::info('Payment created for paid sale', ['sale_id' => $sale->sale_id, 'amount' => $total, 'method' => $paymentMethod]);
+                    \Log::info('Payment created for remaining amount', [
+                        'sale_id' => $sale->sale_id,
+                        'amount' => $remainingAmount,
+                        'method' => $paymentMethod,
+                        'gift_card_used' => $giftCardAmount
+                    ]);
                 } elseif ($validated['payment_status'] === 'partial' && ($validated['paid_amount'] ?? 0) > 0) {
-                    // Partial payment - create payment record for paid amount
+                    // Partial payment - create payment for paid amount
                     Payment::create([
                         'sale_id' => $sale->sale_id,
                         'method' => $paymentMethod,
                         'amount' => $validated['paid_amount'],
                         'notes' => 'POS satışı - qismən ödəniş',
                     ]);
-                    \Log::info('Payment created for partial sale', ['sale_id' => $sale->sale_id, 'amount' => $validated['paid_amount'], 'method' => $paymentMethod]);
+                    \Log::info('Payment created for partial sale', [
+                        'sale_id' => $sale->sale_id,
+                        'amount' => $validated['paid_amount'],
+                        'method' => $paymentMethod
+                    ]);
                 }
-                // Note: For payment_status = 'credit', no payment record is created (full credit sale)
 
                 // Handle loyalty points redemption
                 if (($validated['points_to_redeem'] ?? 0) > 0 && $validated['customer_id']) {
@@ -402,7 +626,7 @@ class POSController extends Controller
                             'error' => $fiscalError
                         ]);
 
-                        // Don't create fiscal job if shift is invalid
+                        // Don't create fiscal job, but allow sale to continue
                     } else {
                         // Shift is valid, queue job for bridge to pick up
                         $fiscalService = app(FiscalPrinterService::class);
@@ -812,4 +1036,235 @@ class POSController extends Controller
             'cart_total' => array_sum(array_column($cart, 'subtotal')),
         ]);
     }
+
+    /**
+     * Lookup gift card by card number
+     */
+    public function lookupGiftCard(Request $request)
+    {
+        Gate::authorize('access-pos');
+
+        $validated = $request->validate([
+            'card_number' => 'required|string',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+
+        $card = \App\Models\GiftCard::where('account_id', $accountId)
+            ->where('card_number', strtoupper($validated['card_number']))
+            ->first();
+
+        if (!$card) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Kart tapılmadı.',
+            ], 404);
+        }
+
+        // Return card info based on status
+        return response()->json([
+            'success' => true,
+            'card' => [
+                'id' => $card->id,
+                'card_number' => $card->card_number,
+                'status' => $card->status,
+                'denomination' => $card->denomination,
+                'current_balance' => $card->current_balance,
+                'customer_id' => $card->customer_id,
+            ],
+        ]);
+    }
+
+    /**
+     * Sell gift card directly (not through products)
+     */
+    public function sellGiftCard(Request $request)
+    {
+        Gate::authorize('access-pos');
+
+        $validated = $request->validate([
+            'card_number' => 'required|string',
+            'customer_id' => 'nullable|exists:customers,id',
+            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'employee_id' => 'nullable|exists:users,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'gift_card_expiry_months' => 'nullable|integer|min:1|max:60',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $userId = Auth::id();
+
+        // Get branch_id: from request, user's assigned branch, or first available branch
+        $branchId = $validated['branch_id'] ?? Auth::user()->branch_id;
+        if (!$branchId) {
+            $branchId = \App\Models\Branch::where('account_id', $accountId)->value('id');
+            if (!$branchId) {
+                throw new \Exception('Filial tapılmadı. Zəhmət olmasa filial yaradın.');
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            // Find the card
+            $card = \App\Models\GiftCard::where('account_id', $accountId)
+                ->where('card_number', strtoupper($validated['card_number']))
+                ->lockForUpdate()
+                ->first();
+
+            if (!$card) {
+                throw new \Exception('Kart tapılmadı.');
+            }
+
+            if (!$card->isConfigured()) {
+                throw new \Exception('Bu kart konfiqurasiya olunmayıb. Status: ' . $card->status);
+            }
+
+            // Get account for fiscal printer check
+            $account = \App\Models\Account::find($accountId);
+
+            // Create sale record (sale_number auto-generated by model with FOR UPDATE locking)
+            $sale = Sale::create([
+                'account_id' => $accountId,
+                'customer_id' => $validated['customer_id'] ?? null,
+                'user_id' => $validated['employee_id'] ?? $userId,
+                'branch_id' => $branchId,
+                'sale_date' => now(),
+                'subtotal' => $card->denomination,
+                'discount_amount' => 0,
+                'tax_amount' => 0,
+                'total' => $card->denomination,
+                'paid_amount' => $card->denomination,
+                'payment_status' => 'paid',
+                'payment_method' => $validated['payment_method'],
+                'notes' => "Hədiyyə kartı satışı: {$card->card_number} - ₼{$card->denomination}",
+            ]);
+
+            // Note: No sale_items record needed - gift card transactions provide full tracking
+
+            // Create payment record
+            Payment::create([
+                'account_id' => $accountId,
+                'sale_id' => $sale->sale_id,
+                'customer_id' => $validated['customer_id'] ?? null,
+                'amount' => $card->denomination,
+                'payment_date' => now(),
+                'payment_method' => $validated['payment_method'],
+                'status' => 'completed',
+                'reference_number' => $sale->sale_number,
+                'notes' => "Hədiyyə kartı satışı: {$card->card_number}",
+            ]);
+
+            // Queue fiscal prepayment job for gift card sale (uses bridge)
+            if ($account->fiscal_printer_enabled) {
+                $config = \App\Models\FiscalPrinterConfig::where('account_id', $accountId)
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($config) {
+                    // Validate shift status before creating fiscal job
+                    if (!$config->isShiftValid()) {
+                        \Log::warning('Gift card fiscal shift validation failed', [
+                            'account_id' => $accountId,
+                            'sale_id' => $sale->sale_id,
+                            'gift_card_id' => $card->id,
+                            'shift_open' => $config->shift_open,
+                        ]);
+
+                        // Don't create fiscal job, but allow sale to continue
+                    } else {
+
+                    $fiscalService = app(FiscalPrinterService::class);
+
+                    $paymentData = [
+                        'cash_amount' => $validated['payment_method'] === 'nağd' ? $card->denomination : 0,
+                        'card_amount' => ($validated['payment_method'] === 'kart' || $validated['payment_method'] === 'köçürmə') ? $card->denomination : 0,
+                        'client_name' => $validated['customer_id'] ? Customer::find($validated['customer_id'])?->name : null,
+                    ];
+
+                    // Format request data for bridge queue
+                    $requestData = $fiscalService->getFormattedGiftCardPrepaymentRequestData(
+                        $config,
+                        $card,
+                        $paymentData
+                    );
+
+                    // Add gift card ID to request data for later reference
+                    $requestData['gift_card_id'] = $card->id;
+
+                    // Create job for bridge to process
+                    \App\Models\FiscalPrinterJob::create([
+                        'account_id' => $accountId,
+                        'sale_id' => $sale->sale_id,
+                        'operation_type' => 'gift_card_prepayment',
+                        'status' => \App\Models\FiscalPrinterJob::STATUS_PENDING,
+                        'request_data' => $requestData,
+                        'provider' => $config->provider,
+                    ]);
+
+                    \Log::info('Gift card fiscal prepayment job queued', [
+                        'sale_id' => $sale->sale_id,
+                        'gift_card_id' => $card->id,
+                        'account_id' => $accountId,
+                    ]);
+                    }
+                }
+            }
+
+            // Activate the gift card
+            // Use custom expiry months if provided, otherwise default to 12 months
+            $expiryMonths = $validated['gift_card_expiry_months'] ?? 12;
+
+            $card->update([
+                'status' => \App\Models\GiftCard::STATUS_ACTIVE,
+                'initial_balance' => $card->denomination,
+                'current_balance' => $card->denomination,
+                'customer_id' => $validated['customer_id'],
+                'activated_at' => now(),
+                'expiry_date' => now()->addMonths($expiryMonths),
+            ]);
+
+            // Create transaction record
+            \App\Models\GiftCardTransaction::create([
+                'gift_card_id' => $card->id,
+                'type' => 'activation',
+                'amount' => $card->denomination,
+                'balance_before' => 0,
+                'balance_after' => $card->denomination,
+                'sale_id' => $sale->sale_id,
+                'user_id' => $userId,
+                'notes' => "Aktivləşdirildi - Satış #{$sale->sale_number}",
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hədiyyə kartı uğurla satıldı.',
+                'sale' => [
+                    'sale_id' => $sale->sale_id,
+                    'sale_number' => $sale->sale_number,
+                    'total_amount' => $sale->total,
+                    'fiscal_number' => $sale->fiscal_number ?? null,
+                ],
+                'card' => [
+                    'card_number' => $card->card_number,
+                    'denomination' => $card->denomination,
+                    'status' => $card->status,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Gift card sale failed', [
+                'error' => $e->getMessage(),
+                'card_number' => $validated['card_number'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
 }

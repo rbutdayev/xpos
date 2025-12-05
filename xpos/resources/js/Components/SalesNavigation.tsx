@@ -7,17 +7,19 @@ import {
     UserGroupIcon,
     PlusCircleIcon,
     PaperAirplaneIcon,
-    TagIcon
+    TagIcon,
+    GiftIcon
 } from '@heroicons/react/24/outline';
 import React from 'react';
 
 interface SalesNavigationProps {
     currentRoute?: string;
     showDiscounts?: boolean;
+    showGiftCards?: boolean;
     children?: React.ReactNode; // Allow custom action buttons
 }
 
-export default function SalesNavigation({ currentRoute, showDiscounts = false, children }: SalesNavigationProps) {
+export default function SalesNavigation({ currentRoute, showDiscounts = false, showGiftCards = false, children }: SalesNavigationProps) {
     const isActive = (routeName: string) => {
         const activeRoute = currentRoute || route().current() || '';
         return activeRoute.includes(routeName);
@@ -56,6 +58,14 @@ export default function SalesNavigation({ currentRoute, showDiscounts = false, c
             isActive: isActive('products.discounts'),
             conditional: true,
             show: showDiscounts // Only show if discounts module is enabled
+        },
+        {
+            href: route('gift-cards.index'),
+            icon: GiftIcon,
+            label: 'Hədiyyə Kartları',
+            isActive: isActive('gift-cards'),
+            conditional: true,
+            show: showGiftCards // Only show if gift cards module is enabled
         },
         {
             href: route('customers.index'),

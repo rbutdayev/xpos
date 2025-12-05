@@ -51,6 +51,11 @@ window.axios.interceptors.response.use(
     response => response,
     error => {
         if (error.response?.status === 419) {
+            // Clear old token before reload to prevent caching issues
+            if (window.axios.defaults.headers.common['X-CSRF-TOKEN']) {
+                delete window.axios.defaults.headers.common['X-CSRF-TOKEN'];
+            }
+
             // Page expired - refresh the page to get new tokens
             window.location.reload();
         }

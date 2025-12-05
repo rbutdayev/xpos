@@ -48,6 +48,7 @@ class Account extends Model
         'services_module_enabled',     // Paid features - only super admin
         'rent_module_enabled',         // Paid features - only super admin
         'discounts_module_enabled',    // Paid features - only super admin
+        'gift_cards_module_enabled',   // Paid features - only super admin
     ];
 
     protected $casts = [
@@ -66,6 +67,7 @@ class Account extends Model
         'services_module_enabled' => 'boolean',
         'rent_module_enabled' => 'boolean',
         'discounts_module_enabled' => 'boolean',
+        'gift_cards_module_enabled' => 'boolean',
     ];
 
     public function users(): HasMany
@@ -201,6 +203,12 @@ class Account extends Model
     public function isDiscountsModuleEnabled(): bool
     {
         return $this->discounts_module_enabled ?? false;
+    }
+
+    // Gift cards module helper methods
+    public function isGiftCardsModuleEnabled(): bool
+    {
+        return $this->gift_cards_module_enabled ?? false;
     }
 
     public function hasSmsConfigured(): bool

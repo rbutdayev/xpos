@@ -134,6 +134,7 @@ class GoodsReceiptController extends Controller
             'products.*.unit' => 'required|string|max:50',
             'products.*.receiving_unit' => 'nullable|string|max:50',
             'products.*.unit_cost' => 'nullable|numeric|min:0',
+            'products.*.sale_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'payment_method' => 'required|in:instant,credit',
@@ -210,6 +211,12 @@ class GoodsReceiptController extends Controller
                     $product = Product::find($productData['product_id']);
                     if ($product) {
                         $product->purchase_price = $productData['unit_cost'];
+
+                        // Update sale_price if provided
+                        if (!empty($productData['sale_price'])) {
+                            $product->sale_price = $productData['sale_price'];
+                        }
+
                         $product->save();
                     }
                 }
@@ -356,6 +363,7 @@ class GoodsReceiptController extends Controller
             'quantity' => 'required|numeric|gt:0',
             'unit' => 'required|string|max:50',
             'unit_cost' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             // payment_method and payment_status are not editable - removed from validation
@@ -411,6 +419,12 @@ class GoodsReceiptController extends Controller
                 $product = Product::find($goodsReceipt->product_id);
                 if ($product) {
                     $product->purchase_price = $request->input('unit_cost');
+
+                    // Update sale_price if provided
+                    if ($request->filled('sale_price')) {
+                        $product->sale_price = $request->input('sale_price');
+                    }
+
                     $product->save();
                 }
             }

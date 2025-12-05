@@ -21,7 +21,7 @@ function CustomerSection({ branches, formData, setFormData, errors, userBranchId
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6">
       <div className="p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Müştəri Məlumatları</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Satış</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <InputLabel htmlFor="customer_id" value="Müştəri" />

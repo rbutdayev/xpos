@@ -21,6 +21,7 @@ class Product extends Model
         'name',
         'sku',
         'barcode',
+        'gift_card_denomination',  // If set, this product is a gift card with this denomination
         'barcode_type',
         'has_custom_barcode',
         'category_id',
@@ -65,6 +66,7 @@ class Product extends Model
             'is_active' => 'boolean',
             'purchase_price' => 'decimal:2',
             'sale_price' => 'decimal:2',
+            'gift_card_denomination' => 'decimal:2',
             'packaging_quantity' => 'decimal:3',
             'unit_price' => 'decimal:4',
             'weight' => 'decimal:3',
@@ -257,6 +259,30 @@ class Product extends Model
     public function hasCustomBarcode(): bool
     {
         return $this->has_custom_barcode;
+    }
+
+    /**
+     * Check if this product is a gift card
+     */
+    public function isGiftCard(): bool
+    {
+        return !is_null($this->gift_card_denomination);
+    }
+
+    /**
+     * Scope to filter only gift card products
+     */
+    public function scopeGiftCards(Builder $query): Builder
+    {
+        return $query->whereNotNull('gift_card_denomination');
+    }
+
+    /**
+     * Scope to filter products by gift card denomination
+     */
+    public function scopeWithGiftCardDenomination(Builder $query, float $denomination): Builder
+    {
+        return $query->where('gift_card_denomination', $denomination);
     }
 
     public function getTotalStockAttribute(): float

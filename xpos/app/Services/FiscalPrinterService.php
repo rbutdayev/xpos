@@ -221,6 +221,21 @@ class FiscalPrinterService
     }
 
     /**
+     * Get formatted request data for gift card prepayment (for bridge queue system)
+     */
+    public function getFormattedGiftCardPrepaymentRequestData(FiscalPrinterConfig $config, \App\Models\GiftCard $giftCard, array $paymentData): array
+    {
+        $requestData = $this->formatGiftCardPrepaymentRequest($config, $giftCard, $paymentData);
+
+        return [
+            'url' => $requestData['url'],
+            'headers' => $requestData['headers'],
+            'body' => $requestData['body'],
+            'provider' => $config->provider,
+        ];
+    }
+
+    /**
      * Send sale data to fiscal printer terminal
      */
     protected function sendToTerminal(FiscalPrinterConfig $config, Sale $sale, FiscalPrinterLog $log): array
@@ -271,6 +286,24 @@ class FiscalPrinterService
                         return [
                             'success' => true,
                             'fiscal_number' => $responseData['data']['document_number'] ?? $responseData['data']['document_id'] ?? null,
+                            'response' => $response->body(),
+                        ];
+                    } else {
+                        return [
+                            'success' => false,
+                            'error' => $responseData['message'] ?? 'Error code: ' . $code,
+                        ];
+                    }
+                }
+
+                // Omnitech uses: {"code": 0, "document_number": X, "long_id": "...", "short_id": "..."}
+                if ($config->provider === 'omnitech') {
+                    $code = $responseData['code'] ?? 999;
+                    if ($code === 0 || $code === '0') {
+                        return [
+                            'success' => true,
+                            'fiscal_number' => $responseData['document_number'] ?? null,
+                            'fiscal_document_id' => $responseData['long_id'] ?? null,
                             'response' => $response->body(),
                         ];
                     } else {
@@ -373,6 +406,24 @@ class FiscalPrinterService
                     }
                 }
 
+                // Omnitech uses: {"code": 0, "document_number": X, "long_id": "...", "short_id": "..."}
+                if ($config->provider === 'omnitech') {
+                    $code = $responseData['code'] ?? 999;
+                    if ($code === 0 || $code === '0') {
+                        return [
+                            'success' => true,
+                            'fiscal_number' => $responseData['document_number'] ?? null,
+                            'fiscal_document_id' => $responseData['long_id'] ?? null,
+                            'response' => $response->body(),
+                        ];
+                    } else {
+                        return [
+                            'success' => false,
+                            'error' => $responseData['message'] ?? 'Error code: ' . $code,
+                        ];
+                    }
+                }
+
                 // Handle other providers
                 if (isset($responseData['success']) && $responseData['success']) {
                     return [
@@ -436,6 +487,79 @@ class FiscalPrinterService
             'azsmart' => $config->getFullUrl("api/{$action}"),
             default => $config->getFullUrl("api/{$action}"),
         };
+    }
+
+    /**
+     * Get Omnitech access token (login if needed)
+     */
+    protected function getOmnitechAccessToken(FiscalPrinterConfig $config): ?string
+    {
+        // Check if we have a valid cached token
+        if ($config->hasValidAccessToken()) {
+            return $config->access_token;
+        }
+
+        // Need to login
+        try {
+            $url = $config->getFullUrl();
+            $loginRequest = [
+                'requestData' => [
+                    'checkData' => [
+                        'check_type' => 40, // 40 = Login
+                    ],
+                    'name' => $config->username,
+                    'password' => $config->password,
+                ],
+            ];
+
+            Log::info('Omnitech login attempt', [
+                'url' => $url,
+                'username' => $config->username,
+            ]);
+
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post($url, $loginRequest);
+
+            if (!$response->successful()) {
+                Log::error('Omnitech login failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (!isset($data['access_token'])) {
+                Log::error('Omnitech login response missing access_token', [
+                    'response' => $data,
+                ]);
+                return null;
+            }
+
+            $accessToken = $data['access_token'];
+
+            // Store token (tokens typically last 24 hours, but we'll refresh on each request to be safe)
+            // Set expiration to 23 hours from now to be conservative
+            $expiresAt = now()->addHours(23);
+            $config->updateAccessToken($accessToken, $expiresAt);
+
+            Log::info('Omnitech login successful', [
+                'token_expires_at' => $expiresAt,
+            ]);
+
+            return $accessToken;
+        } catch (\Exception $e) {
+            Log::error('Omnitech login exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -517,6 +641,15 @@ class FiscalPrinterService
     {
         $sale->load(['items.product', 'payments', 'customer']);
 
+        // Calculate total gift card amount to distribute as discount
+        $totalGiftCardAmount = 0.0;
+        foreach ($sale->payments as $payment) {
+            $method = trim(strtolower($payment->method ?? ''));
+            if (in_array($method, ['hədiyyə_kartı', 'hediyye_karti', 'gift_card'])) {
+                $totalGiftCardAmount += (float) $payment->amount;
+            }
+        }
+
         // Map VAT type (1=18%, 2=Trade18%, 3=VAT-free, 5=0%, 6=Simplified2%, 7=Simplified8%)
         $vatType = 1; // Default to 18% VAT
         if ($config->default_tax_rate == 18) {
@@ -529,12 +662,30 @@ class FiscalPrinterService
             $vatType = 7;
         }
 
+        // Calculate subtotal for proportional discount distribution
+        $subtotal = $sale->items->sum(function ($item) {
+            return (float) $item->total;
+        });
+
         // Format items according to Caspos API spec
-        $items = $sale->items->map(function ($item) use ($vatType) {
+        $items = $sale->items->map(function ($item) use ($vatType, $totalGiftCardAmount, $subtotal) {
             // Map product unit to Caspos quantityType
             $quantityType = $this->mapUnitToQuantityType($item->product->unit ?? 'ədəd');
 
-            return [
+            // Generate itemUuid
+            $itemUuid = \Illuminate\Support\Str::uuid()->toString();
+
+            // Calculate item's share of gift card discount (proportional to item total)
+            $itemTotal = (float) $item->total;
+            $itemGiftCardDiscount = 0.0;
+            if ($totalGiftCardAmount > 0 && $subtotal > 0) {
+                $itemGiftCardDiscount = ($itemTotal / $subtotal) * $totalGiftCardAmount;
+            }
+
+            // Add existing discount + gift card discount
+            $totalDiscount = (float) ($item->discount_amount ?? 0) + $itemGiftCardDiscount;
+
+            $itemData = [
                 'name' => $item->product->name ?? 'Unknown Product',
                 'code' => $item->product->barcode ?? $item->product_id,
                 'quantity' => number_format((float) $item->quantity, 3, '.', ''),
@@ -543,12 +694,15 @@ class FiscalPrinterService
                 'codeType' => 1, // 0=Plain text, 1=EAN8, 2=EAN13, 3=Service
                 'quantityType' => $quantityType,
                 'vatType' => $vatType,
-                'discountAmount' => number_format((float) ($item->discount_amount ?? 0), 2, '.', ''),
-                'itemUuid' => \Illuminate\Support\Str::uuid()->toString(),
+                'discountAmount' => number_format($totalDiscount, 2, '.', ''),
+                'itemUuid' => $itemUuid,
             ];
+
+            return $itemData;
         })->toArray();
 
         // Calculate payment methods
+        // NOTE: Gift card amounts are excluded here because they're applied as discounts above
         $cashPayment = 0.0;
         $cardPayment = 0.0;
         $creditPayment = 0.0;
@@ -571,8 +725,9 @@ class FiscalPrinterService
                 $amount = (float) $payment->amount;
                 $method = trim(strtolower($payment->method ?? ''));
 
-                // Remember the first payment method for partial sales
-                if ($primaryPaymentMethod === null && !empty($method)) {
+                // Remember the first NON-GIFT-CARD payment method for partial sales
+                if ($primaryPaymentMethod === null && !empty($method) &&
+                    !in_array($method, ['hədiyyə_kartı', 'hediyye_karti', 'gift_card'])) {
                     $primaryPaymentMethod = $method;
                 }
 
@@ -598,6 +753,15 @@ class FiscalPrinterService
                         break;
                     case 'bonus':
                         $bonusPayment += $amount;
+                        break;
+                    case 'hədiyyə_kartı':
+                    case 'hediyye_karti':
+                    case 'gift_card':
+                        // SKIP: Gift card amounts are applied as item discounts, not as payment
+                        Log::info('Gift card payment applied as discount', [
+                            'sale_id' => $sale->sale_id,
+                            'gift_card_amount' => $amount
+                        ]);
                         break;
                     default:
                         // If payment method is empty or unknown, default to cash
@@ -646,7 +810,6 @@ class FiscalPrinterService
             'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
             'cashPayment' => number_format($cashPayment, 2, '.', ''),
             'creditPayment' => number_format($creditPayment, 2, '.', ''),
-            'depositPayment' => number_format(0.0, 2, '.', ''),
             'cardPayment' => number_format($cardPayment, 2, '.', ''),
             'bonusPayment' => number_format($bonusPayment, 2, '.', ''),
             'items' => $items,
@@ -780,6 +943,7 @@ class FiscalPrinterService
         $creditSum = 0.0;
         $bonusSum = 0.0;
         $prepaymentSum = 0.0;
+        $giftCardFiscalDocumentId = null; // Store prepayment reference
 
         // For credit sales (debt), Azerbaijan fiscal rules require recording as cash sale
         if ($sale->payment_status === 'credit' && $sale->payments->isEmpty()) {
@@ -818,6 +982,18 @@ class FiscalPrinterService
                         break;
                     case 'bonus':
                         $bonusSum += $amount;
+                        break;
+                    case 'hədiyyə_kartı':
+                    case 'hediyye_karti':
+                    case 'gift_card':
+                        $prepaymentSum += $amount;
+                        // Get gift card fiscal document ID for prepayment reference
+                        if ($payment->gift_card_id) {
+                            $giftCard = \App\Models\GiftCard::find($payment->gift_card_id);
+                            if ($giftCard && $giftCard->fiscal_document_id) {
+                                $giftCardFiscalDocumentId = $giftCard->fiscal_document_id;
+                            }
+                        }
                         break;
                     default:
                         $cashSum += $amount;
@@ -868,16 +1044,25 @@ class FiscalPrinterService
             'vatAmounts' => $vatAmounts,
         ];
 
+        // Add parents array if gift card payment is used (reference to prepayment)
+        if ($giftCardFiscalDocumentId) {
+            $data['parents'] = [$giftCardFiscalDocumentId];
+        }
+
         // Add creditContract if bank credit payment is used and contract number is configured
         if ($creditSum > 0 && !empty($config->credit_contract_number)) {
             $data['creditContract'] = $config->credit_contract_number;
         }
+
+        // Get access token (will login if needed)
+        $accessToken = $this->getOmnitechAccessToken($config);
 
         // Format according to Omnitech API v2:
         // POST to http://ip:8989/v2
         // {"requestData": {"access_token": "...", "tokenData": {...}, "checkData": {...}}}
         return [
             'requestData' => [
+                'access_token' => $accessToken,
                 'tokenData' => [
                     'parameters' => [
                         'doc_type' => 'sale',
@@ -973,9 +1158,13 @@ class FiscalPrinterService
         // Get fiscal number (document number)
         $refundDocumentNumber = $return->sale?->fiscal_number ?? null;
 
+        // Get access token (will login if needed)
+        $accessToken = $this->getOmnitechAccessToken($config);
+
         // Format according to Omnitech API v2 for money_back
         return [
             'requestData' => [
+                'access_token' => $accessToken,
                 'tokenData' => [
                     'operationId' => 'createDocument',
                     'parameters' => [
@@ -2752,5 +2941,247 @@ class FiscalPrinterService
                 'error' => 'Failed to print X report: ' . $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Create fiscal prepayment document for gift card sale
+     * This is required by tax department when selling gift cards
+     */
+    public function createGiftCardPrepayment(int $accountId, \App\Models\GiftCard $giftCard, array $paymentData): array
+    {
+        $config = $this->getConfig($accountId);
+
+        if (!$config) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer not configured for this account',
+            ];
+        }
+
+        if (!$config->isConfigured()) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer is not active or IP address not set',
+            ];
+        }
+
+        $log = FiscalPrinterLog::create([
+            'account_id' => $accountId,
+            'sale_id' => null,
+            'status' => 'pending',
+            'request_data' => null,
+        ]);
+
+        try {
+            $response = $this->sendGiftCardPrepaymentToTerminal($config, $giftCard, $paymentData, $log);
+
+            if ($response['success']) {
+                $log->markAsSuccess($response);
+                return [
+                    'success' => true,
+                    'message' => 'Gift card prepayment fiscal created successfully',
+                    'fiscal_document_id' => $response['fiscal_document_id'] ?? null,
+                    'fiscal_number' => $response['fiscal_number'] ?? null,
+                    'log_id' => $log->id,
+                ];
+            } else {
+                $log->markAsFailed($response['error']);
+                return [
+                    'success' => false,
+                    'error' => $response['error'],
+                    'log_id' => $log->id,
+                ];
+            }
+        } catch (\Exception $e) {
+            $log->markAsFailed($e->getMessage());
+            Log::error('Gift card fiscal prepayment failed', [
+                'account_id' => $accountId,
+                'gift_card_id' => $giftCard->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Failed to create gift card fiscal prepayment: ' . $e->getMessage(),
+                'log_id' => $log->id,
+            ];
+        }
+    }
+
+    /**
+     * Send gift card prepayment request to fiscal terminal
+     */
+    protected function sendGiftCardPrepaymentToTerminal(FiscalPrinterConfig $config, \App\Models\GiftCard $giftCard, array $paymentData, FiscalPrinterLog $log): array
+    {
+        $requestData = $this->formatGiftCardPrepaymentRequest($config, $giftCard, $paymentData);
+
+        $log->update(['request_data' => $requestData]);
+
+        $url = $requestData['url'];
+        $headers = $requestData['headers'];
+        $body = $requestData['body'];
+
+        $response = Http::withHeaders($headers)
+            ->timeout(30)
+            ->post($url, $body);
+
+        if (!$response->successful()) {
+            return [
+                'success' => false,
+                'error' => 'Fiscal printer connection failed: ' . $response->status(),
+            ];
+        }
+
+        $responseData = $response->json();
+
+        // Parse response based on provider
+        if ($config->provider === 'caspos') {
+            if (isset($responseData['code']) && $responseData['code'] === '0') {
+                return [
+                    'success' => true,
+                    'fiscal_document_id' => $responseData['data']['document_id'] ?? null,
+                    'fiscal_number' => $responseData['data']['number'] ?? null,
+                    'document_number' => $responseData['data']['document_number'] ?? null,
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => $responseData['message'] ?? 'Unknown Caspos error',
+                ];
+            }
+        } elseif ($config->provider === 'omnitech') {
+            if (isset($responseData['success']) && $responseData['success']) {
+                return [
+                    'success' => true,
+                    'fiscal_document_id' => $responseData['data']['fiscal_document_id'] ?? null,
+                    'fiscal_number' => $responseData['data']['fiscal_number'] ?? null,
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => $responseData['error'] ?? 'Unknown Omnitech error',
+                ];
+            }
+        }
+
+        return [
+            'success' => false,
+            'error' => 'Unsupported fiscal provider',
+        ];
+    }
+
+    /**
+     * Format gift card prepayment request for both providers
+     */
+    protected function formatGiftCardPrepaymentRequest(FiscalPrinterConfig $config, \App\Models\GiftCard $giftCard, array $data): array
+    {
+        $url = $this->getApiEndpoint($config, 'sale');
+
+        if ($config->provider === 'caspos') {
+            // Caspos uses "prepaymentProducts" operation for gift cards
+            $cashAmount = (float) ($data['cash_amount'] ?? 0);
+            $cardAmount = (float) ($data['card_amount'] ?? 0);
+            $totalSum = $giftCard->denomination;
+
+            return [
+                'url' => $url,
+                'provider' => 'caspos',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => [
+                    'operation' => 'prepaymentProducts',
+                    'username' => $config->username,
+                    'password' => $config->password,
+                    'data' => [
+                        'documentUUID' => \Illuminate\Support\Str::uuid()->toString(),
+                        'sum' => $totalSum,
+                        'vatType' => 1,
+                        'cashPayment' => $cashAmount,
+                        'cardPayment' => $cardAmount,
+                        'bonusPayment' => 0.0,
+                        'items' => [
+                            [
+                                'name' => 'Hədiyyə kartı',
+                                'code' => $giftCard->card_number,
+                                'quantity' => 1.0,
+                                'salePrice' => $totalSum,
+                                'codeType' => 1,
+                                'quantityType' => 0, // 0 = Ədəd (pieces), not kg
+                                'vatType' => 1,
+                                'itemUuid' => \Illuminate\Support\Str::uuid()->toString(),
+                            ],
+                        ],
+                        'clientName' => $data['client_name'] ?? null,
+                        'cashierName' => $this->getCashierDisplayName(auth()->user()),
+                        'currency' => 'AZN',
+                        'note' => 'Hədiyyə kartı',
+                    ],
+                ],
+            ];
+        }
+
+        if ($config->provider === 'omnitech') {
+            // Omnitech uses "prepay" doc_type with check_type 34
+            $cashAmount = (float) ($data['cash_amount'] ?? 0);
+            $cardAmount = (float) ($data['card_amount'] ?? 0);
+            $totalSum = $giftCard->denomination;
+
+            return [
+                'url' => $url,
+                'provider' => 'omnitech',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => [
+                    'requestData' => [
+                        'tokenData' => [
+                            'parameters' => [
+                                'doc_type' => 'prepay',
+                                'data' => [
+                                    'cashier' => $this->getCashierDisplayName(auth()->user()),
+                                    'currency' => 'AZN',
+                                    'sum' => $totalSum,
+                                    'cashSum' => $cashAmount,
+                                    'cashlessSum' => $cardAmount,
+                                    'prepaymentSum' => 0.0,
+                                    'creditSum' => 0.0,
+                                    'bonusSum' => 0.0,
+                                    'incomingSum' => $cashAmount,
+                                    'items' => [
+                                        [
+                                            'itemName' => 'Hədiyyə kartı',
+                                            'itemCode' => $giftCard->card_number,
+                                            'itemCodeType' => 1,
+                                            'itemQuantityType' => 0,
+                                            'itemQuantity' => 1.0,
+                                            'itemPrice' => $totalSum,
+                                            'itemSum' => $totalSum,
+                                            'itemVatPercent' => $config->default_tax_rate ?? 18,
+                                            'itemUuid' => \Illuminate\Support\Str::uuid()->toString(),
+                                        ],
+                                    ],
+                                    'vatAmounts' => [
+                                        [
+                                            'vatSum' => $totalSum,
+                                            'vatPercent' => $config->default_tax_rate ?? 18,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'operationId' => 'createDocument',
+                            'version' => 1,
+                        ],
+                        'checkData' => [
+                            'check_type' => 34, // Prepayment check type
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        throw new \Exception('Gift card prepayment only supported for Caspos and Omnitech');
     }
 }

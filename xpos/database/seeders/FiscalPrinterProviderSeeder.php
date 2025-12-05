@@ -51,6 +51,7 @@ class FiscalPrinterProviderSeeder extends Seeder
                         'money_back' => 'moneyBack',
                         'credit_pay' => 'credit',
                         'advance_sale' => 'prepayment',
+                        'gift_card_prepayment' => 'prepaymentProducts', // Gift card prepayment
                         'deposit' => 'deposit',
                         'withdraw' => 'withDraw',
                         'open_cashbox' => 'openCashbox',

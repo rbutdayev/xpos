@@ -54,15 +54,19 @@ class AuthenticatedSessionController extends Controller
 
         $redirectRoute = route('dashboard', absolute: false);
 
-        // Force a full page reload to refresh CSRF token in meta tag
-        // This prevents "page expired" errors when switching between accounts
+        // CRITICAL: Always force a full page reload after login
+        // This ensures the fresh CSRF token from the new session is loaded
+        // We MUST use absolute URL for X-Inertia-Location to trigger full reload
         $response = redirect()->intended($redirectRoute);
 
-        // For Inertia requests, force a full page reload by setting X-Inertia-Location
-        // This ensures the new CSRF token is properly loaded
-        if ($request->header('X-Inertia')) {
-            $response->header('X-Inertia-Location', $redirectRoute);
-        }
+        // Force full page reload by setting X-Inertia-Location header
+        // This is required for ALL login requests, not just Inertia
+        $response->header('X-Inertia-Location', url($redirectRoute));
+
+        // Prevent caching to ensure fresh CSRF token is loaded
+        $response->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        $response->header('Pragma', 'no-cache');
+        $response->header('Expires', '0');
 
         return $response;
     }
@@ -89,6 +93,10 @@ class AuthenticatedSessionController extends Controller
         $request->session()->flash('user_logged_out', true);
         $request->session()->flash('logged_out_user_id', $userId);
 
-        return redirect('/');
+        // Force full page reload to get fresh CSRF token
+        // This prevents 419 errors when user tries to login again
+        $response = redirect('/');
+        $response->header('X-Inertia-Location', url('/'));
+        return $response;
     }
 }

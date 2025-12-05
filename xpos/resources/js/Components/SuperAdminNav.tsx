@@ -53,6 +53,7 @@ export default function SuperAdminNav({ activePage }: Props) {
             ),
             items: [
                 { path: '/admin/loyalty-cards', label: 'Loaylıq Kartları' },
+                { path: '/admin/gift-cards', label: 'Hədiyyə Kartları' },
                 { path: '/admin/fiscal-printer-providers', label: 'Fiskal Printerlər' },
             ]
         },

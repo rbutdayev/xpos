@@ -1,0 +1,896 @@
+{
+	"info": {
+		"_postman_id": "cf5cfe58-afaa-4fe7-a1f9-b95a6ad7b2a5",
+		"name": "Omni Soft - API Collection (ver. 2.0)",
+		"description": "# **Compatibility**\n\n“Omnicashier” software’s API receive JSON requests on an HTTP socket. By default, port 8989, Ethernet interface is listened.\n\nConfiguration\n\nConfigure IP addresses on Ethernet network interface of the TPS575 device. API link example 192.168.1.103:8989/v2\n\n### **Launch**\n\nLaunch API from the “Omnicashier” software, at login screen press API button.\n\nOn Test units default users:\n\nUser: SuperApi Password: 123\n\nTo obtain API grade user on Production units, please contact technical support via\n\n+994(12)310-1711 or \\*1711.\n\n### **Internet connectivity**\n\nTPS575 consumes \\~ 1.5 Mb / s of network traffic for correct operation, where ½ is the initial traffic and ½ is the incoming traffic.\n\nUnder the condition of continuous intensive work (about 2 checks per minute) for a month, you will need up to 5GB of total traffic.  \n\n### **Compatibility of “Omnicashier” with token version**\n\nModules \"prepayment\" and \"credit\" are available with tokens, that have firmware version higher than 2.18.0",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "33367463"
+	},
+	"item": [
+		{
+			"name": "Get Info",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 41\r\n        },\r\n        \"access_token\": \"{{atoken}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Get info about token and last document number \"check_type\" – 41 get info operation\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"data\": {\n        \"cashbox_factory_number\": \"002D0035304E50152030384B\",\n        \"cashbox_tax_number\": \"test_00116\",\n        \"cashregister_factory_number\": \"all\",\n        \"cashregister_model\": \"test_all\",\n        \"company_name\": \"\\\"OMNITECH\\\" MƏHDUD MƏSULİYYƏTLİ CƏMİYYƏTİ\",\n        \"company_tax_number\": \"1504533971\",\n        \"firmware_version\": \"2.31.0\",\n        \"last_doc_number\": 4959,\n        \"last_online_time\": \"2024-01-18T13:33:11Z\",\n        \"not_after\": \"2024-01-26T12:20:04Z\",\n        \"not_before\": \"2021-01-26T12:19:34Z\",\n        \"object_address\": \"AZ1065 BAKI ŞƏHƏRİ YASAMAL RAYONU MURTUZA MUXTAROV ev.188 m.33\",\n        \"object_name\": \"OFİS\",\n        \"object_tax_number\": \"1504533971-13001\",\n        \"qr_code_url\": \"https://monitoring.e-kassa.az/#/index?doc=\",\n        \"state\": \"ACTIVE\"\n    },\n    \"message\": \"Successful operation\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var url = \"http://10.11.46.180:8989/v2\"\r",
+							"pm.globals.set(\"url\", url);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"var atoken = jsonData.access_token;\r",
+							"pm.globals.set(\"atoken\", atoken)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 40\r\n        },\r\n        \"name\": \"SuperApi\",\r\n        \"password\": \"123\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "# **Authorization**\n\n\"name\" – API grade account username  \n“password” – API grade account password  \n\"check_type\" – 40 Login operation\n\n#### Example Response\n\n``` json\n{\n    \"access_token\": \"ooXdkXvLjHlaZSSzgDD8zg==\",\n    \"code\": 1,\n    \"message\": \"login success\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Shift status",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 14\r\n        },\r\n        \"access_token\": \"{{atoken}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Shift and unit information\n\n\"check_type\" – 14 Shift status operation\n\n\"access_token\" – Session key generated during login opera**tion**\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"desc\": \"shift is open\",\n    \"message\": \"Successful operation\",\n    \"serial\": \"2001G57500300005\",\n    \"shiftStatus\": true,\n    \"shift_open_time\": \"2024-01-17T21:06:17\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Close shift & Z-Report",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"checkData\": {\r\n            \"check_type\": 13\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Closing fiscal shift, printing and obtaining Z-Report\n\n\"check_type\" – 13 Close shift & Z-Report operation\n\n\"access_token\" – Session key generated during login operation\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"data\": {\n        \"createdAtUtc\": \"2024-01-19T14:27:02\",\n        \"currencies\": [\n            {\n                \"correctionBonusSum\": 0.04,\n                \"correctionCashSum\": 0.02,\n                \"correctionCashlessSum\": 0.03,\n                \"correctionCount\": 1,\n                \"correctionCreditSum\": 0.0,\n                \"correctionPrepaymentSum\": 0.0,\n                \"correctionSum\": 0.09,\n                \"correctionVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 0.09\n                    }\n                ],\n                \"creditpayBonusSum\": 0.0,\n                \"creditpayCashSum\": 0.0,\n                \"creditpayCashlessSum\": 0.0,\n                \"creditpayCount\": 0,\n                \"creditpayCreditSum\": 0.0,\n                \"creditpayPrepaymentSum\": 0.0,\n                \"creditpaySum\": 0.0,\n                \"creditpayVatAmounts\": [],\n                \"currency\": \"AZN\",\n                \"depositCount\": 4,\n                \"depositSum\": 0.08,\n                \"moneyBackBonusSum\": 0.0,\n                \"moneyBackCashSum\": 10.2,\n                \"moneyBackCashlessSum\": 8.0,\n                \"moneyBackCount\": 3,\n                \"moneyBackCreditSum\": 0.0,\n                \"moneyBackPrepaymentSum\": 0.0,\n                \"moneyBackSum\": 18.2,\n                \"moneyBackVatAmounts\": [\n                    {\n                        \"vatPercent\": 0.0,\n                        \"vatSum\": 0.2\n                    },\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 18.0\n                    }\n                ],\n                \"prepayBonusSum\": 0.0,\n                \"prepayCashSum\": 0.0,\n                \"prepayCashlessSum\": 0.0,\n                \"prepayCount\": 0,\n                \"prepayCreditSum\": 0.0,\n                \"prepaySum\": 0.0,\n                \"prepayVatAmounts\": [],\n                \"rollbackBonusSum\": 0.0,\n                \"rollbackCashSum\": 10.0,\n                \"rollbackCashlessSum\": 8.0,\n                \"rollbackCount\": 1,\n                \"rollbackCreditSum\": 0.0,\n                \"rollbackPrepaymentSum\": 0.0,\n                \"rollbackSum\": 18.0,\n                \"rollbackVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 18.0\n                    }\n                ],\n                \"saleBonusSum\": 0.0,\n                \"saleCashSum\": 30.07,\n                \"saleCashlessSum\": 1856.77,\n                \"saleCount\": 5.0,\n                \"saleCreditSum\": 0.0,\n                \"salePrepaymentSum\": 0.02,\n                \"saleSum\": 1886.84,\n                \"saleVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 54.07\n                    },\n                    {\n                        \"vatPercent\": 0.0,\n                        \"vatSum\": 1832.77\n                    }\n                ],\n                \"withdrawCount\": 1,\n                \"withdrawSum\": 0.01\n            }\n        ],\n        \"docCountToSend\": 0,\n        \"document_id\": \"HgirmChyx3grbi5dC73bvc7X9xAersEFmTxnoMux1Eu1\",\n        \"firstDocNumber\": 4960,\n        \"lastDocNumber\": 4974,\n        \"reportNumber\": 510,\n        \"shiftOpenAtUtc\": \"2024-01-18T17:46:58\"\n    },\n    \"message\": \"Successful operation\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Open shift",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 15\r\n        },\r\n        \"access_token\": \"{{atoken}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Open fiscal shift\n\n\"check_type\" – 15 Open shift operation\n\n\"access_token\" – Session key generated during login operation\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"Successful operation\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Sale",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"pos_status\": \"true\",\r\n        \"int_ref\": \"123456\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"sale\",\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"Mask\",\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Shirt\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"15648546\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 2.0,\r\n                            \"itemPrice\": 0.50,\r\n                            \"itemSum\": 1.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        },\r\n                        {\r\n                            \"itemName\": \"Trousers\",\r\n                            \"itemCodeType\": 2,\r\n                            \"itemCode\": \"1894981988122\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 0.50,\r\n                            \"itemSum\": 0.50,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"sum\": 1.50,\r\n                    \"cashSum\": 1.0,\r\n                    \"cashlessSum\": 0.50,\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"incomingSum\": 1.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 1.50,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 1\r\n        }\r\n    },\r\n    \"receiptDetails\": [\r\n        {\r\n            \"t\": 0,\r\n            \"k\": \"\",\r\n            \"v\": \"Please keep this receipt\"\r\n        },\r\n        {\r\n            \"t\": 1,\r\n            \"k\": \"Number\",\r\n            \"v\": \"new number\"\r\n        },\r\n        {\r\n            \"t\": 2,\r\n            \"k\": \"Number\",\r\n            \"v\": \"5258645\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Sale receipt.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 4961,\n    \"long_id\": \"Gnu27LbF81Ub4ebtnYD4BnecF5oKD4KFcuNK9EjHvhku\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 2,\n    \"short_id\": \"Gnu27LbF81Ub\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Deposit",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"data\": {\r\n                    \"cashSum\": 10.0\r\n                }\r\n            }\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 7\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.80:8989/v2",
+				"description": "Cash deposit receipt\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 4960,\n    \"long_id\": \"2vjSLjSm7xKjycWMdEVoD5BEmEXhgsyLkUrRwCNb6Agk\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 1,\n    \"short_id\": \"2vjSLjSm7xKj\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Reprint after printing error",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 16\r\n        },\r\n        \"access_token\": \"{{atoken}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Reprint half-printed receipt after paper renewal\n\n\"check_type\" – 16 Reprint after printing error operation\n\n\"access_token\" – Session key generated during login operation\n\n#### Example Response\n\n``` json\n{\n    \"code\": 1,\n    \"document_number\": 4962,\n    \"long_id\": \"AYDtoZsSR17S1t7SThCPNPfJEnrqCHQAF91FafUo3E1G\",\n    \"message\": \"Success\",\n    \"shift_document_number\": 3,\n    \"short_id\": \"AYDtoZsSR17S\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Rollback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"checkData\": {\r\n            \"check_type\": 10\r\n        },\r\n        \"fiscalId\": \"9mcZobUYvqnnsmxxF1JpTg9uNkCgT6na6Q833SQiBLBh\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Receipt of cancellation of sales check in the framework of the current open fiscal shift. Request should contain the “long_id” of sale receipt in \"fiscalId\" parameter.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 4970,\n    \"long_id\": \"FXpzRMrLhRSx8xHf9AhGFhMe4wqYhM1PoXecBrr3gr5G\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 11,\n    \"short_id\": \"FXpzRMrLhRSx\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Moneyback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"fad\",\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Shirt\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"15648546\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 2.0,\r\n                            \"itemPrice\": 0.50,\r\n                            \"itemSum\": 1.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        },\r\n                        {\r\n                            \"itemName\": \"Trousers\",\r\n                            \"itemCodeType\": 2,\r\n                            \"itemCode\": \"1894981988122\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 4.0,\r\n                            \"itemPrice\": 0.50,\r\n                            \"itemSum\": 2,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"lastOperationAtUtc\": \"\",\r\n                    \"parentDocument\": \"2GY9QrBXZHvabewN3vmU51gcW2cR1hTtwYtP1PEk9xhG\",\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"refund_document_number\": \"2168\",\r\n                    \"refund_short_document_id\": \"2GY9QrBXZHva\",\r\n                    \"sum\": 3,\r\n                    \"cashSum\": 2.50,\r\n                    \"cashlessSum\": 0.50,\r\n                    \"creditSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"incomingSum\": 2.50,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 3,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"money_back\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 100\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.137:8989/v2",
+				"description": "The return receipt of the goods sold in both currently open and already closed fiscal shifts. Request should contain the “long_id” of sale receipt in \"parentDocument\" parameter. Request should contain the \"short_id\" of sale document in “refund_short_document_id\" parameter.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 4972,\n    \"long_id\": \"7gtT1LXnaVvgNrni8rZ9ir4kPbJCon9jWVhf1H5obRq9\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 13,\n    \"short_id\": \"7gtT1LXnaVvg\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Withdraw",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"data\": {\r\n                    \"cashSum\": 10.0\r\n                }\r\n            }\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 8\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Cash withdrawal receipt.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 4973,\n    \"long_id\": \"AQsobGS8bp5W9UegCGXr2CyMfLVFSNqSTN9b9V9jbZWF\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 14,\n    \"short_id\": \"AQsobGS8bp5W\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Correction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"doc_type\": \"correction\",\r\n                \"data\": {\r\n                    \"cashier\": \"Masha\",\r\n                    \"firstOperationAtUtc\": \"2024-10-07T08:00:00Z\",\r\n                    \"lastOperationAtUtc\": \"2024-10-08T14:00:00Z\",\r\n                    \"currency\": \"AZN\",\r\n                    \"sum\": 100.0,\r\n                    \"cashSum\": 50.0,\r\n                    \"cashlessSum\": 50.0,\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 100.0,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 19\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Correction receipt in case of non-inclusion of information to the fiscal device.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 4974,\n    \"long_id\": \"HBV59Ncnf4jV4QWoMiqUHGfXr5N9Jingb4UBtYSiAcUG\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 15,\n    \"short_id\": \"HBV59Ncnf4jV\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Receipt copy",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"checkData\": {\r\n            \"check_type\": 11\r\n        },\r\n        \"fiscalId\": \"9mcZobUYvqnnsmxxF1JpTg9uNkCgT6na6Q833SQiBLBh\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Printing receipt copy. Request should contain the “long_id” of sale receipt in \"fiscalId\" parameter.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"Successful operation\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "X-Report",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"checkData\": {\r\n            \"check_type\": 12\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Printing & obtaining X-Report  \n\"check_type\" – 12 X-Report operation\n\n\"access_token\" – Session key generated during login operation\n\n#### Example Response\n\n``` json\n{\n    \"_z\": 0,\n    \"code\": 0,\n    \"data\": {\n        \"createdAtUtc\": \"2024-01-19T14:23:45\",\n        \"currencies\": [\n            {\n                \"correctionBonusSum\": 0.04,\n                \"correctionCashSum\": 0.02,\n                \"correctionCashlessSum\": 0.03,\n                \"correctionCount\": 1,\n                \"correctionCreditSum\": 0.0,\n                \"correctionPrepaymentSum\": 0.0,\n                \"correctionSum\": 0.09,\n                \"correctionVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 0.09\n                    }\n                ],\n                \"creditpayBonusSum\": 0.0,\n                \"creditpayCashSum\": 0.0,\n                \"creditpayCashlessSum\": 0.0,\n                \"creditpayCount\": 0,\n                \"creditpayCreditSum\": 0.0,\n                \"creditpayPrepaymentSum\": 0.0,\n                \"creditpaySum\": 0.0,\n                \"creditpayVatAmounts\": [],\n                \"currency\": \"AZN\",\n                \"depositCount\": 4,\n                \"depositSum\": 0.08,\n                \"moneyBackBonusSum\": 0.0,\n                \"moneyBackCashSum\": 10.2,\n                \"moneyBackCashlessSum\": 8.0,\n                \"moneyBackCount\": 3,\n                \"moneyBackCreditSum\": 0.0,\n                \"moneyBackPrepaymentSum\": 0.0,\n                \"moneyBackSum\": 18.2,\n                \"moneyBackVatAmounts\": [\n                    {\n                        \"vatPercent\": 0.0,\n                        \"vatSum\": 0.2\n                    },\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 18.0\n                    }\n                ],\n                \"prepayBonusSum\": 0.0,\n                \"prepayCashSum\": 0.0,\n                \"prepayCashlessSum\": 0.0,\n                \"prepayCount\": 0,\n                \"prepayCreditSum\": 0.0,\n                \"prepaySum\": 0.0,\n                \"prepayVatAmounts\": [],\n                \"rollbackBonusSum\": 0.0,\n                \"rollbackCashSum\": 10.0,\n                \"rollbackCashlessSum\": 8.0,\n                \"rollbackCount\": 1,\n                \"rollbackCreditSum\": 0.0,\n                \"rollbackPrepaymentSum\": 0.0,\n                \"rollbackSum\": 18.0,\n                \"rollbackVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 18.0\n                    }\n                ],\n                \"saleBonusSum\": 0.0,\n                \"saleCashSum\": 30.07,\n                \"saleCashlessSum\": 1856.77,\n                \"saleCount\": 5.0,\n                \"saleCreditSum\": 0.0,\n                \"salePrepaymentSum\": 0.02,\n                \"saleSum\": 1886.84,\n                \"saleVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 54.07\n                    },\n                    {\n                        \"vatPercent\": 0.0,\n                        \"vatSum\": 1832.77\n                    }\n                ],\n                \"withdrawCount\": 1,\n                \"withdrawSum\": 0.01\n            }\n        ],\n        \"docCountToSend\": 0,\n        \"document_id\": \"\",\n        \"firstDocNumber\": 4960,\n        \"lastDocNumber\": 4974,\n        \"reportNumber\": 510,\n        \"shiftOpenAtUtc\": \"2024-01-18T17:46:58\"\n    },\n    \"message\": \"Successful operation\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Transaction history",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"date_start\": \"2021-01-09 00:35:00\",\r\n        \"date_end\": \"2021-01-09 00:45:00\",\r\n        \"checkData\": {\r\n            \"check_type\": 17\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Provides the sale transactions history for specified period.\n\n\"check_type\" – 17 Transaction history operation\n\n\"access_token\" – Session key generated during login operation\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"message\": \"success\",\n    \"transactions\": [\n        {\n            \"additionalData\": [],\n            \"avans_payment\": 0.0,\n            \"bonus_payment\": 0.04,\n            \"card_payment\": 0.03,\n            \"cashBoxTaxNumber\": \"\",\n            \"cashRegisterFactoryNumber\": \"\",\n            \"cash_payment\": 0.02,\n            \"check_type\": 19,\n            \"createdAtUtc\": \"2024-01-19T13:27:14\",\n            \"credit_payment\": 0.0,\n            \"date\": \"2024-01-19 14:14:16\",\n            \"docNumber\": 0,\n            \"documentId\": \"\",\n            \"id\": 753,\n            \"incomingSum\": 0,\n            \"int_ref\": \"\",\n            \"mainCheckType\": 0,\n            \"moneyBackType\": 0,\n            \"operationSession\": \"5912d5430baea9a9e3ec5dd06edcd179\",\n            \"operationStatus\": 1,\n            \"parents\": [],\n            \"payment_change\": 0.0,\n            \"payment_discount\": 0,\n            \"prev_doc_number\": -1,\n            \"products_list\": \"[]\",\n            \"products_quantity\": 0,\n            \"receiptDetails\": [],\n            \"rrn\": \"\",\n            \"seller_name\": \"Masha\",\n            \"service_type\": \"\",\n            \"storeWebSiteAddress\": \"\",\n            \"summary_money\": 0.09,\n            \"token_request\": \"{\\\"operationId\\\":\\\"createDocument\\\",\\\"parameters\\\":{\\\"access_token\\\":\\\"RdqMJrADtvTePEteKaWgSQ==\\\",\\\"data\\\":{\\\"bonusSum\\\":0.0400,\\\"cashSum\\\":0.0200,\\\"cashier\\\":\\\"Masha\\\",\\\"cashlessSum\\\":0.0300,\\\"creditSum\\\":0.00,\\\"currency\\\":\\\"AZN\\\",\\\"firstOperationAtUtc\\\":\\\"2023-01-01T08:00:00Z\\\",\\\"lastOperationAtUtc\\\":\\\"2023-01-08T14:00:00Z\\\",\\\"moneyBackType\\\":0,\\\"prepaymentSum\\\":0.00,\\\"sum\\\":0.0900,\\\"vatAmounts\\\":[{\\\"vatPercent\\\":18.0000,\\\"vatSum\\\":0.0900}]},\\\"doc_type\\\":\\\"correction\\\"},\\\"version\\\":1}\",\n            \"token_response\": \"{\\\"code\\\":0,\\\"data\\\":{\\\"document_id\\\":\\\"HBV59Ncnf4jV4QWoMiqUHGfXr5N9Jingb4UBtYSiAcUG\\\",\\\"document_number\\\":4974,\\\"shift_document_number\\\":15,\\\"short_document_id\\\":\\\"HBV59Ncnf4jV\\\"},\\\"message\\\":\\\"Successful operation\\\"}\",\n            \"total_discount_amount\": 0,\n            \"total_discount_percent\": 0,\n            \"transaction_id\": \"HBV59Ncnf4jV\"\n        },\n        {\n            \"additionalData\": [],\n            \"avans_payment\": 0.0,\n            \"bonus_payment\": 0.0,\n            \"card_payment\": 8.0,\n            \"cashBoxTaxNumber\": \"\",\n            \"cashRegisterFactoryNumber\": \"\",\n            \"cash_payment\": 10.0,\n            \"check_type\": 3,\n            \"createdAtUtc\": \"2024-01-19T13:27:14\",\n            \"credit_payment\": 0.0,\n            \"date\": \"2024-01-19 14:08:39\",\n            \"docNumber\": 0,\n            \"documentId\": \"\",\n            \"id\": 752,\n            \"incomingSum\": 0,\n            \"int_ref\": \"\",\n            \"mainCheckType\": 0,\n            \"moneyBackType\": 0,\n            \"operationSession\": \"5912d5430baea9a9e3ec5dd06edcd179\",\n            \"operationStatus\": 3,\n            \"parents\": [],\n            \"payment_change\": 0.0,\n            \"payment_discount\": 0,\n            \"prev_doc_number\": -1,\n            \"products_list\": \"[{\\\"buyPrice\\\":0.00,\\\"categoryId\\\":-1,\\\"code\\\":\\\"10526589200149\\\",\\\"description\\\":\\\"api\\\",\\\"discount\\\":0.00,\\\"discount_amount\\\":0.00,\\\"field_temp\\\":\\\"\\\",\\\"id\\\":0,\\\"image\\\":\\\"\\\",\\\"itemCodeType\\\":1,\\\"itemSum\\\":8.0000,\\\"item_discount_percent\\\":0.00,\\\"nds\\\":18,\\\"ndsSummary\\\":0.6102,\\\"ndsType\\\":0,\\\"productType\\\":\\\"0\\\",\\\"quantity\\\":2.0000,\\\"sellPrice\\\":4.0000,\\\"stockCount\\\":0.0,\\\"stockPrice\\\":0.0,\\\"title\\\":\\\"Tshirt3\\\",\\\"unitType\\\":0},{\\\"buyPrice\\\":0.00,\\\"categoryId\\\":-1,\\\"code\\\":\\\"1052658920234\\\",\\\"description\\\":\\\"api\\\",\\\"discount\\\":0.00,\\\"discount_amount\\\":0.00,\\\"field_temp\\\":\\\"\\\",\\\"id\\\":0,\\\"image\\\":\\\"\\\",\\\"itemCodeType\\\":1,\\\"itemSum\\\":4.0000,\\\"item_discount_percent\\\":0.00,\\\"nds\\\":18,\\\"ndsSummary\\\":0.3051,\\\"ndsType\\\":0,\\\"productType\\\":\\\"0\\\",\\\"quantity\\\":2.0000,\\\"sellPrice\\\":2.0000,\\\"stockCount\\\":0.0,\\\"stockPrice\\\":0.0,\\\"title\\\":\\\"Tshirt5\\\",\\\"unitType\\\":0},{\\\"buyPrice\\\":0.00,\\\"categoryId\\\":-1,\\\"code\\\":\\\"1089200149\\\",\\\"description\\\":\\\"api\\\",\\\"discount\\\":0.00,\\\"discount_amount\\\":0.00,\\\"field_temp\\\":\\\"\\\",\\\"id\\\":0,\\\"image\\\":\\\"\\\",\\\"itemCodeType\\\":1,\\\"itemSum\\\":6.0000,\\\"item_discount_percent\\\":0.00,\\\"nds\\\":18,\\\"ndsSummary\\\":0.4577,\\\"ndsType\\\":0,\\\"productType\\\":\\\"0\\\",\\\"quantity\\\":2.0000,\\\"sellPrice\\\":3.0000,\\\"stockCount\\\":0.0,\\\"stockPrice\\\":0.0,\\\"title\\\":\\\"Tshirt5\\\",\\\"unitType\\\":0}]\",\n            \"products_quantity\": 0,\n            \"receiptDetails\": [],\n            \"rrn\": \"\",\n            \"seller_name\": \"Mask\",\n            \"service_type\": \"\",\n            \"storeWebSiteAddress\": \"\",\n            \"summary_money\": 18.0,\n            \"token_request\": \"{\\\"operationId\\\":\\\"createDocument\\\",\\\"parameters\\\":{\\\"access_token\\\":\\\"RdqMJrADtvTePEteKaWgSQ==\\\",\\\"data\\\":{\\\"bonusSum\\\":0.00,\\\"cashSum\\\":10.0000,\\\"cashier\\\":\\\"Mask\\\",\\\"cashlessSum\\\":8.0000,\\\"creditSum\\\":0.00,\\\"currency\\\":\\\"AZN\\\",\\\"firstOperationAtUtc\\\":\\\"\\\",\\\"items\\\":[{\\\"discount\\\":0.00,\\\"itemCode\\\":\\\"10526589200149\\\",\\\"itemCodeType\\\":1,\\\"itemName\\\":\\\"Tshirt3\\\",\\\"itemPrice\\\":4.0000,\\\"itemQuantity\\\":2.0000,\\\"itemQuantityType\\\":0,\\\"itemSum\\\":8.0000,\\\"itemVatPercent\\\":18.0000},{\\\"discount\\\":0.00,\\\"itemCode\\\":\\\"1052658920234\\\",\\\"itemCodeType\\\":1,\\\"itemName\\\":\\\"Tshirt5\\\",\\\"itemPrice\\\":2.0000,\\\"itemQuantity\\\":2.0000,\\\"itemQuantityType\\\":0,\\\"itemSum\\\":4.0000,\\\"itemVatPercent\\\":18.0000},{\\\"discount\\\":0.00,\\\"itemCode\\\":\\\"1089200149\\\",\\\"itemCodeType\\\":1,\\\"itemName\\\":\\\"Tshirt5\\\",\\\"itemPrice\\\":3.0000,\\\"itemQuantity\\\":2.0000,\\\"itemQuantityType\\\":0,\\\"itemSum\\\":6.0000,\\\"itemVatPercent\\\":18.0000}],\\\"lastOperationAtUtc\\\":\\\"\\\",\\\"moneyBackType\\\":0,\\\"parentDocument\\\":\\\"HM3AQLafbqnD8pq94pF4EX9sTTiHRXjmsbJdsyPGLJzG\\\",\\\"prepaymentSum\\\":0.00,\\\"refund_document_number\\\":\\\"4971\\\",\\\"refund_short_document_id\\\":\\\"HM3AQLafbqnD\\\",\\\"sum\\\":18.0000,\\\"vatAmounts\\\":[{\\\"vatPercent\\\":18.0000,\\\"vatSum\\\":18.0000}]},\\\"doc_type\\\":\\\"money_back\\\"},\\\"version\\\":1}\",\n            \"token_response\": \"{\\\"code\\\":0,\\\"data\\\":{\\\"document_id\\\":\\\"7gtT1LXnaVvgNrni8rZ9ir4kPbJCon9jWVhf1H5obRq9\\\",\\\"document_number\\\":4972,\\\"shift_document_number\\\":13,\\\"short_document_id\\\":\\\"7gtT1LXnaVvg\\\"},\\\"message\\\":\\\"Successful operation\\\"}\",\n            \"total_discount_amount\": 0,\n            \"total_discount_percent\": 0,\n            \"transaction_id\": \"7gtT1LXnaVvg\"\n        },\n        {\n            \"additionalData\": [],\n            \"avans_payment\": 0.0,\n            \"bonus_payment\": 0.0,\n            \"card_payment\": 8.0,\n            \"cashBoxTaxNumber\": \"\",\n            \"cashRegisterFactoryNumber\": \"\",\n            \"cash_payment\": 10.0,\n            \"check_type\": 1,\n            \"createdAtUtc\": \"2024-01-19T13:27:14\",\n            \"credit_payment\": 0.0,\n            \"date\": \"2024-01-19 14:07:26\",\n            \"docNumber\": 0,\n            \"documentId\": \"\",\n            \"id\": 751,\n            \"incomingSum\": 0,\n            \"int_ref\": \"\",\n            \"mainCheckType\": 0,\n            \"moneyBackType\": 0,\n            \"operationSession\": \"5912d5430baea9a9e3ec5dd06edcd179\",\n            \"operationStatus\": 1,\n            \"parents\": [],\n            \"payment_change\": 0.0,\n            \"payment_discount\": 0,\n            \"prev_doc_number\": -1,\n            \"products_list\": \"[{\\\"buyPrice\\\":0.00,\\\"categoryId\\\":-1,\\\"code\\\":\\\"10526589200149\\\",\\\"description\\\":\\\"api\\\",\\\"discount\\\":0.00,\\\"discount_amount\\\":0.00,\\\"field_temp\\\":\\\"\\\",\\\"id\\\":0,\\\"image\\\":\\\"\\\",\\\"itemCodeType\\\":1,\\\"itemSum\\\":8.0000,\\\"item_discount_percent\\\":0.00,\\\"nds\\\":18,\\\"ndsSummary\\\":0.6102,\\\"ndsType\\\":0,\\\"productType\\\":\\\"0\\\",\\\"quantity\\\":2.0000,\\\"sellPrice\\\":4.0000,\\\"stockCount\\\":0.0,\\\"stockPrice\\\":0.0,\\\"title\\\":\\\"Tshirt3\\\",\\\"unitType\\\":0},{\\\"buyPrice\\\":0.00,\\\"categoryId\\\":-1,\\\"code\\\":\\\"1052658920234\\\",\\\"description\\\":\\\"api\\\",\\\"discount\\\":0.00,\\\"discount_amount\\\":0.00,\\\"field_temp\\\":\\\"\\\",\\\"id\\\":0,\\\"image\\\":\\\"\\\",\\\"itemCodeType\\\":1,\\\"itemSum\\\":4.0000,\\\"item_discount_percent\\\":0.00,\\\"nds\\\":18,\\\"ndsSummary\\\":0.3051,\\\"ndsType\\\":0,\\\"productType\\\":\\\"0\\\",\\\"quantity\\\":2.0000,\\\"sellPrice\\\":2.0000,\\\"stockCount\\\":0.0,\\\"stockPrice\\\":0.0,\\\"title\\\":\\\"Tshirt5\\\",\\\"unitType\\\":0},{\\\"buyPrice\\\":0.00,\\\"categoryId\\\":-1,\\\"code\\\":\\\"1089200149\\\",\\\"description\\\":\\\"api\\\",\\\"discount\\\":0.00,\\\"discount_amount\\\":0.00,\\\"field_temp\\\":\\\"\\\",\\\"id\\\":0,\\\"image\\\":\\\"\\\",\\\"itemCodeType\\\":1,\\\"itemSum\\\":6.0000,\\\"item_discount_percent\\\":0.00,\\\"nds\\\":18,\\\"ndsSummary\\\":0.4577,\\\"ndsType\\\":0,\\\"productType\\\":\\\"0\\\",\\\"quantity\\\":2.0000,\\\"sellPrice\\\":3.0000,\\\"stockCount\\\":0.0,\\\"stockPrice\\\":0.0,\\\"title\\\":\\\"Tshirt5\\\",\\\"unitType\\\":0}]\",\n            \"products_quantity\": 0,\n            \"receiptDetails\": [],\n            \"rrn\": \"\",\n            \"seller_name\": \"Mask\",\n            \"service_type\": \"\",\n            \"storeWebSiteAddress\": \"\",\n            \"summary_money\": 18.0,\n            \"token_request\": \"{\\\"operationId\\\":\\\"createDocument\\\",\\\"parameters\\\":{\\\"access_token\\\":\\\"RdqMJrADtvTePEteKaWgSQ==\\\",\\\"data\\\":{\\\"bonusSum\\\":0.00,\\\"cashSum\\\":10.0000,\\\"cashier\\\":\\\"Mask\\\",\\\"cashlessSum\\\":8.0000,\\\"creditSum\\\":0.00,\\\"currency\\\":\\\"AZN\\\",\\\"incomingSum\\\":20.0000,\\\"items\\\":[{\\\"discount\\\":0.00,\\\"itemCode\\\":\\\"10526589200149\\\",\\\"itemCodeType\\\":1,\\\"itemName\\\":\\\"Tshirt3\\\",\\\"itemPrice\\\":4.0000,\\\"itemQuantity\\\":2.0000,\\\"itemQuantityType\\\":0,\\\"itemSum\\\":8.0000,\\\"itemVatPercent\\\":18.0000},{\\\"discount\\\":0.00,\\\"itemCode\\\":\\\"1052658920234\\\",\\\"itemCodeType\\\":1,\\\"itemName\\\":\\\"Tshirt5\\\",\\\"itemPrice\\\":2.0000,\\\"itemQuantity\\\":2.0000,\\\"itemQuantityType\\\":0,\\\"itemSum\\\":4.0000,\\\"itemVatPercent\\\":18.0000},{\\\"discount\\\":0.00,\\\"itemCode\\\":\\\"1089200149\\\",\\\"itemCodeType\\\":1,\\\"itemName\\\":\\\"Tshirt5\\\",\\\"itemPrice\\\":3.0000,\\\"itemQuantity\\\":2.0000,\\\"itemQuantityType\\\":0,\\\"itemSum\\\":6.0000,\\\"itemVatPercent\\\":18.0000}],\\\"moneyBackType\\\":0,\\\"prepaymentSum\\\":0.00,\\\"sum\\\":18.0000,\\\"vatAmounts\\\":[{\\\"vatPercent\\\":18.0000,\\\"vatSum\\\":18.0000}]},\\\"doc_type\\\":\\\"sale\\\"},\\\"version\\\":1}\",\n            \"token_response\": \"{\\\"code\\\":0,\\\"data\\\":{\\\"document_id\\\":\\\"HM3AQLafbqnD8pq94pF4EX9sTTiHRXjmsbJdsyPGLJzG\\\",\\\"document_number\\\":4971,\\\"shift_document_number\\\":12,\\\"short_document_id\\\":\\\"HM3AQLafbqnD\\\"},\\\"message\\\":\\\"Successful operation\\\"}\",\n            \"total_discount_amount\": 0,\n            \"total_discount_percent\": 0,\n            \"transaction_id\": \"HM3AQLafbqnD\"\n        }\n    ]\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Statement for the requested period",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"date_start\": \"2021-02-01 00:00:00\",\r\n        \"date_end\": \"2021-02-19 11:00:00\",\r\n        \"checkData\": {\r\n            \"check_type\": 18\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Provides the all transactions history for specified period.\n\n\"check_type\" – 18 Transaction history operation\n\n\"access_token\" – Session key generated during login operation\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"data\": {\n        \"createdAtUtc\": \"2024-01-19T13:33:38Z\",\n        \"currencies\": [\n            {\n                \"correctionBonusSum\": 0.04,\n                \"correctionCashSum\": 0.02,\n                \"correctionCashlessSum\": 0.03,\n                \"correctionCount\": 1,\n                \"correctionCreditSum\": 0.0,\n                \"correctionPrepaymentSum\": 0.0,\n                \"correctionSum\": 0.09,\n                \"correctionVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 0.09\n                    }\n                ],\n                \"creditpayBonusSum\": 0.0,\n                \"creditpayCashSum\": 0.0,\n                \"creditpayCashlessSum\": 0.0,\n                \"creditpayCount\": 0,\n                \"creditpayCreditSum\": 0.0,\n                \"creditpayPrepaymentSum\": 0.0,\n                \"creditpaySum\": 0.0,\n                \"creditpayVatAmounts\": [],\n                \"currency\": \"AZN\",\n                \"depositCount\": 4,\n                \"depositSum\": 0.08,\n                \"moneyBackBonusSum\": 0.0,\n                \"moneyBackCashSum\": 10.2,\n                \"moneyBackCashlessSum\": 8.0,\n                \"moneyBackCount\": 3,\n                \"moneyBackCreditSum\": 0.0,\n                \"moneyBackPrepaymentSum\": 0.0,\n                \"moneyBackSum\": 18.2,\n                \"moneyBackVatAmounts\": [\n                    {\n                        \"vatPercent\": 0.0,\n                        \"vatSum\": 0.2\n                    },\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 18.0\n                    }\n                ],\n                \"prepayBonusSum\": 0.0,\n                \"prepayCashSum\": 0.0,\n                \"prepayCashlessSum\": 0.0,\n                \"prepayCount\": 0,\n                \"prepayCreditSum\": 0.0,\n                \"prepaySum\": 0.0,\n                \"prepayVatAmounts\": [],\n                \"rollbackBonusSum\": 0.0,\n                \"rollbackCashSum\": 10.0,\n                \"rollbackCashlessSum\": 8.0,\n                \"rollbackCount\": 1,\n                \"rollbackCreditSum\": 0.0,\n                \"rollbackPrepaymentSum\": 0.0,\n                \"rollbackSum\": 18.0,\n                \"rollbackVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 18.0\n                    }\n                ],\n                \"saleBonusSum\": 0.0,\n                \"saleCashSum\": 30.07,\n                \"saleCashlessSum\": 1856.77,\n                \"saleCount\": 5.0,\n                \"saleCreditSum\": 0.0,\n                \"salePrepaymentSum\": 0.02,\n                \"saleSum\": 1886.84,\n                \"saleVatAmounts\": [\n                    {\n                        \"vatPercent\": 18.0,\n                        \"vatSum\": 54.07\n                    },\n                    {\n                        \"vatPercent\": 0.0,\n                        \"vatSum\": 1832.77\n                    }\n                ],\n                \"withdrawCount\": 1,\n                \"withdrawSum\": 0.01\n            }\n        ],\n        \"docCountToSend\": 1,\n        \"document_id\": \"\",\n        \"firstDocNumber\": 4960,\n        \"lastDocNumber\": 4974,\n        \"reportNumber\": 510,\n        \"shiftOpenAtUtc\": \"2024-01-18T13:46:58Z\"\n    },\n    \"message\": \"success\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Credit sale",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"sale\",\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"Superman\",\r\n                    \"currency\": \"AZN\",\r\n                    \"creditContract\": \"kreditcontract123456\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Reytuzy men, OOO GomelDrev\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1894981988\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1,\r\n                            \"itemPrice\": 100,\r\n                            \"itemSum\": 100,\r\n                            \"itemVatPercent\": 18,\r\n                            \"itemMarginPrice\": null,\r\n                            \"itemMarginSum\": null\r\n                        }\r\n                    ],\r\n                    \"sum\": 1,\r\n                    \"cashSum\": 1,\r\n                    \"cashlessSum\": 0,\r\n                    \"prepaymentSum\": 0,\r\n                    \"creditSum\": 99,\r\n                    \"bonusSum\": 0,\r\n                    \"incomingSum\": 1.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 1,\r\n                            \"vatPercent\": 18\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"payment_change\": 0,\r\n            \"check_type\": 1\r\n        }\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.116:8989/v2",
+				"description": "Credit sale receipt. Request should contain \"creditContract\" field and only one item for sale.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 451,\n    \"long_id\": \"DAqvFzmembJ9TqddedZfTAS6TWUg8CX8FmLePeiea4vr\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 9,\n    \"short_id\": \"DAqvFzmembJ9\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Credit pay",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"pos_status\": \"false\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"creditpay\",\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"Masha\",\r\n                    \"currency\": \"AZN\",\r\n                    \"parentDocument\": \"86YTdDESdX9DkTuTtan667zUKR3xUSdhr5E1rkkdGeor\",\r\n                    \"creditContract\": \"kreditcontract123456\",\r\n                    \"paymentNumber\": 1,\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Reytuzy men, OOO GomelDrev\",\r\n                            \"itemCodeType\": 5,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1,\r\n                            \"itemPrice\": 100,\r\n                            \"itemSum\": 100,\r\n                            \"itemVatPercent\": 18\r\n                        }\r\n                    ],\r\n                    \"residue\": 93,\r\n                    \"sum\": 6,\r\n                    \"cashSum\": 0,\r\n                    \"cashlessSum\": 6,\r\n                    \"prepaymentSum\": 0,\r\n                    \"creditSum\": 0,\r\n                    \"bonusSum\": 0,\r\n                    \"incomingSum\": 0.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 6,\r\n                            \"vatPercent\": 18\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 31\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.116:8989/v2",
+				"description": "Credit pay receipt. Request should contain the **“long_id”** of credit sale receipt in **\"parentDocument\"** parameter, same **\"creditContract\"** from credit sale receipt, **“residue”** of the total credit amount and \"paymentNumber\" of creditpay receipt.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 452,\n    \"long_id\": \"DYMgHzBzAzV9jec6L9NmdcuFq5LvszNWbwCW7HtANqhR\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 10,\n    \"short_id\": \"DYMgHzBzAzV9\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "CreditPay rollback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"rollback\",\r\n                \"data\": {\r\n                    \"cashier\": \"Givi\",\r\n                    \"currency\": \"AZN\",\r\n                    \"parentDocument\": \"9d2FZkj6qTsStZ315JmVV9TiWq17mRbma2uSUHz7kUxF\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Reytuzy men, OOO GomelDrev\",\r\n                            \"itemCodeType\": 5,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1,\r\n                            \"itemPrice\": 100,\r\n                            \"itemSum\": 100,\r\n                            \"itemVatPercent\": 18\r\n                        }\r\n                    ],\r\n                    \"residue\": 93,\r\n                    \"sum\": 6,\r\n                    \"cashSum\": 0,\r\n                    \"cashlessSum\": 6,\r\n                    \"prepaymentSum\": 0,\r\n                    \"creditSum\": 0,\r\n                    \"bonusSum\": 0,\r\n                    \"incomingSum\": 0.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 6,\r\n                            \"vatPercent\": 18\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 32\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.116:8989/v2",
+				"description": "Credit pay rollback receipt. Receipt of cancellation of credit pays check in the framework of the current open fiscal shift. Request should contain the **“long_id”** of credit pay receipt in **\"fiscalId\"** parameter. **\"check_type\"** should be **32**\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 453,\n    \"long_id\": \"vUaSmfT29aS8DChqRaFvBbTMgLSccmmsYWebSXJpjg6\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 11,\n    \"short_id\": \"vUaSmfT29aS8\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "CreditSale& Sale with prepay Rollback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{access_token}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"rollback\",\r\n                \"data\": {\r\n                    \"cashier\": \"Givi\",\r\n                    \"currency\": \"AZN\",\r\n                    \"parentDocument\": \"CxaYWzkcQQrmVjc4qJ4zJi5Xgsna9R1Pk7AyEeZo44AK\",\r\n                    \"sum\": 0,\r\n                    \"cashSum\": 0,\r\n                    \"cashlessSum\": 0,\r\n                    \"prepaymentSum\": 1000.00, // if Sale with prepay else 0\r\n                    \"creditSum\": 1000.00, //if creditSale else 0\r\n                    \"bonusSum\": 0,\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Samsung TV 55 inch\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1894981988\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1,\r\n                            \"itemPrice\": 1000.00,\r\n                            \"itemSum\": 1000.00,\r\n                            \"itemVatPercent\": 18,\r\n                            \"itemMarginPrice\": null,\r\n                            \"itemMarginSum\": null\r\n                        }\r\n                    ],\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 0,\r\n                            \"vatPercent\": 18\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 32\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "CreditSale and Sale with prepay rollback receipt. Receipt of cancellation of creditSale and sale with prepay check in the framework of the current open fiscal shift. Request should contain the **“long_id”** of creditSale or sale with prepay receipt in **\"parentDocument\"** parameter. **\"check_type\"** should be 32\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 461,\n    \"long_id\": \"BuFxc5Z5JryJZ7G5Juz5ydisG4exrD7azGS6WRJz7uuk\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 19,\n    \"short_id\": \"BuFxc5Z5JryJ\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Credit pay moneyback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                \"prev_doc_number\": 1220,\r\n                \"data\": {\r\n                    \"bonusSum\": 0,\r\n                    \"cashSum\": 10,\r\n                    \"cashier\": \"Superman\",\r\n                    \"cashlessSum\": 0,\r\n                    \"creditSum\": 0,\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Reytuzy men, OOO GomelDrev\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1894981988\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1,\r\n                            \"itemPrice\": 100,\r\n                            \"itemSum\": 100,\r\n                            \"itemVatPercent\": 18,\r\n                            \"itemMarginPrice\": null,\r\n                            \"itemMarginSum\": null\r\n                        }\r\n                    ],\r\n                    \"lastOperationAtUtc\": \"\",\r\n                    \"parentDocument\": \"69qHZoApyNYzs1mY9cBtXhTSxEfqyzksR6jfiXB9dzB4\",\r\n                    \"moneyBackType\": 7,\r\n                    \"prepaymentSum\": 0,\r\n                    \"refund_document_number\": \"1219\",\r\n                    \"refund_short_document_id\": \"69qHZoApyNYz\",\r\n                    \"sum\": 10,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatPercent\": 18,\r\n                            \"vatSum\": 10\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"money_back\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 100\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "The return receipt of the goods sold in both currently open and already closed fiscal shifts. Request should contain the **“long_id”** of credit pay receipt in \"parentDocument\" parameter. Request should contain the **\"short_id\"** of credit pay document in **“refund_short_document_id\"** parameter. **\"check_type\"**: should be **100** and **\"moneyBackType\":7**. **“Items”** contain data from original parent document, but payment fields should be equal to refunded money.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 464,\n    \"long_id\": \"BDLPmRT9QvvPQu4iWPMztRrj3ChzEJ4hc4BzsdKAADZy\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 22,\n    \"short_id\": \"BDLPmRT9QvvP\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Prepay",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"prepay\",\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"Mask\",\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Gift card\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1894981988\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 150.0,\r\n                            \"itemSum\": 150.0,\r\n                            \"itemVatPercent\": 18.0\r\n                        }\r\n                    ],\r\n                    \"sum\": 150,\r\n                    \"cashSum\": 150,\r\n                    \"cashlessSum\": 0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"creditSum\": 0,\r\n                    \"incomingSum\": 150.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 150.0,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 34\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.116:8989/v2",
+				"description": "Prepay receipt.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5011,\n    \"long_id\": \"5zpG8Mcf6Y7GgVX5RJ43EQx3fUAnCE1UU8KUxH63BpFY\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 5,\n    \"short_id\": \"5zpG8Mcf6Y7G\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Sale with prepay",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"sale\",\r\n                \"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"Mask\",\r\n                    \"currency\": \"AZN\",\r\n                    \"parents\": [\r\n                        \"RuA773MiE6payc\"\r\n                    ],\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Shirt\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"sum\": 0.0,\r\n                    \"cashSum\": 0.0,\r\n                    \"cashlessSum\": 0.0,\r\n                    \"prepaymentSum\": 100.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"incomingSum\": 0.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 0.0,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 1\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "For current operation field **“parents”** should contain **\"fiscal_id\"** of prepay document. **“prepaymentSum”** should be equal or less than amount of prepay document. **“prepaymentSum” <=** prepay document amount. Amount paid with prepay Amount paid as prepay are not taxed and not indicated in the total amount **(“vatSum” & “sum” = “cashSum” + “cashlessSum” + “bonusSum“ ).**\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 467,\n    \"long_id\": \"EE9gipXxqGZchXEe1ZUsQWSD1f1TryQSTiwPktVKeRVj\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 25,\n    \"short_id\": \"EE9gipXxqGZc\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Prepay Rollback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"checkData\": {\r\n            \"check_type\": 10\r\n        },\r\n        \"fiscalId\": \"FtSdn5LNoXMjVuWB1i9yx79mwEF2zgatTmaoJRiDAHNZ\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Receipt of cancellation of sales check in the framework of the current open fiscal shift. Request should contain the “long_id” of sale receipt in \"fiscalId\" parameter.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 469,\n    \"long_id\": \"GccWy51rCkMMePQ2DvLv4S8dpencMj177t7M35DFd5MP\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 27,\n    \"short_id\": \"GccWy51rCkMM\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Prepay Moneyback",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                \"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"bonusSum\": 0.0,\r\n                    \"cashSum\": 0.0,\r\n                    \"cashier\": \"fad\",\r\n                    \"cashlessSum\": 25.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"discount\": 0.0,\r\n                            \"itemCode\": \"225555\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemName\": \"test\",\r\n                            \"itemPrice\": 25.0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemSum\": 25.0,\r\n                            \"itemVatPercent\": 18.0\r\n                        }\r\n                    ],\r\n                    \"lastOperationAtUtc\": \"\",\r\n                    \"parentDocument\": \"63YNLNiaWkFS9Q7XxwEY4fD25LiMEU2eE6xtoAPXXDju\",\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"refund_document_number\": \"1\",\r\n                    \"refund_short_document_id\": \"63YNLNiaWkFS\",\r\n                    \"sum\": 25.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatPercent\": 18.0,\r\n                            \"vatSum\": 25.0\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"money_back\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 100\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "The return receipt of the goods sold in both currently open and already closed fiscal shifts. Request should contain the “long_id” of sale receipt in \"parentDocument\" parameter. Request should contain the \"short_id\" of sale document in “refund_short_document_id\" parameter.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5012,\n    \"long_id\": \"HyxMcPiq439g7FQkDPjEw8rYbArHHdnuTVN83QqPh8tk\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 6,\n    \"short_id\": \"HyxMcPiq439g\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "MoneyBack of prepay residue",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                //\"prev_doc_number\": 1209, //optional field\r\n                \"data\": {\r\n                    \"cashier\": \"Mask\",\r\n                    \"currency\": \"AZN\",\r\n                    \"sum\": 300,\r\n                    \"cashSum\": 100,\r\n                    \"cashlessSum\": 100,\r\n                    \"bonusSum\": 100.0,\r\n                    \"creditSum\": 0,\r\n                    \"incomingSum\": 0.0,\r\n                    \"moneyBackType\": 6,\r\n                    \"firstOperationAtUtc\": \"\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Gift card\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1894981988\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 300.0,\r\n                            \"itemSum\": 300.0,\r\n                            \"itemVatPercent\": 18.0\r\n                        }\r\n                    ],\r\n                    \"lastOperationAtUtc\": \"\",\r\n                    \"parentDocument\": \"F9VTHnMcebZ3PK79C1ybSJhZMGdHUQBPonKDZHHzZzFM\",\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"refund_document_number\": \"6109\",\r\n                    \"refund_short_document_id\": \"F9VTHnMcebZ3\",\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 300.0,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"money_back\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 100\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.137:8989/v2",
+				"description": "MoneyBack of prepay residue receipt. Request should contain the “long_id” of prepay receipt in \"parents\" parameter, \"moneyBackType\" should be equal to 6. Items fields should be same with prepay receipt, but “sum” and “vatSum” equal to refunded amount.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5014,\n    \"long_id\": \"4PPTmvKPNvhdCaPCbihSHP8UXZtpjKRfgxVZB9fxHhFr\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 8,\n    \"short_id\": \"4PPTmvKPNvhd\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Prepay with multiple items",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{access_token}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"prepay\",\r\n                \"data\": {\r\n                    \"cashier\": \"Mask\",\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Monitor\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        },\r\n                        {\r\n                            \"itemName\": \"HDD storage\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemCode\": \"15648234651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        },\r\n                        {\r\n                            \"itemName\": \"Cooler\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"sum\": 100.0,\r\n                    \"cashSum\": 100.0,\r\n                    \"cashlessSum\": 0.0,\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"incomingSum\": 100.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 100.0,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 34\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Prepay amount could be different, than total price of items\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5015,\n    \"long_id\": \"2GshVki4AMRFCqduhVyWw29HFB8tmNZf3V7Xv9Go3Rzx\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 9,\n    \"short_id\": \"2GshVki4AMRF\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "MoneyBack of prepay with multiple items",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{access_token}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                \"data\": {\r\n                    \"sum\": 100.0,\r\n                    \"cashSum\": 100.0,\r\n                    \"cashlessSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"cashier\": \"fad\",\r\n                    \"moneyBackType\": 6,\r\n                    \"creditSum\": 0.0,\r\n                    \"currency\": \"AZN\",\r\n                    \"firstOperationAtUtc\": \"\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Monitor\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        },\r\n                        {\r\n                            \"itemName\": \"HDD storage\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemCode\": \"15648234651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        },\r\n                        {\r\n                            \"itemName\": \"Cooler\",\r\n                            \"itemCodeType\": 0,\r\n                            \"itemCode\": \"1564854651\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 100.0,\r\n                            \"itemSum\": 100.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"lastOperationAtUtc\": \"\",\r\n                    \"parentDocument\": \"9x4eDAw9wYMhSeNhozeFqmeW7Sf5tceAPAySfPs7Avop\",\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"refund_document_number\": \"3288\",\r\n                    \"refund_short_document_id\": \"9x4eDAw9wYMh\",\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 100.0,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"money_back\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 100\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "Key value for current operation \"moneyBackType\":6, other data same with prepay receipt.\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5016,\n    \"long_id\": \"3y197fjqgzEuQKzcVRB8ksakjLY33icizWLB2WTqTcL4\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 10,\n    \"short_id\": \"3y197fjqgzEu\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Open money box (Cashbox)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 28\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Close money box (Cashbox)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"checkData\": {\r\n            \"check_type\": 29\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Sale with Discount",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"parameters\": {\r\n                \"doc_type\": \"sale\",\r\n                \"data\": {\r\n                    \"cashier\": \"Mask\",\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Gürcü xəngəli\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"10526589200147\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 12.0,\r\n                            \"itemPrice\": 0.7,\r\n                            \"itemSum\": 8.40,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.40\r\n                        },\r\n                        {\r\n                            \"itemName\": \"Nataktari 0.5l\",\r\n                            \"itemCodeType\": 2,\r\n                            \"itemCode\": \"18949899805\",\r\n                            \"itemQuantityType\": 0,\r\n                            \"itemQuantity\": 1.0,\r\n                            \"itemPrice\": 2.0,\r\n                            \"itemSum\": 2.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"discount\": 0.5\r\n                        }\r\n                    ],\r\n                    \"sum\": 10.4,\r\n                    \"cashSum\": 0.0,\r\n                    \"cashlessSum\": 10.40,\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"bonusSum\": 0.0,\r\n                    \"incomingSum\": 0.0,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 10.40,\r\n                            \"vatPercent\": 18.0\r\n                        }\r\n                    ]\r\n                }\r\n            },\r\n            \"operationId\": \"createDocument\",\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 1\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{url}}",
+				"description": "#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5017,\n    \"long_id\": \"Gh7dtCuwzopeghusmQn3JLhgeTFDZMoNpMhcYqBcMCt8\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 11,\n    \"short_id\": \"Gh7dtCuwzope\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "MoneyBack of Income Tax Products",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                \"data\": {\r\n                    \"bonusSum\": 0.0,\r\n                    \"cashSum\": 36.0,\r\n                    \"cashier\": \"Mask\",\r\n                    \"cashlessSum\": 15.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Pomidor\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1564800002\",\r\n                            \"itemQuantity\": 3,\r\n                            \"itemPrice\": 17.0,\r\n                            \"itemSum\": 51.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"itemMarginPrice\": 9.0,\r\n                            \"itemMarginSum\": 27.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"lastOperationAtUtc\": \"\",\r\n                    \"parentDocument\": \"2JtMw3MqLrHCFppbxBdwue4u4DdWFY1ZG1ZxYrnYZLza\",\r\n                    \"prepaymentSum\": 0.0,\r\n                    \"refund_document_number\": \"1\",\r\n                    \"refund_short_document_id\": \"2JtMw3MqLrHC\",\r\n                    \"sum\": 51.00,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 27.0,\r\n                            \"vatPercent\": 18.0\r\n                        },\r\n                        {\r\n                            \"vatSum\": 24.00\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"money_back\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 100\r\n        }\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.80:8989/v2",
+				"description": "An income tax has been introduced for some categories of products, which requires a separation of the marginal part and cost, where the marginal part is taxed in accordance with the percentage of taxation, part of the cost is not taxed. Due to this reason, in the refund request as well, the amounts subject to Value Added Tax (VAT) and the amounts without VAT should be indicated separately as follows:\n\n#### Example Response\n\n``` json\n{\n    \"code\": 0,\n    \"document_number\": 5018,\n    \"long_id\": \"9k1K3xdzvvPsyMhKCHQiGZzBEGMFW3Ew36Bz3Vc7vXz7\",\n    \"message\": \"Successful operation\",\n    \"shift_document_number\": 12,\n    \"short_id\": \"9k1K3xdzvvPs\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Income Tax Products Sale",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"tokenData\": {\r\n            \"operationId\": \"createDocument\",\r\n            \"parameters\": {\r\n                \"data\": {\r\n                    \"bonusSum\": 0.0,\r\n                    \"cashSum\": 36.0,\r\n                    \"cashier\": \"Mask\",\r\n                    \"cashlessSum\": 15.0,\r\n                    \"creditSum\": 0.0,\r\n                    \"currency\": \"AZN\",\r\n                    \"items\": [\r\n                        {\r\n                            \"itemName\": \"Pomidor\",\r\n                            \"itemCodeType\": 1,\r\n                            \"itemCode\": \"1564800002\",\r\n                            \"itemQuantity\": 3,\r\n                            \"itemPrice\": 17.0,\r\n                            \"itemSum\": 51.0,\r\n                            \"itemVatPercent\": 18.0,\r\n                            \"itemMarginPrice\": 9.0,\r\n                            \"itemMarginSum\": 27.0,\r\n                            \"discount\": 0.0\r\n                        }\r\n                    ],\r\n                    \"sum\": 51.00,\r\n                    \"vatAmounts\": [\r\n                        {\r\n                            \"vatSum\": 27.0,\r\n                            \"vatPercent\": 18.0\r\n                        },\r\n                        {\r\n                            \"vatSum\": 24.00\r\n                        }\r\n                    ]\r\n                },\r\n                \"doc_type\": \"sale\"\r\n            },\r\n            \"version\": 1\r\n        },\r\n        \"checkData\": {\r\n            \"check_type\": 1\r\n        }\r\n    }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "10.11.44.80:8989/v2"
+			},
+			"response": []
+		},
+		{
+			"name": "GetLast Document",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json;charset=UTF-8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"requestData\": {\r\n        \"pos_status\": \"false\",\r\n        \"access_token\": \"{{atoken}}\",\r\n        \"checkData\": {\r\n            \"check_type\": 37\r\n        }\r\n    }\r\n}"
+				},
+				"url": "10.11.44.116:8989/v2"
+			},
+			"response": []
+		}
+	]
+}

@@ -10,7 +10,7 @@ import ProductSearchSection from './ProductSearchSection';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { GoodsReceipt } from '@/types';
 
-interface Product { id: number; name: string; sku: string; barcode?: string; unit: string; base_unit?: string; packaging_size?: string; packaging_quantity?: number; unit_price?: number; }
+interface Product { id: number; name: string; sku: string; barcode?: string; unit: string; base_unit?: string; packaging_size?: string; packaging_quantity?: number; unit_price?: number; purchase_price?: number; sale_price?: number; }
 interface Supplier { id: number; name: string; payment_terms_days?: number; payment_terms_text?: string; }
 interface Warehouse { id: number; name: string; }
 interface Employee { employee_id: number; name: string; }
@@ -202,7 +202,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                     </button>
                                 </div>
                                 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                                     <div>
                                         <InputLabel value="Miqdar *" />
                                         <TextInput
@@ -239,7 +239,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                         )}
                                     </div>
                                     <div>
-                                        <InputLabel value="Vahid qiyməti" />
+                                        <InputLabel value="Alış qiyməti" />
                                         <TextInput
                                             value={productItem.unit_cost}
                                             onChange={(e) => updateProduct(index, 'unit_cost', e.target.value)}
@@ -247,7 +247,19 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            placeholder="0.00"
+                                            placeholder={productItem.product?.purchase_price ? `Hazırda: ${productItem.product.purchase_price}` : "0.00"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel value="Satış qiyməti" />
+                                        <TextInput
+                                            value={productItem.sale_price || ''}
+                                            onChange={(e) => updateProduct(index, 'sale_price', e.target.value)}
+                                            className="mt-1 w-full"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder={productItem.product?.sale_price ? `Hazırda: ${productItem.product.sale_price}` : "0.00"}
                                         />
                                     </div>
                                     <div>

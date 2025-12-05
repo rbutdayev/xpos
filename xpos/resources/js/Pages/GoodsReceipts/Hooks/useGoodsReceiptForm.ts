@@ -11,6 +11,7 @@ export interface ProductItem {
     unit: string;
     receiving_unit: string;
     unit_cost: string;
+    sale_price?: string;
     product?: any;
 }
 
@@ -46,6 +47,8 @@ interface Product {
     packaging_size?: string;
     packaging_quantity?: number;
     unit_price?: number;
+    purchase_price?: number;
+    sale_price?: number;
 }
 
 export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = false) {
@@ -236,6 +239,7 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
             unit: product?.base_unit || product?.unit || '',
             receiving_unit: receivingUnit,
             unit_cost: '',
+            sale_price: '',
             product: product,
         };
 

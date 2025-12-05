@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { EyeIcon, ArrowUturnLeftIcon, XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 import { PageProps } from '@/types';
 import SalesNavigation from '@/Components/SalesNavigation';
+import ReturnModal from '@/Components/ReturnModal';
 
 interface SaleReturn {
     return_id: number;
@@ -54,11 +55,14 @@ interface ReturnsIndexProps extends PageProps {
         today_returns: number;
         today_amount: number;
     };
+    discountsEnabled?: boolean;
+    giftCardsEnabled?: boolean;
 }
 
-export default function Index({ auth, returns, filters, statistics, discountsEnabled }: ReturnsIndexProps) {
+export default function Index({ auth, returns, filters, statistics, discountsEnabled, giftCardsEnabled }: ReturnsIndexProps) {
     const [localFilters, setLocalFilters] = useState(filters);
     const [searchInput, setSearchInput] = useState(filters.search || '');
+    const [returnModalOpen, setReturnModalOpen] = useState(false);
 
     // Debounced search effect
     useEffect(() => {
@@ -220,14 +224,14 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
         <AuthenticatedLayout>
             <Head title="Mal Qaytarma" />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="returns" showDiscounts={discountsEnabled}>
-                    <Link
-                        href="/product-returns/create"
+                <SalesNavigation currentRoute="returns" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
+                    <button
+                        onClick={() => setReturnModalOpen(true)}
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                     >
                         <ArrowUturnLeftIcon className="w-5 h-5 text-white" />
                         <span className="font-semibold">Mal Qaytarma</span>
-                    </Link>
+                    </button>
                 </SalesNavigation>
             </div>
             <div className="py-6">
@@ -302,6 +306,12 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                     </div>
                 </div>
             </div>
+
+            {/* Return Modal */}
+            <ReturnModal
+                show={returnModalOpen}
+                onClose={() => setReturnModalOpen(false)}
+            />
         </AuthenticatedLayout>
     );
 }

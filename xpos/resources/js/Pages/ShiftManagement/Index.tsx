@@ -29,9 +29,11 @@ interface FiscalConfig {
 
 interface ShiftManagementProps extends PageProps {
     fiscalConfig: FiscalConfig | null;
+    discountsEnabled?: boolean;
+    giftCardsEnabled?: boolean;
 }
 
-export default function Index({ auth, fiscalConfig, discountsEnabled }: ShiftManagementProps) {
+export default function Index({ auth, fiscalConfig, discountsEnabled, giftCardsEnabled }: ShiftManagementProps) {
     const [loading, setLoading] = useState(false);
     const [shiftStatus, setShiftStatus] = useState<any>(null);
     const [shiftHours, setShiftHours] = useState<number | null>(null);
@@ -139,7 +141,7 @@ export default function Index({ auth, fiscalConfig, discountsEnabled }: ShiftMan
             <AuthenticatedLayout>
                 <Head title="Növbə İdarəetməsi" />
                 <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                    <SalesNavigation currentRoute="shift-management" showDiscounts={discountsEnabled}>
+                    <SalesNavigation currentRoute="shift-management" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
                         <Link
                             href={route('pos.index')}
                             className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
@@ -182,7 +184,7 @@ export default function Index({ auth, fiscalConfig, discountsEnabled }: ShiftMan
         <AuthenticatedLayout>
             <Head title="Növbə İdarəetməsi" />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="shift-management" showDiscounts={discountsEnabled}>
+                <SalesNavigation currentRoute="shift-management" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
                     <Link
                         href={route('pos.index')}
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"

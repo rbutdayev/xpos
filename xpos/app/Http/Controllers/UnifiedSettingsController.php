@@ -293,8 +293,13 @@ class UnifiedSettingsController extends Controller
      */
     public function toggleModule(Request $request)
     {
+        // Only account_owner and admin can toggle modules
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Bu əməliyyatı yalnız administrator edə bilər.');
+        }
+
         $request->validate([
-            'module' => 'required|in:services,rent,loyalty,shop,discounts',
+            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards',
         ]);
 
         $account = $request->user()->account;
@@ -307,6 +312,7 @@ class UnifiedSettingsController extends Controller
             'loyalty' => 'loyalty_module_enabled',
             'shop' => 'shop_enabled',
             'discounts' => 'discounts_module_enabled',
+            'gift_cards' => 'gift_cards_module_enabled',
         ];
 
         $fieldName = $moduleFields[$module];
@@ -320,6 +326,7 @@ class UnifiedSettingsController extends Controller
             'loyalty' => 'Loyallıq Proqramı',
             'shop' => 'Online Mağaza',
             'discounts' => 'Endirimlər',
+            'gift_cards' => 'Hədiyyə Kartları',
         ];
 
         $moduleName = $moduleNames[$module];

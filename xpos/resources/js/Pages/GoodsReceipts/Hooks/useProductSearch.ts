@@ -10,6 +10,8 @@ interface Product {
   packaging_size?: string;
   packaging_quantity?: number;
   unit_price?: number;
+  purchase_price?: number;
+  sale_price?: number;
 }
 
 export function useProductSearch() {

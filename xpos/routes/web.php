@@ -137,6 +137,18 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
         Route::post('/{card}/unassign', [AdminLoyaltyCardController::class, 'unassign'])->name('unassign');
         Route::get('/reports', [AdminLoyaltyCardController::class, 'reports'])->name('reports');
     });
+
+    // Gift Cards Management
+    Route::prefix('gift-cards')->name('gift-cards.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\GiftCardController::class, 'index'])->name('index');
+        Route::post('/generate', [App\Http\Controllers\Admin\GiftCardController::class, 'generate'])->name('generate');
+        Route::post('/bulk-delete', [App\Http\Controllers\Admin\GiftCardController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/reports/summary', [App\Http\Controllers\Admin\GiftCardController::class, 'reports'])->name('reports');
+        Route::get('/{card}', [App\Http\Controllers\Admin\GiftCardController::class, 'show'])->name('show');
+        Route::delete('/{card}', [App\Http\Controllers\Admin\GiftCardController::class, 'destroy'])->name('destroy');
+        Route::post('/{card}/deactivate', [App\Http\Controllers\Admin\GiftCardController::class, 'deactivate'])->name('deactivate');
+        Route::post('/{card}/activate', [App\Http\Controllers\Admin\GiftCardController::class, 'activate'])->name('activate');
+    });
 });
 
 // Main Dashboard
@@ -590,6 +602,10 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/pos/sale', [\App\Http\Controllers\POSController::class, 'storeSale'])->name('pos.sale');
     Route::post('/pos/service', [\App\Http\Controllers\POSController::class, 'storeService'])->name('pos.service');
 
+    // Gift Card Sales (direct from POS, not through products)
+    Route::post('/pos/gift-card/lookup', [\App\Http\Controllers\POSController::class, 'lookupGiftCard'])->name('pos.gift-card.lookup');
+    Route::post('/pos/gift-card/sell', [\App\Http\Controllers\POSController::class, 'sellGiftCard'])->name('pos.gift-card.sell');
+
     // Shift Management
     Route::get('/shift-management', [\App\Http\Controllers\FiscalShiftController::class, 'index'])->name('shift-management.index');
 
@@ -619,6 +635,22 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/online-orders', [OnlineOrderController::class, 'index'])->name('online-orders.index');
     Route::patch('/online-orders/{sale}/status', [OnlineOrderController::class, 'updateStatus'])->name('online-orders.update-status');
     Route::delete('/online-orders/{sale}/cancel', [OnlineOrderController::class, 'cancel'])->name('online-orders.cancel');
+
+    // Gift Cards Management (Tenant)
+    Route::prefix('gift-cards')->name('gift-cards.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\GiftCardController::class, 'index'])->name('index');
+        Route::get('/configure', [\App\Http\Controllers\GiftCardConfigurationController::class, 'index'])->name('configure');
+        Route::post('/bulk-configure', [\App\Http\Controllers\GiftCardConfigurationController::class, 'bulkConfigure'])->name('bulk-configure');
+        Route::post('/update-denomination', [\App\Http\Controllers\GiftCardConfigurationController::class, 'updateDenomination'])->name('update-denomination');
+        Route::post('/create-products', [\App\Http\Controllers\GiftCardConfigurationController::class, 'createProducts'])->name('create-products');
+        Route::get('/available-denominations', [\App\Http\Controllers\GiftCardConfigurationController::class, 'getAvailableDenominations'])->name('available-denominations');
+        Route::post('/{card}/reset', [\App\Http\Controllers\GiftCardConfigurationController::class, 'resetCard'])->name('reset');
+        Route::get('/{card}', [\App\Http\Controllers\GiftCardController::class, 'show'])->name('show');
+        Route::post('/activate', [\App\Http\Controllers\GiftCardController::class, 'activate'])->name('activate');
+        Route::post('/lookup', [\App\Http\Controllers\GiftCardController::class, 'lookup'])->name('lookup');
+        Route::post('/validate', [\App\Http\Controllers\GiftCardController::class, 'validateCard'])->name('validate');
+        Route::post('/{card}/reactivate', [\App\Http\Controllers\GiftCardController::class, 'reactivate'])->name('reactivate');
+    });
 
     // Notification Channels
     Route::get('/notification-channels', [App\Http\Controllers\UnifiedSettingsController::class, 'notificationChannels'])->name('notification-channels.index');

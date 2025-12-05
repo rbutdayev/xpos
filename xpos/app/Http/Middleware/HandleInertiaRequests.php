@@ -59,6 +59,7 @@ class HandleInertiaRequests extends Middleware
             'servicesEnabled' => $user && $user->account ? ($user->account->services_module_enabled ?? false) : false,
             'rentEnabled' => $user && $user->account ? ($user->account->rent_module_enabled ?? false) : false,
             'discountsEnabled' => $user && $user->account ? ($user->account->discounts_module_enabled ?? false) : false,
+            'giftCardsEnabled' => $user && $user->account ? ($user->account->gift_cards_module_enabled ?? false) : false,
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

@@ -124,7 +124,15 @@ class Supplier extends Model
 
     public function getActiveProductsCountAttribute(): int
     {
-        return $this->products()->wherePivot('is_active', true)->count();
+        // Count unique products from goods receipts (actual purchases)
+        // Only count products that still exist in the products table
+        return \App\Models\Product::whereIn('id', function($query) {
+            $query->select('product_id')
+                ->from('goods_receipts')
+                ->where('supplier_id', $this->id)
+                ->where('account_id', $this->account_id)
+                ->distinct();
+        })->count();
     }
 
     public function getTotalCreditAmountAttribute(): float

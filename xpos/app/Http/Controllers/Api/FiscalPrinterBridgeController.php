@@ -398,7 +398,8 @@ class FiscalPrinterBridgeController extends Controller
             'provider' => 'required|string',
         ]);
 
-        // Store in Redis with 2-minute TTL (for fast frontend access)
+        // Store in Redis with 4-minute TTL (for fast frontend access)
+        // Bridge updates every 60 seconds, so 4 minutes gives buffer for missed updates
         $cacheKey = "shift_status:{$bridge->account_id}";
         $statusData = [
             'shift_open' => $validated['shift_open'],
@@ -407,7 +408,7 @@ class FiscalPrinterBridgeController extends Controller
             'last_updated' => now()->toIso8601String(),
         ];
 
-        \Illuminate\Support\Facades\Cache::put($cacheKey, $statusData, 120); // 2 minutes
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $statusData, 240); // 4 minutes
 
         // Also update the database so shift management page shows correct status
         $config = \App\Models\FiscalPrinterConfig::where('account_id', $bridge->account_id)

@@ -15,6 +15,8 @@ class FiscalPrinterConfig extends Model
         'port',
         'username',
         'password',
+        'access_token',
+        'access_token_expires_at',
         'merchant_id',
         'security_key',
         'device_serial',
@@ -42,6 +44,7 @@ class FiscalPrinterConfig extends Model
         'default_tax_rate' => 'decimal:2',
         'shift_opened_at' => 'datetime',
         'last_z_report_at' => 'datetime',
+        'access_token_expires_at' => 'datetime',
         'current_shift_duration_hours' => 'integer',
     ];
 
@@ -203,6 +206,44 @@ class FiscalPrinterConfig extends Model
         }
 
         return "Növbə açıqdır ({$hours} saat)";
+    }
+
+    /**
+     * Check if access token is valid (not expired)
+     */
+    public function hasValidAccessToken(): bool
+    {
+        if (empty($this->access_token)) {
+            return false;
+        }
+
+        if ($this->access_token_expires_at === null) {
+            return true; // No expiration set, assume valid
+        }
+
+        return $this->access_token_expires_at->isFuture();
+    }
+
+    /**
+     * Update access token and expiration
+     */
+    public function updateAccessToken(string $token, ?\DateTimeInterface $expiresAt = null): void
+    {
+        $this->update([
+            'access_token' => $token,
+            'access_token_expires_at' => $expiresAt,
+        ]);
+    }
+
+    /**
+     * Clear access token
+     */
+    public function clearAccessToken(): void
+    {
+        $this->update([
+            'access_token' => null,
+            'access_token_expires_at' => null,
+        ]);
     }
 }
 

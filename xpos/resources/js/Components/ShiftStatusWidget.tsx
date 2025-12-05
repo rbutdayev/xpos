@@ -62,7 +62,7 @@ export default function ShiftStatusWidget({ fiscalConfig, compact = false }: Shi
                             : isShiftNearExpiration
                             ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-900'
                             : 'bg-green-100 hover:bg-green-200 text-green-900'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-red-100 hover:bg-red-200 text-red-900'
                 }`}
             >
                 {fiscalConfig.shift_open ? (
@@ -89,7 +89,7 @@ export default function ShiftStatusWidget({ fiscalConfig, compact = false }: Shi
                     </>
                 ) : (
                     <>
-                        <XCircleIcon className="h-5 w-5 text-gray-500" />
+                        <XCircleIcon className="h-5 w-5 text-red-600" />
                         <div className="text-xs font-medium">Növbə Bağlı</div>
                     </>
                 )}

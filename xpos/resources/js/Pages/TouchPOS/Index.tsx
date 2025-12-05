@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PageProps, Product, Customer, Branch, LoyaltyProgram } from '@/types';
 import TouchCart from './components/TouchCart';
 import TouchHeader from './components/TouchHeader';
 import TouchPayment from './components/TouchPayment';
 import ProductSearchSection from '../POS/components/ProductSearchSection';
+import GiftCardSaleModal from '../POS/components/GiftCardSaleModal';
 import PrintModal from '@/Components/PrintModal';
 import ReturnModal from '@/Components/ReturnModal';
+import ShiftStatusWarningModal from '@/Components/ShiftStatusWarningModal';
 import { useCart } from '../POS/hooks/useCart';
 import { useSearch } from '../POS/hooks/useSearch';
 import toast from 'react-hot-toast';
@@ -26,9 +28,10 @@ interface TouchPOSProps extends PageProps {
   branches: Branch[];
   fiscalConfig: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
+  giftCardsEnabled?: boolean;
 }
 
-export default function TouchPOS({ auth, customers, branches, fiscalConfig, loyaltyProgram }: TouchPOSProps) {
+export default function TouchPOS({ auth, customers, branches, fiscalConfig, loyaltyProgram, giftCardsEnabled }: TouchPOSProps) {
   // Determine initial branch selection
   const getUserBranch = () => {
     // If user is assigned to a branch, use that
@@ -56,6 +59,9 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
     credit_due_date: '',
     credit_description: '',
     points_to_redeem: 0,
+    gift_card_code: '',
+    gift_card_amount: 0,
+    gift_card_expiry_months: 12, // Default 12 months for gift card sales
   });
 
   // Selected customer
@@ -81,6 +87,14 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
 
   // Return modal state
   const [returnModalOpen, setReturnModalOpen] = useState(false);
+
+  // Gift card sale modal state
+  const [giftCardModalOpen, setGiftCardModalOpen] = useState(false);
+
+  // Shift status warning modal state
+  const [shiftWarningModalOpen, setShiftWarningModalOpen] = useState(false);
+  const [shiftWarningType, setShiftWarningType] = useState<'offline' | 'closed'>('closed');
+  const [pendingSaleSubmission, setPendingSaleSubmission] = useState(false);
 
   // Fiscal printer status
   const [fiscalPrintStatus, setFiscalPrintStatus] = useState<string | null>(null);
@@ -196,25 +210,77 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
     }
   }, [flash]);
 
-  const handleSubmit = () => {
-    setProcessing(true);
-    setErrors({});
+  // Check shift status before submitting sale
+  const checkShiftStatus = async (): Promise<{ online: boolean; shift_open: boolean | null }> => {
+    try {
+      const response = await fetch('/api/shift-status', {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+      });
 
-    const newErrors: Record<string, string> = {};
-    if (!formData.branch_id) newErrors.branch_id = 'Filial seçmək məcburidir';
-    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul əlavə edilməlidir';
+      if (!response.ok) {
+        throw new Error('Failed to check shift status');
+      }
 
-    // For credit or partial payment, customer is required
-    if ((formData.payment_status === 'credit' || formData.payment_status === 'partial') && !formData.customer_id) {
-      newErrors.customer_id = 'Borc və ya qismən ödəniş üçün müştəri seçmək məcburidir';
+      return await response.json();
+    } catch (error) {
+      console.error('Error checking shift status:', error);
+      // If we can't check status, assume offline
+      return { online: false, shift_open: null };
     }
+  };
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setProcessing(false);
-      return;
+  // Handle opening shift from modal
+  const handleOpenShift = async () => {
+    try {
+      const response = await fetch('/fiscal-printer/shift/open', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to open shift');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Növbə açılır...', { duration: 3000 });
+
+        // Wait a bit for the shift to actually open
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Check status again
+        const status = await checkShiftStatus();
+
+        if (status.shift_open) {
+          toast.success('Növbə açıldı!', { duration: 2000 });
+          setShiftWarningModalOpen(false);
+          // Now submit the sale
+          submitSale();
+        } else {
+          toast.error('Növbə açılmadı. Yenidən cəhd edin.');
+        }
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Error opening shift:', error);
+      toast.error(`Növbə açılarkən xəta: ${error.message}`, { duration: 5000 });
     }
+  };
 
+  // Actually submit the sale (called directly or after modal confirmation)
+  const submitSale = () => {
     const submitData = {
       ...formData,
       items: cart.map((item) => ({
@@ -257,6 +323,52 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
     });
   };
 
+  const handleSubmit = async () => {
+    setProcessing(true);
+    setErrors({});
+
+    const newErrors: Record<string, string> = {};
+    if (!formData.branch_id) newErrors.branch_id = 'Filial seçmək məcburidir';
+    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul əlavə edilməlidir';
+
+    // For credit or partial payment, customer is required
+    if ((formData.payment_status === 'credit' || formData.payment_status === 'partial') && !formData.customer_id) {
+      newErrors.customer_id = 'Borc və ya qismən ödəniş üçün müştəri seçmək məcburidir';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setProcessing(false);
+      return;
+    }
+
+    // Check shift status if fiscal printer is enabled
+    if (fiscalConfig) {
+      const status = await checkShiftStatus();
+
+      if (!status.online) {
+        // Agent is offline
+        setShiftWarningType('offline');
+        setShiftWarningModalOpen(true);
+        setPendingSaleSubmission(true);
+        setProcessing(false);
+        return;
+      }
+
+      if (!status.shift_open) {
+        // Shift is closed
+        setShiftWarningType('closed');
+        setShiftWarningModalOpen(true);
+        setPendingSaleSubmission(true);
+        setProcessing(false);
+        return;
+      }
+    }
+
+    // All checks passed, submit the sale
+    submitSale();
+  };
+
   const clearCart = () => {
     setCart([]);
   };
@@ -265,6 +377,17 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
     <>
       <Head title="TouchPOS" />
       <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
+        {/* Floating Home Button - Fixed Position */}
+        <Link
+          href="/dashboard"
+          className="fixed bottom-6 left-6 z-50 bg-white hover:bg-gray-50 text-gray-700 p-3 rounded-full shadow-lg hover:shadow-xl transition-all border-2 border-gray-300 group"
+          title="Ana Səhifə"
+        >
+          <svg className="w-6 h-6 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </Link>
+
         {/* Header */}
         <TouchHeader
           branches={branches}
@@ -296,20 +419,32 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
         <div className="flex-1 flex overflow-hidden">
           {/* Left Side - Search and Cart */}
           <div className="flex-1 overflow-auto p-4">
-            {/* Product Search - Using exact POS logic */}
-            <ProductSearchSection
-              query={itemSearch}
-              setQuery={setItemSearch}
-              loading={!!isSearching}
-              results={searchResults}
-              onSelect={(item) => {
-                addToCart(item);
-                setItemSearch('');
-              }}
-              branchId={formData.branch_id}
-              searchImmediate={searchImmediate}
-            />
-            
+            {/* Product Search with Gift Card Button */}
+            <div className="relative">
+              <ProductSearchSection
+                query={itemSearch}
+                setQuery={setItemSearch}
+                loading={!!isSearching}
+                results={searchResults}
+                onSelect={(item) => {
+                  addToCart(item);
+                  setItemSearch('');
+                }}
+                branchId={formData.branch_id}
+                searchImmediate={searchImmediate}
+              />
+              <button
+                type="button"
+                onClick={() => setGiftCardModalOpen(true)}
+                className="absolute top-6 right-6 px-3 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-md"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Hədiyyə Kartı
+              </button>
+            </div>
+
             {/* Cart Items */}
             <TouchCart
               cart={cart}
@@ -351,6 +486,7 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
                 fiscalConfig={fiscalConfig}
                 loyaltyProgram={loyaltyProgram}
                 selectedCustomer={selectedCustomer}
+                giftCardsEnabled={giftCardsEnabled}
               />
             </div>
           </div>
@@ -382,6 +518,30 @@ export default function TouchPOS({ auth, customers, branches, fiscalConfig, loya
       <ReturnModal
         show={returnModalOpen}
         onClose={() => setReturnModalOpen(false)}
+      />
+
+      {/* Shift Status Warning Modal */}
+      <ShiftStatusWarningModal
+        show={shiftWarningModalOpen}
+        type={shiftWarningType}
+        onContinue={() => {
+          setShiftWarningModalOpen(false);
+          setPendingSaleSubmission(false);
+          submitSale();
+        }}
+        onCancel={() => {
+          setShiftWarningModalOpen(false);
+          setPendingSaleSubmission(false);
+        }}
+        onOpenShift={shiftWarningType === 'closed' ? handleOpenShift : undefined}
+      />
+
+      {/* Gift Card Sale Modal */}
+      <GiftCardSaleModal
+        isOpen={giftCardModalOpen}
+        onClose={() => setGiftCardModalOpen(false)}
+        customers={customers}
+        branchId={formData.branch_id}
       />
     </>
   );

@@ -189,9 +189,9 @@ async function checkAndPushShiftStatus() {
                 // Omnitech check_type: 14 returns shift status
                 const code = result.data.code ?? 999;
                 if (code === 0 || code === '0') {
-                    // Parse shift status from Omnitech response
-                    shiftStatus.shift_open = result.data.data?.shiftStatus ?? false;
-                    shiftStatus.shift_opened_at = result.data.data?.shift_open_time ?? null;
+                    // Parse shift status from Omnitech response (data at root level)
+                    shiftStatus.shift_open = result.data.shiftStatus ?? result.data.data?.shiftStatus ?? false;
+                    shiftStatus.shift_opened_at = result.data.shift_open_time ?? result.data.data?.shift_open_time ?? null;
                 }
             } else if (requestData.provider === 'caspos') {
                 // Caspos getShiftStatus operation
@@ -558,17 +558,17 @@ async function processJob(job) {
                     throw new Error(errorMsg);
                 }
             } else if (job.provider === 'omnitech') {
-                // Omnitech response structure: { code: 0, message: "...", data: { fiscalId: "...", document_id: "..." } }
+                // Omnitech response structure: { code: 0, document_number: X, long_id: "...", short_id: "..." }
                 const code = result.data.code ?? 999;
                 if (code === 0 || code === '0') {
-                    // Extract fiscal ID (long document ID)
-                    fiscalDocumentId = result.data.data?.fiscalId || result.data.data?.document_id || result.data.data?.long_id;
+                    // Extract fiscal ID (long document ID) - data is at root level, not nested
+                    fiscalDocumentId = result.data.long_id || result.data.data?.fiscalId || result.data.data?.document_id || result.data.data?.long_id;
 
                     // Extract document number (short number displayed on receipt)
-                    fiscalNumber = result.data.data?.document_number || result.data.data?.documentNumber || result.data.data?.number;
+                    fiscalNumber = result.data.document_number || result.data.data?.document_number || result.data.data?.documentNumber || result.data.data?.number;
 
                     if (!fiscalDocumentId) {
-                        log.warn('⚠️  Omnitech cavabında fiscalId tapılmadı!');
+                        log.warn('⚠️  Omnitech cavabında long_id tapılmadı!');
                     }
 
                     if (!fiscalNumber) {

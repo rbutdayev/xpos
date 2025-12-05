@@ -105,6 +105,17 @@ class FiscalPrinterJob extends Model
                 'fiscal_document_id' => $fiscalDocumentId,
             ]);
         }
+
+        // Update gift card with fiscal information if this is a gift card prepayment
+        if ($this->operation_type === 'gift_card_prepayment' && isset($this->request_data['gift_card_id'])) {
+            $giftCard = \App\Models\GiftCard::find($this->request_data['gift_card_id']);
+            if ($giftCard) {
+                $giftCard->update([
+                    'fiscal_number' => $fiscalNumber,
+                    'fiscal_document_id' => $fiscalDocumentId,
+                ]);
+            }
+        }
     }
 
     /**

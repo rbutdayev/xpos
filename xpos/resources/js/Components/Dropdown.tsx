@@ -116,9 +116,24 @@ const DropdownLink = ({
     children,
     ...props
 }: InertiaLinkProps) => {
+    // CRITICAL FIX: Refresh CSRF token before link is clicked
+    // This prevents 419 errors on logout
+    const handleClick = (e: React.MouseEvent<Element, MouseEvent>) => {
+        const token = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (token && window.axios) {
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
+        }
+
+        // Call original onClick if it exists
+        if (props.onClick) {
+            props.onClick(e);
+        }
+    };
+
     return (
         <Link
             {...props}
+            onClick={handleClick}
             className={
                 'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
                 className

@@ -7,6 +7,7 @@ import ProductSearchSection from './components/ProductSearchSection';
 import CartSection from './components/CartSection';
 import SummaryPaymentSection from './components/SummaryPaymentSection';
 import VariantSelectorModal from './components/VariantSelectorModal';
+import GiftCardSaleModal from './components/GiftCardSaleModal';
 import ReturnModal from '@/Components/ReturnModal';
 import ShiftStatusWidget from '@/Components/ShiftStatusWidget';
 import ShiftStatusWarningModal from '@/Components/ShiftStatusWarningModal';
@@ -26,12 +27,14 @@ interface FiscalConfig {
 
 interface POSIndexProps extends PageProps {
   branches: Branch[];
+  customers: Customer[];
   fiscalPrinterEnabled: boolean;
   fiscalConfig: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
+  giftCardsEnabled?: boolean;
 }
 
-export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConfig, loyaltyProgram }: POSIndexProps) {
+export default function Index({ auth, branches, customers, fiscalPrinterEnabled, fiscalConfig, loyaltyProgram, giftCardsEnabled }: POSIndexProps) {
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -61,6 +64,9 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
     credit_description: '',
     use_fiscal_printer: true,
     points_to_redeem: 0,
+    gift_card_code: '',
+    gift_card_amount: 0,
+    gift_card_expiry_months: 12, // Default 12 months for gift card sales
   });
 
   // Selected customer will be managed by CustomerSection
@@ -83,6 +89,9 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
 
   // Return modal state
   const [returnModalOpen, setReturnModalOpen] = useState(false);
+
+  // Gift card sale modal state
+  const [giftCardModalOpen, setGiftCardModalOpen] = useState(false);
 
   // Shift status warning modal state
   const [shiftWarningModalOpen, setShiftWarningModalOpen] = useState(false);
@@ -424,16 +433,30 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
                   onCustomerChange={setSelectedCustomer}
                 />
 
-                {/* Product Search */}
-                <ProductSearchSection
-                  query={itemSearch}
-                  setQuery={(q) => setItemSearch(q)}
-                  loading={!!isSearching}
-                  results={searchResults}
-                  onSelect={handleProductSelect}
-                  branchId={formData.branch_id}
-                  searchImmediate={searchImmediate}
-                />
+                {/* Product Search with Gift Card Button */}
+                <div className="relative">
+                  <ProductSearchSection
+                    query={itemSearch}
+                    setQuery={(q) => setItemSearch(q)}
+                    loading={!!isSearching}
+                    results={searchResults}
+                    onSelect={handleProductSelect}
+                    branchId={formData.branch_id}
+                    searchImmediate={searchImmediate}
+                  />
+                  {giftCardsEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => setGiftCardModalOpen(true)}
+                      className="absolute top-6 right-6 px-3 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Hədiyyə Kartı
+                    </button>
+                  )}
+                </div>
 
                 {/* Cart Items */}
                 <CartSection cart={cart} updateCartItem={updateCartItem} removeFromCart={removeFromCart} changeItemUnit={changeItemUnit} />
@@ -441,6 +464,20 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
 
               {/* Right Column - Summary & Actions */}
               <div className="lg:col-span-1">
+                {/* Return Button */}
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setReturnModalOpen(true)}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors shadow-sm"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <span>Mal Qaytarma</span>
+                  </button>
+                </div>
+
                 <SummaryPaymentSection
                   processing={processing}
                   subtotal={subtotal}
@@ -455,6 +492,7 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
                   fiscalConfig={fiscalConfig}
                   loyaltyProgram={loyaltyProgram}
                   selectedCustomer={selectedCustomer}
+                  giftCardsEnabled={giftCardsEnabled}
                 />
               </div>
             </div>
@@ -493,6 +531,14 @@ export default function Index({ auth, branches, fiscalPrinterEnabled, fiscalConf
               setPendingSaleSubmission(false);
             }}
             onOpenShift={shiftWarningType === 'closed' ? handleOpenShift : undefined}
+          />
+
+          {/* Gift Card Sale Modal */}
+          <GiftCardSaleModal
+            isOpen={giftCardModalOpen}
+            onClose={() => setGiftCardModalOpen(false)}
+            customers={customers}
+            branchId={formData.branch_id}
           />
         </div>
       </div>

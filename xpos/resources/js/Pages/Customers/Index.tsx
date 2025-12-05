@@ -25,9 +25,11 @@ interface CustomersIndexProps extends PageProps {
         has_services?: string;
         birthday_month?: string;
     };
+    discountsEnabled?: boolean;
+    giftCardsEnabled?: boolean;
 }
 
-export default function Index({ auth, customers, filters, discountsEnabled }: CustomersIndexProps) {
+export default function Index({ auth, customers, filters, discountsEnabled, giftCardsEnabled }: CustomersIndexProps) {
     const [localFilters, setLocalFilters] = useState(filters);
 
     const handleSearch = (search: string) => {
@@ -280,7 +282,7 @@ export default function Index({ auth, customers, filters, discountsEnabled }: Cu
         <AuthenticatedLayout>
             <Head title="Müştərilər" />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="customers" showDiscounts={discountsEnabled}>
+                <SalesNavigation currentRoute="customers" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
                     <Link
                         href={route('customers.create')}
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"

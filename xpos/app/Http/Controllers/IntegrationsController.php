@@ -58,6 +58,9 @@ class IntegrationsController extends Controller
         // Check Discounts module
         $discountsModuleEnabled = $account->discounts_module_enabled ?? false;
 
+        // Check Gift Cards module
+        $giftCardsModuleEnabled = $account->gift_cards_module_enabled ?? false;
+
         return Inertia::render('Integrations/Index', [
             'smsConfigured' => $smsConfigured,
             'telegramConfigured' => $telegramConfigured,
@@ -70,6 +73,7 @@ class IntegrationsController extends Controller
             'servicesModuleEnabled' => $servicesModuleEnabled,
             'rentModuleEnabled' => $rentModuleEnabled,
             'discountsModuleEnabled' => $discountsModuleEnabled,
+            'giftCardsModuleEnabled' => $giftCardsModuleEnabled,
         ]);
     }
 

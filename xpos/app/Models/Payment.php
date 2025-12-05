@@ -22,6 +22,7 @@ class Payment extends Model
         'card_type',
         'reference_number',
         'notes',
+        'gift_card_id',
     ];
 
     protected function casts(): array
@@ -39,6 +40,11 @@ class Payment extends Model
     public function rental(): BelongsTo
     {
         return $this->belongsTo(Rental::class, 'rental_id', 'id');
+    }
+
+    public function giftCard(): BelongsTo
+    {
+        return $this->belongsTo(GiftCard::class, 'gift_card_id', 'id');
     }
 
     public function scopeCash(Builder $query): Builder

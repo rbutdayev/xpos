@@ -26,6 +26,7 @@ interface Props {
   fiscalConfig?: FiscalConfig | null;
   loyaltyProgram?: LoyaltyProgram | null;
   selectedCustomer?: Customer | null;
+  giftCardsEnabled?: boolean;
 }
 
 export default function TouchPayment({
@@ -42,12 +43,56 @@ export default function TouchPayment({
   fiscalConfig,
   loyaltyProgram,
   selectedCustomer,
+  giftCardsEnabled = false,
 }: Props) {
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [showTaxInput, setShowTaxInput] = useState(false);
   const [showLoyaltyInput, setShowLoyaltyInput] = useState(false);
   const [pointsDiscount, setPointsDiscount] = useState(0);
   const [pointsToEarn, setPointsToEarn] = useState(0);
+  const [isGiftCardOpen, setIsGiftCardOpen] = useState(false);
+  const [giftCardInfo, setGiftCardInfo] = useState<any>(null);
+  const [isLookingUpCard, setIsLookingUpCard] = useState(false);
+  const [cardLookupError, setCardLookupError] = useState('');
+
+  const handleGiftCardLookup = async (cardNumber: string) => {
+    if (!cardNumber || cardNumber.length < 4) {
+      setGiftCardInfo(null);
+      setCardLookupError('');
+      return;
+    }
+
+    setIsLookingUpCard(true);
+    setCardLookupError('');
+
+    try {
+      const response = await fetch('/pos/gift-card/lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ card_number: cardNumber.toUpperCase() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setGiftCardInfo(data.card);
+        const maxAmount = Math.min(data.card.current_balance, grandTotal);
+        setFormData((prev: any) => ({ ...prev, gift_card_amount: maxAmount }));
+        setCardLookupError('');
+      } else {
+        setGiftCardInfo(null);
+        setCardLookupError(data.error || 'Kart tapılmadı');
+      }
+    } catch (error) {
+      setGiftCardInfo(null);
+      setCardLookupError('Xəta baş verdi');
+    } finally {
+      setIsLookingUpCard(false);
+    }
+  };
 
   // Calculate points discount when points_to_redeem changes
   useEffect(() => {
@@ -328,9 +373,124 @@ export default function TouchPayment({
         </div>
       )}
 
+      {/* Gift Card Section (Optional - reduces total) */}
+      {giftCardsEnabled && formData.payment_status === 'paid' && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setIsGiftCardOpen(!isGiftCardOpen)}
+            className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300 rounded-xl hover:from-emerald-100 hover:to-teal-100 transition-all shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-emerald-500 p-2 rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-lg font-bold text-emerald-900">Hədiyyə Kartı</span>
+            </div>
+            <svg
+              className={`w-6 h-6 text-emerald-600 transition-transform ${isGiftCardOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isGiftCardOpen && (
+            <div className="mt-3 p-4 bg-white border border-emerald-200 rounded-xl shadow-sm space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kart Nömrəsi:</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.gift_card_code || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase();
+                      setFormData((prev: any) => ({ ...prev, gift_card_code: value }));
+                      setGiftCardInfo(null);
+                      setCardLookupError('');
+                    }}
+                    className="flex-1 text-lg border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500 uppercase"
+                    placeholder="AZ-CARD-123456"
+                    disabled={processing || isLookingUpCard}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleGiftCardLookup(formData.gift_card_code)}
+                    disabled={processing || isLookingUpCard || !formData.gift_card_code}
+                    className="px-5 py-3 bg-emerald-600 text-white text-base font-semibold rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap shadow-sm"
+                  >
+                    {isLookingUpCard ? '...' : 'Yoxla'}
+                  </button>
+                </div>
+                {cardLookupError && (
+                  <p className="text-sm text-red-600 mt-2">{cardLookupError}</p>
+                )}
+              </div>
+
+              {giftCardInfo && (
+                <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <span className="text-base font-medium text-emerald-700">Kart Balansı:</span>
+                    <span className="text-2xl font-bold text-emerald-600">₼{giftCardInfo.current_balance}</span>
+                  </div>
+                </div>
+              )}
+
+              {giftCardInfo && giftCardInfo.status === 'active' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">İstifadə Ediləcək Məbləğ:</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.gift_card_amount || ''}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, gift_card_amount: parseFloat(e.target.value) || 0 }))}
+                    className="w-full text-xl text-right font-semibold border-2 border-emerald-300 rounded-lg px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500 bg-emerald-50"
+                    placeholder="0.00"
+                    min="0"
+                    max={Math.min(giftCardInfo.current_balance, grandTotal)}
+                    disabled={processing}
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    Maksimum: <span className="font-semibold text-emerald-600">₼{Math.min(giftCardInfo.current_balance, grandTotal).toFixed(2)}</span>
+                  </p>
+                  {(formData.gift_card_amount || 0) > 0 && (
+                    <div className="mt-2 p-2 bg-emerald-100 border border-emerald-300 rounded-lg">
+                      <p className="text-base text-emerald-800 font-bold text-center">
+                        Qalan ödəniş: ₼{Math.max(0, grandTotal - (formData.gift_card_amount || 0)).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Payment Amount Inputs */}
       {formData.payment_status === 'partial' && (
         <div className="mb-4 space-y-3">
+          {/* Show gift card breakdown if gift card is used */}
+          {(formData.gift_card_amount || 0) > 0 && (
+            <div className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl space-y-2">
+              <div className="flex justify-between text-base">
+                <span className="text-emerald-700 font-medium">Cəmi məbləğ:</span>
+                <span className="font-semibold">{grandTotal.toFixed(2)} ₼</span>
+              </div>
+              <div className="flex justify-between text-base">
+                <span className="text-emerald-700 font-medium">Hədiyyə kartı:</span>
+                <span className="font-bold text-emerald-600">-{(formData.gift_card_amount || 0).toFixed(2)} ₼</span>
+              </div>
+              <div className="flex justify-between text-base pt-2 border-t-2 border-emerald-300">
+                <span className="text-emerald-900 font-bold">Qalan ödəniş:</span>
+                <span className="font-bold text-lg">{Math.max(0, grandTotal - (formData.gift_card_amount || 0)).toFixed(2)} ₼</span>
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ödənən məbləğ:</label>
             <input
@@ -338,16 +498,17 @@ export default function TouchPayment({
               step="0.01"
               value={formData.paid_amount}
               onChange={(e) => {
-                const paidAmount = Math.min(parseFloat(e.target.value) || 0, grandTotal);
+                const remainingAfterGiftCard = grandTotal - (formData.gift_card_amount || 0);
+                const paidAmount = Math.min(parseFloat(e.target.value) || 0, remainingAfterGiftCard);
                 setFormData((prev: any) => ({
                   ...prev,
                   paid_amount: paidAmount,
-                  credit_amount: Math.max(0, grandTotal - paidAmount),
+                  credit_amount: Math.max(0, remainingAfterGiftCard - paidAmount),
                 }));
               }}
               className="w-full text-lg text-right border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-blue-500 focus:border-blue-500"
               min="0"
-              max={grandTotal}
+              max={grandTotal - (formData.gift_card_amount || 0)}
             />
           </div>
           <div>
@@ -403,7 +564,7 @@ export default function TouchPayment({
             <span>Emal edilir...</span>
           </div>
         ) : (
-          `Satışı Tamamla (${grandTotal.toFixed(2)} ₼)`
+          `Satışı Tamamla (${Math.max(0, grandTotal - (formData.gift_card_amount || 0)).toFixed(2)} ₼)`
         )}
       </button>
 

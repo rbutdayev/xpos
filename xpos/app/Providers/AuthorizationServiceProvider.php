@@ -43,7 +43,11 @@ class AuthorizationServiceProvider extends ServiceProvider
     {
         // Dashboard Access
         Gate::define('access-dashboard', function (User $user) {
-            return $user->isActive() && $user->account->isActive();
+            // Super admins don't have an account, so check separately
+            if ($user->isSuperAdmin()) {
+                return $user->isActive();
+            }
+            return $user->isActive() && $user->account && $user->account->isActive();
         });
 
         // Sales Management
@@ -83,9 +87,14 @@ class AuthorizationServiceProvider extends ServiceProvider
 
         // System Settings
         Gate::define('manage-system-settings', function (User $user) {
-            return $user->isActive() && in_array($user->role, [
-                'account_owner', 'admin'
-            ]);
+            if ($user->isSuperAdmin()) {
+                return $user->isActive();
+            }
+
+            return $user->isActive()
+                && $user->account
+                && $user->account->isActive()
+                && in_array($user->role, ['account_owner', 'admin']);
         });
 
         // User Management
@@ -104,7 +113,7 @@ class AuthorizationServiceProvider extends ServiceProvider
 
         // Account Owner specific permissions
         Gate::define('manage-account', function (User $user) {
-            return $user->isOwner() && $user->account->isActive();
+            return $user->isOwner() && $user->account && $user->account->isActive();
         });
 
         // Subscription management
@@ -164,7 +173,12 @@ class AuthorizationServiceProvider extends ServiceProvider
 
         // Multi-tenant data access - ensure users can only access their account's data
         Gate::define('access-account-data', function (User $user, $model = null) {
-            if (!$user->isActive() || !$user->account->isActive()) {
+            // Super admins can access everything
+            if ($user->isSuperAdmin()) {
+                return $user->isActive();
+            }
+
+            if (!$user->isActive() || !$user->account || !$user->account->isActive()) {
                 return false;
             }
 
@@ -188,28 +202,28 @@ class AuthorizationServiceProvider extends ServiceProvider
 
         // Create data in account (accountant excluded - they can only view)
         Gate::define('create-account-data', function (User $user) {
-            return $user->isActive() && $user->account->isActive() && in_array($user->role, [
+            return $user->isActive() && $user->account && $user->account->isActive() && in_array($user->role, [
                 'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'tailor'
             ]);
         });
 
         // Edit data in account (accountant excluded - they can only view)
         Gate::define('edit-account-data', function (User $user) {
-            return $user->isActive() && $user->account->isActive() && in_array($user->role, [
+            return $user->isActive() && $user->account && $user->account->isActive() && in_array($user->role, [
                 'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier', 'tailor'
             ]);
         });
 
         // Delete data in account
         Gate::define('delete-account-data', function (User $user) {
-            return $user->isActive() && $user->account->isActive() && in_array($user->role, [
+            return $user->isActive() && $user->account && $user->account->isActive() && in_array($user->role, [
                 'account_owner', 'admin'
             ]);
         });
 
         // Access POS system (excludes tailor and accountant roles)
         Gate::define('access-pos', function (User $user) {
-            return $user->isActive() && $user->account->isActive() && in_array($user->role, [
+            return $user->isActive() && $user->account && $user->account->isActive() && in_array($user->role, [
                 'account_owner', 'admin', 'branch_manager', 'warehouse_manager', 'sales_staff', 'cashier'
             ]);
         });
@@ -221,7 +235,20 @@ class AuthorizationServiceProvider extends ServiceProvider
 
         // Assign Loyalty Cards (All active users can assign cards to their customers)
         Gate::define('assign-loyalty-cards', function (User $user) {
-            return $user->isActive() && $user->account->isActive();
+            return $user->isActive() && $user->account && $user->account->isActive();
+        });
+
+        // Gift Cards Management (Super Admin only)
+        Gate::define('manage-gift-cards', function (User $user) {
+            return $user->isSuperAdmin();
+        });
+
+        // Use Gift Cards (All active users can use gift cards at their account if module enabled)
+        Gate::define('use-gift-cards', function (User $user) {
+            return $user->isActive() &&
+                   $user->account &&
+                   $user->account->isActive() &&
+                   $user->account->isGiftCardsModuleEnabled();
         });
     }
 }

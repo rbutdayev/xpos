@@ -40,6 +40,7 @@ interface IntegrationsProps extends PageProps {
     servicesModuleEnabled: boolean;
     rentModuleEnabled: boolean;
     discountsModuleEnabled: boolean;
+    giftCardsModuleEnabled: boolean;
 }
 
 export default function Index({
@@ -54,7 +55,8 @@ export default function Index({
     shopConfigured,
     servicesModuleEnabled,
     rentModuleEnabled,
-    discountsModuleEnabled
+    discountsModuleEnabled,
+    giftCardsModuleEnabled
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
 
@@ -190,6 +192,23 @@ export default function Index({
                 'Filial üzrə endirimlər'
             ],
             isSimpleToggle: true
+        },
+        {
+            id: 'gift_cards',
+            name: 'Hədiyyə Kartları',
+            description: 'Hədiyyə kartları satışı və idarəetməsi',
+            icon: GiftIcon,
+            category: 'business',
+            status: giftCardsModuleEnabled ? 'active' : 'inactive',
+            route: '/gift-cards/configure',
+            color: 'pink',
+            features: [
+                'Hədiyyə kartları satışı',
+                'Fiskal inteqrasiya',
+                'Kart balans izləmə',
+                'Çoxdəfəli istifadə'
+            ],
+            isSimpleToggle: true
         }
     ];
 
@@ -241,6 +260,7 @@ export default function Index({
             indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600', button: 'bg-indigo-600' },
             teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', button: 'bg-teal-600' },
             amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', button: 'bg-amber-600' },
+            pink: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-600', button: 'bg-pink-600' },
         };
         return classes[color]?.[type] || classes.blue[type];
     };
@@ -354,7 +374,7 @@ export default function Index({
 
                                         {/* Action Button */}
                                         <div className="mt-auto pt-4 sm:pt-6">
-                                            {['services', 'rent', 'discounts'].includes(integration.id) ? (
+                                            {['services', 'rent', 'discounts', 'gift_cards'].includes(integration.id) ? (
                                                 // Toggle switch for business modules
                                                 <button
                                                     onClick={() => handleToggleModule(integration.id)}
