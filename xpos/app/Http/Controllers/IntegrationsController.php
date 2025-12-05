@@ -61,6 +61,17 @@ class IntegrationsController extends Controller
         // Check Gift Cards module
         $giftCardsModuleEnabled = $account->gift_cards_module_enabled ?? false;
 
+        // Check module dependencies
+        $moduleDependencies = [
+            'shop' => ['sms'],
+            // Add more dependencies as needed
+        ];
+
+        $dependencyStatus = [];
+        foreach ($moduleDependencies as $module => $dependencies) {
+            $dependencyStatus[$module] = $account->checkModuleDependencies($dependencies);
+        }
+
         return Inertia::render('Integrations/Index', [
             'smsConfigured' => $smsConfigured,
             'telegramConfigured' => $telegramConfigured,
@@ -74,6 +85,7 @@ class IntegrationsController extends Controller
             'rentModuleEnabled' => $rentModuleEnabled,
             'discountsModuleEnabled' => $discountsModuleEnabled,
             'giftCardsModuleEnabled' => $giftCardsModuleEnabled,
+            'dependencyStatus' => $dependencyStatus,
         ]);
     }
 

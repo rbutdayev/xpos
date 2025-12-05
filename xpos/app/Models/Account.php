@@ -219,6 +219,57 @@ class Account extends Model
             ->exists();
     }
 
+    /**
+     * Check if integration/dependency is configured
+     * Used for module dependency checking
+     */
+    public function isDependencyMet(string $dependency): bool
+    {
+        return match($dependency) {
+            'sms' => $this->hasSmsConfigured(),
+            'telegram' => $this->hasTelegramConfigured(),
+            'loyalty' => $this->isLoyaltyModuleEnabled(),
+            'services' => $this->isServicesModuleEnabled(),
+            'rent' => $this->isRentModuleEnabled(),
+            'shop' => $this->isShopEnabled(),
+            'discounts' => $this->isDiscountsModuleEnabled(),
+            'gift_cards' => $this->isGiftCardsModuleEnabled(),
+            default => false,
+        };
+    }
+
+    /**
+     * Check if all dependencies are met for a module
+     * @param array $dependencies Array of dependency IDs
+     * @return array ['met' => bool, 'missing' => array of missing dependency names]
+     */
+    public function checkModuleDependencies(array $dependencies): array
+    {
+        $missing = [];
+
+        $dependencyNames = [
+            'sms' => 'SMS Xidməti',
+            'telegram' => 'Telegram Bot',
+            'loyalty' => 'Loyallıq Proqramı',
+            'services' => 'Xidmətlər Modulu',
+            'rent' => 'İcarə Modulu',
+            'shop' => 'Online Mağaza',
+            'discounts' => 'Endirimlər Modulu',
+            'gift_cards' => 'Hədiyyə Kartları',
+        ];
+
+        foreach ($dependencies as $dependency) {
+            if (!$this->isDependencyMet($dependency)) {
+                $missing[] = $dependencyNames[$dependency] ?? $dependency;
+            }
+        }
+
+        return [
+            'met' => empty($missing),
+            'missing' => $missing,
+        ];
+    }
+
     public function getCustomerSmsTemplate(): string
     {
         // Default template if not customized

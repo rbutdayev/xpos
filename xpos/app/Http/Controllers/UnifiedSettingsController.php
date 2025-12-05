@@ -315,8 +315,33 @@ class UnifiedSettingsController extends Controller
             'gift_cards' => 'gift_cards_module_enabled',
         ];
 
+        // Define module dependencies
+        $moduleDependencies = [
+            'services' => [],
+            'rent' => [],
+            'loyalty' => [],
+            'shop' => ['sms'], // Shop requires SMS to be configured
+            'discounts' => [],
+            'gift_cards' => [],
+        ];
+
         $fieldName = $moduleFields[$module];
-        $account->$fieldName = !$account->$fieldName;
+        $isCurrentlyEnabled = $account->$fieldName;
+
+        // If trying to enable the module, check dependencies
+        if (!$isCurrentlyEnabled && !empty($moduleDependencies[$module])) {
+            $dependencyCheck = $account->checkModuleDependencies($moduleDependencies[$module]);
+
+            if (!$dependencyCheck['met']) {
+                $missingList = implode(', ', $dependencyCheck['missing']);
+                return redirect()->back()->withErrors([
+                    'dependency' => "Bu modulu aktivləşdirmək üçün əvvəlcə bunları konfiqurasiya etməlisiniz: {$missingList}"
+                ]);
+            }
+        }
+
+        // Toggle the module
+        $account->$fieldName = !$isCurrentlyEnabled;
         $account->save();
 
         // Human-readable module names

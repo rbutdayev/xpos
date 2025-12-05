@@ -85,6 +85,7 @@ export const MODULES: Record<string, ModuleConfig> = {
         ],
         permissions: ['manage-shop'],
         requiredRoles: ['admin', 'account_owner'],
+        dependencies: ['sms'], // Requires SMS to be configured for notifications
         category: 'sales',
     },
 

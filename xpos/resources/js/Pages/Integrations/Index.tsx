@@ -28,6 +28,11 @@ interface Integration {
     isSimpleToggle?: boolean; // For modules that don't have configuration
 }
 
+interface DependencyStatus {
+    met: boolean;
+    missing: string[];
+}
+
 interface IntegrationsProps extends PageProps {
     smsConfigured: boolean;
     telegramConfigured: boolean;
@@ -41,6 +46,7 @@ interface IntegrationsProps extends PageProps {
     rentModuleEnabled: boolean;
     discountsModuleEnabled: boolean;
     giftCardsModuleEnabled: boolean;
+    dependencyStatus: Record<string, DependencyStatus>;
 }
 
 export default function Index({
@@ -56,9 +62,27 @@ export default function Index({
     servicesModuleEnabled,
     rentModuleEnabled,
     discountsModuleEnabled,
-    giftCardsModuleEnabled
+    giftCardsModuleEnabled,
+    dependencyStatus = {}
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
+
+    // Helper to check if a module can be enabled
+    const canEnableModule = (moduleId: string): { canEnable: boolean; message?: string } => {
+        if (!dependencyStatus[moduleId]) {
+            return { canEnable: true };
+        }
+
+        const status = dependencyStatus[moduleId];
+        if (!status.met) {
+            return {
+                canEnable: false,
+                message: `Bu modulu aktivləşdirmək üçün əvvəlcə bunları konfiqurasiya etməlisiniz: ${status.missing.join(', ')}`
+            };
+        }
+
+        return { canEnable: true };
+    };
 
     const integrations: Integration[] = [
         {
@@ -273,7 +297,16 @@ export default function Index({
         router.visit(integration.route);
     };
 
-    const handleToggleModule = (moduleId: string) => {
+    const handleToggleModule = (moduleId: string, currentlyEnabled: boolean) => {
+        // If trying to enable, check dependencies first
+        if (!currentlyEnabled) {
+            const { canEnable, message } = canEnableModule(moduleId);
+            if (!canEnable) {
+                alert(message);
+                return;
+            }
+        }
+
         router.post('/settings/toggle-module', {
             module: moduleId
         }, {
@@ -362,6 +395,25 @@ export default function Index({
                                             </p>
                                         </div>
 
+                                        {/* Dependency Warning */}
+                                        {integration.status !== 'active' && !canEnableModule(integration.id).canEnable && (
+                                            <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                                <div className="flex items-start">
+                                                    <svg className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <div>
+                                                        <p className="text-xs font-medium text-yellow-800">
+                                                            Qoşulma tələb edir
+                                                        </p>
+                                                        <p className="text-xs text-yellow-700 mt-1">
+                                                            {canEnableModule(integration.id).message}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Features */}
                                         <div className="mt-4 space-y-2 flex-1">
                                             {integration.features.map((feature, index) => (
@@ -374,16 +426,19 @@ export default function Index({
 
                                         {/* Action Button */}
                                         <div className="mt-auto pt-4 sm:pt-6">
-                                            {['services', 'rent', 'discounts', 'gift_cards'].includes(integration.id) ? (
+                                            {['services', 'rent', 'discounts', 'gift_cards', 'shop'].includes(integration.id) ? (
                                                 // Toggle switch for business modules
                                                 <button
-                                                    onClick={() => handleToggleModule(integration.id)}
+                                                    onClick={() => handleToggleModule(integration.id, integration.status === 'active')}
+                                                    disabled={integration.status !== 'active' && !canEnableModule(integration.id).canEnable}
                                                     className={`
                                                         w-full flex items-center justify-center px-3 sm:px-4 py-2 border-2
                                                         rounded-md shadow-sm text-xs sm:text-sm font-medium
-                                                        ${integration.status === 'active'
-                                                            ? `${getColorClasses(integration.color, 'button')} text-white hover:opacity-90`
-                                                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                                                        ${integration.status !== 'active' && !canEnableModule(integration.id).canEnable
+                                                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                            : integration.status === 'active'
+                                                                ? `${getColorClasses(integration.color, 'button')} text-white hover:opacity-90`
+                                                                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                                                         }
                                                         focus:outline-none focus:ring-2 focus:ring-offset-2
                                                         transition-all duration-200

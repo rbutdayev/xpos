@@ -187,96 +187,65 @@ export default function ProductPage({ account, product }: Props) {
         <>
             <Head title={`${product.name} - ${account.company_name}`} />
 
-            <div className="min-h-screen bg-gray-50">
-                {/* Trendyol-Style Header */}
-                <header className="bg-white shadow-sm sticky top-0 z-50">
-                    {/* Top Bar */}
-                    <div className="bg-orange-500">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5">
-                            <div className="flex justify-between items-center text-white text-xs">
-                                <div className="flex items-center gap-4">
-                                    {account.phone && (
-                                        <a href={`tel:${account.phone}`} className="hover:underline">
-                                            {account.phone}
-                                        </a>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {account.email && (
-                                        <a href={`mailto:${account.email}`} className="hidden md:inline hover:underline">
-                                            {account.email}
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div className="min-h-screen bg-white">
+                {/* Clean Professional Header */}
+                <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+                    <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            {/* Back Button + Logo */}
+                            <Link
+                                href={route('shop.home', account.shop_slug)}
+                                className="flex items-center gap-3 hover:opacity-60 transition-opacity"
+                            >
+                                <ArrowLeftIcon className="w-5 h-5 text-gray-900" />
+                                <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+                                    {account.company_name}
+                                </h1>
+                            </Link>
 
-                    {/* Main Navigation */}
-                    <div className="border-b border-gray-200">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex items-center gap-6 py-3">
-                                {/* Back Button + Logo */}
-                                <Link
-                                    href={route('shop.home', account.shop_slug)}
-                                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                            {/* Contact Button */}
+                            {account.phone && (
+                                <a
+                                    href={`tel:${account.phone}`}
+                                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium text-gray-700"
                                 >
-                                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
-                                        <ArrowLeftIcon className="w-4 h-4 text-gray-700" />
-                                    </div>
-                                    <h1 className="text-xl md:text-2xl font-bold text-orange-500">
-                                        {account.company_name}
-                                    </h1>
-                                </Link>
-
-                                {/* Spacer */}
-                                <div className="flex-1"></div>
-
-                                {/* Contact Button */}
-                                {account.phone && (
-                                    <a
-                                        href={`tel:${account.phone}`}
-                                        className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors text-sm font-medium"
-                                    >
-                                        <PhoneIcon className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Əlaqə</span>
-                                    </a>
-                                )}
-                            </div>
+                                    <PhoneIcon className="w-5 h-5" />
+                                    <span className="hidden sm:inline">Əlaqə</span>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </header>
 
                 {/* Breadcrumb */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 border-b border-gray-200">
                     <nav className="flex items-center gap-2 text-sm text-gray-600">
-                        <Link href={route('shop.home', account.shop_slug)} className="hover:text-orange-500">
+                        <Link href={route('shop.home', account.shop_slug)} className="hover:text-gray-900">
                             Ana səhifə
                         </Link>
                         <span>/</span>
                         {product.category && (
                             <>
-                                <span className="text-gray-500">{product.category.name}</span>
+                                <span>{product.category.name}</span>
                                 <span>/</span>
                             </>
                         )}
-                        <span className="text-gray-900 font-medium truncate">{product.name}</span>
+                        <span className="text-gray-900 truncate">{product.name}</span>
                     </nav>
                 </div>
 
                 {/* Product Detail */}
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                        <div className="grid md:grid-cols-2 gap-8 p-6 md:p-8">
+                <main className="max-w-[1400px] mx-auto px-6 lg:px-8 py-12">
+                    <div className="grid lg:grid-cols-2 gap-12">
                             {/* Product Images */}
-                            <div>
+                            <div className="space-y-4">
                                 {displayImages && displayImages.length > 0 ? (
                                     <>
-                                        <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden mb-4 shadow-md">
+                                        <div className="aspect-square bg-gray-100 overflow-hidden">
                                             <img
                                                 src={displayImages[selectedImage]?.url || displayImages[0]?.url}
                                                 alt={product.name}
-                                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                                className="w-full h-full object-cover"
                                             />
                                         </div>
                                         {displayImages.length > 1 && (
@@ -285,10 +254,10 @@ export default function ProductPage({ account, product }: Props) {
                                                     <button
                                                         key={img.id}
                                                         onClick={() => setSelectedImage(idx)}
-                                                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                                                        className={`aspect-square overflow-hidden border transition-colors ${
                                                             selectedImage === idx
-                                                                ? 'border-orange-500 shadow-md scale-105'
-                                                                : 'border-gray-200 hover:border-orange-300'
+                                                                ? 'border-gray-900'
+                                                                : 'border-gray-200 hover:border-gray-400'
                                                         }`}
                                                     >
                                                         <img
@@ -302,56 +271,58 @@ export default function ProductPage({ account, product }: Props) {
                                         )}
                                     </>
                                 ) : (
-                                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+                                    <div className="aspect-square bg-gray-100 flex items-center justify-center">
                                         <ShoppingCartIcon className="w-32 h-32 text-gray-300" />
                                     </div>
                                 )}
                             </div>
 
                             {/* Product Info */}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col space-y-6">
                                 {product.category && (
-                                    <div className="mb-3">
-                                        <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-sm font-medium">
+                                    <div>
+                                        <span className="text-xs text-gray-500 uppercase tracking-wide">
                                             {product.category.name}
                                         </span>
                                     </div>
                                 )}
-                                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                                    {product.name}
-                                </h2>
-
-                                {/* Mock Rating */}
-                                <div className="flex items-center gap-2 mb-6">
-                                    <div className="flex">
-                                        {[...Array(5)].map((_, i) => (
-                                            <StarIcon key={i} className="w-5 h-5 text-yellow-400" />
-                                        ))}
-                                    </div>
-                                    <span className="text-sm text-gray-600">(0 rəy)</span>
+                                <div>
+                                    <h1 className="text-3xl font-medium text-gray-900 mb-3">
+                                        {product.name}
+                                    </h1>
+                                    <p className="text-2xl font-semibold text-gray-900">
+                                        ₼{Number(currentPrice).toFixed(2)}
+                                    </p>
                                 </div>
+
+                                {product.description && (
+                                    <div className="border-t border-gray-200 pt-6">
+                                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                            {product.description}
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Product Details */}
                                 {(displayProduct.brand || displayProduct.model || (displayProduct.attributes && Object.keys(displayProduct.attributes).length > 0)) && (
-                                    <div className="mb-6 border-t border-gray-200 pt-6">
-                                        <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Texniki Məlumatlar</h3>
+                                    <div className="border-t border-gray-200 pt-6">
+                                        <h3 className="text-sm font-medium text-gray-900 mb-4">Texniki Məlumatlar</h3>
                                         <div className="space-y-2">
                                             {displayProduct.brand && (
-                                                <div className="flex items-start">
-                                                    <span className="text-sm text-gray-500 w-48 flex-shrink-0">Marka:</span>
-                                                    <span className="text-sm text-gray-900 font-medium">{displayProduct.brand}</span>
+                                                <div className="flex">
+                                                    <span className="text-sm text-gray-500 w-32">Marka</span>
+                                                    <span className="text-sm text-gray-900">{displayProduct.brand}</span>
                                                 </div>
                                             )}
                                             {displayProduct.model && (
-                                                <div className="flex items-start">
-                                                    <span className="text-sm text-gray-500 w-48 flex-shrink-0">Model:</span>
-                                                    <span className="text-sm text-gray-900 font-medium">{displayProduct.model}</span>
+                                                <div className="flex">
+                                                    <span className="text-sm text-gray-500 w-32">Model</span>
+                                                    <span className="text-sm text-gray-900">{displayProduct.model}</span>
                                                 </div>
                                             )}
                                             {displayProduct.attributes && Object.entries(displayProduct.attributes)
                                                 .filter(([key]) => !['size', 'color', 'color_code'].includes(key))
                                                 .map(([key, value]) => {
-                                                    // Translate attribute labels to Azerbaijani
                                                     const attributeLabels: Record<string, string> = {
                                                         'material': 'Material',
                                                         'season': 'Mövsüm',
@@ -365,11 +336,9 @@ export default function ProductPage({ account, product }: Props) {
                                                     const label = attributeLabels[key] || key.replace(/_/g, ' ');
 
                                                     return (
-                                                        <div key={key} className="flex items-start">
-                                                            <span className="text-sm text-gray-500 w-48 flex-shrink-0">
-                                                                {label}:
-                                                            </span>
-                                                            <span className="text-sm text-gray-900 font-medium">{value}</span>
+                                                        <div key={key} className="flex">
+                                                            <span className="text-sm text-gray-500 w-32">{label}</span>
+                                                            <span className="text-sm text-gray-900">{value}</span>
                                                         </div>
                                                     );
                                                 })
@@ -378,39 +347,10 @@ export default function ProductPage({ account, product }: Props) {
                                     </div>
                                 )}
 
-                                {product.description && (
-                                    <div className="mb-6">
-                                        <h3 className="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Məhsul haqqında</h3>
-                                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                                            {product.description}
-                                        </p>
-                                    </div>
-                                )}
-
-                                <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-100">
-                                    <p className="text-xs text-gray-600 mb-0.5">Qiymət</p>
-                                    <p className="text-2xl font-bold text-orange-500">
-                                        {Number(currentPrice).toFixed(2)}
-                                        <span className="text-lg text-gray-600 ml-1">₼</span>
-                                    </p>
-                                </div>
-
-                                {/* Trust Badges */}
-                                <div className="grid grid-cols-2 gap-3 mb-6">
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                        <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                        <span>Keyfiyyət zəmanəti</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                                        <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                        <span>Sürətli çatdırılma</span>
-                                    </div>
-                                </div>
-
                                 {/* Variants */}
                                 {hasVariants && (
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
+                                    <div className="border-t border-gray-200 pt-6">
+                                        <label className="block text-sm font-medium text-gray-900 mb-4">
                                             Seçimlər
                                         </label>
 
@@ -419,14 +359,12 @@ export default function ProductPage({ account, product }: Props) {
                                             {/* Available Sizes */}
                                             {variants.some(v => v.size) && (
                                                 <div>
-                                                    <p className="text-xs text-gray-600 mb-2 font-medium">Ölçü seçin:</p>
+                                                    <p className="text-xs text-gray-600 mb-2">Ölçü:</p>
                                                     <div className="flex flex-wrap gap-2">
                                                         {[...new Set(variants.filter(v => v.size).map(v => v.size))].map(size => {
-                                                            // Check if this size has stock (with any color or the selected color)
                                                             const allSizeVariants = variants.filter(v => v.size === size);
                                                             const hasStockWithAnyColor = allSizeVariants.some(v => v.stock_quantity > 0);
 
-                                                            // If color is selected, check if this size is available with that color
                                                             const sizeVariants = selectedColor
                                                                 ? variants.filter(v => v.size === size && v.color === selectedColor)
                                                                 : allSizeVariants;
@@ -438,17 +376,16 @@ export default function ProductPage({ account, product }: Props) {
                                                                     key={size}
                                                                     onClick={() => {
                                                                         setSelectedSize(size);
-                                                                        // If selecting a new size and current color combo is not available, clear color
                                                                         if (selectedColor && !hasStock) {
                                                                             setSelectedColor(null);
                                                                         }
                                                                     }}
                                                                     disabled={!hasStockWithAnyColor}
-                                                                    className={`min-w-[50px] px-3 py-1.5 rounded-md border text-sm font-medium transition-all ${
+                                                                    className={`min-w-[50px] px-3 py-2 border text-sm transition-colors ${
                                                                         isSelected
-                                                                            ? 'border-orange-500 bg-orange-500 text-white shadow-sm'
+                                                                            ? 'border-gray-900 bg-gray-900 text-white'
                                                                             : hasStockWithAnyColor
-                                                                            ? 'border-gray-300 hover:border-orange-400 bg-white hover:bg-orange-50'
+                                                                            ? 'border-gray-300 hover:border-gray-900 bg-white'
                                                                             : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed line-through'
                                                                     }`}
                                                                 >
@@ -463,15 +400,13 @@ export default function ProductPage({ account, product }: Props) {
                                             {/* Available Colors */}
                                             {variants.some(v => v.color) && (
                                                 <div>
-                                                    <p className="text-xs text-gray-600 mb-2 font-medium">Rəng seçin:</p>
+                                                    <p className="text-xs text-gray-600 mb-2">Rəng:</p>
                                                     <div className="flex flex-wrap gap-2">
                                                         {[...new Map(variants.filter(v => v.color).map(v => [v.color, v])).values()].map(variant => {
-                                                            // Check if this color has stock (with any size or the selected size)
                                                             const allColorVariants = variants.filter(v => v.color === variant.color);
                                                             const totalStockWithAnySize = allColorVariants.reduce((sum, v) => sum + Number(v.stock_quantity), 0);
                                                             const hasStockWithAnySize = totalStockWithAnySize > 0;
 
-                                                            // If size is selected, check if this color is available with that size
                                                             const colorVariants = selectedSize
                                                                 ? variants.filter(v => v.color === variant.color && v.size === selectedSize)
                                                                 : allColorVariants;
@@ -484,17 +419,16 @@ export default function ProductPage({ account, product }: Props) {
                                                                     key={variant.color}
                                                                     onClick={() => {
                                                                         setSelectedColor(variant.color);
-                                                                        // If selecting a new color and current size combo is not available, clear size
                                                                         if (selectedSize && !hasStock) {
                                                                             setSelectedSize(null);
                                                                         }
                                                                     }}
                                                                     disabled={selectedSize ? !hasStock : !hasStockWithAnySize}
-                                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm transition-all ${
+                                                                    className={`flex items-center gap-2 px-3 py-2 border text-sm transition-colors ${
                                                                         isSelected
-                                                                            ? 'border-orange-500 bg-orange-50 shadow-sm'
+                                                                            ? 'border-gray-900 bg-gray-50'
                                                                             : (selectedSize ? hasStock : hasStockWithAnySize)
-                                                                            ? 'border-gray-300 hover:border-orange-400 bg-white hover:bg-orange-50'
+                                                                            ? 'border-gray-300 hover:border-gray-900 bg-white'
                                                                             : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
                                                                     }`}
                                                                 >
@@ -504,14 +438,9 @@ export default function ProductPage({ account, product }: Props) {
                                                                             style={{ backgroundColor: variant.color_code }}
                                                                         />
                                                                     )}
-                                                                    <span className={`font-medium ${(selectedSize ? !hasStock : !hasStockWithAnySize) ? 'line-through text-gray-400' : ''}`}>
+                                                                    <span className={`${(selectedSize ? !hasStock : !hasStockWithAnySize) ? 'line-through text-gray-400' : ''}`}>
                                                                         {variant.color}
                                                                     </span>
-                                                                    {(selectedSize ? hasStock : hasStockWithAnySize) && (
-                                                                        <span className="text-xs text-gray-500">
-                                                                            ({selectedSize ? totalStock : totalStockWithAnySize})
-                                                                        </span>
-                                                                    )}
                                                                 </button>
                                                             );
                                                         })}
@@ -580,14 +509,14 @@ export default function ProductPage({ account, product }: Props) {
                                 )}
 
                                 {/* Quantity */}
-                                <div className="mb-6">
-                                    <label className="block text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
+                                <div className="border-t border-gray-200 pt-6">
+                                    <label className="block text-sm font-medium text-gray-900 mb-3">
                                         Miqdar
                                     </label>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                         <button
                                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-9 h-9 rounded-lg border border-gray-300 hover:border-orange-500 hover:bg-orange-50 font-bold text-lg transition-all"
+                                            className="w-10 h-10 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
                                         >
                                             −
                                         </button>
@@ -595,76 +524,72 @@ export default function ProductPage({ account, product }: Props) {
                                             type="number"
                                             value={quantity}
                                             onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                            className="w-16 text-center border border-gray-300 rounded-lg py-2 font-semibold focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                            className="w-16 text-center border border-gray-300 py-2 font-medium focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                         />
                                         <button
                                             onClick={() => setQuantity(quantity + 1)}
-                                            className="w-9 h-9 rounded-lg border border-gray-300 hover:border-orange-500 hover:bg-orange-50 font-bold text-lg transition-all"
+                                            className="w-10 h-10 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
                                         >
                                             +
                                         </button>
-                                    </div>
-                                </div>
-
-                                {/* Total */}
-                                <div className="mb-6 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm font-semibold text-gray-700">Cəmi məbləğ:</span>
-                                        <span className="text-2xl font-bold text-gray-900">
-                                            {(Number(currentPrice) * quantity).toFixed(2)} ₼
-                                        </span>
+                                        <div className="ml-auto">
+                                            <p className="text-xs text-gray-500">Cəmi</p>
+                                            <p className="text-lg font-semibold text-gray-900">
+                                                ₼{(Number(currentPrice) * quantity).toFixed(2)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Order Button */}
                                 {!showOrderForm ? (
-                                    <button
-                                        onClick={() => setShowOrderForm(true)}
-                                        className="w-full bg-orange-500 text-white py-4 rounded-xl hover:bg-orange-600 font-bold text-lg transition-all hover:shadow-xl flex items-center justify-center gap-2"
-                                    >
-                                        <ShoppingCartIcon className="w-6 h-6" />
-                                        Sifariş ver
-                                    </button>
+                                    <div className="mt-8">
+                                        <button
+                                            onClick={() => setShowOrderForm(true)}
+                                            className="w-full bg-gray-900 text-white py-4 hover:bg-gray-800 font-medium text-base transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <ShoppingCartIcon className="w-5 h-5" />
+                                            Sifariş ver
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <form onSubmit={handleOrder} className="space-y-4 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Sifariş məlumatları</h3>
+                                    <form onSubmit={handleOrder} className="mt-8 space-y-4 border-t border-gray-200 pt-6">
+                                        <h3 className="text-base font-medium text-gray-900 mb-4">Sifariş məlumatları</h3>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Adınız *
+                                                Ad Soyad *
                                             </label>
                                             <input
                                                 type="text"
                                                 value={formData.customer_name}
                                                 onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
                                                 required
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                                 placeholder="Adınızı daxil edin"
                                             />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Telefon nömrəsi *
+                                                Telefon *
                                             </label>
                                             <div className="flex">
-                                                <span className="inline-flex items-center px-4 py-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-700 font-medium">
+                                                <span className="inline-flex items-center px-4 py-2.5 bg-gray-100 border border-r-0 border-gray-300 text-gray-700 font-medium">
                                                     +994
                                                 </span>
                                                 <input
                                                     type="tel"
                                                     value={formData.customer_phone}
                                                     onChange={(e) => {
-                                                        // Only allow digits
                                                         const value = e.target.value.replace(/\D/g, '');
                                                         setFormData({ ...formData, customer_phone: value });
                                                     }}
                                                     required
                                                     maxLength={9}
-                                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                    className="flex-1 px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                                                     placeholder="501234567"
                                                 />
                                             </div>
-                                            <p className="mt-1 text-xs text-gray-500">Nümunə: 501234567 və ya 551234567</p>
                                         </div>
 
                                         <div>
@@ -676,8 +601,8 @@ export default function ProductPage({ account, product }: Props) {
                                                 value={formData.city}
                                                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                                 required
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                                placeholder="Məsələn: Bakı, Gəncə, Sumqayıt..."
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                                placeholder="Bakı, Gəncə, Sumqayıt..."
                                             />
                                         </div>
 
@@ -689,20 +614,20 @@ export default function ProductPage({ account, product }: Props) {
                                                 value={formData.address}
                                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                                 rows={2}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                                                placeholder="Dəqiq ünvan (küçə, bina, mənzil...)"
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                                                placeholder="Ünvan..."
                                             />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Əlavə qeydlər (istəyə bağlı)
+                                                Qeyd (istəyə bağlı)
                                             </label>
                                             <textarea
                                                 value={formData.notes}
                                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                                 rows={2}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
                                                 placeholder="Əlavə məlumat..."
                                             />
                                         </div>
@@ -711,14 +636,14 @@ export default function ProductPage({ account, product }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowOrderForm(false)}
-                                                className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 font-semibold transition-all"
+                                                className="flex-1 border border-gray-300 text-gray-700 py-3 hover:bg-gray-50 font-medium transition-colors"
                                             >
                                                 Ləğv et
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={submitting}
-                                                className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 font-semibold disabled:opacity-50 transition-all hover:shadow-lg flex items-center justify-center gap-2"
+                                                className="flex-1 bg-gray-900 text-white py-3 hover:bg-gray-800 font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 {submitting ? (
                                                     <>
@@ -726,10 +651,7 @@ export default function ProductPage({ account, product }: Props) {
                                                         Göndərilir...
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        <CheckCircleIcon className="w-5 h-5" />
-                                                        Təsdiq et
-                                                    </>
+                                                    'Təsdiq et'
                                                 )}
                                             </button>
                                         </div>
@@ -737,19 +659,20 @@ export default function ProductPage({ account, product }: Props) {
                                 )}
                             </div>
                         </div>
-                    </div>
                 </main>
 
                 {/* Footer */}
-                <footer className="bg-white border-t border-gray-200">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <footer className="bg-gray-50 border-t border-gray-200 mt-24">
+                    <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-12">
                         <div className="text-center">
-                            <p className="text-gray-600">&copy; {new Date().getFullYear()} {account.company_name}. Bütün hüquqlar qorunur.</p>
+                            <p className="text-sm text-gray-600">
+                                &copy; {new Date().getFullYear()} {account.company_name}. Bütün hüquqlar qorunur.
+                            </p>
                             <p className="mt-2 text-sm text-gray-500">
-                                <a href="https://xpos.az" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors">
+                                Powered by{' '}
+                                <a href="https://xpos.az" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">
                                     XPOS
                                 </a>
-                                {' '}ilə hazırlanıb
                             </p>
                         </div>
                     </div>

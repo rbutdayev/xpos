@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ShoppingCartIcon,
     PhoneIcon,
@@ -11,7 +11,8 @@ import {
     TagIcon,
     SparklesIcon,
     Bars3Icon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
@@ -69,6 +70,14 @@ interface CartItem {
     quantity: number;
 }
 
+interface OrderFormData {
+    customer_name: string;
+    customer_phone: string;
+    city: string;
+    address: string;
+    notes: string;
+}
+
 export default function Home({ account, products, categories }: Props) {
     const [cart, setCart] = useState<{ [key: number]: CartItem }>({});
     const [showCart, setShowCart] = useState(false);
@@ -77,6 +86,17 @@ export default function Home({ account, products, categories }: Props) {
     const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
     const [showCategoryMenu, setShowCategoryMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [showOrderModal, setShowOrderModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [orderQuantity, setOrderQuantity] = useState(1);
+    const [orderFormData, setOrderFormData] = useState<OrderFormData>({
+        customer_name: '',
+        customer_phone: '',
+        city: '',
+        address: '',
+        notes: ''
+    });
+    const [submitting, setSubmitting] = useState(false);
 
     const updateCartQuantity = (productId: number, quantity: number) => {
         if (quantity <= 0) {
@@ -98,6 +118,45 @@ export default function Home({ account, products, categories }: Props) {
         const newCart = { ...cart };
         delete newCart[productId];
         setCart(newCart);
+    };
+
+    const openOrderModal = (product: Product) => {
+        setSelectedProduct(product);
+        setOrderQuantity(1);
+        setShowOrderModal(true);
+    };
+
+    const handleQuickOrder = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedProduct) return;
+
+        setSubmitting(true);
+        router.post(route('shop.order', account.shop_slug), {
+            customer_name: orderFormData.customer_name,
+            customer_phone: orderFormData.customer_phone,
+            items: [{
+                product_id: selectedProduct.id,
+                variant_id: null,
+                quantity: orderQuantity,
+                sale_price: selectedProduct.sale_price
+            }],
+            city: orderFormData.city,
+            address: orderFormData.address,
+            notes: orderFormData.notes
+        }, {
+            onSuccess: () => {
+                alert('Sifarişiniz qəbul edildi! Tezliklə sizinlə əlaqə saxlanılacaq.');
+                setShowOrderModal(false);
+                setOrderFormData({ customer_name: '', customer_phone: '', city: '', address: '', notes: '' });
+                setOrderQuantity(1);
+                setSelectedProduct(null);
+            },
+            onError: (errors) => {
+                alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+                console.error(errors);
+            },
+            onFinish: () => setSubmitting(false)
+        });
     };
 
     const cartItems = Object.values(cart);
@@ -124,255 +183,224 @@ export default function Home({ account, products, categories }: Props) {
         <>
             <Head title={account.company_name} />
 
-            <div className="min-h-screen bg-gray-50">
-                {/* Trendyol-Style Header */}
-                <header className="bg-white shadow-sm sticky top-0 z-50">
-                    {/* Top Bar */}
-                    <div className="bg-orange-500">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5">
-                            <div className="flex justify-between items-center text-white text-xs">
-                                <div className="flex items-center gap-4">
-                                    {account.phone && (
-                                        <a href={`tel:${account.phone}`} className="hover:underline">
-                                            {account.phone}
-                                        </a>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {account.email && (
-                                        <a href={`mailto:${account.email}`} className="hidden md:inline hover:underline">
-                                            {account.email}
-                                        </a>
-                                    )}
-                                </div>
+            <div className="min-h-screen bg-white">
+                {/* Clean Professional Header - Single Layer */}
+                <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+                    <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            {/* Logo */}
+                            <div className="flex-shrink-0">
+                                <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">
+                                    {account.company_name}
+                                </h1>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Main Navigation */}
-                    <div className="border-b border-gray-200">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex items-center gap-6 py-3">
-                                {/* Logo */}
-                                <div className="flex-shrink-0">
-                                    <h1 className="text-xl md:text-2xl font-bold text-orange-500">
-                                        {account.company_name}
-                                    </h1>
-                                </div>
-
-                                {/* Search Bar */}
-                                <div className="flex-1 max-w-3xl">
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            placeholder="Axtardığınız məhsulu yazın"
-                                            className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                        />
-                                        <button className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
-                                        </button>
-                                        {searchQuery && (
-                                            <button
-                                                onClick={() => setSearchQuery('')}
-                                                className="absolute right-10 top-1/2 -translate-y-1/2"
-                                            >
-                                                <XMarkIcon className="w-4 h-4 text-gray-400" />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Cart Button */}
-                                <button
-                                    onClick={() => setShowCart(true)}
-                                    className="relative flex items-center gap-2 px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors"
-                                >
-                                    <ShoppingCartIcon className="w-6 h-6 text-gray-700" />
-                                    <span className="hidden md:inline text-sm font-medium text-gray-700">Səbət</span>
-                                    {cartCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-orange-500 text-white px-1.5 py-0.5 rounded-full text-xs font-bold min-w-[20px] text-center">
-                                            {cartCount}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Category Navigation Bar */}
-                    <div className="bg-gray-50 border-b border-gray-200">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex items-center gap-2 py-2 overflow-x-auto">
-                                {/* All Categories Button */}
+                            {/* Desktop Navigation */}
+                            <nav className="hidden lg:flex items-center gap-8">
                                 <button
                                     onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-                                    className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors flex-shrink-0 text-sm font-medium"
+                                    className="text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-1"
                                 >
-                                    <Bars3Icon className="w-4 h-4" />
-                                    <span>Bütün Kateqoriyalar</span>
+                                    Kateqoriyalar
+                                    <ChevronRightIcon className={`w-4 h-4 transition-transform ${showCategoryMenu ? 'rotate-90' : ''}`} />
                                 </button>
+                            </nav>
 
-                                {/* Quick Category Links */}
-                                <button
-                                    onClick={() => setSelectedCategory(null)}
-                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex-shrink-0 ${
-                                        selectedCategory === null
-                                            ? 'bg-white text-orange-500 shadow-sm'
-                                            : 'text-gray-700 hover:bg-white hover:text-orange-500'
-                                    }`}
-                                >
-                                    Hamısı
-                                </button>
-                                {categories.slice(0, 6).map(category => (
-                                    <button
-                                        key={category.id}
-                                        onClick={() => setSelectedCategory(category.id)}
-                                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex-shrink-0 ${
-                                            selectedCategory === category.id
-                                                ? 'bg-white text-orange-500 shadow-sm'
-                                                : 'text-gray-700 hover:bg-white hover:text-orange-500'
-                                        }`}
-                                    >
-                                        {category.name}
-                                    </button>
-                                ))}
+                            {/* Search Bar */}
+                            <div className="flex-1 max-w-xl mx-8 hidden md:block">
+                                <div className="relative">
+                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Axtar..."
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            <XMarkIcon className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+
+                            {/* Cart */}
+                            <button
+                                onClick={() => setShowCart(true)}
+                                className="relative flex items-center gap-2 px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                            >
+                                <ShoppingCartIcon className="w-6 h-6 text-gray-700" />
+                                {cartCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-medium">
+                                        {cartCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Mobile Menu Button */}
+                            <button
+                                onClick={() => setShowMobileMenu(true)}
+                                className="lg:hidden text-gray-700"
+                            >
+                                <Bars3Icon className="w-6 h-6" />
+                            </button>
                         </div>
                     </div>
                 </header>
 
 
                 {/* Main Content */}
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="flex flex-col lg:flex-row gap-8">
-                        {/* Category Sidebar - Desktop (Hidden, using top nav instead) */}
+                <main className="max-w-[1400px] mx-auto px-6 lg:px-8 py-12">
+                    {/* Category Filter Pills */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                            <button
+                                onClick={() => setSelectedCategory(null)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                                    selectedCategory === null
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                Hamısı
+                            </button>
+                            {categories.map(category => (
+                                <button
+                                    key={category.id}
+                                    onClick={() => setSelectedCategory(category.id)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                                        selectedCategory === category.id
+                                            ? 'bg-gray-900 text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                        {/* Products Section */}
-                        <div className="flex-1 w-full lg:min-w-0">
-
-                    {/* Toolbar: Results count & Sort */}
+                    {/* Toolbar: Results & Sort */}
                     <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <h2 className="text-lg font-semibold text-gray-900">
-                            {filteredProducts.length > 0 ? (
-                                <>
-                                    <span className="text-indigo-600">{filteredProducts.length}</span>
-                                    {' '}məhsul tapıldı
-                                </>
-                            ) : (
-                                'Məhsul tapılmadı'
-                            )}
-                        </h2>
+                        <div>
+                            <p className="text-sm text-gray-600">
+                                {filteredProducts.length > 0 ? (
+                                    <>{filteredProducts.length} məhsul</>
+                                ) : (
+                                    'Məhsul tapılmadı'
+                                )}
+                            </p>
+                        </div>
 
                         <div className="flex items-center gap-2">
                             <label className="text-sm text-gray-600">Sırala:</label>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as any)}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm bg-white"
                             >
                                 <option value="name">Ad (A-Z)</option>
-                                <option value="price-asc">Qiymət (Aşağıdan yuxarı)</option>
-                                <option value="price-desc">Qiymət (Yuxarıdan aşağı)</option>
+                                <option value="price-asc">Qiymət: Aşağıdan</option>
+                                <option value="price-desc">Qiymət: Yuxarıdan</option>
                             </select>
                         </div>
                     </div>
 
-                    {/* Products Grid - Trendyol Style */}
+                    {/* Products Grid - Clean Minimal Design */}
                     {filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                             {filteredProducts.map(product => (
                                 <Link
                                     key={product.id}
                                     href={route('shop.product', { shop_slug: account.shop_slug, id: product.id })}
-                                    className="bg-white rounded-lg hover:shadow-lg transition-shadow duration-200 overflow-hidden group flex flex-col"
+                                    className="group block"
                                 >
                                     {/* Product Image */}
-                                    <div className="aspect-[3/4] bg-gray-100 overflow-hidden relative">
+                                    <div className="aspect-square bg-gray-100 overflow-hidden mb-3 relative">
                                         {product.image_url ? (
                                             <img
                                                 src={product.image_url}
                                                 alt={product.name}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                <ShoppingCartIcon className="w-12 h-12" />
+                                                <ShoppingCartIcon className="w-16 h-16" />
                                             </div>
                                         )}
+
+                                        {/* Quick Order Button on Hover */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                openOrderModal(product);
+                                            }}
+                                            className="absolute bottom-3 left-3 right-3 bg-white text-gray-900 py-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100"
+                                        >
+                                            Sifariş ver
+                                        </button>
                                     </div>
 
                                     {/* Product Info */}
-                                    <div className="p-2 flex flex-col flex-1">
-                                        {/* Brand/Category */}
+                                    <div className="space-y-1">
+                                        {/* Brand */}
                                         {product.brand && (
-                                            <p className="text-xs font-semibold text-gray-900 mb-1 uppercase">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">
                                                 {product.brand}
                                             </p>
                                         )}
 
                                         {/* Product Name */}
-                                        <h3 className="text-xs text-gray-600 mb-2 line-clamp-2 leading-tight">
+                                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
                                             {product.name}
                                         </h3>
 
-                                        {/* Variant Info */}
+                                        {/* Variant Info - Compact */}
                                         {((product.available_sizes?.length || 0) > 0 || (product.available_colors?.length || 0) > 0) && (
-                                            <p className="text-xs text-gray-400 mb-2">
-                                                {product.available_sizes && product.available_sizes?.length > 0
-                                                    ? `${product.available_sizes.length} Ölçü`
-                                                    : product.available_colors && product.available_colors?.length > 0
-                                                    ? `${product.available_colors.length} Rəng`
-                                                    : ''}
+                                            <p className="text-xs text-gray-500">
+                                                {product.available_sizes && product.available_sizes?.length > 0 && `${product.available_sizes.length} ölçü`}
+                                                {product.available_sizes && product.available_sizes?.length > 0 && product.available_colors && product.available_colors?.length > 0 && ' • '}
+                                                {product.available_colors && product.available_colors?.length > 0 && `${product.available_colors.length} rəng`}
                                             </p>
                                         )}
 
-                                        {/* Price Section */}
-                                        <div className="mt-auto">
-                                            {product.price_range?.has_range ? (
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-base font-bold text-orange-500">
-                                                        {Number(product.price_range.min).toFixed(2)}
-                                                    </span>
-                                                    <span className="text-xs text-gray-400">-</span>
-                                                    <span className="text-base font-bold text-orange-500">
-                                                        {Number(product.price_range.max).toFixed(2)}
-                                                    </span>
-                                                    <span className="text-xs text-gray-600">₼</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-base font-bold text-orange-500">
-                                                        {Number(product.sale_price).toFixed(2)}
-                                                    </span>
-                                                    <span className="text-xs text-gray-600">₼</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        {/* Price */}
+                                        {product.price_range?.has_range ? (
+                                            <p className="text-base font-semibold text-gray-900">
+                                                ₼{Number(product.price_range.min).toFixed(2)} - ₼{Number(product.price_range.max).toFixed(2)}
+                                            </p>
+                                        ) : (
+                                            <p className="text-base font-semibold text-gray-900">
+                                                ₼{Number(product.sale_price).toFixed(2)}
+                                            </p>
+                                        )}
                                     </div>
                                 </Link>
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-16 bg-white rounded-xl">
-                            <ShoppingCartIcon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-                            <p className="text-lg text-gray-600 mb-2">Məhsul tapılmadı</p>
+                        <div className="text-center py-32">
+                            <ShoppingCartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                            <p className="text-lg font-medium text-gray-900 mb-1">Məhsul tapılmadı</p>
                             <p className="text-sm text-gray-500">Axtarış və ya filtr parametrlərini dəyişdirin</p>
                         </div>
                     )}
 
                     {/* Pagination */}
                     {products.last_page > 1 && (
-                        <div className="mt-8 flex justify-center gap-2">
+                        <div className="mt-12 flex justify-center gap-1">
                             {Array.from({ length: products.last_page }, (_, i) => i + 1).map(page => (
                                 <Link
                                     key={page}
                                     href={`?page=${page}`}
-                                    className={`px-4 py-2 rounded-lg transition-all ${
+                                    className={`px-4 py-2 text-sm font-medium transition-colors ${
                                         page === products.current_page
-                                            ? 'bg-indigo-600 text-white shadow-md'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                                            ? 'bg-gray-900 text-white'
+                                            : 'text-gray-700 hover:bg-gray-100'
                                     }`}
                                 >
                                     {page}
@@ -380,23 +408,20 @@ export default function Home({ account, products, categories }: Props) {
                             ))}
                         </div>
                     )}
-                        </div>
-                    </div>
                 </main>
 
-                {/* Category Menu Modal - Trendyol Style */}
+                {/* Category Menu Modal */}
                 {showCategoryMenu && categories.length > 0 && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowCategoryMenu(false)}>
+                    <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowCategoryMenu(false)}>
                         <div className="absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                             {/* Menu Header */}
-                            <div className="bg-orange-500 px-4 py-4 flex items-center justify-between sticky top-0">
-                                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                                    <Bars3Icon className="w-5 h-5" />
-                                    Bütün Kateqoriyalar
+                            <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
+                                <h2 className="text-base font-semibold text-gray-900">
+                                    Kateqoriyalar
                                 </h2>
                                 <button
                                     onClick={() => setShowCategoryMenu(false)}
-                                    className="text-white hover:bg-white/20 p-1.5 rounded transition-colors"
+                                    className="text-gray-400 hover:text-gray-600"
                                 >
                                     <XMarkIcon className="w-6 h-6" />
                                 </button>
@@ -410,9 +435,9 @@ export default function Home({ account, products, categories }: Props) {
                                         setSelectedCategory(null);
                                         setShowCategoryMenu(false);
                                     }}
-                                    className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                                    className={`w-full text-left px-6 py-3 text-sm font-medium transition-colors ${
                                         selectedCategory === null
-                                            ? 'bg-orange-50 text-orange-500 font-medium'
+                                            ? 'bg-gray-100 text-gray-900'
                                             : 'text-gray-700 hover:bg-gray-50'
                                     }`}
                                 >
@@ -431,9 +456,9 @@ export default function Home({ account, products, categories }: Props) {
                                                     setSelectedCategory(category.id);
                                                     if (!hasChildren) setShowCategoryMenu(false);
                                                 }}
-                                                className={`w-full text-left px-4 py-3 text-sm transition-colors flex items-center justify-between ${
+                                                className={`w-full text-left px-6 py-3 text-sm font-medium transition-colors flex items-center justify-between ${
                                                     isActive
-                                                        ? 'bg-orange-50 text-orange-500 font-medium'
+                                                        ? 'bg-gray-100 text-gray-900'
                                                         : 'text-gray-700 hover:bg-gray-50'
                                                 }`}
                                             >
@@ -453,7 +478,7 @@ export default function Home({ account, products, categories }: Props) {
                                                                 setSelectedCategory(child.id);
                                                                 setShowCategoryMenu(false);
                                                             }}
-                                                            className="w-full text-left px-8 py-2.5 text-sm text-gray-600 hover:text-orange-500 hover:bg-white transition-colors"
+                                                            className="w-full text-left px-12 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-white transition-colors"
                                                         >
                                                             {child.name}
                                                         </button>
@@ -469,12 +494,12 @@ export default function Home({ account, products, categories }: Props) {
                 )}
 
                 {/* Footer */}
-                <footer className="bg-white border-t border-gray-200 mt-8">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <footer className="bg-gray-50 border-t border-gray-200 mt-24">
+                    <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-16">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
                             {/* Company Info */}
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                                     {account.company_name}
                                 </h3>
                                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -484,18 +509,13 @@ export default function Home({ account, products, categories }: Props) {
 
                             {/* Quick Links */}
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Sürətli keçidlər</h3>
+                                <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">Kateqoriyalar</h3>
                                 <ul className="space-y-2">
-                                    <li>
-                                        <Link href={route('shop.home', account.shop_slug)} className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">
-                                            Ana səhifə
-                                        </Link>
-                                    </li>
-                                    {categories.slice(0, 4).map(category => (
+                                    {categories.slice(0, 5).map(category => (
                                         <li key={category.id}>
                                             <button
                                                 onClick={() => setSelectedCategory(category.id)}
-                                                className="text-sm text-gray-600 hover:text-indigo-600 transition-colors"
+                                                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
                                             >
                                                 {category.name}
                                             </button>
@@ -510,23 +530,23 @@ export default function Home({ account, products, categories }: Props) {
                                 <ul className="space-y-3">
                                     {account.phone && (
                                         <li className="flex items-start gap-2">
-                                            <PhoneIcon className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                                            <a href={`tel:${account.phone}`} className="text-sm text-gray-600 hover:text-indigo-600">
+                                            <PhoneIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                            <a href={`tel:${account.phone}`} className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
                                                 {account.phone}
                                             </a>
                                         </li>
                                     )}
                                     {account.email && (
                                         <li className="flex items-start gap-2">
-                                            <EnvelopeIcon className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                                            <a href={`mailto:${account.email}`} className="text-sm text-gray-600 hover:text-indigo-600 break-all">
+                                            <EnvelopeIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                                            <a href={`mailto:${account.email}`} className="text-sm text-gray-600 hover:text-gray-900 break-all transition-colors">
                                                 {account.email}
                                             </a>
                                         </li>
                                     )}
                                     {account.address && (
                                         <li className="flex items-start gap-2">
-                                            <MapPinIcon className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                                            <MapPinIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                                             <span className="text-sm text-gray-600">
                                                 {account.address}
                                             </span>
@@ -538,13 +558,15 @@ export default function Home({ account, products, categories }: Props) {
 
                         {/* Bottom Bar */}
                         <div className="border-t border-gray-200 pt-8">
-                            <div className="text-center">
-                                <p className="text-gray-600">&copy; {new Date().getFullYear()} {account.company_name}. Bütün hüquqlar qorunur.</p>
-                                <p className="mt-2 text-sm text-gray-500">
-                                    <a href="https://xpos.az" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors">
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                <p className="text-sm text-gray-600">
+                                    &copy; {new Date().getFullYear()} {account.company_name}. Bütün hüquqlar qorunur.
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    Powered by{' '}
+                                    <a href="https://xpos.az" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:underline">
                                         XPOS
                                     </a>
-                                    {' '}ilə hazırlanıb
                                 </p>
                             </div>
                         </div>
@@ -553,17 +575,16 @@ export default function Home({ account, products, categories }: Props) {
 
                 {/* Shopping Cart Modal */}
                 {showCart && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white max-w-2xl w-full max-h-[90vh] flex flex-col">
                             {/* Cart Header */}
-                            <div className="flex justify-between items-center p-6 border-b">
-                                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                    <ShoppingCartIcon className="w-6 h-6 text-indigo-600" />
-                                    Səbətim
+                            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                                <h2 className="text-xl font-semibold text-gray-900">
+                                    Səbət ({cartCount})
                                 </h2>
                                 <button
                                     onClick={() => setShowCart(false)}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="text-gray-400 hover:text-gray-600"
                                 >
                                     <XMarkIcon className="w-6 h-6" />
                                 </button>
@@ -574,8 +595,8 @@ export default function Home({ account, products, categories }: Props) {
                                 {cartItems.length > 0 ? (
                                     <div className="space-y-4">
                                         {cartItems.map(item => (
-                                            <div key={item.product.id} className="flex gap-4 bg-gray-50 p-4 rounded-lg">
-                                                <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                            <div key={item.product.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
+                                                <div className="w-24 h-24 bg-gray-100 flex-shrink-0">
                                                     {item.product.image_url ? (
                                                         <img
                                                             src={item.product.image_url}
@@ -584,26 +605,26 @@ export default function Home({ account, products, categories }: Props) {
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <ShoppingCartIcon className="w-8 h-8 text-gray-400" />
+                                                            <ShoppingCartIcon className="w-8 h-8 text-gray-300" />
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h3 className="font-semibold text-gray-900 mb-1">{item.product.name}</h3>
-                                                    <p className="text-sm text-gray-600 mb-2">
-                                                        {Number(item.product.sale_price).toFixed(2)} ₼
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
+                                                    <p className="text-sm text-gray-600 mb-3">
+                                                        ₼{Number(item.product.sale_price).toFixed(2)}
                                                     </p>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-3">
                                                         <button
                                                             onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
-                                                            className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                                                            className="w-8 h-8 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
                                                         >
                                                             <MinusIcon className="w-4 h-4" />
                                                         </button>
-                                                        <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                                                        <span className="w-8 text-center font-medium">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
-                                                            className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                                                            className="w-8 h-8 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
                                                         >
                                                             <PlusIcon className="w-4 h-4" />
                                                         </button>
@@ -612,19 +633,19 @@ export default function Home({ account, products, categories }: Props) {
                                                 <div className="flex flex-col items-end justify-between">
                                                     <button
                                                         onClick={() => removeFromCart(item.product.id)}
-                                                        className="text-red-500 hover:text-red-700"
+                                                        className="text-gray-400 hover:text-gray-900"
                                                     >
                                                         <XMarkIcon className="w-5 h-5" />
                                                     </button>
-                                                    <p className="font-bold text-gray-900">
-                                                        {(Number(item.product.sale_price) * item.quantity).toFixed(2)} ₼
+                                                    <p className="font-semibold text-gray-900">
+                                                        ₼{(Number(item.product.sale_price) * item.quantity).toFixed(2)}
                                                     </p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12">
+                                    <div className="text-center py-16">
                                         <ShoppingCartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                         <p className="text-gray-600">Səbətiniz boşdur</p>
                                     </div>
@@ -633,18 +654,206 @@ export default function Home({ account, products, categories }: Props) {
 
                             {/* Cart Footer */}
                             {cartItems.length > 0 && (
-                                <div className="border-t p-6 bg-gray-50">
+                                <div className="border-t border-gray-200 p-6">
                                     <div className="flex justify-between items-center mb-4">
-                                        <span className="text-lg font-semibold text-gray-700">Cəmi:</span>
-                                        <span className="text-2xl font-bold text-gray-900">
-                                            {cartTotal.toFixed(2)} ₼
+                                        <span className="text-sm font-medium text-gray-700">Cəmi</span>
+                                        <span className="text-2xl font-semibold text-gray-900">
+                                            ₼{cartTotal.toFixed(2)}
                                         </span>
                                     </div>
-                                    <button className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold text-lg transition-all hover:shadow-lg">
+                                    <button className="w-full bg-gray-900 text-white py-3.5 hover:bg-gray-800 font-medium transition-colors">
                                         Sifarişi tamamla
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Quick Order Modal */}
+                {showOrderModal && selectedProduct && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+                            {/* Modal Header */}
+                            <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
+                                <h2 className="text-xl font-semibold text-gray-900">
+                                    Sürətli Sifariş
+                                </h2>
+                                <button
+                                    onClick={() => setShowOrderModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <XMarkIcon className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6">
+                                {/* Product Preview */}
+                                <div className="flex gap-4 mb-6 pb-6 border-b border-gray-200">
+                                    <div className="w-24 h-24 bg-gray-100 flex-shrink-0">
+                                        {selectedProduct.image_url ? (
+                                            <img
+                                                src={selectedProduct.image_url}
+                                                alt={selectedProduct.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <ShoppingCartIcon className="w-10 h-10 text-gray-300" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        {selectedProduct.brand && (
+                                            <p className="text-xs text-gray-500 uppercase mb-1">{selectedProduct.brand}</p>
+                                        )}
+                                        <h3 className="font-medium text-gray-900 mb-2">{selectedProduct.name}</h3>
+                                        <p className="text-xl font-semibold text-gray-900">
+                                            ₼{Number(selectedProduct.sale_price).toFixed(2)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Quantity Selector */}
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Miqdar
+                                    </label>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
+                                            className="w-10 h-10 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
+                                        >
+                                            <MinusIcon className="w-5 h-5" />
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={orderQuantity}
+                                            onChange={(e) => setOrderQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                            className="w-16 text-center border border-gray-300 py-2 font-medium focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                        />
+                                        <button
+                                            onClick={() => setOrderQuantity(orderQuantity + 1)}
+                                            className="w-10 h-10 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
+                                        >
+                                            <PlusIcon className="w-5 h-5" />
+                                        </button>
+                                        <div className="ml-auto text-right">
+                                            <p className="text-xs text-gray-500">Cəmi</p>
+                                            <p className="text-xl font-semibold text-gray-900">
+                                                ₼{(Number(selectedProduct.sale_price) * orderQuantity).toFixed(2)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Order Form */}
+                                <form onSubmit={handleQuickOrder} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Ad Soyad *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={orderFormData.customer_name}
+                                            onChange={(e) => setOrderFormData({ ...orderFormData, customer_name: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                            placeholder="Adınızı daxil edin"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Telefon nömrəsi *
+                                        </label>
+                                        <div className="flex">
+                                            <span className="inline-flex items-center px-4 py-2.5 bg-gray-100 border border-r-0 border-gray-300 text-gray-700 font-medium">
+                                                +994
+                                            </span>
+                                            <input
+                                                type="tel"
+                                                value={orderFormData.customer_phone}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, '');
+                                                    setOrderFormData({ ...orderFormData, customer_phone: value });
+                                                }}
+                                                required
+                                                maxLength={9}
+                                                className="flex-1 px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                                placeholder="501234567"
+                                            />
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">Nümunə: 501234567 və ya 551234567</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Şəhər *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={orderFormData.city}
+                                            onChange={(e) => setOrderFormData({ ...orderFormData, city: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                            placeholder="Məsələn: Bakı, Gəncə, Sumqayıt..."
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Ünvan (istəyə bağlı)
+                                        </label>
+                                        <textarea
+                                            value={orderFormData.address}
+                                            onChange={(e) => setOrderFormData({ ...orderFormData, address: e.target.value })}
+                                            rows={2}
+                                            className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                                            placeholder="Dəqiq ünvan (küçə, bina, mənzil...)"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Əlavə qeydlər (istəyə bağlı)
+                                        </label>
+                                        <textarea
+                                            value={orderFormData.notes}
+                                            onChange={(e) => setOrderFormData({ ...orderFormData, notes: e.target.value })}
+                                            rows={2}
+                                            className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                                            placeholder="Əlavə məlumat..."
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowOrderModal(false)}
+                                            className="flex-1 border border-gray-300 text-gray-700 py-3 hover:bg-gray-50 font-medium transition-colors"
+                                        >
+                                            Ləğv et
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={submitting}
+                                            className="flex-1 bg-gray-900 text-white py-3 hover:bg-gray-800 font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            {submitting ? (
+                                                <>
+                                                    <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                                    Göndərilir...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Sifarişi təsdiq et
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 )}

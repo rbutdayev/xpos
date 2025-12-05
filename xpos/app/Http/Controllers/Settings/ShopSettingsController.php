@@ -59,6 +59,18 @@ class ShopSettingsController extends Controller
             'shop_slug.min' => 'Minimum 3 simvol',
         ]);
 
+        // Check dependencies before enabling shop
+        if (isset($validated['shop_enabled']) && $validated['shop_enabled'] && !$account->shop_enabled) {
+            $dependencyCheck = $account->checkModuleDependencies(['sms']);
+
+            if (!$dependencyCheck['met']) {
+                $missingList = implode(', ', $dependencyCheck['missing']);
+                return back()->withErrors([
+                    'shop_enabled' => "Online mağazanı aktivləşdirmək üçün əvvəlcə bunları konfiqurasiya etməlisiniz: {$missingList}"
+                ]);
+            }
+        }
+
         // If disabling shop, clear the slug
         if (isset($validated['shop_enabled']) && !$validated['shop_enabled']) {
             $validated['shop_slug'] = null;
