@@ -29,7 +29,7 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Permissions Policy (restrict browser features)
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=(self)');
 
         // Content Security Policy
         // Note: Adjust these based on your actual requirements
