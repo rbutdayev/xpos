@@ -1,0 +1,155 @@
+{
+  "title": "Suppliers",
+  "newSupplier": "New Supplier",
+  "editSupplier": "Edit Supplier",
+  "editSupplierTitle": "Edit: {{name}}",
+  "supplierDetails": "Supplier Details",
+  "manageSuppliers": "Manage your supplier companies",
+  "fields": {
+    "supplierName": "Supplier Name *",
+    "contactPerson": "Contact Person",
+    "phone": "Phone",
+    "email": "Email",
+    "taxNumber": "Tax Number (VÖEN)",
+    "address": "Address",
+    "bankName": "Bank Name",
+    "accountNumber": "Account Number",
+    "paymentTerms": "Payment Terms (days)",
+    "paymentTermsLabel": "Payment Terms",
+    "notes": "Notes",
+    "companyName": "Company Name",
+    "status": "Status",
+    "supplier": "Supplier"
+  },
+  "sections": {
+    "basicInfo": "Basic Information",
+    "bankInfo": "Bank Information",
+    "paymentTerms": "Payment Terms",
+    "additionalInfo": "Additional Information",
+    "contactInfo": "Contact Information",
+    "suppliedProducts": "Supplied Products ({{count}})",
+    "history": "History",
+    "systemInfo": "System Information"
+  },
+  "labels": {
+    "createdAt": "Created At",
+    "lastModified": "Last Modified",
+    "product": "Product"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "supplierActive": "Supplier is active",
+    "all": "All"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "products": "Products",
+    "cancel": "Cancel",
+    "createSupplier": "Create Supplier",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "close": "Close"
+  },
+  "products": {
+    "title": "{{name}} - Products",
+    "productName": "Product Name",
+    "price": "Price",
+    "lastPrice": "Last Price",
+    "totalPurchased": "Total Purchased",
+    "lastPurchase": "Last Purchase",
+    "averagePrice": "Average price",
+    "times": "{{count}} times",
+    "deliveryDays": "Delivery: {{days}} days"
+  },
+  "placeholders": {
+    "search": "Search supplier name, contact person or email...",
+    "phone": "+994 XX XXX XX XX",
+    "notes": "Additional notes about the supplier...",
+    "paymentTermsHint": "0 = cash payment, other numbers are credit days"
+  },
+  "emptyState": {
+    "title": "No suppliers found",
+    "description": "Create a new supplier to get started.",
+    "noProducts": "No products found",
+    "noProductsDescription": "No products found from this supplier."
+  },
+  "messages": {
+    "confirmDelete": "Are you sure you want to delete the supplier {{name}}?",
+    "created": "Supplier created successfully",
+    "updated": "Supplier updated successfully",
+    "deleted": "Supplier deleted successfully"
+  },
+  "stats": {
+    "registered": "Registered",
+    "lastModified": "Last modified",
+    "totalOrders": "Total Orders",
+    "totalSpent": "Total Spent",
+    "notSpecified": "Not specified"
+  },
+  "payments": {
+    "title": "Supplier Payments",
+    "newPayment": "New Supplier Payment",
+    "editPayment": "Edit Payment",
+    "editPaymentTitle": "Edit - {{name}}",
+    "paymentDetails": "Payment Details",
+    "paymentInfo": "Payment Information",
+    "fields": {
+      "supplier": "Supplier",
+      "amount": "Amount (AZN)",
+      "description": "Description",
+      "paymentDate": "Payment Date",
+      "paymentMethod": "Payment Method",
+      "invoiceNumber": "Invoice Number",
+      "notes": "Notes",
+      "referenceNumber": "Reference Number",
+      "branch": "Branch",
+      "category": "Expense Category"
+    },
+    "placeholders": {
+      "search": "Search by description, number or category...",
+      "amount": "0.00",
+      "description": "Payment purpose or description",
+      "invoiceNumber": "Paid invoice number",
+      "notes": "Additional notes (optional)",
+      "selectSupplier": "Select Supplier",
+      "selectBranch": "Select Branch",
+      "selectCategory": "Select category (optional)"
+    },
+    "filters": {
+      "allSuppliers": "All Suppliers",
+      "allMethods": "All Payment Methods",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "goodsReceipt": {
+      "label": "Select Unpaid Goods Receipt (Optional)",
+      "helpText": "If you select a goods receipt, information will be auto-filled",
+      "select": "Select goods receipt",
+      "search": "Search goods receipt (№, supplier, product)",
+      "remaining": "Remaining",
+      "partiallyPaid": "(Partially paid)",
+      "selected": "Selected: {{number}}",
+      "cancel": "Cancel",
+      "debt": "Remaining debt: {{amount}} AZN",
+      "paymentFor": "Goods receipt payment - {{reference}}"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save",
+      "update": "Update",
+      "saving": "Saving...",
+      "updating": "Updating..."
+    },
+    "messages": {
+      "confirmDelete": "Are you sure you want to delete?",
+      "noPaymentsFound": "No supplier payments found",
+      "startAddingPayments": "Start by adding your first supplier payment."
+    }
+  }
+}

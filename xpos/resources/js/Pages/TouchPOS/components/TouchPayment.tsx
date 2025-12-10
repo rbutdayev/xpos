@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCardIcon, BanknotesIcon, ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { LoyaltyProgram, Customer } from '@/types';
+import { useTranslations } from '@/Hooks/useTranslations';
 
 interface FiscalConfig {
   id: number;
@@ -45,6 +46,7 @@ export default function TouchPayment({
   selectedCustomer,
   giftCardsEnabled = false,
 }: Props) {
+  const { translatePaymentMethod } = useTranslations();
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [showTaxInput, setShowTaxInput] = useState(false);
   const [showLoyaltyInput, setShowLoyaltyInput] = useState(false);
@@ -332,7 +334,7 @@ export default function TouchPayment({
               <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="text-lg">Nağd</span>
+              <span className="text-lg">{translatePaymentMethod('nağd')}</span>
             </button>
             <button
               type="button"
@@ -348,7 +350,7 @@ export default function TouchPayment({
               <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
-              <span className="text-lg">Kart</span>
+              <span className="text-lg">{translatePaymentMethod('kart')}</span>
             </button>
             {/* Bank Kredit - Only show if fiscal config has credit contract number */}
             {fiscalConfig?.credit_contract_number && (

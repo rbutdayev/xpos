@@ -1,0 +1,143 @@
+{
+  "title": "Xərclər",
+  "createExpense": "Yeni Xərc",
+  "editExpense": "Xərci Düzəliş Et",
+  "viewExpense": "Xərc Detalları",
+  "deleteExpense": "Xərci Sil",
+  "expenseInfo": "Xərc məlumatları",
+  "expenseDetails": "Xərc Detalları",
+  "basicInfo": "Əsas Məlumatlar",
+  "additionalInfo": "Əlavə Məlumatlar",
+  "systemInfo": "Sistem Məlumatları",
+  "statisticsAndRelations": "Statistikalar və əlaqələr",
+  "fields": {
+    "description": "Təsvir",
+    "amount": "Məbləğ",
+    "amountAZN": "Məbləğ (AZN)",
+    "expenseDate": "Xərc tarixi",
+    "dueDate": "Son ödəmə tarixi",
+    "category": "Kateqoriya",
+    "branch": "Filial",
+    "paymentMethod": "Ödəniş üsulu",
+    "receipt": "Qəbz",
+    "notes": "Qeydlər",
+    "referenceNumber": "İstinad nömrəsi",
+    "status": "Status",
+    "supplier": "Təchizatçı",
+    "createdBy": "Yaradan",
+    "createdAt": "Yaradılma tarixi",
+    "updatedAt": "Son yeniləmə",
+    "remainingAmount": "Qalıq",
+    "inactive": "Aktiv deyil"
+  },
+  "placeholders": {
+    "description": "Xərcin təsvirini daxil edin",
+    "searchExpenses": "Təsvir, nömrə və ya kateqoriya ilə axtar...",
+    "amount": "0.00",
+    "notes": "Əlavə qeydlər (istəyə bağlı)"
+  },
+  "paymentMethods": {
+    "cash": "Nağd",
+    "card": "Kart",
+    "transfer": "Köçürmə",
+    "unpaid": "Ödənilməyib"
+  },
+  "filters": {
+    "allCategories": "Bütün kateqoriyalar",
+    "allBranches": "Bütün filiallar",
+    "allMethods": "Bütün üsullar",
+    "allStatuses": "Bütün statuslar"
+  },
+  "actions": {
+    "pay": "Ödə",
+    "viewReceipt": "Qəbzi görüntülə",
+    "downloadReceipt": "Endir",
+    "save": "Yadda saxla",
+    "cancel": "Ləğv et",
+    "update": "Yenilə",
+    "view": "Bax",
+    "edit": "Düzəliş",
+    "delete": "Sil"
+  },
+  "messages": {
+    "confirmDelete": "Bu xərci silmək istədiyinizə əminsiniz?",
+    "saving": "Yadda saxlanılır...",
+    "updating": "Yenilənir...",
+    "noExpensesFound": "Heç bir xərc tapılmadı",
+    "startAddingExpenses": "İlk xərcinizi əlavə etməklə başlayın."
+  },
+  "receiptUpload": {
+    "label": "Qəbz (şəkil)",
+    "newLabel": "Yeni qəbz (şəkil)",
+    "currentLabel": "Cari qəbz",
+    "helpText": "Qəbz şəklini və ya PDF faylını yükləyin (İstəyə bağlı)",
+    "replaceHelpText": "Yeni qəbz yükləmək istəyirsinizsə seçin (Köhnəsini əvəz edəcək)"
+  },
+  "categories": {
+    "title": "Xərc kateqoriyaları",
+    "createCategory": "Yeni xərc kateqoriyası",
+    "editCategory": "Xərc kateqoriyasını düzəliş et",
+    "viewCategory": "Kateqoriya Detalları",
+    "deleteCategory": "Kateqoriyanı Sil",
+    "addCategory": "Kateqoriya əlavə et",
+    "categoryInfo": "Kateqoriya",
+    "categoryName": "Kateqoriya adı",
+    "type": "Növ",
+    "parentCategory": "Ana kateqoriya",
+    "subCategories": "Alt kateqoriyalar",
+    "subCategoryCount": "Alt kateqoriyalar",
+    "subCategoryList": "Alt kateqoriyalar siyahısı",
+    "totalExpenses": "Ümumi xərclər",
+    "activeCategory": "Aktiv kateqoriya",
+    "fields": {
+      "name": "Kateqoriya adı",
+      "type": "Növ",
+      "parentCategory": "Ana kateqoriya",
+      "description": "Təsvir",
+      "status": "Status",
+      "isActive": "Aktiv"
+    },
+    "placeholders": {
+      "name": "Kateqoriya adını daxil edin",
+      "searchCategories": "Kateqoriya adı və ya təsviri ilə axtar...",
+      "description": "Kateqoriya haqqında əlavə məlumat (istəyə bağlı)",
+      "selectType": "Növ seçin",
+      "selectParent": "Ana kateqoriya seçin (istəyə bağlı)"
+    },
+    "filters": {
+      "allTypes": "Bütün növlər",
+      "allStatuses": "Bütün statuslar"
+    },
+    "types": {
+      "salary": "Maaş",
+      "expenses": "Xərclər",
+      "payments": "Ödənişlər",
+      "utilities": "Kommunal",
+      "transport": "Nəqliyyat",
+      "other": "Digər"
+    },
+    "messages": {
+      "confirmDelete": "Bu kateqoriyanı silmək istədiyinizə əminsiniz?",
+      "cannotDeleteWithChildren": "Alt kateqoriyaları olan kateqoriya silinə bilməz.",
+      "cannotDeleteWithExpenses": "Xərcləri olan kateqoriya silinə bilməz.",
+      "noCategoriesFound": "Heç bir kateqoriya tapılmadı",
+      "startAddingCategories": "İlk xərc kateqoriyanızı əlavə etməklə başlayın.",
+      "underParent": "{{parent}} altında",
+      "deactivatedInfo": "Deaktiv kateqoriyalar yeni xərclər üçün istifadə edilə bilməz",
+      "parentCategoryHelp": "Alt kateqoriya yaratmaq üçün ana kateqoriya seçin"
+    },
+    "backToCategories": "Kateqoriyalara qayıt"
+  },
+  "supplierCredit": {
+    "paymentFor": "{{reference}} üçün ödəniş",
+    "creditNote": "Təchizatçı krediti: {{reference}}"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Aktiv deyil"
+  },
+  "units": {
+    "item": "ədəd",
+    "items": "ədəd"
+  }
+}

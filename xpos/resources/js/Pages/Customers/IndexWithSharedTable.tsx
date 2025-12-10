@@ -3,14 +3,15 @@ import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
 import { Customer } from '@/types';
-import { 
-    UserIcon, 
-    PhoneIcon, 
+import {
+    UserIcon,
+    PhoneIcon,
     PlusIcon,
     EyeIcon,
     PencilIcon,
     TrashIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     customers: {
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function Index({ customers, filters }: Props) {
+    const { t } = useTranslation('customers');
     const [search, setSearch] = useState(filters.search || '');
     const [selectedType, setSelectedType] = useState(filters.type || '');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
@@ -41,8 +43,8 @@ export default function Index({ customers, filters }: Props) {
     const columns: Column[] = [
         {
             key: 'name',
-            label: 'Müştəri',
-            mobileLabel: 'Ad',
+            label: t('fields.customer'),
+            mobileLabel: t('fields.name'),
             sortable: true,
             render: (customer: Customer) => (
                 <div className="flex items-center">
@@ -66,8 +68,8 @@ export default function Index({ customers, filters }: Props) {
         },
         {
             key: 'contact',
-            label: 'Əlaqə məlumatları',
-            mobileLabel: 'Telefon',
+            label: t('fields.contactInfo'),
+            mobileLabel: t('fields.phone'),
             hideOnMobile: true,
             render: (customer: Customer) => (
                 <div className="text-sm">
@@ -91,18 +93,18 @@ export default function Index({ customers, filters }: Props) {
         },
         {
             key: 'vehicles_count',
-            label: 'Nəqliyyat vasitələri',
-            mobileLabel: 'Nəqliyyat',
+            label: t('vehiclesServices.vehicles'),
+            mobileLabel: t('vehiclesServices.vehicles'),
             sortable: true,
             align: 'center',
             hideOnMobile: true,
             render: (customer: Customer) => (
                 <div className="text-center">
                     <div className="text-sm font-medium text-gray-900">
-                        {customer.active_vehicles_count || 0} ədəd
+                        {t('vehiclesServices.vehiclesCount', { count: customer.active_vehicles_count || 0 })}
                     </div>
                     <div className="text-xs text-gray-500">
-                        {customer.total_service_records || 0} servis
+                        {t('vehiclesServices.servicesCount', { count: customer.total_service_records || 0 })}
                     </div>
                 </div>
             ),
@@ -110,7 +112,7 @@ export default function Index({ customers, filters }: Props) {
         },
         {
             key: 'last_service_date',
-            label: 'Son servis',
+            label: t('serviceHistory.lastService'),
             sortable: true,
             align: 'center',
             hideOnMobile: true,
@@ -119,7 +121,7 @@ export default function Index({ customers, filters }: Props) {
                     {customer.last_service_date ? (
                         new Date(customer.last_service_date).toLocaleDateString('az-AZ')
                     ) : (
-                        <span className="text-gray-500">Servis yoxdur</span>
+                        <span className="text-gray-500">{t('serviceHistory.noServices')}</span>
                     )}
                 </div>
             ),
@@ -127,7 +129,7 @@ export default function Index({ customers, filters }: Props) {
         },
         {
             key: 'is_active',
-            label: 'Status',
+            label: t('fields.status'),
             sortable: true,
             align: 'center',
             render: (customer: Customer) => (
@@ -136,7 +138,7 @@ export default function Index({ customers, filters }: Props) {
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
-                    {customer.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
+                    {customer.is_active ? t('status.active') : t('status.inactive')}
                 </span>
             ),
             width: '100px'
@@ -148,26 +150,26 @@ export default function Index({ customers, filters }: Props) {
         {
             key: 'type',
             type: 'dropdown',
-            label: 'Müştəri növü',
+            label: t('fields.customerType'),
             value: selectedType,
             onChange: setSelectedType,
             options: [
-                { value: '', label: 'Bütün növlər' },
-                { value: 'individual', label: 'Fiziki şəxs' },
-                { value: 'corporate', label: 'Hüquqi şəxs' },
+                { value: '', label: t('types.allTypes') },
+                { value: 'individual', label: t('types.individual') },
+                { value: 'corporate', label: t('types.corporate') },
             ],
             className: 'min-w-[150px]'
         },
         {
             key: 'status',
             type: 'dropdown',
-            label: 'Status',
+            label: t('fields.status'),
             value: selectedStatus,
             onChange: setSelectedStatus,
             options: [
-                { value: '', label: 'Bütün statuslar' },
-                { value: 'active', label: 'Aktiv' },
-                { value: 'inactive', label: 'Qeyri-aktiv' },
+                { value: '', label: t('status.allStatuses') },
+                { value: 'active', label: t('status.active') },
+                { value: 'inactive', label: t('status.inactive') },
             ],
             className: 'min-w-[120px]'
         }
@@ -176,19 +178,19 @@ export default function Index({ customers, filters }: Props) {
     // Define actions
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('actions.view'),
             href: (customer: Customer) => `/customers/${customer.id}`,
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'primary'
         },
         {
-            label: 'Düzəliş',
+            label: t('actions.edit'),
             href: (customer: Customer) => `/customers/${customer.id}/edit`,
             icon: <PencilIcon className="w-4 h-4" />,
             variant: 'secondary'
         },
         {
-            label: 'Sil',
+            label: t('actions.delete'),
             onClick: (customer: Customer) => handleDelete(customer),
             icon: <TrashIcon className="w-4 h-4" />,
             variant: 'danger',
@@ -250,7 +252,7 @@ export default function Index({ customers, filters }: Props) {
     };
 
     const handleDelete = (customer: Customer) => {
-        if (confirm('Bu müştərini silmək istədiyinizə əminsiniz?')) {
+        if (confirm(t('messages.confirmDelete'))) {
             router.delete(`/customers/${customer.id}`);
         }
     };
@@ -261,7 +263,7 @@ export default function Index({ customers, filters }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Müştərilər" />
+            <Head title={t('title')} />
 
             <div className="py-12">
                 <div className="mx-auto sm:px-6 lg:px-8">
@@ -274,7 +276,7 @@ export default function Index({ customers, filters }: Props) {
                         // Search & Filter
                         searchValue={search}
                         onSearchChange={setSearch}
-                        searchPlaceholder="Müştəri axtar (ad, telefon, email)..."
+                        searchPlaceholder={t('placeholders.search')}
                         filters={tableFilters}
 
                         // Sorting
@@ -291,25 +293,25 @@ export default function Index({ customers, filters }: Props) {
                         onRefresh={handleRefresh}
 
                         // UI Configuration
-                        title="Müştərilər"
-                        subtitle={`${customers.total} müştəri qeydiyyatda`}
+                        title={t('title')}
+                        subtitle={t('stats.registered', { count: customers.total })}
                         createButton={{
-                            label: "Müştəri əlavə et",
+                            label: t('addCustomer'),
                             href: "/customers/create"
                         }}
 
                         // Empty state
                         emptyState={{
                             icon: <UserIcon className="w-12 h-12" />,
-                            title: "Müştəri tapılmadı",
-                            description: "İlk müştərinizi əlavə etməklə başlayın.",
+                            title: t('emptyState.title'),
+                            description: t('emptyState.description'),
                             action: (
                                 <Link
                                     href="/customers/create"
                                     className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                                 >
                                     <PlusIcon className="w-4 h-4 mr-2" />
-                                    Müştəri əlavə et
+                                    {t('addCustomer')}
                                 </Link>
                             )
                         }}

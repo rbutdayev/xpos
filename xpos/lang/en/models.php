@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'product' => 'Product',
+    'products' => 'Products',
+    'customer' => 'Customer',
+    'customers' => 'Customers',
+    'sale' => 'Sale',
+    'sales' => 'Sales',
+    'expense' => 'Expense',
+    'expenses' => 'Expenses',
+    'payment' => 'Payment',
+    'payments' => 'Payments',
+    'supplier' => 'Supplier',
+    'suppliers' => 'Suppliers',
+    'category' => 'Category',
+    'categories' => 'Categories',
+    'inventory' => 'Inventory',
+    'report' => 'Report',
+    'reports' => 'Reports',
+    'user' => 'User',
+    'users' => 'Users',
+    'company' => 'Company',
+    'companies' => 'Companies',
+    'account' => 'Account',
+    'accounts' => 'Accounts',
+];

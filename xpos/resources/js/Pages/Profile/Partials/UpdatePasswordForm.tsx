@@ -5,12 +5,14 @@ import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function UpdatePasswordForm({
     className = '',
 }: {
     className?: string;
 }) {
+    const { t } = useTranslation(['profile', 'common']);
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
@@ -52,11 +54,11 @@ export default function UpdatePasswordForm({
         <section className={className}>
             <header>
                 <h2 className="text-lg font-medium text-gray-900">
-                    Şifrəni Yenilə
+                    {t('password.title')}
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-600">
-                    Hesabınızın təhlükəsizliyini təmin etmək üçün uzun və təsadüfi şifrə istifadə edin.
+                    {t('password.description')}
                 </p>
             </header>
 
@@ -64,7 +66,7 @@ export default function UpdatePasswordForm({
                 <div>
                     <InputLabel
                         htmlFor="current_password"
-                        value="Mövcud Şifrə"
+                        value={t('password.current')}
                     />
 
                     <TextInput
@@ -86,7 +88,7 @@ export default function UpdatePasswordForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="Yeni Şifrə" />
+                    <InputLabel htmlFor="password" value={t('password.new')} />
 
                     <TextInput
                         id="password"
@@ -104,7 +106,7 @@ export default function UpdatePasswordForm({
                 <div>
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Şifrəni Təsdiq Et"
+                        value={t('password.confirm')}
                     />
 
                     <TextInput
@@ -125,7 +127,7 @@ export default function UpdatePasswordForm({
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Yadda saxla</PrimaryButton>
+                    <PrimaryButton disabled={processing}>{t('actions.save')}</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -135,7 +137,7 @@ export default function UpdatePasswordForm({
                         leaveTo="opacity-0"
                     >
                         <p className="text-sm text-gray-600">
-                            Yadda saxlanıldı.
+                            {t('password.saved')}
                         </p>
                     </Transition>
                 </div>

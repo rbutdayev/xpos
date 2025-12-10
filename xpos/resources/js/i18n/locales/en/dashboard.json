@@ -1,0 +1,249 @@
+{
+  "title": "Dashboard",
+  "loading": "Loading...",
+  "welcome": "Welcome",
+  "welcomeBack": "Welcome back, {{name}}!",
+  "dashboardLoading": "Dashboard loading...",
+
+  "quickActions": {
+    "title": "Quick Actions",
+    "newSale": "New Sale",
+    "newService": "New Service",
+    "newCustomer": "New Customer",
+    "newProduct": "New Product",
+    "goodsReceipt": "Goods Receipt",
+    "productList": "Product List"
+  },
+
+  "sections": {
+    "financialSummary": "Financial Summary",
+    "operationalMetrics": "Operational Metrics",
+    "serviceStatistics": "Service Statistics",
+    "rentalStatistics": "Rental Statistics",
+    "creditStatistics": "Credit Statistics",
+    "stockIndicators": "Stock Indicators",
+    "myPerformance": "My Performance",
+    "myServiceQueue": "My Service Queue",
+    "branchStatistics": "Branch Statistics",
+    "todaySales": "Today's Sales",
+    "paymentCollection": "Payment Collection",
+    "warehouseValuation": "Warehouse Valuation"
+  },
+
+  "financial": {
+    "thisMonthRevenue": "This Month Revenue",
+    "thisMonthExpenses": "This Month Expenses",
+    "profit": "Profit",
+    "margin": "margin",
+    "pendingPayment": "Pending Payment",
+    "customer": "customer",
+    "customers": "customers"
+  },
+
+  "operational": {
+    "activeCustomers": "Active Customers",
+    "newThisMonth": "new this month",
+    "productsInStock": "Products in Stock",
+    "total": "total",
+    "stockValue": "Stock Value",
+    "costValue": "Cost Value",
+    "totalQuantity": "Total Quantity",
+    "allUnits": "All units"
+  },
+
+  "services": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "completedThisMonth": "Completed This Month",
+    "revenue": "Revenue",
+    "notStarted": "Not started",
+    "currently": "Currently",
+    "thisMonth": "This month",
+    "pendingServices": "Pending Services"
+  },
+
+  "rentals": {
+    "activeRentals": "Active Rentals",
+    "thisMonthRevenue": "This Month Revenue",
+    "pendingReturns": "Pending Returns",
+    "overdue": "Overdue"
+  },
+
+  "credits": {
+    "totalOutstanding": "Total Outstanding",
+    "givenThisMonth": "Given This Month",
+    "paidThisMonth": "Paid This Month"
+  },
+
+  "stock": {
+    "productsInStock": "Products in Stock",
+    "stockValue": "Stock Value (Cost)",
+    "costPrice": "Cost price",
+    "saleValue": "Sale Value",
+    "potentialRevenue": "Potential revenue",
+    "potentialProfit": "Potential Profit",
+    "saleLessCost": "Sale - Cost",
+    "product": "product"
+  },
+
+  "alerts": {
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "negativeStock": "Negative Stock",
+    "pendingReceipt": "Pending Receipt",
+    "stockWarning": "Stock Warning",
+    "lowStockDesc": "product is low on stock",
+    "outOfStockDesc": "product is out of stock"
+  },
+
+  "onlineOrders": {
+    "pendingOrders": "pending online order",
+    "pendingOrdersPlural": "pending online orders",
+    "viewOrders": "View"
+  },
+
+  "paymentAlert": {
+    "title": "Payment Overdue",
+    "description": "Your monthly payment is overdue.",
+    "amount": "Amount:",
+    "dueDate": "Due date:",
+    "daysOverdue": "days overdue",
+    "understood": "Understood"
+  },
+
+  "charts": {
+    "salesStatistics": "Sales Statistics",
+    "paymentMethods": "Payment Methods",
+    "topSelling": "Top Selling",
+    "viewAll": "View all",
+    "noData": "No data",
+    "revenueBreakdown": "Revenue Breakdown",
+    "expenseBreakdown": "Expense Breakdown",
+    "sales": "Sales",
+    "service": "Service",
+    "rental": "Rental",
+    "noExpenses": "No expenses"
+  },
+
+  "tables": {
+    "topSellingProducts": "Top Selling Products",
+    "lowStockProducts": "Low Stock Products",
+    "recentSales": "Recent Sales",
+    "allGood": "All good",
+    "noSales": "No sales",
+    "customer": "Customer",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "paid": "Paid",
+    "pending": "Pending",
+    "allWarehouses": "All warehouses",
+    "min": "Min"
+  },
+
+  "performance": {
+    "mySales": "My Sales",
+    "myRevenue": "My Revenue",
+    "myCustomers": "My Customers",
+    "averageTicket": "Average Ticket"
+  },
+
+  "branch": {
+    "thisMonthRevenue": "This Month Revenue",
+    "branchRevenue": "Branch revenue",
+    "sales": "Sales",
+    "staff": "Staff",
+    "active": "Active",
+    "customers": "Customers"
+  },
+
+  "shift": {
+    "salesCount": "Sales Count",
+    "salesRevenue": "Sales Revenue",
+    "customers": "Customers",
+    "cash": "Cash",
+    "cardTransfer": "Card/Transfer"
+  },
+
+  "info": {
+    "viewServiceList": "To view your pending services, go to",
+    "serviceList": "Service List",
+    "page": "page",
+    "detailedReports": "For detailed reports, go to",
+    "reports": "Reports",
+    "section": "section"
+  },
+
+  "roles": {
+    "accountOwnerPanel": "Account Owner Dashboard",
+    "accountantPanel": "Financial reports and statistics",
+    "warehousePanel": "Warehouse management panel",
+    "salesStaffPanel": "Your performance this month",
+    "tailorPanel": "Your service queue",
+    "branchManagerPanel": "Your branch performance",
+    "cashierPanel": "Today's shift"
+  },
+
+  "stockByUnit": {
+    "title": "Stock by Unit",
+    "product": "product"
+  },
+
+  "widgets": {
+    "topProducts": {
+      "title": "Top Selling Products",
+      "thisMonth": "This month",
+      "uncategorized": "Uncategorized",
+      "pieces": "pcs",
+      "stock": "Stock",
+      "noData": "No data found"
+    },
+    "recentSales": {
+      "title": "Recent Sales",
+      "viewAll": "View all",
+      "anonymousCustomer": "Anonymous customer",
+      "products": "products",
+      "details": "Details",
+      "noSales": "No recent sales found"
+    },
+    "lowStock": {
+      "title": "Low Stock Products",
+      "viewAll": "View all",
+      "uncategorized": "Uncategorized",
+      "noIssue": "No stock issues",
+      "allGoodDesc": "All products are sufficiently stocked."
+    },
+    "financialSummary": {
+      "title": "Financial Summary",
+      "today": "Today",
+      "thisMonth": "This month",
+      "thisYear": "This year",
+      "financial": "Financial",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "netProfit": "Net Profit",
+      "profitMargin": "Profit Margin",
+      "pendingPayments": "Pending Payments",
+      "financialHealth": "Financial Health",
+      "excellent": "Excellent",
+      "good": "Good",
+      "average": "Average",
+      "weak": "Weak"
+    },
+    "salesChart": {
+      "title": "Sales Trend",
+      "today": "Today (hourly)",
+      "last7days": "Last 7 days",
+      "last30days": "Last 30 days",
+      "last90days": "Last 90 days",
+      "sales": "Sales",
+      "noData": "No data found",
+      "totalSales": "Total Sales",
+      "totalRevenue": "Total Revenue",
+      "avgRevenue": "Avg Revenue",
+      "revenue": "Revenue",
+      "salesCount": "Sales count"
+    }
+  }
+}

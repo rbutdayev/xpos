@@ -18,6 +18,40 @@ export default defineConfig({
     define: {
         'import.meta.env.VITE_APP_VERSION': JSON.stringify(`v${version}`)
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Core vendor libraries
+                    'vendor-react': ['react', 'react-dom'],
+                    'vendor-inertia': ['@inertiajs/react'],
+
+                    // UI libraries
+                    'vendor-ui': [
+                        '@headlessui/react',
+                        '@heroicons/react',
+                    ],
+
+                    // i18n
+                    'vendor-i18n': [
+                        'i18next',
+                        'react-i18next',
+                        'i18next-browser-languagedetector',
+                        'i18next-http-backend',
+                    ],
+
+                    // Other large libraries
+                    'vendor-utils': [
+                        'axios',
+                        'lodash',
+                        'date-fns',
+                    ],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 600, // Increase slightly to 600kb
+        sourcemap: false, // Disable source maps in production for smaller builds
+    },
     server: {
         port: 5173,
         proxy: {

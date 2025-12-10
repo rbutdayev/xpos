@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Product } from '@/types';
 import { ArrowLeftIcon, PencilIcon, CubeIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
@@ -32,20 +33,21 @@ interface Props {
 }
 
 export default function Show({ product, photos, branches }: Props) {
+  const { t } = useTranslation('products');
   const { auth } = usePage().props as any;
   const currentUser = auth.user;
 
   const totalStock = (product.stock || []).reduce((s: number, x: any) => s + (x.quantity || 0), 0);
   const hasLowStock = (product.stock || []).some((s: any) => s.min_level && s.quantity <= s.min_level);
   const stockStatus = totalStock <= 0
-    ? { text: 'Stokda yoxdur', color: 'text-red-600 bg-red-100' }
+    ? { text: t('stockStatuses.outOfStock'), color: 'text-red-600 bg-red-100' }
     : hasLowStock
-      ? { text: 'Az qalıb', color: 'text-yellow-600 bg-yellow-100' }
-      : { text: 'Stokda var', color: 'text-green-600 bg-green-100' };
+      ? { text: t('stockStatuses.lowStockRemaining'), color: 'text-yellow-600 bg-yellow-100' }
+      : { text: t('stockStatuses.inStock'), color: 'text-green-600 bg-green-100' };
 
   return (
     <AuthenticatedLayout>
-      <Head title={`${product.name} - Məhsul Təfərrüatları`} />
+      <Head title={`${product.name}${t('detailsSuffix')}`} />
 
       <div className="mx-auto sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
@@ -63,7 +65,7 @@ export default function Show({ product, photos, branches }: Props) {
                     <CubeIcon className="w-4 h-4 text-gray-500 mr-1" />
                   )}
                   <span className="text-sm text-gray-600">
-                    {product.type === 'service' ? 'Xidmət' : 'Məhsul'}
+                    {product.type === 'service' ? t('types.service') : t('types.product')}
                   </span>
                 </div>
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${stockStatus.color}`}>
@@ -76,7 +78,7 @@ export default function Show({ product, photos, branches }: Props) {
                     href={`/products/${product.parentProduct.id}`}
                     className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
                   >
-                    <span className="text-gray-500">Variant:</span> {product.parentProduct.name} ({product.parentProduct.sku})
+                    <span className="text-gray-500">{t('variant')}</span> {product.parentProduct.name} ({product.parentProduct.sku})
                   </Link>
                 </div>
               )}
@@ -85,7 +87,7 @@ export default function Show({ product, photos, branches }: Props) {
           {currentUser?.role !== 'sales_staff' && (
             <Link href={`/products/${product.id}/edit`} className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
               <PencilIcon className="w-4 h-4 mr-2" />
-              Düzəlt
+              {t('actions.edit')}
             </Link>
           )}
         </div>

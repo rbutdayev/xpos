@@ -16,6 +16,7 @@ import {
     EyeIcon,
     BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
+import { useTranslations } from '@/Hooks/useTranslations';
 
 interface Customer {
     id: number;
@@ -113,6 +114,7 @@ interface Props {
 
 export default function Show({ rental, agreementPhotos = [], customerSignatureUrl, staffSignatureUrl }: Props) {
     const { flash } = usePage().props as any;
+    const { translatePaymentMethod } = useTranslations();
     const [showExtendModal, setShowExtendModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
@@ -1066,9 +1068,9 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                         disabled={isSubmitting}
                                     >
-                                        <option value="cash">Nağd</option>
-                                        <option value="card">Kart</option>
-                                        <option value="transfer">Köçürmə</option>
+                                        <option value="cash">{translatePaymentMethod('cash')}</option>
+                                        <option value="card">{translatePaymentMethod('card')}</option>
+                                        <option value="transfer">{translatePaymentMethod('bank_transfer')}</option>
                                     </select>
                                 </div>
 

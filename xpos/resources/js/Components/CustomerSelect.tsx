@@ -1,6 +1,7 @@
 import { Customer } from '@/types';
 import { MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     customers: Customer[];
@@ -13,16 +14,18 @@ interface Props {
     showSearch?: boolean;
 }
 
-export default function CustomerSelect({ 
-    customers, 
-    value, 
-    onChange, 
-    placeholder = "Müştəri seçin...",
+export default function CustomerSelect({
+    customers,
+    value,
+    onChange,
+    placeholder,
     required = false,
     disabled = false,
     className = "",
     showSearch = true
 }: Props) {
+    const { t } = useTranslation();
+    const defaultPlaceholder = placeholder || t('customerSelect.placeholder');
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [filteredCustomers, setFilteredCustomers] = useState(customers);
@@ -98,7 +101,7 @@ export default function CustomerSelect({
                                 <span className="text-gray-500 ml-2">({selectedCustomer.customer_type_text})</span>
                             </span>
                         ) : (
-                            <span className="text-gray-500">{placeholder}</span>
+                            <span className="text-gray-500">{defaultPlaceholder}</span>
                         )}
                     </span>
                 </span>
@@ -119,7 +122,7 @@ export default function CustomerSelect({
                                     ref={searchRef}
                                     type="text"
                                     className="w-full rounded-md border-gray-300 pl-10 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    placeholder="Müştəri axtar..."
+                                    placeholder={t('customerSelect.searchPlaceholder')}
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
@@ -134,7 +137,7 @@ export default function CustomerSelect({
                             onClick={handleClear}
                         >
                             <span className="font-normal block truncate text-gray-500 italic">
-                                Müştəri seçməyin
+                                {t('customerSelect.noCustomer')}
                             </span>
                         </div>
                     )}
@@ -142,7 +145,7 @@ export default function CustomerSelect({
                     {filteredCustomers.length === 0 ? (
                         <div className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900">
                             <span className="font-normal block truncate text-gray-500">
-                                Müştəri tapılmadı
+                                {t('customerSelect.notFound')}
                             </span>
                         </div>
                     ) : (

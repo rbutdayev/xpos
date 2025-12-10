@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
 import ExpensesNavigation from '@/Components/ExpensesNavigation';
@@ -114,6 +115,7 @@ interface Props {
 }
 
 export default function Index({ expenses, categories, branches, paymentMethods, suppliers, unpaidGoodsReceipts, filters, flash, errors }: Props) {
+    const { t } = useTranslation(['expenses', 'common']);
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category_id || '');
     const [selectedBranch, setSelectedBranch] = useState(filters.branch_id || '');
@@ -127,8 +129,8 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     const columns: Column[] = [
         {
             key: 'expense_info',
-            label: 'Xərc məlumatları',
-            mobileLabel: 'Xərc',
+            label: t('expenseInfo'),
+            mobileLabel: t('title'),
             sortable: true,
             render: (expense: Expense) => (
                 <div className="flex items-center">
@@ -147,7 +149,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         )}
                         {expense.supplier && (
                             <div className="text-xs text-green-600">
-                                Təchizatçı: {expense.supplier.name}
+                                {t('fields.supplier')}: {expense.supplier.name}
                             </div>
                         )}
                     </div>
@@ -157,7 +159,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             key: 'amount',
-            label: 'Məbləğ',
+            label: t('labels.amount', { ns: 'common' }),
             sortable: true,
             align: 'right',
             render: (expense: Expense) => (
@@ -167,7 +169,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                     </div>
                     {expense.type === 'supplier_credit' && expense.remaining_amount !== undefined && expense.remaining_amount > 0 && (
                         <div className="text-xs text-orange-600 mt-0.5">
-                            Qalıq: {expense.remaining_amount.toLocaleString('az-AZ')} ₼
+                            {t('fields.remainingAmount')}: {expense.remaining_amount.toLocaleString('az-AZ')} ₼
                         </div>
                     )}
                 </div>
@@ -176,7 +178,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             key: 'expense_date',
-            label: 'Tarix',
+            label: t('labels.date', { ns: 'common' }),
             sortable: true,
             hideOnMobile: true,
             render: (expense: Expense) => (
@@ -189,8 +191,8 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             key: 'payment_method',
-            label: 'Ödəniş',
-            mobileLabel: 'Ödəniş',
+            label: t('labels.payment', { ns: 'common' }),
+            mobileLabel: t('labels.payment', { ns: 'common' }),
             align: 'center',
             hideOnMobile: true,
             render: (expense: Expense) => {
@@ -198,7 +200,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                 if (expense.type === 'supplier_credit' && expense.status !== 'paid') {
                     return (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Ödənilməyib
+                            {t('paymentMethods.unpaid')}
                         </span>
                     );
                 }
@@ -212,8 +214,8 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-purple-100 text-purple-800'
                     }`}>
-                        {expense.payment_method === 'nağd' ? 'Nağd' :
-                         expense.payment_method === 'kart' ? 'Kart' : 'Köçürmə'}
+                        {expense.payment_method === 'nağd' ? t('paymentMethods.cash') :
+                         expense.payment_method === 'kart' ? t('paymentMethods.card') : t('paymentMethods.transfer')}
                     </span>
                 );
             },
@@ -221,7 +223,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             key: 'branch',
-            label: 'Filial',
+            label: t('fields.branch'),
             hideOnMobile: true,
             render: (expense: Expense) => (
                 <div className="flex items-center text-sm text-gray-900">
@@ -233,7 +235,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         },
         {
             key: 'receipt',
-            label: 'Qaimə',
+            label: t('fields.receipt'),
             align: 'center',
             hideOnMobile: true,
             render: (expense: Expense) => (
@@ -243,7 +245,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-green-600 hover:text-green-800"
-                        title="Qəbzi görüntülə"
+                        title={t('actions.viewReceipt')}
                     >
                         <DocumentTextIcon className="w-5 h-5" />
                     </a>
@@ -260,11 +262,11 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'category_id',
             type: 'dropdown',
-            label: 'Kateqoriya',
+            label: t('fields.category'),
             value: selectedCategory,
             onChange: setSelectedCategory,
             options: [
-                { value: '', label: 'Bütün kateqoriyalar' },
+                { value: '', label: t('filters.allCategories') },
                 ...categories.map(cat => ({
                     value: cat.category_id.toString(),
                     label: cat.parent ? `${cat.parent.name} > ${cat.name}` : cat.name
@@ -275,11 +277,11 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'branch_id',
             type: 'dropdown',
-            label: 'Filial',
+            label: t('fields.branch'),
             value: selectedBranch,
             onChange: setSelectedBranch,
             options: [
-                { value: '', label: 'Bütün filiallar' },
+                { value: '', label: t('filters.allBranches') },
                 ...branches.map(branch => ({
                     value: branch.id.toString(),
                     label: branch.name
@@ -290,11 +292,11 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'payment_method',
             type: 'dropdown',
-            label: 'Ödəniş üsulu',
+            label: t('fields.paymentMethod'),
             value: selectedPaymentMethod,
             onChange: setSelectedPaymentMethod,
             options: [
-                { value: '', label: 'Bütün üsullar' },
+                { value: '', label: t('filters.allMethods') },
                 ...Object.entries(paymentMethods).map(([value, label]) => ({
                     value,
                     label
@@ -307,28 +309,28 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     // Define actions
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('actions.view', { ns: 'common' }),
             href: (expense: Expense) => `/expenses/${expense.expense_id}`,
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'primary',
             condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide view for credits
         },
         {
-            label: 'Ödə',
+            label: t('actions.pay'),
             onClick: (expense: Expense) => handlePaySupplierCredit(expense),
             icon: <CurrencyDollarIcon className="w-4 h-4" />,
             variant: 'primary',
             condition: (expense: Expense) => expense.type === 'supplier_credit' && expense.status !== 'paid'
         },
         {
-            label: 'Düzəliş',
+            label: t('actions.edit', { ns: 'common' }),
             href: (expense: Expense) => `/expenses/${expense.expense_id}/edit`,
             icon: <PencilIcon className="w-4 h-4" />,
             variant: 'secondary',
             condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide edit for credits
         },
         {
-            label: 'Sil',
+            label: t('actions.delete', { ns: 'common' }),
             onClick: (expense: Expense) => handleDelete(expense),
             icon: <TrashIcon className="w-4 h-4" />,
             variant: 'danger',
@@ -361,7 +363,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     };
 
     const handleDelete = (expense: Expense) => {
-        if (confirm('Bu xərci silmək istədiyinizə əminsiniz?')) {
+        if (confirm(t('messages.confirmDelete'))) {
             router.delete(`/expenses/${expense.expense_id}`, {
                 preserveScroll: true,
             });
@@ -384,7 +386,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
 
     return (
         <AuthenticatedLayout>
-            <Head title="Xərclər" />
+            <Head title={t('title')} />
 
             <div className="py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -430,12 +432,12 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         filters={tableFilters}
                         searchValue={search}
                         onSearchChange={setSearch}
-                        searchPlaceholder="Təsvir, nömrə və ya kateqoriya ilə axtar..."
+                        searchPlaceholder={t('placeholders.searchExpenses')}
                         onSearch={handleSearch}
                         onReset={handleReset}
                         emptyState={{
-                            title: 'Heç bir xərc tapılmadı',
-                            description: 'İlk xərcinizi əlavə etməklə başlayın.',
+                            title: t('messages.noExpensesFound'),
+                            description: t('messages.startAddingExpenses'),
                             icon: <CurrencyDollarIcon className="w-12 h-12 text-gray-400" />
                         }}
                         fullWidth={true}

@@ -1,4 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -42,6 +43,8 @@ interface PaymentFormData {
 }
 
 export default function Edit({ payment, suppliers, paymentMethods }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
+
     // Format the payment date for HTML date input (YYYY-MM-DD)
     const formatDateForInput = (dateString: string) => {
         const date = new Date(dateString);
@@ -66,7 +69,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
     return (
         <AuthenticatedLayout
         >
-            <Head title={`Redaktə Et - ${payment.supplier.name}`} />
+            <Head title={t('payments.editPaymentTitle', { name: payment.supplier.name })} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
@@ -74,7 +77,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                         <form onSubmit={submit} className="p-6 space-y-6">
                             {/* Supplier Selection */}
                             <div>
-                                <InputLabel htmlFor="supplier_id" value="Təchizatçı *" />
+                                <InputLabel htmlFor="supplier_id" value={t('payments.fields.supplier') + ' *'} />
                                 <select
                                     id="supplier_id"
                                     name="supplier_id"
@@ -83,7 +86,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                     required
                                 >
-                                    <option value="">Təchizatçı seçin</option>
+                                    <option value="">{t('payments.placeholders.selectSupplier')}</option>
                                     {suppliers.map((supplier) => (
                                         <option key={supplier.id} value={supplier.id}>
                                             {supplier.name}
@@ -95,7 +98,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
 
                             {/* Amount */}
                             <div>
-                                <InputLabel htmlFor="amount" value="Məbləğ (AZN) *" />
+                                <InputLabel htmlFor="amount" value={t('payments.fields.amount') + ' *'} />
                                 <TextInput
                                     id="amount"
                                     type="number"
@@ -105,7 +108,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                                     step="0.01"
                                     min="0"
                                     onChange={(e) => setData('amount', e.target.value)}
-                                    placeholder="0.00"
+                                    placeholder={t('payments.placeholders.amount')}
                                     required
                                 />
                                 <InputError message={errors.amount} className="mt-2" />
@@ -113,7 +116,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
 
                             {/* Description */}
                             <div>
-                                <InputLabel htmlFor="description" value="Təsvir *" />
+                                <InputLabel htmlFor="description" value={t('payments.fields.description') + ' *'} />
                                 <TextInput
                                     id="description"
                                     type="text"
@@ -121,7 +124,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                                     value={data.description}
                                     className="mt-1 block w-full"
                                     onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Ödəniş məqsədi və ya açıqlaması"
+                                    placeholder={t('payments.placeholders.description')}
                                     required
                                 />
                                 <InputError message={errors.description} className="mt-2" />
@@ -129,7 +132,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
 
                             {/* Payment Date */}
                             <div>
-                                <InputLabel htmlFor="payment_date" value="Ödəniş tarixi *" />
+                                <InputLabel htmlFor="payment_date" value={t('payments.fields.paymentDate') + ' *'} />
                                 <TextInput
                                     id="payment_date"
                                     type="date"
@@ -144,7 +147,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
 
                             {/* Payment Method */}
                             <div>
-                                <InputLabel htmlFor="payment_method" value="Ödəniş üsulu *" />
+                                <InputLabel htmlFor="payment_method" value={t('payments.fields.paymentMethod') + ' *'} />
                                 <select
                                     id="payment_method"
                                     name="payment_method"
@@ -164,7 +167,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
 
                             {/* Invoice Number */}
                             <div>
-                                <InputLabel htmlFor="invoice_number" value="İnvoys nömrəsi" />
+                                <InputLabel htmlFor="invoice_number" value={t('payments.fields.invoiceNumber')} />
                                 <TextInput
                                     id="invoice_number"
                                     type="text"
@@ -172,14 +175,14 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                                     value={data.invoice_number}
                                     className="mt-1 block w-full"
                                     onChange={(e) => setData('invoice_number', e.target.value)}
-                                    placeholder="Ödənilən invoys nömrəsi"
+                                    placeholder={t('payments.placeholders.invoiceNumber')}
                                 />
                                 <InputError message={errors.invoice_number} className="mt-2" />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('payments.fields.notes')} />
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -187,7 +190,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Əlavə qeydlər (istəyə bağlı)"
+                                    placeholder={t('payments.placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
@@ -196,7 +199,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                             <div className="flex items-center justify-between pt-4">
                                 <SecondaryButton>
                                     <Link href="/supplier-payments">
-                                        Ləğv et
+                                        {t('payments.actions.cancel')}
                                     </Link>
                                 </SecondaryButton>
 
@@ -204,7 +207,7 @@ export default function Edit({ payment, suppliers, paymentMethods }: Props) {
                                     className="ms-4"
                                     disabled={processing}
                                 >
-                                    {processing ? 'Yenilənir...' : 'Yenilə'}
+                                    {processing ? t('payments.actions.updating') : t('payments.actions.update')}
                                 </PrimaryButton>
                             </div>
                         </form>

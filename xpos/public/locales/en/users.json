@@ -1,0 +1,133 @@
+{
+  "title": "User Management",
+  "subtitle": "Manage all users in the system",
+  "create": "New User",
+  "createButton": "Create New User",
+  "edit": "Edit User",
+  "delete": "Delete",
+  "view": "View",
+  "noUsers": "No users created yet",
+  "firstUser": "Create First User",
+  "searchPlaceholder": "Search users...",
+
+  "form": {
+    "personalInfo": "Personal Information",
+    "accountSettings": "Account Settings",
+    "employeeInfo": "Employee Information",
+    "loginInfo": "Login Information",
+    "passwordChange": "Password Change (optional)",
+
+    "name": "Full Name",
+    "namePlaceholder": "John Doe",
+    "email": "Email",
+    "emailPlaceholder": "john@company.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+994 XX XXX XX XX",
+
+    "role": "System Role",
+    "rolePlaceholder": "Select role...",
+    "roleHint": "Determines user's access permissions in the system",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "branch": "Branch",
+    "branchPlaceholder": "Select branch...",
+    "branchRequired": "Branch assignment is required for sales staff",
+
+    "position": "Position (Job Title)",
+    "positionPlaceholder": "E.g.: Chief Mechanic, Sales Manager",
+    "positionHint": "Employee's specific job title (e.g.: Head Cashier, Warehouse Worker)",
+    "hireDate": "Hire Date",
+    "hourlyRate": "Hourly Rate (AZN)",
+    "hourlyRatePlaceholder": "15.00",
+    "notes": "Notes",
+    "notesPlaceholder": "Additional notes or information",
+
+    "password": "Password",
+    "passwordPlaceholder": "Minimum 8 characters",
+    "passwordConfirm": "Confirm Password",
+    "passwordConfirmPlaceholder": "Repeat password",
+    "passwordNew": "New Password",
+    "passwordNewPlaceholder": "Leave blank if you don't want to change",
+    "passwordRepeat": "Repeat Password",
+    "passwordRepeatPlaceholder": "Repeat new password",
+
+    "accountOwnerNote": "Account owner role cannot be changed",
+    "accountOwnerWarning": "⚠️ Cannot change account owner's role"
+  },
+
+  "help": {
+    "title": "Information",
+    "roleInfo": "System Role: Determines user's access permissions in the system (e.g.: Admin, Cashier)",
+    "positionInfo": "Position: Employee's specific job title (e.g.: Chief Mechanic, Sales Manager)",
+    "passwordInfo": "Password must be at least 8 characters",
+    "branchInfo": "Branch assignment is required when selecting sales staff role",
+    "inactiveInfo": "Inactive users cannot log into the system",
+    "emailInfo": "Email address must be unique",
+    "passwordChangeInfo": "If you leave the password field empty, the current password will not be changed"
+  },
+
+  "actions": {
+    "create": "Create User",
+    "creating": "Creating...",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+
+  "messages": {
+    "cannotDeleteSystem": "Cannot delete system users!",
+    "cannotDeleteOwner": "Cannot delete account owner!",
+    "cannotDeleteSelf": "You cannot delete yourself!",
+    "confirmDelete": "Are you sure you want to delete user \"{{name}}\"?",
+    "deleteSuccess": "User deleted successfully",
+    "createSuccess": "User created successfully",
+    "updateSuccess": "User updated successfully"
+  },
+
+  "filters": {
+    "all": "All",
+    "role": "Role",
+    "status": "Status"
+  },
+
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "branch": "Branch",
+    "position": "Position",
+    "actions": "Actions"
+  },
+
+  "roles": {
+    "account_owner": "Account Owner",
+    "branch_manager": "Branch Manager",
+    "cashier": "Cashier",
+    "sales_staff": "Sales Staff",
+    "warehouse_manager": "Warehouse Manager",
+    "accountant": "Accountant",
+    "tailor": "Tailor"
+  },
+
+  "show": {
+    "title": "User Information",
+    "userId": "ID",
+    "back": "Back",
+    "edit": "Edit",
+    "contactInfo": "Contact Information",
+    "email": "Email",
+    "phone": "Phone",
+    "employeeInfo": "Employee Information",
+    "position": "Position",
+    "hireDate": "Hire Date",
+    "hourlyRate": "Hourly Rate",
+    "notes": "Notes",
+    "systemInfo": "System Information",
+    "lastLogin": "Last Login",
+    "createdAt": "Created Date",
+    "accountOwnerDisplay": "Account Owner (account_owner)"
+  }
+}

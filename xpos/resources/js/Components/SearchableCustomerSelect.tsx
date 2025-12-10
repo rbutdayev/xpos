@@ -1,6 +1,7 @@
 import { Customer } from '@/types';
 import { MagnifyingGlassIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 interface Props {
@@ -15,11 +16,12 @@ interface Props {
 export default function SearchableCustomerSelect({
     value,
     onChange,
-    placeholder = "Müştəri axtar...",
+    placeholder,
     required = false,
     disabled = false,
     className = ""
 }: Props) {
+    const { t } = useTranslation('common');
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -140,7 +142,7 @@ export default function SearchableCustomerSelect({
                                 )}
                             </span>
                         ) : (
-                            <span className="text-gray-500">{placeholder}</span>
+                            <span className="text-gray-500">{placeholder || t('customerSelect.placeholder')}</span>
                         )}
                     </span>
                 </span>
@@ -160,7 +162,7 @@ export default function SearchableCustomerSelect({
                                 ref={searchRef}
                                 type="text"
                                 className="w-full rounded-md border-gray-300 pl-10 pr-8 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Ad və ya telefon nömrəsi ilə axtar..."
+                                placeholder={t('customerSelect.searchPlaceholder')}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 autoFocus
@@ -184,7 +186,7 @@ export default function SearchableCustomerSelect({
                             onClick={handleClear}
                         >
                             <span className="font-normal block truncate text-gray-500 italic">
-                                Müştəri seçməyin
+                                {t('customerSelect.noCustomer')}
                             </span>
                         </div>
                     )}
@@ -192,16 +194,16 @@ export default function SearchableCustomerSelect({
                     {loading ? (
                         <div className="relative cursor-default select-none py-4 pl-3 pr-9 text-center text-gray-500">
                             <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
-                            <span className="ml-2">Axtarılır...</span>
+                            <span className="ml-2">{t('messages.searching')}</span>
                         </div>
                     ) : search.trim().length < 2 ? (
                         <div className="relative cursor-default select-none py-4 pl-3 pr-9 text-gray-500 text-center">
-                            <span className="text-sm">Axtarmaq üçün ən azı 2 hərf daxil edin</span>
+                            <span className="text-sm">{t('productSelect.minChars')}</span>
                         </div>
                     ) : customers.length === 0 ? (
                         <div className="relative cursor-default select-none py-4 pl-3 pr-9 text-gray-500 text-center">
                             <span className="font-normal block truncate">
-                                Müştəri tapılmadı
+                                {t('customerSelect.notFound')}
                             </span>
                         </div>
                     ) : (

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod as PaymentMethodEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,7 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'method' => PaymentMethodEnum::class,
         ];
     }
 
@@ -49,43 +51,60 @@ class Payment extends Model
 
     public function scopeCash(Builder $query): Builder
     {
-        return $query->where('method', 'nağd');
+        return $query->where('method', PaymentMethodEnum::CASH);
     }
 
     public function scopeCard(Builder $query): Builder
     {
-        return $query->where('method', 'kart');
+        return $query->where('method', PaymentMethodEnum::CARD);
     }
 
     public function scopeTransfer(Builder $query): Builder
     {
-        return $query->where('method', 'köçürmə');
+        return $query->where('method', PaymentMethodEnum::BANK_TRANSFER);
     }
 
+    public function scopeBankCredit(Builder $query): Builder
+    {
+        return $query->where('method', PaymentMethodEnum::BANK_CREDIT);
+    }
+
+    public function scopeGiftCard(Builder $query): Builder
+    {
+        return $query->where('method', PaymentMethodEnum::GIFT_CARD);
+    }
 
     public function isCash(): bool
     {
-        return $this->method === 'nağd';
+        return $this->method === PaymentMethodEnum::CASH;
     }
 
     public function isCard(): bool
     {
-        return $this->method === 'kart';
+        return $this->method === PaymentMethodEnum::CARD;
     }
 
     public function isTransfer(): bool
     {
-        return $this->method === 'köçürmə';
+        return $this->method === PaymentMethodEnum::BANK_TRANSFER;
+    }
+
+    public function isBankCredit(): bool
+    {
+        return $this->method === PaymentMethodEnum::BANK_CREDIT;
+    }
+
+    public function isGiftCard(): bool
+    {
+        return $this->method === PaymentMethodEnum::GIFT_CARD;
     }
 
     public function getMethodDisplayAttribute(): string
     {
-        return match($this->method) {
-            'nağd' => 'Nağd',
-            'kart' => 'Kart',
-            'köçürmə' => 'Köçürmə',
-            null => 'Bilinmir',
-            default => $this->method ?? 'Bilinmir',
-        };
+        if (!$this->method) {
+            return __('Unknown');
+        }
+
+        return $this->method->label();
     }
 }

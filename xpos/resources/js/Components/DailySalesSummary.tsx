@@ -10,6 +10,8 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon
 } from '@heroicons/react/24/outline';
+import { useTranslations } from '@/Hooks/useTranslations';
+import { useTranslation } from 'react-i18next';
 
 interface DailySalesSummaryProps {
     summary: {
@@ -29,6 +31,8 @@ interface DailySalesSummaryProps {
 }
 
 export default function DailySalesSummary({ summary, selectedDate, onDateChange }: DailySalesSummaryProps) {
+    const { translatePaymentMethod } = useTranslations();
+    const { t } = useTranslation('sales');
     const isIncrease = summary.percentage_change >= 0;
 
     const handlePreviousDay = () => {
@@ -71,7 +75,7 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-blue-200">
                 <div className="flex items-center gap-3">
                     <CalendarIcon className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-800">Satış Hesabatı</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">{t('dailySummary.title')}</h3>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -84,13 +88,13 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                                 : 'bg-white text-gray-700 hover:bg-blue-100 border border-gray-300'
                         }`}
                     >
-                        Bugün
+                        {t('dailySummary.today')}
                     </button>
                     <button
                         onClick={handleYesterday}
                         className="px-3 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 hover:bg-blue-100 border border-gray-300 transition"
                     >
-                        Dünən
+                        {t('dailySummary.yesterday')}
                     </button>
 
                     {/* Date Navigation */}
@@ -98,7 +102,7 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                         <button
                             onClick={handlePreviousDay}
                             className="p-1.5 hover:bg-gray-100 rounded transition"
-                            title="Əvvəlki gün"
+                            title={t('dailySummary.previousDay')}
                         >
                             <ChevronLeftIcon className="w-4 h-4 text-gray-600" />
                         </button>
@@ -119,7 +123,7 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                                     ? 'opacity-30 cursor-not-allowed'
                                     : 'hover:bg-gray-100'
                             }`}
-                            title="Növbəti gün"
+                            title={t('dailySummary.nextDay')}
                         >
                             <ChevronRightIcon className="w-4 h-4 text-gray-600" />
                         </button>
@@ -143,7 +147,7 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                             <span>{Math.abs(summary.percentage_change)}%</span>
                         </div>
                     )}
-                    <span className="text-xs text-gray-500">əvvəlki günə nisbətən</span>
+                    <span className="text-xs text-gray-500">{t('dailySummary.comparedToPrevious')}</span>
                 </div>
             </div>
 
@@ -152,9 +156,9 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">Cəmi</p>
+                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('dailySummary.total')}</p>
                             <p className="text-2xl font-bold text-gray-900">{summary.today_total} ₼</p>
-                            <p className="text-xs text-gray-500 mt-1">{summary.today_count} əməliyyat</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('dailySummary.operations', { count: summary.today_count })}</p>
                         </div>
                         <div className="bg-blue-100 p-3 rounded-lg">
                             <ShoppingCartIcon className="w-6 h-6 text-blue-600" />
@@ -166,9 +170,9 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">Nağd</p>
+                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">{translatePaymentMethod('cash')}</p>
                             <p className="text-2xl font-bold text-gray-900">{summary.cash_total} ₼</p>
-                            <p className="text-xs text-gray-500 mt-1">nağd ödəniş</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('dailySummary.payment')}</p>
                         </div>
                         <div className="bg-green-100 p-3 rounded-lg">
                             <BanknotesIcon className="w-6 h-6 text-green-600" />
@@ -180,9 +184,9 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">Kart</p>
+                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">{translatePaymentMethod('card')}</p>
                             <p className="text-2xl font-bold text-gray-900">{summary.card_total} ₼</p>
-                            <p className="text-xs text-gray-500 mt-1">kart ödənişi</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('dailySummary.payment')}</p>
                         </div>
                         <div className="bg-purple-100 p-3 rounded-lg">
                             <CreditCardIcon className="w-6 h-6 text-purple-600" />
@@ -194,9 +198,9 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">Borc</p>
+                            <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('dailySummary.debt')}</p>
                             <p className="text-2xl font-bold text-gray-900">{summary.today_credit} ₼</p>
-                            <p className="text-xs text-gray-500 mt-1">ödənilməmiş</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('dailySummary.unpaid')}</p>
                         </div>
                         <div className={`p-3 rounded-lg ${
                             summary.today_credit > 0 ? 'bg-red-100' : 'bg-gray-100'
@@ -212,7 +216,7 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
             {summary.transfer_total > 0 && (
                 <div className="mt-4 bg-white rounded-lg p-3 shadow-sm">
                     <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-700">Köçürmə</p>
+                        <p className="text-sm font-medium text-gray-700">{translatePaymentMethod('bank_transfer')}</p>
                         <p className="text-lg font-bold text-gray-900">{summary.transfer_total} ₼</p>
                     </div>
                 </div>

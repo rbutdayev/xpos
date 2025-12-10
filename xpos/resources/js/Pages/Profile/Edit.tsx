@@ -4,15 +4,18 @@ import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import { useTranslation } from 'react-i18next';
 
 export default function Edit({
     mustVerifyEmail,
     status,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
+    const { t } = useTranslation(['profile', 'common']);
+
     return (
         <AuthenticatedLayout
         >
-            <Head title="Profil" />
+            <Head title={t('edit.heading')} />
 
             <div className="py-12">
                 <div className="mx-auto space-y-6 sm:px-6 lg:px-8">

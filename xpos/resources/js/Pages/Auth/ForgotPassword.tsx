@@ -4,8 +4,10 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ForgotPassword({ status }: { status?: string }) {
+    const { t } = useTranslation('auth');
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
@@ -18,11 +20,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
     return (
         <GuestLayout>
-            <Head title="Şifrəni Unutmuşam" />
+            <Head title={t('forgotPassword.pageTitle')} />
 
             <div className="mb-4 text-sm text-gray-600">
-                Şifrənizi unutmusunuz? Problem yoxdur. Sadəcə e-poçt ünvanınızı bizə bildirin 
-                və sizə yeni şifrə seçməyə imkan verəcək şifrə sıfırlama linkini e-poçtla göndərəcəyik.
+                {t('forgotPassword.description')}
             </div>
 
             {status && (
@@ -46,7 +47,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Şifrə Sıfırlama Linki Göndər
+                        {t('forgotPassword.sendResetLinkButton')}
                     </PrimaryButton>
                 </div>
             </form>

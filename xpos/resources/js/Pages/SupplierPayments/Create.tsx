@@ -1,5 +1,6 @@
 import { Head, useForm, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -48,6 +49,7 @@ interface PaymentFormData {
 }
 
 export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts, branches, categories }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
     const [goodsReceiptSearch, setGoodsReceiptSearch] = useState('');
     const [showGoodsReceiptDropdown, setShowGoodsReceiptDropdown] = useState(false);
 
@@ -91,7 +93,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
             supplier_id: String(receipt.supplier_id),
             amount: remainingAmount.toFixed(2),
             payment_amount: remainingAmount.toFixed(2),
-            description: `Mal qəbulu ödəməsi - ${receipt.receipt_number}`,
+            description: t('payments.goodsReceipt.paymentFor', { reference: receipt.receipt_number }),
             invoice_number: receipt.receipt_number,
         });
         setGoodsReceiptSearch('');
@@ -106,7 +108,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
     return (
         <AuthenticatedLayout
         >
-            <Head title="Yeni Təchizatçı Ödənişi" />
+            <Head title={t('payments.newPayment')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
@@ -115,9 +117,9 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                             {/* Goods Receipt Selector */}
                             {unpaidGoodsReceipts && unpaidGoodsReceipts.length > 0 && (
                                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                    <InputLabel htmlFor="goods_receipt" value="Ödənilməmiş Mal Qəbulu Seçin (İstəyə bağlı)" className="text-blue-900" />
+                                    <InputLabel htmlFor="goods_receipt" value={t('payments.goodsReceipt.label')} className="text-blue-900" />
                                     <p className="text-sm text-blue-700 mt-1 mb-3">
-                                        Mal qəbulu seçsəniz, məlumatlar avtomatik doldurulacaq
+                                        {t('payments.goodsReceipt.helpText')}
                                     </p>
 
                                     {/* Show dropdown if 20 or fewer items, otherwise show searchable */}
@@ -131,7 +133,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                             }}
                                             className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
                                         >
-                                            <option value="">Mal qəbulu seçin</option>
+                                            <option value="">{t('payments.goodsReceipt.select')}</option>
                                             {unpaidGoodsReceipts.map((receipt) => {
                                                 const remaining = getRemainingAmount(receipt);
                                                 return (
@@ -153,7 +155,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                                         setShowGoodsReceiptDropdown(true);
                                                     }}
                                                     onFocus={() => setShowGoodsReceiptDropdown(true)}
-                                                    placeholder="Mal qəbulu axtar (№, təchizatçı, məhsul)"
+                                                    placeholder={t('payments.goodsReceipt.search')}
                                                     className="mt-1 block w-full pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
                                                 />
                                             </div>
@@ -173,9 +175,9 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                                                     {receipt.supplier?.name} - {receipt.product?.name}
                                                                 </div>
                                                                 <div className="text-sm font-semibold text-red-600">
-                                                                    Qalıq: {remaining.toFixed(2)} AZN
+                                                                    {t('payments.goodsReceipt.remaining')}: {remaining.toFixed(2)} AZN
                                                                     {receipt.payment_status === 'partial' && (
-                                                                        <span className="ml-2 text-xs text-yellow-600">(Qismən ödənilib)</span>
+                                                                        <span className="ml-2 text-xs text-yellow-600">{t('payments.goodsReceipt.partiallyPaid')}</span>
                                                                     )}
                                                                 </div>
                                                             </button>
@@ -192,16 +194,16 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <div className="font-medium text-gray-900">
-                                                        Seçilmiş: {selectedGoodsReceipt.receipt_number}
+                                                        {t('payments.goodsReceipt.selected', { number: selectedGoodsReceipt.receipt_number })}
                                                     </div>
                                                     <div className="text-sm text-gray-600 mt-1">
-                                                        Təchizatçı: {selectedGoodsReceipt.supplier?.name}
+                                                        {t('payments.fields.supplier')}: {selectedGoodsReceipt.supplier?.name}
                                                     </div>
                                                     <div className="text-sm text-gray-600">
-                                                        Məhsul: {selectedGoodsReceipt.product?.name}
+                                                        {t('labels.product')}: {selectedGoodsReceipt.product?.name}
                                                     </div>
                                                     <div className="text-sm font-semibold text-red-600 mt-1">
-                                                        Qalıq borc: {getRemainingAmount(selectedGoodsReceipt).toFixed(2)} AZN
+                                                        {t('payments.goodsReceipt.debt', { amount: getRemainingAmount(selectedGoodsReceipt).toFixed(2) })}
                                                     </div>
                                                 </div>
                                                 <button
@@ -209,7 +211,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                                     onClick={() => setData({ ...data, goods_receipt_id: '', payment_amount: '' })}
                                                     className="text-red-600 hover:text-red-800 text-sm"
                                                 >
-                                                    Ləğv et
+                                                    {t('payments.goodsReceipt.cancel')}
                                                 </button>
                                             </div>
                                         </div>
@@ -219,7 +221,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Supplier Selection */}
                             <div>
-                                <InputLabel htmlFor="supplier_id" value="Təchizatçı *" />
+                                <InputLabel htmlFor="supplier_id" value={t('payments.fields.supplier') + ' *'} />
                                 <select
                                     id="supplier_id"
                                     name="supplier_id"
@@ -228,7 +230,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                     required
                                 >
-                                    <option value="">Təchizatçı seçin</option>
+                                    <option value="">{t('payments.placeholders.selectSupplier')}</option>
                                     {suppliers.map((supplier) => (
                                         <option key={supplier.id} value={supplier.id}>
                                             {supplier.name}
@@ -240,7 +242,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Amount */}
                             <div>
-                                <InputLabel htmlFor="amount" value="Məbləğ (AZN) *" />
+                                <InputLabel htmlFor="amount" value={t('payments.fields.amount') + ' *'} />
                                 <TextInput
                                     id="amount"
                                     type="number"
@@ -257,7 +259,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                             payment_amount: data.goods_receipt_id ? e.target.value : data.payment_amount
                                         });
                                     }}
-                                    placeholder="0.00"
+                                    placeholder={t('payments.placeholders.amount')}
                                     required
                                 />
                                 <InputError message={errors.amount} className="mt-2" />
@@ -265,7 +267,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Description */}
                             <div>
-                                <InputLabel htmlFor="description" value="Təsvir *" />
+                                <InputLabel htmlFor="description" value={t('payments.fields.description') + ' *'} />
                                 <TextInput
                                     id="description"
                                     type="text"
@@ -273,7 +275,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     value={data.description}
                                     className="mt-1 block w-full"
                                     onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Ödəniş məqsədi və ya açıqlaması"
+                                    placeholder={t('payments.placeholders.description')}
                                     required
                                 />
                                 <InputError message={errors.description} className="mt-2" />
@@ -281,7 +283,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Payment Date */}
                             <div>
-                                <InputLabel htmlFor="payment_date" value="Ödəniş tarixi *" />
+                                <InputLabel htmlFor="payment_date" value={t('payments.fields.paymentDate') + ' *'} />
                                 <TextInput
                                     id="payment_date"
                                     type="date"
@@ -296,7 +298,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Payment Method */}
                             <div>
-                                <InputLabel htmlFor="payment_method" value="Ödəniş üsulu *" />
+                                <InputLabel htmlFor="payment_method" value={t('payments.fields.paymentMethod') + ' *'} />
                                 <select
                                     id="payment_method"
                                     name="payment_method"
@@ -316,7 +318,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Branch Selection */}
                             <div>
-                                <InputLabel htmlFor="branch_id" value="Filial *" />
+                                <InputLabel htmlFor="branch_id" value={t('payments.fields.branch') + ' *'} />
                                 <select
                                     id="branch_id"
                                     name="branch_id"
@@ -325,7 +327,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                     required
                                 >
-                                    <option value="">Filial seçin</option>
+                                    <option value="">{t('payments.placeholders.selectBranch')}</option>
                                     {branches.map((branch) => (
                                         <option key={branch.id} value={branch.id}>
                                             {branch.name}
@@ -337,7 +339,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Category Selection */}
                             <div>
-                                <InputLabel htmlFor="category_id" value="Xərc kateqoriyası" />
+                                <InputLabel htmlFor="category_id" value={t('payments.fields.category')} />
                                 <select
                                     id="category_id"
                                     name="category_id"
@@ -345,7 +347,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     onChange={(e) => setData('category_id', e.target.value)}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <option value="">Kateqoriya seçin (istəyə bağlı)</option>
+                                    <option value="">{t('payments.placeholders.selectCategory')}</option>
                                     {categories.map((category) => (
                                         <option key={category.category_id} value={category.category_id}>
                                             {category.name}
@@ -357,7 +359,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
 
                             {/* Invoice Number */}
                             <div>
-                                <InputLabel htmlFor="invoice_number" value="İnvoys nömrəsi" />
+                                <InputLabel htmlFor="invoice_number" value={t('payments.fields.invoiceNumber')} />
                                 <TextInput
                                     id="invoice_number"
                                     type="text"
@@ -365,14 +367,14 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     value={data.invoice_number}
                                     className="mt-1 block w-full"
                                     onChange={(e) => setData('invoice_number', e.target.value)}
-                                    placeholder="Ödənilən invoys nömrəsi"
+                                    placeholder={t('payments.placeholders.invoiceNumber')}
                                 />
                                 <InputError message={errors.invoice_number} className="mt-2" />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('payments.fields.notes')} />
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -380,7 +382,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Əlavə qeydlər (istəyə bağlı)"
+                                    placeholder={t('payments.placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
@@ -389,7 +391,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4">
                                 <SecondaryButton className="w-full sm:w-auto">
                                     <Link href="/supplier-payments">
-                                        Ləğv et
+                                        {t('payments.actions.cancel')}
                                     </Link>
                                 </SecondaryButton>
 
@@ -397,7 +399,7 @@ export default function Create({ suppliers, paymentMethods, unpaidGoodsReceipts,
                                     className="w-full sm:w-auto"
                                     disabled={processing}
                                 >
-                                    {processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}
+                                    {processing ? t('payments.actions.saving') : t('payments.actions.save')}
                                 </PrimaryButton>
                             </div>
                         </form>

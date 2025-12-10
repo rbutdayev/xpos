@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Props {
     status: string;
     type?: 'service' | 'general';
@@ -6,30 +8,31 @@ interface Props {
 }
 
 export default function StatusBadge({ status, type = 'general', size = 'md', showIcon = true }: Props) {
+    const { t } = useTranslation();
     const getStatusConfig = (status: string, type: string) => {
         if (type === 'service') {
             switch (status) {
                 case 'pending':
                     return {
-                        text: 'Gözləyir',
+                        text: t('status.pending'),
                         color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
                         icon: '⏳'
                     };
                 case 'in_progress':
                     return {
-                        text: 'Davam edir',
+                        text: t('status.inProgress'),
                         color: 'bg-blue-100 text-blue-800 border-blue-200',
                         icon: '🔧'
                     };
                 case 'completed':
                     return {
-                        text: 'Tamamlandı',
+                        text: t('status.completed'),
                         color: 'bg-green-100 text-green-800 border-green-200',
                         icon: '✅'
                     };
                 case 'cancelled':
                     return {
-                        text: 'Ləğv edildi',
+                        text: t('status.cancelled'),
                         color: 'bg-red-100 text-red-800 border-red-200',
                         icon: '❌'
                     };
@@ -46,39 +49,39 @@ export default function StatusBadge({ status, type = 'general', size = 'md', sho
         switch (status) {
             case 'pending':
                 return {
-                    text: 'Gözləyir',
+                    text: t('status.pending'),
                     color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
                     icon: '⏳'
                 };
             case 'completed':
                 return {
-                    text: 'Tamamlandı',
+                    text: t('status.completed'),
                     color: 'bg-green-100 text-green-800 border-green-200',
                     icon: '✅'
                 };
             case 'cancelled':
                 return {
-                    text: 'Ləğv edildi',
+                    text: t('status.cancelled'),
                     color: 'bg-red-100 text-red-800 border-red-200',
                     icon: '❌'
                 };
             case 'refunded':
                 return {
-                    text: 'Geri qaytarıldı',
+                    text: t('status.refunded'),
                     color: 'bg-purple-100 text-purple-800 border-purple-200',
                     icon: '↩️'
                 };
             case 'active':
             case 'aktiv':
                 return {
-                    text: 'Aktiv',
+                    text: t('status.active'),
                     color: 'bg-green-100 text-green-800 border-green-200',
                     icon: '✅'
                 };
             case 'inactive':
             case 'qeyri-aktiv':
                 return {
-                    text: 'Qeyri-aktiv',
+                    text: t('status.inactive'),
                     color: 'bg-red-100 text-red-800 border-red-200',
                     icon: '⭕'
                 };

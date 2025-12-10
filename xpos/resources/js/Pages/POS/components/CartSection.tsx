@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import TextInput from '@/Components/TextInput';
 import DangerButton from '@/Components/DangerButton';
 import { TrashIcon } from '@heroicons/react/24/outline';
@@ -12,6 +13,8 @@ interface Props {
 }
 
 function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: Props) {
+  const { t } = useTranslation('sales');
+
   if (cart.length === 0) return null;
   return (
     <div className="space-y-2">
@@ -59,15 +62,15 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
                         {item.product.base_unit || 'L'} - {(Math.round((Number(item.product.unit_price || 0)) * 100) / 100).toFixed(2)} AZN
                       </option>
                       <option value="qab">
-                        Qab ({item.product.packaging_size}) - {(Math.round((Number(item.product.unit_price || 0) * Number(item.product.packaging_quantity || 1)) * 100) / 100).toFixed(2)} AZN
+                        {t('cartSection.packaging')} ({item.product.packaging_size}) - {(Math.round((Number(item.product.unit_price || 0) * Number(item.product.packaging_quantity || 1)) * 100) / 100).toFixed(2)} AZN
                       </option>
                     </select>
                   ) : (
-                    <span>Vahid: {item.selling_unit || item.product?.base_unit}</span>
+                    <span>{t('cartSection.unit')}: {item.selling_unit || item.product?.base_unit}</span>
                   )}
                   {item.is_packaging && item.product.packaging_quantity && (
                     <div className="text-xs text-blue-600 mt-1">
-                      1 qab = {item.product.packaging_quantity} {item.product.base_unit}
+                      {t('cartSection.packageInfo', { quantity: item.product.packaging_quantity, unit: item.product.base_unit })}
                     </div>
                   )}
                 </div>
@@ -91,10 +94,10 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
                   }}
                   className="w-20"
                   min="0"
-                  placeholder="Miqdar"
+                  placeholder={t('cartSection.quantityPlaceholder')}
                 />
                 {item.base_quantity !== undefined && item.base_quantity !== item.quantity && (
-                  <span className="text-xs text-gray-400 mt-1">Bazis: {Number(item.base_quantity || 0).toFixed(2)}</span>
+                  <span className="text-xs text-gray-400 mt-1">{t('cartSection.baseQuantity')}: {Number(item.base_quantity || 0).toFixed(2)}</span>
                 )}
               </div>
 
@@ -115,7 +118,7 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
                 }}
                 className="w-24"
                 min="0"
-                placeholder="Qiymət"
+                placeholder={t('cartSection.pricePlaceholder')}
               />
 
               <span className="text-sm text-gray-500">=</span>
@@ -134,7 +137,7 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
               value={item.notes || ''}
               onChange={(e) => updateCartItem(item.id, 'notes', e.target.value)}
               className="w-full text-sm"
-              placeholder="Qeydlər (ixtiyari)"
+              placeholder={t('cartSection.notesPlaceholder')}
             />
           </div>
         </div>

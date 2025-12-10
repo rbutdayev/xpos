@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationData {
     current_page: number;
@@ -21,11 +22,12 @@ interface Props {
     showPerPageSelector?: boolean;
 }
 
-export default function AdvancedPagination({ 
-    data, 
+export default function AdvancedPagination({
+    data,
     onPerPageChange,
-    showPerPageSelector = true 
+    showPerPageSelector = true
 }: Props) {
+    const { t } = useTranslation();
     const { current_page, last_page, per_page, total, from, to, links } = data;
 
     const handlePerPageChange = (newPerPage: number) => {
@@ -59,19 +61,19 @@ export default function AdvancedPagination({
                     preserveState
                     disabled={!firstLink.url}
                 >
-                    Əvvəlki
+                    {t('pagination.previous')}
                 </Link>
                 <Link
                     href={lastLink.url || '#'}
                     className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                        lastLink.url 
-                            ? 'text-gray-700 bg-white hover:bg-gray-50' 
+                        lastLink.url
+                            ? 'text-gray-700 bg-white hover:bg-gray-50'
                             : 'text-gray-400 bg-gray-100 cursor-not-allowed'
                     }`}
                     preserveState
                     disabled={!lastLink.url}
                 >
-                    Növbəti
+                    {t('pagination.next')}
                 </Link>
             </div>
 
@@ -80,19 +82,14 @@ export default function AdvancedPagination({
                     {/* Results info */}
                     <div>
                         <p className="text-sm text-gray-700">
-                            <span className="font-medium">{from}</span>
-                            {' - '}
-                            <span className="font-medium">{to}</span>
-                            {' / '}
-                            <span className="font-medium">{total}</span>
-                            {' nəticə'}
+                            {t('pagination.showing', { from, to, total })}
                         </p>
                     </div>
 
                     {/* Per page selector */}
                     {showPerPageSelector && onPerPageChange && (
                         <div className="flex items-center space-x-2">
-                            <label className="text-sm text-gray-700">Səhifədə:</label>
+                            <label className="text-sm text-gray-700">{t('pagination.perPage')}:</label>
                             <select
                                 value={per_page}
                                 onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
@@ -113,14 +110,14 @@ export default function AdvancedPagination({
                         <Link
                             href={firstLink.url || '#'}
                             className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${
-                                firstLink.url 
-                                    ? 'text-gray-500 bg-white hover:bg-gray-50' 
+                                firstLink.url
+                                    ? 'text-gray-500 bg-white hover:bg-gray-50'
                                     : 'text-gray-300 bg-gray-100 cursor-not-allowed'
                             }`}
                             preserveState
                             disabled={!firstLink.url}
                         >
-                            <span className="sr-only">Əvvəlki</span>
+                            <span className="sr-only">{t('pagination.previous')}</span>
                             <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                         </Link>
 
@@ -143,14 +140,14 @@ export default function AdvancedPagination({
                         <Link
                             href={lastLink.url || '#'}
                             className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${
-                                lastLink.url 
-                                    ? 'text-gray-500 bg-white hover:bg-gray-50' 
+                                lastLink.url
+                                    ? 'text-gray-500 bg-white hover:bg-gray-50'
                                     : 'text-gray-300 bg-gray-100 cursor-not-allowed'
                             }`}
                             preserveState
                             disabled={!lastLink.url}
                         >
-                            <span className="sr-only">Növbəti</span>
+                            <span className="sr-only">{t('pagination.next')}</span>
                             <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
                         </Link>
                     </nav>

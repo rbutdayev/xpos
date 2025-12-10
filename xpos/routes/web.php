@@ -645,6 +645,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/create-products', [\App\Http\Controllers\GiftCardConfigurationController::class, 'createProducts'])->name('create-products');
         Route::get('/available-denominations', [\App\Http\Controllers\GiftCardConfigurationController::class, 'getAvailableDenominations'])->name('available-denominations');
         Route::post('/{card}/reset', [\App\Http\Controllers\GiftCardConfigurationController::class, 'resetCard'])->name('reset');
+        Route::get('/{card}/details', [\App\Http\Controllers\GiftCardController::class, 'details'])->name('details');
         Route::get('/{card}', [\App\Http\Controllers\GiftCardController::class, 'show'])->name('show');
         Route::post('/activate', [\App\Http\Controllers\GiftCardController::class, 'activate'])->name('activate');
         Route::post('/lookup', [\App\Http\Controllers\GiftCardController::class, 'lookup'])->name('lookup');

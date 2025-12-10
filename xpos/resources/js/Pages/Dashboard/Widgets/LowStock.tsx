@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon, CubeIcon } from '@heroicons/react/24/outline';
 import { formatCurrency, getStockLevelStatus } from '../Utils/dashboardCalculations';
 
@@ -18,19 +19,20 @@ interface LowStockProps {
 }
 
 const LowStock = memo(function LowStock({ products }: LowStockProps) {
+    const { t } = useTranslation('dashboard');
 
     return (
         <div className="-m-6 p-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
                     <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" />
-                    <h3 className="text-lg font-semibold text-gray-900">Az Stok Məhsulları</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('widgets.lowStock.title')}</h3>
                 </div>
-                <Link 
-                    href="/products?filter=low_stock" 
+                <Link
+                    href="/products?filter=low_stock"
                     className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                 >
-                    Hamısını gör
+                    {t('widgets.lowStock.viewAll')}
                 </Link>
             </div>
 
@@ -55,7 +57,7 @@ const LowStock = memo(function LowStock({ products }: LowStockProps) {
                                                         <span className="mx-2">•</span>
                                                     </>
                                                 )}
-                                                <span className="truncate">{product.category_name || 'Kateqoriyasız'}</span>
+                                                <span className="truncate">{product.category_name || t('widgets.lowStock.uncategorized')}</span>
                                                 <span className="mx-2">•</span>
                                                 <span className="flex-shrink-0">{formatCurrency(product.price)}</span>
                                             </div>
@@ -96,9 +98,9 @@ const LowStock = memo(function LowStock({ products }: LowStockProps) {
             ) : (
                 <div className="text-center py-8">
                     <CubeIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">Stok problemi yoxdur</h3>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">{t('widgets.lowStock.noIssue')}</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                        Bütün məhsullar kifayət qədər stokdadır.
+                        {t('widgets.lowStock.allGoodDesc')}
                     </p>
                 </div>
             )}

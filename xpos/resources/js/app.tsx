@@ -1,5 +1,6 @@
 import '../css/app.css';
 import './bootstrap';
+import './i18n';
 
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -67,10 +68,11 @@ window.addEventListener('focus', () => {
     lastKnownCSRFToken = currentToken;
 });
 
-// CRITICAL: Add CSRF token to every Inertia request
+// CRITICAL: Add CSRF token and locale to every Inertia request
 // Inertia overrides axios default headers, so we must explicitly add it
 router.on('before', (event) => {
     const token = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const locale = localStorage.getItem('i18nextLng') || 'en';
 
     // Set in axios defaults (for non-Inertia requests)
     if (token && window.axios) {
@@ -79,9 +81,15 @@ router.on('before', (event) => {
 
     // CRITICAL: Add to Inertia request headers
     // This is the key fix - Inertia doesn't use axios defaults!
-    if (token && event.detail.visit) {
+    if (event.detail.visit) {
         event.detail.visit.headers = event.detail.visit.headers || {};
-        event.detail.visit.headers['X-CSRF-TOKEN'] = token;
+
+        if (token) {
+            event.detail.visit.headers['X-CSRF-TOKEN'] = token;
+        }
+
+        // Add locale header for backend to return localized content
+        event.detail.visit.headers['X-Locale'] = locale;
     }
 });
 
@@ -112,6 +120,30 @@ createInertiaApp({
         const token = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (token && window.axios) {
             window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
+        }
+
+        // Initialize language preference
+        // Priority: User DB preference > localStorage > Browser language > Default (en)
+        const user = (props.initialPage.props as any)?.auth?.user;
+        const userLanguage = user?.language;
+        const storedLanguage = localStorage.getItem('i18nextLng');
+
+        console.log('[App] Language initialization:', {
+            userLanguage,
+            storedLanguage,
+            willSync: userLanguage && userLanguage !== storedLanguage
+        });
+
+        // Sync language preference: If user has a DB preference different from localStorage, update localStorage
+        if (userLanguage && userLanguage !== storedLanguage) {
+            console.log('[App] Syncing language from DB to localStorage:', userLanguage);
+            localStorage.setItem('i18nextLng', userLanguage);
+
+            // Dynamically import i18n to avoid circular dependency
+            import('./i18n').then((i18nModule) => {
+                console.log('[App] Changing i18n language to:', userLanguage);
+                i18nModule.default.changeLanguage(userLanguage);
+            });
         }
 
         const root = createRoot(el);

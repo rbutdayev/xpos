@@ -1,0 +1,128 @@
+{
+  "title": "Products",
+  "productCatalog": "Product Catalog",
+  "addProduct": "Add Product",
+  "editProduct": "Edit Product",
+  "productDetails": "Product Details",
+  "productList": "Product List",
+  "fields": {
+    "productName": "Product Name",
+    "productCode": "Product Code",
+    "barcode": "Barcode",
+    "category": "Category",
+    "brand": "Brand",
+    "unit": "Unit",
+    "cost": "Cost Price",
+    "price": "Selling Price",
+    "stock": "Stock",
+    "stockInfo": "Stock Information",
+    "minStock": "Minimum Stock",
+    "maxStock": "Maximum Stock",
+    "image": "Product Image",
+    "description": "Description",
+    "taxRate": "Tax Rate",
+    "type": "Type",
+    "warehouse": "Warehouse",
+    "salePrice": "Sale",
+    "purchasePrice": "Purchase"
+  },
+  "types": {
+    "product": "Product",
+    "service": "Service"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "deactivate",
+    "activate": "activate"
+  },
+  "messages": {
+    "productAdded": "Product added successfully",
+    "productUpdated": "Product updated successfully",
+    "productDeleted": "Product deleted successfully",
+    "deleteError": "Error deleting product",
+    "statusChangeError": "Error changing status",
+    "lowStock": "Low stock!",
+    "stockOut": "Out of stock",
+    "confirmDelete": "Are you sure you want to delete {{name}}?\n\nNote: Products with stock movements cannot be deleted. If the product has been used, you can only deactivate it.",
+    "confirmStatusChange": "Are you sure you want to {{action}} {{name}}?",
+    "warehousesCount": "warehouses"
+  },
+  "filters": {
+    "allProducts": "All Products",
+    "allCategories": "All Categories",
+    "allWarehouses": "All Warehouses",
+    "allTypes": "All Types",
+    "allStatuses": "All Statuses",
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "byCategory": "By Category",
+    "warehouseFilter": "Warehouse Filter",
+    "selectedWarehouse": "Selected warehouse: ",
+    "warehouseFilterActive": "Warehouse filter active: ",
+    "main": "(Main)"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "stockDetails": "Stock Details",
+    "changeStatus": "Change Status",
+    "viewDetails": "Details"
+  },
+  "emptyState": {
+    "title": "No products found",
+    "description": "Add a new product to get started."
+  },
+  "searchPlaceholder": "Search by name, SKU or barcode...",
+  "newProduct": "New Product",
+  "editSuffix": " - Edit",
+  "editProductTitle": "Edit Product",
+  "detailsSuffix": " - Product Details",
+  "variant": "Variant:",
+  "stockStatuses": {
+    "outOfStock": "Out of stock",
+    "lowStockRemaining": "Low stock",
+    "inStock": "In stock"
+  },
+  "bulk": {
+    "title": "Bulk Product Creation",
+    "description": "Create multiple products with the same category and prices at once. Barcodes will be generated automatically.",
+    "commonInfo": "Common Information",
+    "products": "Products",
+    "addProduct": "Add product",
+    "productNumber": "Product #{{number}}",
+    "productName": "Product Name *",
+    "sku": "SKU",
+    "barcode": "Barcode",
+    "barcodePlaceholder": "13-digit barcode - leave empty for automatic generation",
+    "size": "Size",
+    "sizePlaceholder": "e.g.: M, 42",
+    "color": "Color",
+    "colorPlaceholder": "e.g.: Red",
+    "initialStock": "Initial Stock (optional)",
+    "warehouse": "Warehouse",
+    "selectWarehouse": "Select warehouse",
+    "initialQuantity": "Initial quantity",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "createProducts": "Create {{count}} Products",
+    "validation": {
+      "categoryRequired": "Category must be selected",
+      "salePriceRequired": "Sale price must be entered",
+      "purchasePriceRequired": "Purchase price must be entered",
+      "warehouseRequired": "Warehouse must be selected for all products with initial quantity",
+      "nameRequired": "All products must have a name"
+    },
+    "success": "Products created successfully",
+    "errors": "{{count}} errors"
+  },
+  "required": {
+    "category": "Category *",
+    "salePrice": "Sale Price *",
+    "purchasePrice": "Purchase Price *",
+    "unit": "Unit *",
+    "select": "Select"
+  }
+}

@@ -1,10 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import toast from 'react-hot-toast';
-import { 
-    ChartBarIcon, 
-    CubeIcon, 
-    CurrencyDollarIcon, 
+import {
+    ChartBarIcon,
+    CubeIcon,
+    CurrencyDollarIcon,
     UserIcon,
     DocumentTextIcon,
     CalendarIcon,
@@ -14,6 +14,7 @@ import {
     HomeIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ReportType {
     id: string;
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export default function Index({ reportTypes = [], recentReports = [], stats }: Props) {
+    const { t } = useTranslation(['reports', 'common']);
     const [selectedReportType, setSelectedReportType] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
@@ -81,7 +83,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
 
     const handleGenerateReport = () => {
         if (!selectedReportType || !dateFrom || !dateTo) {
-            toast.error('Hesabat növü və tarix aralığını seçin');
+            toast.error(t('messages.selectTypeAndRange'));
             return;
         }
 
@@ -93,33 +95,33 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
             format: 'table'
         }, {
             onSuccess: () => {
-                toast.success('Hesabat uğurla yaradıldı');
+                toast.success(t('messages.reportCreated'));
             },
             onError: (errors) => {
-                toast.error('Hesabat yaradılarkən xəta baş verdi');
+                toast.error(t('messages.reportError'));
             },
             onFinish: () => setIsGenerating(false)
         });
     };
 
     const quickStats = [
-        { label: 'Ümumi Hesabatlar', value: stats?.total_reports_generated || 0, change: '', positive: true },
-        { label: 'Bu Ay', value: stats?.this_month_reports || 0, change: '', positive: true },
-        { label: 'Ən Çox İstifadə', value: stats?.most_used_report || 'N/A', change: '', positive: true },
-        { label: 'Son Yaradılma', value: stats?.last_generated || 'N/A', change: '', positive: true },
+        { label: t('stats.totalReports'), value: stats?.total_reports_generated || 0, change: '', positive: true },
+        { label: t('stats.thisMonth'), value: stats?.this_month_reports || 0, change: '', positive: true },
+        { label: t('stats.mostUsed'), value: stats?.most_used_report || 'N/A', change: '', positive: true },
+        { label: t('stats.lastGenerated'), value: stats?.last_generated || 'N/A', change: '', positive: true },
     ];
 
     return (
         <AuthenticatedLayout>
-            <Head title="Hesabatlar" />
+            <Head title={t('title')} />
 
             <div className="py-6">
                 <div className="mx-auto sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Hesabatlar</h1>
+                        <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
                         <p className="mt-2 text-gray-600">
-                            İşinizin performansını analiz edin və qərar vermə üçün məlumatlar əldə edin
+                            {t('description')}
                         </p>
                     </div>
 
@@ -128,21 +130,21 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-lg font-medium text-gray-900 flex items-center">
                                 <PlusIcon className="h-5 w-5 mr-2" />
-                                Yeni Hesabat Yarat
+                                {t('newReport')}
                             </h3>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Hesabat Növü
+                                        {t('reportType')}
                                     </label>
                                     <select
                                         value={selectedReportType}
                                         onChange={(e) => setSelectedReportType(e.target.value)}
                                         className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     >
-                                        <option value="">Seçin...</option>
+                                        <option value="">{t('selectReportType')}</option>
                                         {reportTypes.map((type) => (
                                             <option key={type.id} value={type.id}>
                                                 {type.name}
@@ -152,7 +154,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Başlanğıc Tarixi
+                                        {t('fields.startDate')}
                                     </label>
                                     <input
                                         type="date"
@@ -163,7 +165,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Bitmə Tarixi
+                                        {t('fields.endDate')}
                                     </label>
                                     <input
                                         type="date"
@@ -181,12 +183,12 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                         {isGenerating ? (
                                             <>
                                                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                                                Yaradılır...
+                                                {t('creating')}
                                             </>
                                         ) : (
                                             <>
                                                 <DocumentTextIcon className="h-4 w-4 mr-2" />
-                                                Hesabat Yarat
+                                                {t('createReport')}
                                             </>
                                         )}
                                     </button>
@@ -231,7 +233,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                                 {report.description}
                                             </p>
                                             <div className="mt-4 flex items-center text-blue-600 text-sm font-medium">
-                                                <span>Yuxarıda seçin və yaradın</span>
+                                                <span>{t('selectAndCreate')}</span>
                                                 <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                 </svg>
@@ -248,7 +250,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                         <div className="bg-white rounded-lg shadow">
                             <div className="px-6 py-4 border-b border-gray-200">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-medium text-gray-900">Son Hesabatlar</h3>
+                                    <h3 className="text-lg font-medium text-gray-900">{t('recentReports')}</h3>
                                     <ClockIcon className="h-5 w-5 text-gray-400" />
                                 </div>
                             </div>
@@ -277,9 +279,9 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                 ) : (
                                     <div className="text-center py-8">
                                         <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-                                        <h3 className="mt-2 text-sm font-medium text-gray-900">Hesabat yoxdur</h3>
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900">{t('noReports')}</h3>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            İlk hesabatınızı yaratmaq üçün yuxarıdakı formu istifadə edin.
+                                            {t('noReportsDescription')}
                                         </p>
                                     </div>
                                 )}

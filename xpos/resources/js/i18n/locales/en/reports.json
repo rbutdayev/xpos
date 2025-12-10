@@ -1,0 +1,139 @@
+{
+  "title": "Reports",
+  "description": "Analyze your business performance and get insights for decision making",
+  "salesReport": "Sales Report",
+  "purchaseReport": "Purchase Report",
+  "inventoryReport": "Inventory Report",
+  "profitLoss": "Profit & Loss",
+  "customerReport": "Customer Report",
+  "productReport": "Product Report",
+  "newReport": "New Report",
+  "createReport": "Create Report",
+  "creating": "Creating...",
+  "recentReports": "Recent Reports",
+  "reportType": "Report Type",
+  "selectReportType": "Select...",
+  "selectAndCreate": "Select above and create",
+  "noReports": "No reports",
+  "noReportsDescription": "Use the form above to create your first report.",
+  "stats": {
+    "totalReports": "Total Reports",
+    "thisMonth": "This Month",
+    "mostUsed": "Most Used",
+    "lastGenerated": "Last Generated"
+  },
+  "types": {
+    "endOfDay": "Daily Closing Report",
+    "sales": "Sales Report",
+    "inventory": "Inventory Report",
+    "financial": "Financial Report",
+    "customer": "Customer Report",
+    "service": "Service Report",
+    "rental": "Rental Report",
+    "cashDrawer": "Cash Drawer Report"
+  },
+  "view": {
+    "title": "Report",
+    "print": "Print",
+    "downloadCsv": "Download CSV",
+    "noData": "No data",
+    "noDataDescription": "No data found for this report type.",
+    "detailedData": "Detailed Data"
+  },
+  "summary": {
+    "salesCount": "Sales Count",
+    "totalRevenue": "Total Revenue",
+    "averageTransaction": "Average Transaction",
+    "soldProducts": "Sold Products",
+    "totalSales": "Total Sales",
+    "totalIncome": "Total Income",
+    "averageSale": "Average Sale",
+    "topCustomer": "Top Customer",
+    "totalProducts": "Total Products",
+    "stockValue": "Stock Value",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "totalExpenses": "Total Expenses",
+    "netProfit": "Net Profit",
+    "profitMargin": "Profit Margin",
+    "totalCustomers": "Total Customers",
+    "activeCustomers": "Active Customers",
+    "averageValue": "Average Value",
+    "topShopping": "Top Shopping",
+    "totalServices": "Total Services",
+    "completed": "Completed",
+    "pending": "Pending",
+    "totalRentals": "Total Rentals",
+    "activeRentals": "Active Rentals",
+    "rentalRevenue": "Total Revenue",
+    "overdue": "Overdue",
+    "cashSales": "Cash Sales",
+    "cashExpenses": "Cash Expenses",
+    "netCash": "Net Cash",
+    "transactionCount": "Transaction Count"
+  },
+  "sections": {
+    "paymentMethods": "Payment Methods",
+    "hourlySales": "Hourly Sales",
+    "employeeSalesData": "Employee Sales Data",
+    "topProducts": "Top Selling Products",
+    "dailyCashReport": "Daily Cash Report"
+  },
+  "paymentMethods": {
+    "cash": "Cash",
+    "card": "Card",
+    "transfer": "Transfer"
+  },
+  "table": {
+    "hour": "Hour",
+    "salesCount": "Sales Count",
+    "revenue": "Revenue",
+    "employeeName": "Employee Name",
+    "transactions": "Transactions",
+    "soldProducts": "Sold Products",
+    "productName": "Product Name",
+    "sku": "SKU",
+    "quantity": "Quantity",
+    "date": "Date",
+    "cashSales": "Cash Sales",
+    "cashExpenses": "Cash Expenses",
+    "netCash": "Net Cash",
+    "operations": "Operations"
+  },
+  "messages": {
+    "selectTypeAndRange": "Select report type and date range",
+    "reportCreated": "Report created successfully",
+    "reportError": "Error creating report"
+  },
+  "fields": {
+    "reportType": "Report Type",
+    "dateRange": "Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "period": "Period",
+    "branch": "Branch",
+    "category": "Category"
+  },
+  "periods": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "thisYear": "This Year",
+    "custom": "Custom Range"
+  },
+  "metrics": {
+    "totalSales": "Total Sales",
+    "totalRevenue": "Total Revenue",
+    "totalProfit": "Total Profit",
+    "totalOrders": "Total Orders",
+    "averageOrder": "Average Order"
+  },
+  "actions": {
+    "generateReport": "Generate Report",
+    "exportPDF": "Export to PDF",
+    "exportExcel": "Export to Excel"
+  }
+}

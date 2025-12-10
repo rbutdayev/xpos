@@ -1,4 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProductsNavigation from '@/Components/ProductsNavigation';
 import { Category, Warehouse } from '@/types';
@@ -32,6 +33,7 @@ interface FormData {
 }
 
 export default function BulkCreate({ categories, warehouses }: Props) {
+  const { t } = useTranslation('products');
   const { data, setData, post, processing, errors } = useForm<FormData>({
     category_id: '',
     sale_price: '',
@@ -110,38 +112,38 @@ export default function BulkCreate({ categories, warehouses }: Props) {
     
     // Basic validation
     if (!data.category_id) {
-      toast.error('Kateqoriya seçilməlidir');
+      toast.error(t('bulk.validation.categoryRequired'));
       return;
     }
-    
+
     if (!data.sale_price || parseFloat(data.sale_price) <= 0) {
-      toast.error('Satış qiyməti daxil edilməlidir');
+      toast.error(t('bulk.validation.salePriceRequired'));
       return;
     }
-    
+
     if (!data.purchase_price || parseFloat(data.purchase_price) <= 0) {
-      toast.error('Alış qiyməti daxil edilməlidir');
+      toast.error(t('bulk.validation.purchasePriceRequired'));
       return;
     }
-    
+
     // Check if any product has initial quantity but no warehouse selected for that product
-    const productsWithQuantityButNoWarehouse = data.products.filter(p => 
+    const productsWithQuantityButNoWarehouse = data.products.filter(p =>
       p.initial_quantity && parseFloat(p.initial_quantity) > 0 && !p.warehouse_id
     );
     if (productsWithQuantityButNoWarehouse.length > 0) {
-      toast.error('İlkin miqdarı olan bütün məhsullar üçün anbar seçilməlidir');
+      toast.error(t('bulk.validation.warehouseRequired'));
       return;
     }
-    
+
     const emptyProducts = data.products.filter(p => !p.name.trim());
     if (emptyProducts.length > 0) {
-      toast.error('Bütün məhsulların adı daxil edilməlidir');
+      toast.error(t('bulk.validation.nameRequired'));
       return;
     }
 
     post(route('products.bulk-store'), {
       onSuccess: () => {
-        toast.success('Məhsullar uğurla yaradıldı');
+        toast.success(t('bulk.success'));
       },
       onError: (errors) => {
         console.log('Validation errors:', errors);
@@ -150,7 +152,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
           const errorMessage = Object.values(errors)[0] as string;
           toast.error(errorMessage);
         } else {
-          toast.error(`${errorCount} xəta var`, { duration: 6000 });
+          toast.error(t('bulk.errors', { count: errorCount }), { duration: 6000 });
         }
       }
     });
@@ -158,7 +160,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
 
   return (
     <AuthenticatedLayout>
-      <Head title="Toplu Məhsul Yaratma" />
+      <Head title={t('bulk.title')} />
 
       <div className="mx-auto sm:px-6 lg:px-8 mb-6">
         <ProductsNavigation currentRoute="products.bulk-create" />
@@ -173,8 +175,8 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                   <ArrowLeftIcon className="w-5 h-5" />
                 </Link>
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">Toplu Məhsul Yaratma</h2>
-                  <p className="text-sm text-gray-600 mt-1">Eyni kateqoriya və qiymətdə bir neçə məhsulu eyni vaxtda yaradın. Barkodlar avtomatik yaradılacaq.</p>
+                  <h2 className="text-2xl font-semibold text-gray-900">{t('bulk.title')}</h2>
+                  <p className="text-sm text-gray-600 mt-1">{t('bulk.description')}</p>
                 </div>
               </div>
             </div>
@@ -183,12 +185,12 @@ export default function BulkCreate({ categories, warehouses }: Props) {
 
               {/* Common Fields */}
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Ümumi Məlumatlar</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">{t('bulk.commonInfo')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Category */}
                   <div>
                     <label htmlFor="category_id" className="block text-sm font-medium text-gray-700">
-                      Kateqoriya *
+                      {t('required.category')}
                     </label>
                     <select
                       id="category_id"
@@ -197,7 +199,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                       className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       required
                     >
-                      <option value="">Seçin</option>
+                      <option value="">{t('required.select')}</option>
                       {categories.map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.name}
@@ -210,7 +212,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                   {/* Sale Price */}
                   <div>
                     <label htmlFor="sale_price" className="block text-sm font-medium text-gray-700">
-                      Satış Qiyməti *
+                      {t('required.salePrice')}
                     </label>
                     <input
                       type="number"
@@ -228,7 +230,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                   {/* Purchase Price */}
                   <div>
                     <label htmlFor="purchase_price" className="block text-sm font-medium text-gray-700">
-                      Alış Qiyməti *
+                      {t('required.purchasePrice')}
                     </label>
                     <input
                       type="number"
@@ -246,7 +248,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                   {/* Unit */}
                   <div>
                     <label htmlFor="unit" className="block text-sm font-medium text-gray-700">
-                      Ölçü vahidi *
+                      {t('required.unit')}
                     </label>
                     <select
                       id="unit"
@@ -277,14 +279,14 @@ export default function BulkCreate({ categories, warehouses }: Props) {
               {/* Products List */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Məhsullar</h3>
+                  <h3 className="text-lg font-medium text-gray-900">{t('bulk.products')}</h3>
                   <button
                     type="button"
                     onClick={addProduct}
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     <PlusIcon className="w-4 h-4 mr-1" />
-                    Məhsul əlavə et
+                    {t('bulk.addProduct')}
                   </button>
                 </div>
 
@@ -292,7 +294,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                   {data.products.map((product, index) => (
                     <div key={index} className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-gray-700">Məhsul #{index + 1}</h4>
+                        <h4 className="text-sm font-medium text-gray-700">{t('bulk.productNumber', { number: index + 1 })}</h4>
                         {data.products.length > 1 && (
                           <button
                             type="button"
@@ -308,7 +310,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                         {/* Product Name */}
                         <div className="lg:col-span-2">
                           <label htmlFor={`product_name_${index}`} className="block text-xs font-medium text-gray-700">
-                            Məhsul Adı *
+                            {t('bulk.productName')}
                           </label>
                           <input
                             type="text"
@@ -323,7 +325,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                         {/* SKU */}
                         <div>
                           <label htmlFor={`product_sku_${index}`} className="block text-xs font-medium text-gray-700">
-                            SKU
+                            {t('bulk.sku')}
                           </label>
                           <input
                             type="text"
@@ -337,7 +339,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                         {/* Barcode */}
                         <div>
                           <label htmlFor={`product_barcode_${index}`} className="block text-xs font-medium text-gray-700">
-                            Barkod
+                            {t('bulk.barcode')}
                           </label>
                           <input
                             type="text"
@@ -345,14 +347,14 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             value={product.barcode}
                             onChange={(e) => updateProduct(index, 'barcode', e.target.value)}
                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            placeholder="13 rəqəmli barkod - boş buraxsanız avtomatik yaradılacaq"
+                            placeholder={t('bulk.barcodePlaceholder')}
                           />
                         </div>
 
                         {/* Size */}
                         <div>
                           <label htmlFor={`product_size_${index}`} className="block text-xs font-medium text-gray-700">
-                            Ölçü
+                            {t('bulk.size')}
                           </label>
                           <input
                             type="text"
@@ -360,14 +362,14 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             value={product.size}
                             onChange={(e) => updateProduct(index, 'size', e.target.value)}
                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            placeholder="məs: M, 42"
+                            placeholder={t('bulk.sizePlaceholder')}
                           />
                         </div>
 
                         {/* Color */}
                         <div>
                           <label htmlFor={`product_color_${index}`} className="block text-xs font-medium text-gray-700">
-                            Rəng
+                            {t('bulk.color')}
                           </label>
                           <input
                             type="text"
@@ -375,19 +377,19 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             value={product.color}
                             onChange={(e) => updateProduct(index, 'color', e.target.value)}
                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            placeholder="məs: Qırmızı"
+                            placeholder={t('bulk.colorPlaceholder')}
                           />
                         </div>
                       </div>
 
                       {/* Initial Stock Section for this product */}
                       <div className="mt-3 pt-3 border-t border-gray-200">
-                        <h5 className="text-xs font-medium text-gray-700 mb-2">İlkin Stok (seçimə bağlı)</h5>
+                        <h5 className="text-xs font-medium text-gray-700 mb-2">{t('bulk.initialStock')}</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {/* Warehouse for this product */}
                           <div>
                             <label htmlFor={`product_warehouse_${index}`} className="block text-xs font-medium text-gray-700">
-                              Anbar
+                              {t('bulk.warehouse')}
                             </label>
                             <select
                               id={`product_warehouse_${index}`}
@@ -395,7 +397,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                               onChange={(e) => updateProduct(index, 'warehouse_id', e.target.value)}
                               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             >
-                              <option value="">Anbar seçin</option>
+                              <option value="">{t('bulk.selectWarehouse')}</option>
                               {warehouses.map((warehouse) => (
                                 <option key={warehouse.id} value={warehouse.id}>
                                   {warehouse.name}
@@ -407,7 +409,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                           {/* Initial Quantity for this product */}
                           <div>
                             <label htmlFor={`product_initial_quantity_${index}`} className="block text-xs font-medium text-gray-700">
-                              Başlanğıc miqdarı
+                              {t('bulk.initialQuantity')}
                             </label>
                             <input
                               type="number"
@@ -435,10 +437,10 @@ export default function BulkCreate({ categories, warehouses }: Props) {
               {/* Submit Buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <Link href="/products">
-                  <SecondaryButton type="button" disabled={processing}>Ləğv et</SecondaryButton>
+                  <SecondaryButton type="button" disabled={processing}>{t('bulk.cancel')}</SecondaryButton>
                 </Link>
                 <PrimaryButton type="submit" disabled={processing}>
-                  {processing ? 'Yaradılır...' : `${data.products.length} Məhsul Yarat`}
+                  {processing ? t('bulk.creating') : t('bulk.createProducts', { count: data.products.length })}
                 </PrimaryButton>
               </div>
             </form>

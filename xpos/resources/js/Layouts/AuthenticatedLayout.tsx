@@ -1,5 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import SearchableWarehouseSelect from '@/Components/SearchableWarehouseSelect';
 import SessionManager from '@/Components/SessionManager';
 import { Link, usePage, router } from '@inertiajs/react';
@@ -8,6 +9,7 @@ import { getAppVersion } from '@/utils/version';
 import { Toaster } from 'react-hot-toast';
 import { SERVICE_TYPES, getServiceRoute, serviceTypeToRouteParam } from '@/config/serviceTypes';
 import { useModuleAccess } from '@/Hooks/useModuleAccess';
+import { useTranslation } from 'react-i18next';
 import {
     HomeIcon,
     CubeIcon,
@@ -62,6 +64,7 @@ export default function Authenticated({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
+    const { t } = useTranslation('common');
     const user = usePage().props.auth.user;
     const warehouses = usePage().props.warehouses as Array<{id: number, name: string, type: string}>;
     const selectedWarehouse = usePage().props.selectedWarehouse as number | null;
@@ -112,7 +115,7 @@ export default function Authenticated({
              !currentRoute?.includes('rental-categories')) ||
             currentRoute?.includes('products.discounts') ||
             currentRoute?.includes('loyalty-program')) {
-            openMenus.push('Məhsullar');
+            openMenus.push(t('navigation.products'));
         }
 
         if (currentRoute?.includes('goods-receipts') ||
@@ -120,26 +123,26 @@ export default function Authenticated({
             currentRoute?.includes('stock-movements') ||
             currentRoute?.includes('inventory') && !currentRoute?.includes('rental-inventory') ||
             currentRoute?.includes('product-returns')) {
-            openMenus.push('Anbar İdarəetməsi');
+            openMenus.push(t('navigation.warehouse_management'));
         }
 
         if (canAccessModule('services') && (currentRoute?.includes('services') ||
             currentRoute?.includes('tailor-services') ||
             currentRoute?.includes('customer-items'))) {
-            openMenus.push('Xidmətlər');
+            openMenus.push(t('navigation.services'));
         }
 
         if (canAccessModule('rentals') && (currentRoute?.includes('rentals') ||
             currentRoute?.includes('rental-inventory') ||
             currentRoute?.includes('rental-categories'))) {
-            openMenus.push('İcarə İdarəetməsi');
+            openMenus.push(t('navigation.rental_management'));
         }
 
         if (currentRoute?.includes('expenses') ||
             currentRoute?.includes('employee-salaries') ||
             currentRoute?.includes('supplier-payments') ||
             currentRoute?.includes('reports')) {
-            openMenus.push('Maliyyə və Hesabatlar');
+            openMenus.push(t('navigation.finance_and_reports'));
         }
 
         if (currentRoute?.includes('companies') ||
@@ -150,14 +153,14 @@ export default function Authenticated({
             currentRoute?.includes('printer-configs') ||
             currentRoute?.includes('receipt-templates') ||
             currentRoute?.includes('bridge-tokens')) {
-            openMenus.push('Parametrlər');
+            openMenus.push(t('navigation.settings'));
         }
 
         if (currentRoute?.includes('fiscal-printer-jobs') ||
             currentRoute === 'sms.logs' ||
             currentRoute === 'telegram.logs' ||
             currentRoute?.includes('audit-logs')) {
-            openMenus.push('Sistem Monitorinqi');
+            openMenus.push(t('navigation.system_monitoring'));
         }
 
         return openMenus;
@@ -205,19 +208,19 @@ export default function Authenticated({
         
         const allNavItems: SidebarItem[] = [
             {
-                name: 'Dashboard',
+                name: t('navigation.dashboard'),
                 href: '/dashboard',
                 icon: HomeIcon,
                 current: route().current('dashboard')
             },
             {
-                name: 'POS Satış',
+                name: t('navigation.pos_sales'),
                 href: route('pos.index'),
                 icon: ShoppingCartIcon,
                 current: route().current('pos.index')
             },
             {
-                name: 'TouchPOS',
+                name: t('navigation.touch_pos'),
                 href: route('pos.touch'),
                 icon: DeviceTabletIcon,
                 current: route().current('pos.touch')
@@ -226,12 +229,12 @@ export default function Authenticated({
         
         // Filter out TouchPOS on mobile
         let baseNavigation = isMobile
-            ? allNavItems.filter(item => item.name !== 'TouchPOS')
+            ? allNavItems.filter(item => item.name !== t('navigation.touch_pos'))
             : allNavItems;
 
         // Filter out POS for tailors (they have their own service management)
         const tailorBaseNavigation = allNavItems.filter(item =>
-            item.name !== 'POS Satış' && item.name !== 'TouchPOS'
+            item.name !== t('navigation.pos_sales') && item.name !== t('navigation.touch_pos')
         );
 
         // If user is sales_staff, only show Dashboard, Products (read-only), Sales, and Customer Services
@@ -239,47 +242,47 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Satışlar və Müştərilər',
+                    name: t('navigation.sales_and_customers'),
                     href: '/sales',
                     icon: ShoppingCartIcon,
                     current: route().current('sales.*') || route().current('returns.*') || route().current('shift-management.*') || route().current('online-orders.*') || route().current('customers.*') || route().current('sms.*')
                 },
                 {
-                    name: 'Məhsullar',
+                    name: t('navigation.products'),
                     href: '/products',
                     icon: CubeIcon,
                     current: route().current('products.*') || route().current('categories.*') || route().current('loyalty-program.*')
                 },
                 ...(canAccessModule('services') ? [{
-                    name: 'Xidmətlər',
+                    name: t('navigation.services'),
                     icon: WrenchScrewdriverIcon,
                     children: [
                         {
-                            name: SERVICE_TYPES.tailor.name,
+                            name: t('navigation.tailor_service'),
                             href: getServiceRoute('tailor'),
                             icon: SERVICE_TYPES.tailor.icon,
                             current: route().current('services.*') && route().params.serviceType === 'tailor'
                         },
                         {
-                            name: SERVICE_TYPES.phone_repair.name,
+                            name: t('navigation.phone_repair'),
                             href: getServiceRoute('phone_repair'),
                             icon: SERVICE_TYPES.phone_repair.icon,
                             current: route().current('services.*') && route().params.serviceType === 'phone-repair'
                         },
                         {
-                            name: SERVICE_TYPES.electronics.name,
+                            name: t('navigation.electronics_repair'),
                             href: getServiceRoute('electronics'),
                             icon: SERVICE_TYPES.electronics.icon,
                             current: route().current('services.*') && route().params.serviceType === 'electronics'
                         },
                         {
-                            name: SERVICE_TYPES.general.name,
+                            name: t('navigation.general_service'),
                             href: getServiceRoute('general'),
                             icon: SERVICE_TYPES.general.icon,
                             current: route().current('services.*') && route().params.serviceType === 'general'
                         },
                         {
-                            name: 'Xidmətə Qəbul',
+                            name: t('navigation.service_intake'),
                             href: '/customer-items',
                             icon: InboxIcon,
                             current: route().current('customer-items.*')
@@ -287,29 +290,29 @@ export default function Authenticated({
                     ]
                 }] : []),
                 ...(canAccessModule('rentals') ? [{
-                    name: 'İcarə İdarəetməsi',
+                    name: t('navigation.rental_management'),
                     icon: ClockIcon,
                     children: [
                         {
-                            name: 'İcarə Siyahısı',
+                            name: t('navigation.rental_list'),
                             href: '/rentals',
                             icon: ClockIcon,
                             current: route().current('rentals.*') && !route().current('rentals.calendar')
                         },
                         {
-                            name: 'Təqvim',
+                            name: t('navigation.calendar'),
                             href: '/rentals/calendar',
                             icon: CalendarIcon,
                             current: route().current('rentals.calendar')
                         },
                         {
-                            name: 'İcarə İnventarı',
+                            name: t('navigation.rental_inventory'),
                             href: '/rental-inventory',
                             icon: ArchiveBoxIcon,
                             current: route().current('rental-inventory.*')
                         },
                         {
-                            name: 'İcarə Kateqoriyaları',
+                            name: t('navigation.rental_categories'),
                             href: '/rental-categories',
                             icon: TagIcon,
                             current: route().current('rental-categories.*')
@@ -323,23 +326,23 @@ export default function Authenticated({
         if (user.role === 'accountant') {
             return [
                 {
-                    name: 'Dashboard',
+                    name: t('navigation.dashboard'),
                     href: '/dashboard',
                     icon: HomeIcon,
                     current: route().current('dashboard')
                 },
                 {
-                    name: 'Satışlar',
+                    name: t('navigation.sales'),
                     icon: ShoppingCartIcon,
                     children: [
                         {
-                            name: 'Satış Siyahısı',
+                            name: t('navigation.sales_list'),
                             href: '/sales',
                             icon: ShoppingCartIcon,
                             current: route().current('sales.index') || route().current('sales.show')
                         },
                         {
-                            name: 'Müştərilər',
+                            name: t('navigation.customers'),
                             href: '/customers',
                             icon: UserGroupIcon,
                             current: route().current('customers.*')
@@ -347,23 +350,23 @@ export default function Authenticated({
                     ]
                 },
                 {
-                    name: 'Maliyyə və Hesabatlar',
+                    name: t('navigation.finance_and_reports'),
                     icon: CurrencyDollarIcon,
                     children: [
                         {
-                            name: 'Xərclər',
+                            name: t('navigation.expenses'),
                             href: '/expenses',
                             icon: BanknotesIcon,
                             current: route().current('expenses.*')
                         },
                         {
-                            name: 'İşçi Maaşları',
+                            name: t('navigation.employee_salaries'),
                             href: '/employee-salaries',
                             icon: UsersIcon,
                             current: route().current('employee-salaries.*')
                         },
                         {
-                            name: 'Hesabat Mərkəzi',
+                            name: t('navigation.report_center'),
                             href: '/reports',
                             icon: ChartBarIcon,
                             current: route().current('reports.*')
@@ -371,29 +374,29 @@ export default function Authenticated({
                     ]
                 },
                 {
-                    name: 'Sistem Monitorinqi',
+                    name: t('navigation.system_monitoring'),
                     icon: DocumentMagnifyingGlassIcon,
                     children: [
                         {
-                            name: 'Fiskal Printer Növbəsi',
+                            name: t('navigation.fiscal_printer_queue'),
                             href: '/fiscal-printer-jobs',
                             icon: QueueListIcon,
                             current: route().current('fiscal-printer-jobs.*')
                         },
                         {
-                            name: 'SMS Logları',
+                            name: t('navigation.sms_logs'),
                             href: '/sms/logs',
                             icon: ChatBubbleLeftRightIcon,
                             current: route().current('sms.logs')
                         },
                         {
-                            name: 'Telegram Logları',
+                            name: t('navigation.telegram_logs'),
                             href: '/telegram/logs',
                             icon: ChatBubbleLeftRightIcon,
                             current: route().current('telegram.logs')
                         },
                         {
-                            name: 'Audit Logları',
+                            name: t('navigation.audit_logs'),
                             href: '/audit-logs',
                             icon: ClockIcon,
                             current: route().current('audit-logs.*')
@@ -407,47 +410,47 @@ export default function Authenticated({
         if (user.role === 'warehouse_manager') {
             return [
                 {
-                    name: 'Dashboard',
+                    name: t('navigation.dashboard'),
                     href: '/dashboard',
                     icon: HomeIcon,
                     current: route().current('dashboard')
                 },
                 {
-                    name: 'Məhsullar',
+                    name: t('navigation.products'),
                     href: '/products',
                     icon: CubeIcon,
                     current: route().current('products.*') || route().current('categories.*')
                 },
                 {
-                    name: 'Anbar İdarəetməsi',
+                    name: t('navigation.warehouse_management'),
                     icon: BuildingStorefrontIcon,
                     children: [
                         {
-                            name: 'Mal Qəbulu',
+                            name: t('navigation.goods_receipt'),
                             href: '/goods-receipts',
                             icon: ArrowDownTrayIcon,
                             current: route().current('goods-receipts.*')
                         },
                         {
-                            name: 'Stok Hərəkətləri',
+                            name: t('navigation.stock_movements'),
                             href: '/stock-movements',
                             icon: ArrowsRightLeftIcon,
                             current: route().current('stock-movements.*')
                         },
                         {
-                            name: 'İnventar',
+                            name: t('navigation.inventory'),
                             href: '/inventory',
                             icon: ClipboardDocumentListIcon,
                             current: route().current('inventory.*')
                         },
                         {
-                            name: 'Təchizatçılar',
+                            name: t('navigation.suppliers'),
                             href: '/suppliers',
                             icon: TruckIcon,
                             current: route().current('suppliers.*')
                         },
                         {
-                            name: 'Məhsul Qaytarmaları',
+                            name: t('navigation.product_returns'),
                             href: '/product-returns',
                             icon: ArrowUturnLeftIcon,
                             current: route().current('product-returns.*')
@@ -469,35 +472,35 @@ export default function Authenticated({
             return [
                 ...tailorBaseNavigation,
                 ...(canAccessModule('services') ? [{
-                    name: 'Xidmətlər',
+                    name: t('navigation.services'),
                     icon: WrenchScrewdriverIcon,
                     children: [
                         {
-                            name: SERVICE_TYPES.tailor.name,
+                            name: t('navigation.tailor_service'),
                             href: getServiceRoute('tailor'),
                             icon: SERVICE_TYPES.tailor.icon,
                             current: route().current('services.*') && route().params.serviceType === 'tailor'
                         },
                         {
-                            name: SERVICE_TYPES.phone_repair.name,
+                            name: t('navigation.phone_repair'),
                             href: getServiceRoute('phone_repair'),
                             icon: SERVICE_TYPES.phone_repair.icon,
                             current: route().current('services.*') && route().params.serviceType === 'phone-repair'
                         },
                         {
-                            name: SERVICE_TYPES.electronics.name,
+                            name: t('navigation.electronics_repair'),
                             href: getServiceRoute('electronics'),
                             icon: SERVICE_TYPES.electronics.icon,
                             current: route().current('services.*') && route().params.serviceType === 'electronics'
                         },
                         {
-                            name: SERVICE_TYPES.general.name,
+                            name: t('navigation.general_service'),
                             href: getServiceRoute('general'),
                             icon: SERVICE_TYPES.general.icon,
                             current: route().current('services.*') && route().params.serviceType === 'general'
                         },
                         {
-                            name: 'Xidmətə Qəbul',
+                            name: t('navigation.service_intake'),
                             href: '/customer-items',
                             icon: InboxIcon,
                             current: route().current('customer-items.*')
@@ -512,11 +515,11 @@ export default function Authenticated({
             return [
                 ...baseNavigation,
                 {
-                    name: 'Maliyyə və Hesabatlar',
+                    name: t('navigation.finance_and_reports'),
                     icon: CurrencyDollarIcon,
                     children: [
                         {
-                            name: 'Hesabat Mərkəzi',
+                            name: t('navigation.report_center'),
                             href: '/reports',
                             icon: ChartBarIcon,
                             current: route().current('reports.*')
@@ -524,29 +527,29 @@ export default function Authenticated({
                     ]
                 },
                 {
-                    name: 'Sistem Monitorinqi',
+                    name: t('navigation.system_monitoring'),
                     icon: DocumentMagnifyingGlassIcon,
                     children: [
                         {
-                            name: 'Fiskal Printer Növbəsi',
+                            name: t('navigation.fiscal_printer_queue'),
                             href: '/fiscal-printer-jobs',
                             icon: QueueListIcon,
                             current: route().current('fiscal-printer-jobs.*')
                         },
                         {
-                            name: 'SMS Logları',
+                            name: t('navigation.sms_logs'),
                             href: '/sms/logs',
                             icon: ChatBubbleLeftRightIcon,
                             current: route().current('sms.logs')
                         },
                         {
-                            name: 'Telegram Logları',
+                            name: t('navigation.telegram_logs'),
                             href: '/telegram/logs',
                             icon: ChatBubbleLeftRightIcon,
                             current: route().current('telegram.logs')
                         },
                         {
-                            name: 'Audit Logları',
+                            name: t('navigation.audit_logs'),
                             href: '/audit-logs',
                             icon: ClockIcon,
                             current: route().current('audit-logs.*')
@@ -554,17 +557,17 @@ export default function Authenticated({
                     ]
                 },
                 {
-                    name: 'Parametrlər',
+                    name: t('navigation.settings'),
                     icon: CogIcon,
                     children: [
                         {
-                            name: 'İstifadəçilər',
+                            name: t('navigation.users'),
                             href: '/users',
                             icon: UsersIcon,
                             current: route().current('users.*')
                         },
                         {
-                            name: 'Sistem Parametrləri',
+                            name: t('navigation.system_settings'),
                             href: '/settings',
                             icon: Cog6ToothIcon,
                             current: route().current('settings.*') || route().current('printer-configs.*') || route().current('receipt-templates.*')
@@ -578,47 +581,47 @@ export default function Authenticated({
         return [
             ...baseNavigation,
         {
-            name: 'Satışlar və Müştərilər',
+            name: t('navigation.sales_and_customers'),
             href: '/sales',
             icon: ShoppingCartIcon,
             current: route().current('sales.*') || route().current('returns.*') || route().current('shift-management.*') || route().current('online-orders.*') || route().current('customers.*') || route().current('sms.*')
         },
         {
-            name: 'Məhsullar',
+            name: t('navigation.products'),
             href: '/products',
             icon: CubeIcon,
             current: route().current('products.*') || route().current('categories.*') || route().current('loyalty-program.*')
         },
         {
-            name: 'Anbar İdarəetməsi',
+            name: t('navigation.warehouse_management'),
             icon: BuildingStorefrontIcon,
             children: [
                 {
-                    name: 'Mal Qəbulu',
+                    name: t('navigation.goods_receipt'),
                     href: '/goods-receipts',
                     icon: ArrowDownTrayIcon,
                     current: route().current('goods-receipts.*')
                 },
                 {
-                    name: 'Stok Hərəkətləri',
+                    name: t('navigation.stock_movements'),
                     href: '/stock-movements',
                     icon: ArrowsRightLeftIcon,
                     current: route().current('stock-movements.*')
                 },
                 {
-                    name: 'İnventar',
+                    name: t('navigation.inventory'),
                     href: '/inventory',
                     icon: ClipboardDocumentListIcon,
                     current: route().current('inventory.*') && !route().current('rental-inventory.*')
                 },
                 {
-                    name: 'Təchizatçılar',
+                    name: t('navigation.suppliers'),
                     href: '/suppliers',
                     icon: TruckIcon,
                     current: route().current('suppliers.*')
                 },
                 {
-                    name: 'Məhsul Qaytarmaları',
+                    name: t('navigation.product_returns'),
                     href: '/product-returns',
                     icon: ArrowUturnLeftIcon,
                     current: route().current('product-returns.*')
@@ -626,35 +629,35 @@ export default function Authenticated({
             ]
         },
         ...(canAccessModule('services') ? [{
-            name: 'Xidmətlər',
+            name: t('navigation.services'),
             icon: WrenchScrewdriverIcon,
             children: [
                 {
-                    name: SERVICE_TYPES.tailor.name,
+                    name: t('navigation.tailor_service'),
                     href: getServiceRoute('tailor'),
                     icon: SERVICE_TYPES.tailor.icon,
                     current: route().current('services.*') && route().params.serviceType === 'tailor'
                 },
                 {
-                    name: SERVICE_TYPES.phone_repair.name,
+                    name: t('navigation.phone_repair'),
                     href: getServiceRoute('phone_repair'),
                     icon: SERVICE_TYPES.phone_repair.icon,
                     current: route().current('services.*') && route().params.serviceType === 'phone-repair'
                 },
                 {
-                    name: SERVICE_TYPES.electronics.name,
+                    name: t('navigation.electronics_repair'),
                     href: getServiceRoute('electronics'),
                     icon: SERVICE_TYPES.electronics.icon,
                     current: route().current('services.*') && route().params.serviceType === 'electronics'
                 },
                 {
-                    name: SERVICE_TYPES.general.name,
+                    name: t('navigation.general_service'),
                     href: getServiceRoute('general'),
                     icon: SERVICE_TYPES.general.icon,
                     current: route().current('services.*') && route().params.serviceType === 'general'
                 },
                 {
-                    name: 'Xidmətə Qəbul',
+                    name: t('navigation.service_intake'),
                     href: '/customer-items',
                     icon: InboxIcon,
                     current: route().current('customer-items.*')
@@ -662,29 +665,29 @@ export default function Authenticated({
             ]
         }] : []),
         ...(canAccessModule('rentals') ? [{
-            name: 'İcarə İdarəetməsi',
+            name: t('navigation.rental_management'),
             icon: ClockIcon,
             children: [
                 {
-                    name: 'İcarə Siyahısı',
+                    name: t('navigation.rental_list'),
                     href: '/rentals',
                     icon: ClockIcon,
                     current: route().current('rentals.*') && !route().current('rentals.calendar')
                 },
                 {
-                    name: 'Təqvim',
+                    name: t('navigation.calendar'),
                     href: '/rentals/calendar',
                     icon: CalendarIcon,
                     current: route().current('rentals.calendar')
                 },
                 {
-                    name: 'İcarə İnventarı',
+                    name: t('navigation.rental_inventory'),
                     href: '/rental-inventory',
                     icon: ArchiveBoxIcon,
                     current: route().current('rental-inventory.*')
                 },
                 {
-                    name: 'İcarə Kateqoriyaları',
+                    name: t('navigation.rental_categories'),
                     href: '/rental-categories',
                     icon: TagIcon,
                     current: route().current('rental-categories.*')
@@ -692,23 +695,23 @@ export default function Authenticated({
             ]
         }] : []),
         {
-            name: 'Maliyyə və Hesabatlar',
+            name: t('navigation.finance_and_reports'),
             icon: CurrencyDollarIcon,
             children: [
                 {
-                    name: 'Xərclər',
+                    name: t('navigation.expenses'),
                     href: '/expenses',
                     icon: BanknotesIcon,
                     current: route().current('expenses.*')
                 },
                 {
-                    name: 'İşçi Maaşları',
+                    name: t('navigation.employee_salaries'),
                     href: '/employee-salaries',
                     icon: UsersIcon,
                     current: route().current('employee-salaries.*')
                 },
                 {
-                    name: 'Hesabat Mərkəzi',
+                    name: t('navigation.report_center'),
                     href: '/reports',
                     icon: ChartBarIcon,
                     current: route().current('reports.*')
@@ -716,35 +719,35 @@ export default function Authenticated({
             ]
         },
         {
-            name: 'Tətbiqlər',
+            name: t('navigation.integrations'),
             href: '/integrations',
             icon: PuzzlePieceIcon,
             current: route().current('integrations.*')
         },
         {
-            name: 'Sistem Monitorinqi',
+            name: t('navigation.system_monitoring'),
             icon: DocumentMagnifyingGlassIcon,
             children: [
                 {
-                    name: 'Fiskal Printer Növbəsi',
+                    name: t('navigation.fiscal_printer_queue'),
                     href: '/fiscal-printer-jobs',
                     icon: QueueListIcon,
                     current: route().current('fiscal-printer-jobs.*')
                 },
                 {
-                    name: 'SMS Logları',
+                    name: t('navigation.sms_logs'),
                     href: '/sms/logs',
                     icon: ChatBubbleLeftRightIcon,
                     current: route().current('sms.logs')
                 },
                 {
-                    name: 'Telegram Logları',
+                    name: t('navigation.telegram_logs'),
                     href: '/telegram/logs',
                     icon: ChatBubbleLeftRightIcon,
                     current: route().current('telegram.logs')
                 },
                 {
-                    name: 'Audit Logları',
+                    name: t('navigation.audit_logs'),
                     href: '/audit-logs',
                     icon: ClockIcon,
                     current: route().current('audit-logs.*')
@@ -752,23 +755,23 @@ export default function Authenticated({
             ]
         },
         {
-            name: 'Parametrlər',
+            name: t('navigation.settings'),
             icon: CogIcon,
             children: [
                 {
-                    name: 'Şirkət və Filiallar',
+                    name: t('navigation.company_and_branches'),
                     href: '/companies',
                     icon: BuildingOffice2Icon,
                     current: route().current('companies.*') || route().current('branches.*')
                 },
                 {
-                    name: 'İstifadəçilər',
+                    name: t('navigation.users'),
                     href: '/users',
                     icon: UsersIcon,
                     current: route().current('users.*')
                 },
                 {
-                    name: 'Sistem Parametrləri',
+                    name: t('navigation.system_settings'),
                     href: '/settings',
                     icon: Cog6ToothIcon,
                     current: route().current('settings.*') || route().current('printer-configs.*') || route().current('receipt-templates.*') || route().current('bridge-tokens.*')
@@ -889,7 +892,7 @@ export default function Authenticated({
                         <button
                             onClick={() => setSidebarCollapsed(false)}
                             className="flex items-center justify-center w-full group"
-                            title="Genişlət"
+                            title={t('navigation.expand')}
                         >
                             <div className="flex h-10 w-10 items-center justify-center bg-gradient-to-br from-blue-600 to-blue-700 text-white text-xl font-bold shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 group-hover:scale-105 transition-all duration-200 rounded-xl">
                                 X
@@ -904,7 +907,7 @@ export default function Authenticated({
                             <button
                                 onClick={() => setSidebarCollapsed(true)}
                                 className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-all duration-200"
-                                title="Kiçilt"
+                                title={t('navigation.collapse')}
                             >
                                 <ChevronLeftIcon className="w-5 h-5" />
                             </button>
@@ -947,13 +950,13 @@ export default function Authenticated({
                         </Dropdown.Trigger>
 
                         <Dropdown.Content align="right" direction="up" contentClasses="py-1 bg-white border border-slate-200 shadow-xl" width="48">
-                            <Dropdown.Link href="/profile">Profil</Dropdown.Link>
+                            <Dropdown.Link href="/profile">{t('navigation.profile')}</Dropdown.Link>
                             <Dropdown.Link
                                 href={route('logout')}
                                 method="post"
                                 as="button"
                             >
-                                Çıxış
+                                {t('actions.logout')}
                             </Dropdown.Link>
                         </Dropdown.Content>
                     </Dropdown>
@@ -971,10 +974,13 @@ export default function Authenticated({
                     >
                         <Bars3Icon className="h-6 w-6" />
                     </button>
-                    
+
                     <div className="flex flex-1 justify-between px-4">
                         <div className="flex flex-1 items-center">
                             <h1 className="text-lg font-semibold text-gray-900">XPOS</h1>
+                        </div>
+                        <div className="flex items-center">
+                            <LanguageSwitcher />
                         </div>
                     </div>
                 </div>
@@ -1000,7 +1006,7 @@ export default function Authenticated({
                         {/* Left section - Only Version */}
                         <div className="flex items-center space-x-6">
                             <div className="flex items-center space-x-1 text-slate-300">
-                                <span>Versiya:</span>
+                                <span>{t('footer.version')}:</span>
                                 <span className="font-mono bg-slate-600 px-2 py-0.5 rounded text-white">{getAppVersion()}</span>
                             </div>
                         </div>
@@ -1046,14 +1052,14 @@ export default function Authenticated({
                             </div>
 
                             <div className="flex items-center space-x-1">
-                                <button 
+                                <button
                                     onClick={() => window.open('https://onyx.az/az/contact', '_blank')}
                                     className="flex items-center space-x-1 bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded transition-colors duration-200 text-slate-200 hover:text-white"
                                 >
                                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className="text-xs">Dəstək</span>
+                                    <span className="text-xs">{t('footer.support')}</span>
                                 </button>
                             </div>
                         </div>

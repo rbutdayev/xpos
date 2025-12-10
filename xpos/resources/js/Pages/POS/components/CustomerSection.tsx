@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import SearchableCustomerSelect from '@/Components/SearchableCustomerSelect';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 function CustomerSection({ branches, formData, setFormData, errors, userBranchId, onCustomerChange }: Props) {
+  const { t } = useTranslation('sales');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const isBranchFixed = !!userBranchId;
   const selectedBranch = branches.find(b => b.id.toString() === formData.branch_id);
@@ -21,10 +23,10 @@ function CustomerSection({ branches, formData, setFormData, errors, userBranchId
   return (
     <div className="bg-white shadow-sm sm:rounded-lg mb-6">
       <div className="p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Satış</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">{t('customerSection.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <InputLabel htmlFor="customer_id" value="Müştəri" />
+            <InputLabel htmlFor="customer_id" value={t('customerSection.customer')} />
             <SearchableCustomerSelect
               value={formData.customer_id}
               onChange={(value, customer) => {
@@ -41,11 +43,11 @@ function CustomerSection({ branches, formData, setFormData, errors, userBranchId
           </div>
 
           <div>
-            <InputLabel htmlFor="branch_id" value="Filial *" />
+            <InputLabel htmlFor="branch_id" value={t('customerSection.branch')} />
             {isBranchFixed ? (
               <div className="mt-1 p-2 bg-gray-50 border border-gray-300 rounded-md">
-                <span className="text-gray-700">{selectedBranch?.name || 'Bilinməyən filial'}</span>
-                <span className="ml-2 text-xs text-gray-500">(Təyin edilmiş filial)</span>
+                <span className="text-gray-700">{selectedBranch?.name || t('customerSection.unknownBranch')}</span>
+                <span className="ml-2 text-xs text-gray-500">{t('customerSection.assignedBranch')}</span>
               </div>
             ) : (
               <select
@@ -55,7 +57,7 @@ function CustomerSection({ branches, formData, setFormData, errors, userBranchId
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 required
               >
-                <option value="">Filial seçin</option>
+                <option value="">{t('customerSection.selectBranch')}</option>
                 {branches.map((branch) => (
                   <option key={branch.id} value={branch.id}>
                     {branch.name}
@@ -76,11 +78,11 @@ function CustomerSection({ branches, formData, setFormData, errors, userBranchId
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
                 <div>
-                  <span className="text-sm font-medium text-blue-900">Bonus Ballar</span>
+                  <span className="text-sm font-medium text-blue-900">{t('customerSection.loyaltyPoints')}</span>
                   <p className="text-xs text-blue-700 mt-0.5">
-                    Mövcud: <span className="font-semibold">{selectedCustomer.current_points}</span> bal
+                    {t('customerSection.available')}: <span className="font-semibold">{selectedCustomer.current_points}</span> {t('customerSection.points')}
                     {selectedCustomer.lifetime_points && selectedCustomer.lifetime_points > 0 && (
-                      <span className="ml-2">• Ümumi: {selectedCustomer.lifetime_points} bal</span>
+                      <span className="ml-2">• {t('customerSection.total')}: {selectedCustomer.lifetime_points} {t('customerSection.points')}</span>
                     )}
                   </p>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesNavigation from '@/Components/SalesNavigation';
@@ -8,7 +8,30 @@ import {
     MagnifyingGlassIcon,
     AdjustmentsHorizontalIcon,
     Cog6ToothIcon,
+    EllipsisVerticalIcon,
+    EyeIcon,
+    PencilIcon,
+    ArrowPathIcon,
+    XMarkIcon,
+    ClockIcon,
+    UserIcon,
+    BanknotesIcon,
 } from '@heroicons/react/24/outline';
+import { Menu, Transition, Dialog } from '@headlessui/react';
+
+interface GiftCardTransaction {
+    id: number;
+    transaction_type: 'issue' | 'activate' | 'redeem' | 'refund' | 'adjust' | 'expire' | 'cancel' | 'reset';
+    amount: number;
+    balance_before: number;
+    balance_after: number;
+    notes?: string;
+    user: {
+        id: number;
+        name: string;
+    };
+    created_at: string;
+}
 
 interface GiftCard {
     id: number;
@@ -21,10 +44,12 @@ interface GiftCard {
         id: number;
         name: string;
         phone?: string;
+        email?: string;
     };
     activated_at?: string;
     expiry_date?: string;
     created_at: string;
+    transactions?: GiftCardTransaction[];
 }
 
 interface IndexProps extends PageProps {
@@ -53,6 +78,8 @@ interface IndexProps extends PageProps {
 export default function Index({ auth, cards, stats, filters, giftCardsEnabled = true, discountsEnabled = false }: IndexProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
+    const [quickViewCard, setQuickViewCard] = useState<GiftCard | null>(null);
+    const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,6 +90,53 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
         setSearch('');
         setStatus('');
         router.get('/gift-cards', {}, { preserveState: true });
+    };
+
+    const handleQuickView = async (cardId: number) => {
+        // Fetch full card details including transactions
+        try {
+            const response = await fetch(`/gift-cards/${cardId}/details`);
+            if (response.ok) {
+                const cardData = await response.json();
+                setQuickViewCard(cardData);
+                setIsQuickViewOpen(true);
+            } else {
+                // Fallback to navigating to the full page
+                router.visit(`/gift-cards/${cardId}`);
+            }
+        } catch (error) {
+            // Fallback to navigating to the full page
+            router.visit(`/gift-cards/${cardId}`);
+        }
+    };
+
+    const handleReactivate = (cardId: number) => {
+        if (confirm('Bu kartı yenidən satış üçün sıfırlamaq istədiyinizə əminsiniz?')) {
+            router.post(`/gift-cards/${cardId}/reactivate`, {}, {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const getTransactionTypeBadge = (type: string) => {
+        const typeConfig: Record<string, { label: string; class: string }> = {
+            issue: { label: 'Satıldı', class: 'bg-green-100 text-green-800' },
+            activate: { label: 'Aktivləşdirildi', class: 'bg-blue-100 text-blue-800' },
+            redeem: { label: 'İstifadə edildi', class: 'bg-purple-100 text-purple-800' },
+            refund: { label: 'Geri qaytarıldı', class: 'bg-yellow-100 text-yellow-800' },
+            adjust: { label: 'Düzəliş', class: 'bg-gray-100 text-gray-800' },
+            expire: { label: 'Vaxtı keçdi', class: 'bg-orange-100 text-orange-800' },
+            cancel: { label: 'Ləğv edildi', class: 'bg-red-100 text-red-800' },
+            reset: { label: 'Sıfırlandı', class: 'bg-indigo-100 text-indigo-800' },
+        };
+
+        const config = typeConfig[type] || typeConfig.adjust;
+
+        return (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.class}`}>
+                {config.label}
+            </span>
+        );
     };
 
     const getStatusBadge = (card: GiftCard) => {
@@ -281,12 +355,62 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <Link
-                                                            href={`/gift-cards/${card.id}`}
-                                                            className="text-blue-600 hover:text-blue-900"
-                                                        >
-                                                            Detallar
-                                                        </Link>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() => handleQuickView(card.id)}
+                                                                className="text-blue-600 hover:text-blue-900 p-1"
+                                                                title="Tez baxış"
+                                                            >
+                                                                <EyeIcon className="w-5 h-5" />
+                                                            </button>
+                                                            <Menu as="div" className="relative inline-block text-left">
+                                                                <Menu.Button className="p-1 text-gray-600 hover:text-gray-900">
+                                                                    <EllipsisVerticalIcon className="w-5 h-5" />
+                                                                </Menu.Button>
+                                                                <Transition
+                                                                    as={Fragment}
+                                                                    enter="transition ease-out duration-100"
+                                                                    enterFrom="transform opacity-0 scale-95"
+                                                                    enterTo="transform opacity-100 scale-100"
+                                                                    leave="transition ease-in duration-75"
+                                                                    leaveFrom="transform opacity-100 scale-100"
+                                                                    leaveTo="transform opacity-0 scale-95"
+                                                                >
+                                                                    <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                                        <div className="py-1">
+                                                                            <Menu.Item>
+                                                                                {({ active }) => (
+                                                                                    <Link
+                                                                                        href={`/gift-cards/${card.id}`}
+                                                                                        className={`${
+                                                                                            active ? 'bg-gray-100' : ''
+                                                                                        } flex items-center gap-2 px-4 py-2 text-sm text-gray-700`}
+                                                                                    >
+                                                                                        <EyeIcon className="w-4 h-4" />
+                                                                                        Tam Detallar
+                                                                                    </Link>
+                                                                                )}
+                                                                            </Menu.Item>
+                                                                            {(card.status === 'depleted' || card.status === 'expired') && (
+                                                                                <Menu.Item>
+                                                                                    {({ active }) => (
+                                                                                        <button
+                                                                                            onClick={() => handleReactivate(card.id)}
+                                                                                            className={`${
+                                                                                                active ? 'bg-gray-100' : ''
+                                                                                            } flex items-center gap-2 px-4 py-2 text-sm text-gray-700 w-full text-left`}
+                                                                                        >
+                                                                                            <ArrowPathIcon className="w-4 h-4" />
+                                                                                            Yenidən Aktivləşdir
+                                                                                        </button>
+                                                                                    )}
+                                                                                </Menu.Item>
+                                                                            )}
+                                                                        </div>
+                                                                    </Menu.Items>
+                                                                </Transition>
+                                                            </Menu>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -400,6 +524,172 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                     </div>
                 </div>
             </div>
+
+            {/* Quick View Modal */}
+            <Transition appear show={isQuickViewOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-50" onClose={() => setIsQuickViewOpen(false)}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0 bg-black bg-opacity-25" />
+                    </Transition.Child>
+
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 text-center">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0 scale-95"
+                                enterTo="opacity-100 scale-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100 scale-100"
+                                leaveTo="opacity-0 scale-95"
+                            >
+                                <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
+                                    {quickViewCard && (
+                                        <>
+                                            {/* Header */}
+                                            <div className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-4 text-white">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <Dialog.Title className="text-2xl font-bold font-mono mb-2">
+                                                            {quickViewCard.card_number}
+                                                        </Dialog.Title>
+                                                        <div className="flex items-center gap-2">
+                                                            {getStatusBadge(quickViewCard)}
+                                                        </div>
+                                                        {quickViewCard.current_balance !== null && (
+                                                            <div className="mt-4">
+                                                                <p className="text-sm opacity-90">Cari Balans</p>
+                                                                <p className="text-3xl font-bold mt-1">
+                                                                    ₼{Number(quickViewCard.current_balance).toFixed(2)}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setIsQuickViewOpen(false)}
+                                                        className="text-white hover:text-gray-200"
+                                                    >
+                                                        <XMarkIcon className="w-6 h-6" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Content */}
+                                            <div className="px-6 py-4 max-h-96 overflow-y-auto">
+                                                <div className="space-y-4">
+                                                    {/* Basic Info */}
+                                                    <div>
+                                                        <h3 className="text-sm font-semibold text-gray-900 mb-2">Əsas Məlumat</h3>
+                                                        <dl className="grid grid-cols-2 gap-3 text-sm">
+                                                            {quickViewCard.denomination && (
+                                                                <div>
+                                                                    <dt className="text-gray-500">Nominal</dt>
+                                                                    <dd className="font-semibold text-gray-900">₼{quickViewCard.denomination}</dd>
+                                                                </div>
+                                                            )}
+                                                            {quickViewCard.activated_at && (
+                                                                <div>
+                                                                    <dt className="text-gray-500">Aktivləşmə</dt>
+                                                                    <dd className="text-gray-900">
+                                                                        {new Date(quickViewCard.activated_at).toLocaleDateString('az-AZ')}
+                                                                    </dd>
+                                                                </div>
+                                                            )}
+                                                            {quickViewCard.expiry_date && (
+                                                                <div>
+                                                                    <dt className="text-gray-500">Bitmə tarixi</dt>
+                                                                    <dd className="text-gray-900">
+                                                                        {new Date(quickViewCard.expiry_date).toLocaleDateString('az-AZ')}
+                                                                    </dd>
+                                                                </div>
+                                                            )}
+                                                        </dl>
+                                                    </div>
+
+                                                    {/* Customer Info */}
+                                                    {quickViewCard.customer && (
+                                                        <div>
+                                                            <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1">
+                                                                <UserIcon className="w-4 h-4" />
+                                                                Müştəri
+                                                            </h3>
+                                                            <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                                                                <p className="font-semibold text-gray-900">{quickViewCard.customer.name}</p>
+                                                                {quickViewCard.customer.phone && (
+                                                                    <p className="text-gray-600">{quickViewCard.customer.phone}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Recent Transactions */}
+                                                    {quickViewCard.transactions && quickViewCard.transactions.length > 0 && (
+                                                        <div>
+                                                            <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1">
+                                                                <ClockIcon className="w-4 h-4" />
+                                                                Son Əməliyyatlar
+                                                            </h3>
+                                                            <div className="space-y-2">
+                                                                {quickViewCard.transactions.slice(0, 5).map((transaction) => (
+                                                                    <div
+                                                                        key={transaction.id}
+                                                                        className="bg-gray-50 rounded-lg p-3 text-sm"
+                                                                    >
+                                                                        <div className="flex items-center justify-between mb-1">
+                                                                            <div className="flex items-center gap-2">
+                                                                                {getTransactionTypeBadge(transaction.transaction_type)}
+                                                                                <span className="text-xs text-gray-500">
+                                                                                    {new Date(transaction.created_at).toLocaleDateString('az-AZ')}
+                                                                                </span>
+                                                                            </div>
+                                                                            <span className={`font-semibold ${
+                                                                                transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                                                                            }`}>
+                                                                                {transaction.amount > 0 ? '+' : ''}₼{Math.abs(Number(transaction.amount)).toFixed(2)}
+                                                                            </span>
+                                                                        </div>
+                                                                        {transaction.notes && (
+                                                                            <p className="text-xs text-gray-600">{transaction.notes}</p>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Footer */}
+                                            <div className="bg-gray-50 px-6 py-4 flex items-center justify-between">
+                                                <Link
+                                                    href={`/gift-cards/${quickViewCard.id}`}
+                                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                                >
+                                                    Tam Detallara Keç →
+                                                </Link>
+                                                <button
+                                                    onClick={() => setIsQuickViewOpen(false)}
+                                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+                                                >
+                                                    Bağla
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
         </AuthenticatedLayout>
     );
 }

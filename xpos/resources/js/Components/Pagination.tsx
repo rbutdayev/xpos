@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationLink {
     url: string | null;
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export default function Pagination({ links, currentPage, lastPage }: Props) {
+    const { t } = useTranslation();
+
     if (lastPage <= 1) return null;
 
     return (
@@ -24,24 +27,24 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                         href={links[0].url!}
                         className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
-                        Əvvəlki
+                        {t('pagination.previous')}
                     </Link>
                 ) : (
                     <span className="relative inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
-                        Əvvəlki
+                        {t('pagination.previous')}
                     </span>
                 )}
-                
+
                 {links[links.length - 1]?.url ? (
                     <Link
                         href={links[links.length - 1].url!}
                         className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
-                        Növbəti
+                        {t('pagination.next')}
                     </Link>
                 ) : (
                     <span className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
-                        Növbəti
+                        {t('pagination.next')}
                     </span>
                 )}
             </div>
@@ -49,7 +52,7 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                     <p className="text-sm text-gray-700">
-                        Səhifə <span className="font-medium">{currentPage}</span> / <span className="font-medium">{lastPage}</span>
+                        {t('pagination.page')} <span className="font-medium">{currentPage}</span> {t('pagination.of')} <span className="font-medium">{lastPage}</span>
                     </p>
                 </div>
                 
@@ -61,12 +64,12 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                                 href={links[0].url!}
                                 className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <span className="sr-only">Əvvəlki</span>
+                                <span className="sr-only">{t('pagination.previous')}</span>
                                 <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                             </Link>
                         ) : (
                             <span className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300 cursor-not-allowed">
-                                <span className="sr-only">Əvvəlki</span>
+                                <span className="sr-only">{t('pagination.previous')}</span>
                                 <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                             </span>
                         )}
@@ -117,12 +120,12 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                                 href={links[links.length - 1].url!}
                                 className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <span className="sr-only">Növbəti</span>
+                                <span className="sr-only">{t('pagination.next')}</span>
                                 <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
                             </Link>
                         ) : (
                             <span className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300 cursor-not-allowed">
-                                <span className="sr-only">Növbəti</span>
+                                <span className="sr-only">{t('pagination.next')}</span>
                                 <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
                             </span>
                         )}

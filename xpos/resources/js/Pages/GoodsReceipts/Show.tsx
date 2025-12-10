@@ -2,18 +2,20 @@ import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ArrowLeftIcon, DocumentIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import { GoodsReceipt } from '@/types';
-// Using hardcoded Azerbaijani strings like other pages in the application
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     receipt: GoodsReceipt;
 }
 
 export default function Show({ receipt }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
+
     const formatCurrency = (amount?: number) => {
         if (!amount) return '-';
-        return new Intl.NumberFormat('az-AZ', { 
-            style: 'currency', 
-            currency: 'AZN' 
+        return new Intl.NumberFormat('az-AZ', {
+            style: 'currency',
+            currency: 'AZN'
         }).format(amount);
     };
 
@@ -29,7 +31,7 @@ export default function Show({ receipt }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Mal qəbulu - ${receipt.receipt_number}`} />
+            <Head title={`${t('goodsReceipts.title')} - ${receipt.receipt_number}`} />
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -44,9 +46,9 @@ export default function Show({ receipt }: Props) {
                                 </Link>
                                 <div>
                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                        Mal qəbulu - {receipt.receipt_number}
+                                        {t('goodsReceipts.title')} - {receipt.receipt_number}
                                     </h2>
-                                    <p className="text-gray-600">Qəbul təfərrüatları</p>
+                                    <p className="text-gray-600">{t('goodsReceipts.receiptDetails')}</p>
                                 </div>
                             </div>
                             <div className="flex space-x-2">
@@ -55,7 +57,7 @@ export default function Show({ receipt }: Props) {
                                     className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                                 >
                                     <PrinterIcon className="w-4 h-4 mr-2" />
-                                    Çap et
+                                    {t('goodsReceipts.printReceipt')}
                                 </button>
                             </div>
                         </div>
@@ -66,12 +68,12 @@ export default function Show({ receipt }: Props) {
                                 {/* Receipt Information */}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                        Qəbul məlumatları
+                                        {t('goodsReceipts.receiptInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
-                                                Qəbul nömrəsi
+                                                {t('goodsReceipts.receiptNumber')}
                                             </dt>
                                             <dd className="text-sm text-gray-900 font-mono">
                                                 {receipt.receipt_number}
@@ -79,7 +81,7 @@ export default function Show({ receipt }: Props) {
                                         </div>
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
-                                                Yaradılma tarixi
+                                                {t('goodsReceipts.createdDate')}
                                             </dt>
                                             <dd className="text-sm text-gray-900">
                                                 {formatDate(receipt.created_at || '')}
@@ -88,7 +90,7 @@ export default function Show({ receipt }: Props) {
                                         {receipt.employee && (
                                             <div>
                                                 <dt className="text-sm font-medium text-gray-500">
-                                                    Qəbul edən
+                                                    {t('goodsReceipts.receivedBy')}
                                                 </dt>
                                                 <dd className="text-sm text-gray-900">
                                                     {receipt.employee.name}
@@ -101,12 +103,12 @@ export default function Show({ receipt }: Props) {
                                 {/* Product Information */}
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-blue-900 mb-4">
-                                        Məhsul məlumatları
+                                        {t('goodsReceipts.productInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-blue-700">
-                                                Məhsul adı
+                                                {t('goodsReceipts.productName')}
                                             </dt>
                                             <dd className="text-sm text-blue-900 font-medium">
                                                 {receipt.product?.name}
@@ -114,7 +116,7 @@ export default function Show({ receipt }: Props) {
                                         </div>
                                         <div>
                                             <dt className="text-sm font-medium text-blue-700">
-                                                SKU
+                                                {t('labels.sku', { ns: 'common' })}
                                             </dt>
                                             <dd className="text-sm text-blue-900 font-mono">
                                                 {receipt.product?.sku}
@@ -123,7 +125,7 @@ export default function Show({ receipt }: Props) {
                                         {receipt.product?.barcode && (
                                             <div>
                                                 <dt className="text-sm font-medium text-blue-700">
-                                                    Barkod
+                                                    {t('table.barcode')}
                                                 </dt>
                                                 <dd className="text-sm text-blue-900 font-mono">
                                                     {receipt.product?.barcode}
@@ -137,12 +139,12 @@ export default function Show({ receipt }: Props) {
                                 {receipt.supplier && (
                                     <div className="bg-green-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-medium text-green-900 mb-4">
-                                            Təchizatçı məlumatları
+                                            {t('goodsReceipts.supplierInfo')}
                                         </h3>
                                         <dl className="space-y-3">
                                             <div>
                                                 <dt className="text-sm font-medium text-green-700">
-                                                    Təchizatçı adı
+                                                    {t('goodsReceipts.supplierName')}
                                                 </dt>
                                                 <dd className="text-sm text-green-900 font-medium">
                                                     {receipt.supplier.name}
@@ -151,7 +153,7 @@ export default function Show({ receipt }: Props) {
                                             {receipt.supplier.contact_person && (
                                                 <div>
                                                     <dt className="text-sm font-medium text-green-700">
-                                                        Əlaqə şəxsi
+                                                        {t('goodsReceipts.contactPerson')}
                                                     </dt>
                                                     <dd className="text-sm text-green-900">
                                                         {receipt.supplier.contact_person}
@@ -161,7 +163,7 @@ export default function Show({ receipt }: Props) {
                                             {receipt.supplier.phone && (
                                                 <div>
                                                     <dt className="text-sm font-medium text-green-700">
-                                                        Telefon
+                                                        {t('goodsReceipts.phone')}
                                                     </dt>
                                                     <dd className="text-sm text-green-900">
                                                         {receipt.supplier.phone}
@@ -178,12 +180,12 @@ export default function Show({ receipt }: Props) {
                                 {/* Warehouse Information */}
                                 <div className="bg-purple-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-purple-900 mb-4">
-                                        Anbar məlumatları
+                                        {t('goodsReceipts.warehouseInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-purple-700">
-                                                Anbar adı
+                                                {t('goodsReceipts.warehouseName')}
                                             </dt>
                                             <dd className="text-sm text-purple-900 font-medium">
                                                 {receipt.warehouse?.name}
@@ -192,7 +194,7 @@ export default function Show({ receipt }: Props) {
                                         {receipt.warehouse?.location && (
                                             <div>
                                                 <dt className="text-sm font-medium text-purple-700">
-                                                    Yer
+                                                    {t('goodsReceipts.location')}
                                                 </dt>
                                                 <dd className="text-sm text-purple-900">
                                                     {receipt.warehouse?.location}
@@ -205,12 +207,12 @@ export default function Show({ receipt }: Props) {
                                 {/* Quantity & Cost Information */}
                                 <div className="bg-yellow-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-yellow-900 mb-4">
-                                        Miqdar və dəyər məlumatları
+                                        {t('goodsReceipts.quantityAndCost')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-yellow-700">
-                                                Qəbul edilən miqdar
+                                                {t('goodsReceipts.receivedQuantity')}
                                             </dt>
                                             <dd className="text-lg text-yellow-900 font-bold">
                                                 {receipt.quantity}{receipt.unit ? ` ${receipt.unit}` : ''}
@@ -219,7 +221,7 @@ export default function Show({ receipt }: Props) {
                                         {receipt.unit_cost && (
                                             <div>
                                                 <dt className="text-sm font-medium text-yellow-700">
-                                                    Vahid dəyər
+                                                    {t('goodsReceipts.unitCost')}
                                                 </dt>
                                                 <dd className="text-sm text-yellow-900 font-medium">
                                                     {formatCurrency(receipt.unit_cost)}
@@ -229,7 +231,7 @@ export default function Show({ receipt }: Props) {
                                         {receipt.total_cost && (
                                             <div>
                                                 <dt className="text-sm font-medium text-yellow-700">
-                                                    Ümumi dəyər
+                                                    {t('goodsReceipts.totalCost')}
                                                 </dt>
                                                 <dd className="text-lg text-yellow-900 font-bold">
                                                     {formatCurrency(receipt.total_cost)}
@@ -243,17 +245,17 @@ export default function Show({ receipt }: Props) {
                                 {receipt.document_path && (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                            Əlavə edilmiş sənəd
+                                            {t('goodsReceipts.attachedDocument')}
                                         </h3>
                                         <div className="flex items-center justify-between p-3 bg-white rounded border">
                                             <div className="flex items-center">
                                                 <DocumentIcon className="w-8 h-8 text-blue-500 mr-3" />
                                                 <div>
                                                     <p className="text-sm font-medium text-gray-900">
-                                                        Qəbul sənədi
+                                                        {t('goodsReceipts.receiptDocument')}
                                                     </p>
                                                     <p className="text-xs text-gray-500">
-                                                        Sənədi görüntülə və ya yüklə
+                                                        {t('goodsReceipts.viewOrDownload')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -265,7 +267,7 @@ export default function Show({ receipt }: Props) {
                                                         rel="noopener noreferrer"
                                                         className="text-green-600 hover:text-green-800 text-sm font-medium"
                                                     >
-                                                        Görüntülə
+                                                        {t('goodsReceipts.viewDocument')}
                                                     </a>
                                                 )}
                                                 {receipt.document_download_url && (
@@ -274,7 +276,7 @@ export default function Show({ receipt }: Props) {
                                                         download
                                                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                                                     >
-                                                        Yüklə
+                                                        {t('goodsReceipts.downloadDocument')}
                                                     </a>
                                                 )}
                                             </div>
@@ -286,7 +288,7 @@ export default function Show({ receipt }: Props) {
                                 {receipt.notes && (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                            Qeydlər
+                                            {t('goodsReceipts.notes')}
                                         </h3>
                                         <p className="text-sm text-gray-700 whitespace-pre-wrap">
                                             {receipt.notes}
@@ -302,11 +304,11 @@ export default function Show({ receipt }: Props) {
                                 href={route('goods-receipts.index')}
                                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
                             >
-                                Siyahıya qayıt
+                                {t('goodsReceipts.backToList')}
                             </Link>
-                            
+
                             <div className="text-xs text-gray-500">
-                                Son yenilənmə: {formatDate(receipt.updated_at || '')}
+                                {t('goodsReceipts.lastUpdated')}: {formatDate(receipt.updated_at || '')}
                             </div>
                         </div>
                     </div>

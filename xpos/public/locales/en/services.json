@@ -1,0 +1,168 @@
+{
+  "title": "Tailor Services",
+  "subtitle": "Manage tailoring and alteration services",
+  "create": "New Service",
+  "createButton": "Create New Service",
+  "edit": "Edit Service",
+  "delete": "Delete",
+  "view": "View",
+  "noServices": "No services found",
+  "firstService": "Create First Service",
+  "searchPlaceholder": "Search services...",
+
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "ready": "Ready",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "onHold": "On Hold"
+  },
+
+  "priority": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+
+  "serviceType": {
+    "alteration": "Alteration",
+    "repair": "Repair",
+    "custom": "Custom Tailoring",
+    "cleaning": "Cleaning",
+    "other": "Other"
+  },
+
+  "form": {
+    "basicInfo": "Basic Information",
+    "customerInfo": "Customer Information",
+    "serviceDetails": "Service Details",
+    "measurements": "Measurements",
+    "pricing": "Pricing",
+    "schedule": "Schedule",
+
+    "customer": "Customer",
+    "selectCustomer": "Select customer...",
+    "serviceType": "Service Type",
+    "selectServiceType": "Select type...",
+    "description": "Description",
+    "priority": "Priority",
+    "selectPriority": "Select priority...",
+
+    "garmentType": "Garment Type",
+    "garmentColor": "Color",
+    "garmentSize": "Size",
+    "fabric": "Fabric Type",
+
+    "receivedDate": "Received Date",
+    "dueDate": "Due Date",
+    "completedDate": "Completed Date",
+
+    "servicePrice": "Service Price",
+    "deposit": "Deposit",
+    "totalPrice": "Total Price",
+    "paidAmount": "Paid Amount",
+    "balance": "Balance",
+
+    "notes": "Service Notes",
+    "internalNotes": "Internal Notes",
+    "customerNotes": "Customer Instructions"
+  },
+
+  "show": {
+    "title": "Service Details",
+    "serviceNumber": "Service #",
+    "back": "Back to Services",
+    "edit": "Edit",
+    "markReady": "Mark as Ready",
+    "markCompleted": "Mark as Completed",
+    "print": "Print",
+    "sendSMS": "Send SMS",
+
+    "customerInfo": "Customer Information",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+
+    "serviceInfo": "Service Information",
+    "type": "Service Type",
+    "description": "Description",
+    "priority": "Priority",
+    "status": "Status",
+    "garment": "Garment",
+
+    "schedule": "Schedule",
+    "receivedDate": "Received",
+    "dueDate": "Due Date",
+    "completedDate": "Completed",
+
+    "measurements": "Measurements",
+
+    "financialInfo": "Financial Information",
+    "servicePrice": "Service Price",
+    "deposit": "Deposit",
+    "totalPrice": "Total Price",
+    "paidAmount": "Paid",
+    "balance": "Balance",
+
+    "payments": "Payment History",
+    "paymentMethod": "Method",
+    "amount": "Amount",
+    "date": "Date",
+    "noPayments": "No payments",
+
+    "notes": "Notes",
+    "customerInstructions": "Customer Instructions",
+    "internalNotes": "Internal Notes",
+
+    "systemInfo": "System Information",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "assignedTo": "Assigned To",
+
+    "overdue": "Service is overdue!",
+    "dueToday": "Service is due today!"
+  },
+
+  "actions": {
+    "create": "Create Service",
+    "creating": "Creating...",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "addPayment": "Add Payment",
+    "viewDetails": "View Details"
+  },
+
+  "messages": {
+    "createSuccess": "Service created successfully",
+    "updateSuccess": "Service updated successfully",
+    "deleteSuccess": "Service deleted successfully",
+    "confirmDelete": "Are you sure you want to delete this service?",
+    "selectCustomer": "Please select a customer",
+    "invalidDates": "Due date must be after received date"
+  },
+
+  "filters": {
+    "all": "All",
+    "status": "Status",
+    "priority": "Priority",
+    "type": "Service Type",
+    "overdue": "Overdue Only"
+  },
+
+  "table": {
+    "serviceNumber": "Service #",
+    "customer": "Customer",
+    "type": "Type",
+    "description": "Description",
+    "receivedDate": "Received",
+    "dueDate": "Due Date",
+    "priority": "Priority",
+    "status": "Status",
+    "totalPrice": "Price",
+    "balance": "Balance",
+    "actions": "Actions"
+  }
+}

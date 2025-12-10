@@ -1,0 +1,44 @@
+{
+  "title": "Profil",
+  "edit": {
+    "title": "Profili Düzəliş Et",
+    "heading": "Profil"
+  },
+  "information": {
+    "title": "Profil Məlumatları",
+    "description": "Hesabınızın profil məlumatları və e-poçt ünvanını yeniləyin.",
+    "name": "Ad",
+    "email": "E-poçt",
+    "language": "Dil / Language",
+    "languageDescription": "İstifadəçi interfeysi dili / User interface language",
+    "emailUnverified": "E-poçt ünvanınız təsdiqlənməyib.",
+    "resendVerification": "Təsdiqləmə e-poçtunu yenidən göndərmək üçün buraya klikləyin.",
+    "verificationSent": "Yeni təsdiqləmə linki e-poçt ünvanınıza göndərildi.",
+    "saved": "Yadda saxlanıldı."
+  },
+  "password": {
+    "title": "Şifrəni Yenilə",
+    "description": "Hesabınızın təhlükəsizliyini təmin etmək üçün uzun və təsadüfi şifrə istifadə edin.",
+    "current": "Mövcud Şifrə",
+    "new": "Yeni Şifrə",
+    "confirm": "Şifrəni Təsdiq Et",
+    "saved": "Yadda saxlanıldı."
+  },
+  "delete": {
+    "title": "Hesabı Sil",
+    "description": "Hesabınız silindikdən sonra, onun bütün resursları və məlumatları həmişəlik silinəcək. Hesabınızı silməzdən əvvəl, saxlamaq istədiyiniz hər hansı məlumat və ya məlumatları endirin.",
+    "button": "Hesabı Sil",
+    "confirm": "Hesabınızı silmək istədiyinizə əminsiniz?",
+    "confirmDescription": "Hesabınız silindikdən sonra, onun bütün resursları və məlumatları həmişəlik silinəcək. Hesabınızı həmişəlik silmək istədiyinizi təsdiqləmək üçün şifrənizi daxil edin.",
+    "password": "Şifrə",
+    "passwordPlaceholder": "Şifrə"
+  },
+  "languages": {
+    "en": "English",
+    "az": "Azərbaycan"
+  },
+  "actions": {
+    "save": "Yadda saxla",
+    "cancel": "Ləğv et"
+  }
+}

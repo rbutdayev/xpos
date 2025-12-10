@@ -1,0 +1,155 @@
+{
+  "title": "Customers",
+  "addCustomer": "Add New Customer",
+  "editCustomer": "Edit Customer",
+  "editCustomerTitle": "Edit: {{name}}",
+  "customerDetails": "Customer Details",
+  "customerList": "Customer List",
+  "newCustomer": "New Customer",
+  "fields": {
+    "customer": "Customer",
+    "name": "Customer Name *",
+    "customerType": "Customer Type *",
+    "phone": "Phone",
+    "email": "Email",
+    "birthday": "Birthday",
+    "taxNumber": "Tax Number (VÖEN)",
+    "address": "Address",
+    "notes": "Notes",
+    "loyaltyCard": "Loyalty Card",
+    "activeCustomer": "Active Customer",
+    "contactInfo": "Contact Information",
+    "phoneEmail": "Phone / Email",
+    "loyaltyPoints": "Loyalty Points",
+    "points": "Points",
+    "creditStatus": "Credit Status",
+    "status": "Status",
+    "totalPoints": "Total: {{points}}",
+    "currentPoints": "Current Points",
+    "lifetimePoints": "Total Earned",
+    "bonusPoints": "Bonus Points"
+  },
+  "types": {
+    "allTypes": "All Types",
+    "individual": "Individual",
+    "corporate": "Corporate"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "allStatuses": "All Statuses",
+    "hasDebt": "Has Debt",
+    "noDebt": "No Debt"
+  },
+  "creditStatus": {
+    "label": "Credit Status",
+    "all": "All",
+    "withDebt": "Customers with Debt",
+    "noDebt": "No Debt"
+  },
+  "serviceHistory": {
+    "label": "Service History",
+    "all": "All",
+    "withServices": "With Services",
+    "withoutServices": "Without Services",
+    "noServices": "No Services",
+    "lastService": "Last Service",
+    "totalServices": "Total Services"
+  },
+  "birthMonth": {
+    "label": "Birth Month",
+    "allMonths": "All Months",
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "update": "Save Changes",
+    "updating": "Updating...",
+    "addItem": "Add",
+    "newService": "New Service"
+  },
+  "messages": {
+    "created": "Customer created successfully",
+    "updated": "Customer information updated",
+    "deleted": "Customer deleted successfully",
+    "confirmDelete": "Are you sure you want to delete this customer?",
+    "confirmDeleteItem": "Are you sure you want to delete this item?",
+    "validating": "Validating...",
+    "cardError": "Error validating card",
+    "existingCard": "Existing Card"
+  },
+  "placeholders": {
+    "search": "Search by customer name or contact information...",
+    "phone": "501234567",
+    "phoneExample": "For example: 501234567 (9 digits)",
+    "taxNumber": "1234567890",
+    "address": "Customer address...",
+    "notes": "Additional information...",
+    "cardNumber": "14 character card number"
+  },
+  "emptyState": {
+    "title": "No customers found",
+    "description": "Get started by adding your first customer.",
+    "noItems": "No products/devices added yet",
+    "addFirstItem": "Add First Product",
+    "noServices": "No service records yet",
+    "addFirstService": "Add First Service"
+  },
+  "stats": {
+    "registered": "{{count}} customers registered",
+    "items": "Products/Devices",
+    "totalServices": "Total Services",
+    "debt": "Debt",
+    "createdAt": "Created:",
+    "activeItems": "Active Items:",
+    "lastService": "Last Service:"
+  },
+  "info": {
+    "title": "Information",
+    "nameRequired": "Customer name and type are required fields",
+    "phoneFormat": "Enter phone number in international format (+994...)",
+    "taxRequired": "Tax number (VÖEN) is required for corporate entities",
+    "vehiclesAfterCreate": "You can add vehicles to the customer after creation",
+    "cardOptional": "Optional. Enter the physical loyalty card number.",
+    "cardChangeWarning": "Changing the card or leaving it empty will delete it."
+  },
+  "warning": {
+    "title": "Warning",
+    "hasServices": "This customer has {{count}} service records. To delete the customer, you must first delete all service records."
+  },
+  "itemsDevices": {
+    "title": "Products/Devices",
+    "fabric": "Fabric: {{type}}",
+    "size": "Size: {{size}}"
+  },
+  "vehiclesServices": {
+    "vehicles": "Vehicles",
+    "vehiclesCount": "{{count}} units",
+    "servicesCount": "{{count}} services"
+  },
+  "serviceDetails": {
+    "title": "Service History",
+    "date": "Date:",
+    "item": "Product:",
+    "amount": "Amount:",
+    "employee": "Employee:",
+    "viewAll": "View all service records →"
+  }
+}

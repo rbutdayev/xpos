@@ -14,6 +14,7 @@ import {
     CreditCardIcon
 } from '@heroicons/react/24/outline';
 import { SERVICE_TYPES, ServiceType } from '@/config/serviceTypes';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     customer: Customer;
@@ -23,14 +24,16 @@ interface Props {
 }
 
 export default function Show({ customer, customerItems, serviceHistory, serviceCounts }: Props) {
+    const { t } = useTranslation('customers');
+
     const handleDelete = () => {
-        if (confirm('Bu müştərini silmək istədiyinizə əminsiniz?')) {
+        if (confirm(t('messages.confirmDelete'))) {
             router.delete(`/customers/${customer.id}`);
         }
     };
 
     const handleDeleteItem = (item: CustomerItem) => {
-        if (confirm('Bu geyimi silmək istədiyinizə əminsiniz?')) {
+        if (confirm(t('messages.confirmDeleteItem'))) {
             router.delete(`/customer-items/${item.id}`);
         }
     };
@@ -47,7 +50,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Müştəri: ${customer.name}`} />
+            <Head title={customer.name} />
 
             <div className="py-12">
                 <div className="mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -65,7 +68,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                                 ? 'bg-green-100 text-green-800' 
                                                 : 'bg-red-100 text-red-800'
                                         }`}>
-                                            {customer.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
+                                            {customer.is_active ? t('status.active') : t('status.inactive')}
                                         </div>
                                     </div>
                                 </div>
@@ -107,7 +110,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                         <div className="flex items-center">
                                             <CreditCardIcon className="w-5 h-5 text-gray-400 mr-3" />
                                             <div>
-                                                <span className="text-gray-500 text-sm">Loaylıq Kartı: </span>
+                                                <span className="text-gray-500 text-sm">{t('fields.loyaltyCard')}: </span>
                                                 <span className="font-mono font-semibold text-indigo-600">{customer.loyalty_card.card_number}</span>
                                             </div>
                                         </div>
@@ -119,13 +122,13 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                         <div className="text-2xl font-bold text-gray-900">
                                             {customer.active_customerItems_count || 0}
                                         </div>
-                                        <div className="text-sm text-gray-500">Məhsul/Cihaz</div>
+                                        <div className="text-sm text-gray-500">{t('stats.items')}</div>
                                     </div>
                                     <div className="bg-gray-50 p-4 rounded-lg text-center">
                                         <div className="text-2xl font-bold text-gray-900">
                                             {Object.values(serviceCounts).reduce((sum, count) => sum + count, 0) || 0}
                                         </div>
-                                        <div className="text-sm text-gray-500">Ümumi xidmətlər</div>
+                                        <div className="text-sm text-gray-500">{t('serviceHistory.totalServices')}</div>
                                     </div>
                                     <div className={`p-4 rounded-lg text-center ${
                                         (customer.total_credit_amount || 0) > 0
@@ -149,7 +152,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                                 maximumFractionDigits: 2
                                             })} ₼
                                         </div>
-                                        <div className="text-sm text-gray-500">Borc</div>
+                                        <div className="text-sm text-gray-500">{t('stats.debt')}</div>
                                     </div>
                                 </div>
 
@@ -165,18 +168,18 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                                         </svg>
                                                     </div>
                                                     <div>
-                                                        <div className="text-sm font-medium text-blue-900">Bonus Ballar</div>
+                                                        <div className="text-sm font-medium text-blue-900">{t('fields.bonusPoints')}</div>
                                                         <div className="text-3xl font-bold text-blue-900 mt-1">
                                                             {customer.current_points || 0}
                                                         </div>
                                                         <div className="text-xs text-blue-700 mt-1">
-                                                            Mövcud ballar
+                                                            {t('fields.currentPoints')}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 {customer.lifetime_points && customer.lifetime_points > 0 && (
                                                     <div className="text-right">
-                                                        <div className="text-xs text-blue-700">Ümumi qazanılmış</div>
+                                                        <div className="text-xs text-blue-700">{t('fields.lifetimePoints')}</div>
                                                         <div className="text-2xl font-bold text-blue-900">
                                                             {customer.lifetime_points}
                                                         </div>
@@ -190,7 +193,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
 
                             {customer.notes && (
                                 <div className="mt-6 pt-6 border-t">
-                                    <h4 className="text-sm font-medium text-gray-900 mb-2">Qeydlər</h4>
+                                    <h4 className="text-sm font-medium text-gray-900 mb-2">{t('fields.notes')}</h4>
                                     <p className="text-gray-700">{customer.notes}</p>
                                 </div>
                             )}
@@ -201,7 +204,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-medium text-gray-900">Məhsullar/Cihazlar</h3>
+                                <h3 className="text-lg font-medium text-gray-900">{t('itemsDevices.title')}</h3>
                                 <Link
                                     href={`/customer-items/create?customer_id=${customer.id}`}
                                     className="inline-flex items-center px-3 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
@@ -272,13 +275,13 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                             ) : (
                                 <div className="text-center py-6">
                                     <ShoppingBagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500">Hələ məhsul/cihaz əlavə edilməyib</p>
+                                    <p className="text-gray-500">{t('emptyState.noItems')}</p>
                                     <Link
                                         href={`/customer-items/create?customer_id=${customer.id}`}
                                         className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 mt-4"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
-                                        İlk məhsulu əlavə et
+                                        {t('emptyState.addFirstItem')}
                                     </Link>
                                 </div>
                             )}
@@ -289,7 +292,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg font-medium text-gray-900">Xidmətlər tarixçəsi</h3>
+                                <h3 className="text-lg font-medium text-gray-900">{t('serviceDetails.title')}</h3>
                                 <Link
                                     href={`/tailor-services/create?customer_id=${customer.id}`}
                                     className="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
@@ -375,7 +378,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                                 href={`/tailor-services?customer_id=${customer.id}`}
                                                 className="text-blue-600 hover:text-blue-900 text-sm"
                                             >
-                                                Bütün xidmət qeydlərini gör →
+                                                {t('serviceDetails.viewAll')}
                                             </Link>
                                         </div>
                                     )}
@@ -383,13 +386,13 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                             ) : (
                                 <div className="text-center py-6">
                                     <ScissorsIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500">Hələ xidmət qeydi yoxdur</p>
+                                    <p className="text-gray-500">{t('emptyState.noServices')}</p>
                                     <Link
                                         href={`/tailor-services/create?customer_id=${customer.id}`}
                                         className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 mt-4"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
-                                        İlk xidməti əlavə et
+                                        {t('emptyState.addFirstService')}
                                     </Link>
                                 </div>
                             )}

@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProductsNavigation from '@/Components/ProductsNavigation';
 import { Category, Warehouse } from '@/types';
@@ -12,9 +13,11 @@ interface Props {
 }
 
 export default function Create({ categories, warehouses }: Props) {
+  const { t } = useTranslation('products');
+
   return (
     <AuthenticatedLayout>
-      <Head title="Yeni Məhsul" />
+      <Head title={t('newProduct')} />
 
       <div className="mx-auto sm:px-6 lg:px-8 mb-6">
         <ProductsNavigation currentRoute="products.create" />
@@ -29,7 +32,7 @@ export default function Create({ categories, warehouses }: Props) {
                   <ArrowLeftIcon className="w-5 h-5" />
                 </Link>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Yeni Məhsul</h2>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">{t('newProduct')}</h2>
                 </div>
               </div>
             </div>

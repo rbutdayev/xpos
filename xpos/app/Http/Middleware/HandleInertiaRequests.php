@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CurrencyService;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -60,6 +62,15 @@ class HandleInertiaRequests extends Middleware
             'rentEnabled' => $user && $user->account ? ($user->account->rent_module_enabled ?? false) : false,
             'discountsEnabled' => $user && $user->account ? ($user->account->discounts_module_enabled ?? false) : false,
             'giftCardsEnabled' => $user && $user->account ? ($user->account->gift_cards_module_enabled ?? false) : false,
+            'currency' => $user ? app(CurrencyService::class)->getCompanyCurrency() : null,
+            'locale' => app()->getLocale(),
+            'translations' => [
+                'payment_methods' => TranslationService::enumOptions('payment_methods'),
+                'expense_types' => TranslationService::enumOptions('expense_types'),
+                'subscription_plans' => TranslationService::enumOptions('subscription_plans'),
+                'user_roles' => TranslationService::enumOptions('user_roles'),
+                'sale_statuses' => TranslationService::enumOptions('sale_statuses'),
+            ],
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

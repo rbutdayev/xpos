@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
 import { CubeIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 
 interface StockMovement {
@@ -54,6 +55,7 @@ interface Props {
 }
 
 export default function Index({ movements, warehouses, movementTypes, filters }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
     const { auth } = usePage().props as any;
     const [searchValue, setSearchValue] = useState(filters.search || '');
     const [movementType, setMovementType] = useState(filters.movement_type || '');
@@ -92,11 +94,11 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
         {
             key: 'movement_type',
             type: 'dropdown' as const,
-            label: 'Hərəkət növü',
+            label: t('stockMovements.movementType'),
             value: movementType,
             onChange: setMovementType,
             options: [
-                { value: '', label: 'Bütün növlər' },
+                { value: '', label: t('stockMovements.allTypes') },
                 ...Object.entries(movementTypes).map(([key, value]) => ({
                     value: key,
                     label: value
@@ -107,11 +109,11 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
         {
             key: 'warehouse_id',
             type: 'dropdown' as const,
-            label: 'Anbar',
+            label: t('stockMovements.warehouse'),
             value: warehouseId,
             onChange: setWarehouseId,
             options: [
-                { value: '', label: 'Bütün anbarlar' },
+                { value: '', label: t('filters.allWarehouses') },
                 ...warehouses.map(warehouse => ({
                     value: warehouse.id.toString(),
                     label: warehouse.name
@@ -122,7 +124,7 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
         {
             key: 'date_from',
             type: 'date' as const,
-            label: 'Başlanğıc tarixi',
+            label: t('filters.startDate'),
             value: dateFrom,
             onChange: setDateFrom,
             className: 'min-w-[150px]'
@@ -130,7 +132,7 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
         {
             key: 'date_to',
             type: 'date' as const,
-            label: 'Bitmə tarixi',
+            label: t('filters.endDate'),
             value: dateTo,
             onChange: setDateTo,
             className: 'min-w-[150px]'
@@ -145,7 +147,7 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
         {
             ...tableConfig.stockMovements.actions[1], // Delete action
             onClick: (movement: StockMovement) => {
-                if (confirm('Silmək istədiyinizdən əminsiniz?')) {
+                if (confirm(t('confirmDelete'))) {
                     router.delete(`/stock-movements/${movement.movement_id}`);
                 }
             }
@@ -154,7 +156,7 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
 
     return (
         <AuthenticatedLayout>
-            <Head title="Stok Hərəkətləri" />
+            <Head title={t('stockMovements.title')} />
 
             <div className="py-12">
                 <div className="w-full">
@@ -164,18 +166,18 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
                         actions={tableActions}
                         searchValue={searchValue}
                         onSearchChange={setSearchValue}
-                        searchPlaceholder={tableConfig.stockMovements.searchPlaceholder}
+                        searchPlaceholder={t('stockMovements.searchPlaceholder')}
                         filters={tableFilters}
                         onSearch={handleSearch}
                         onReset={handleReset}
                         createButton={canCreateStockMovement ? {
-                            label: tableConfig.stockMovements.createButtonText,
+                            label: t('stockMovements.newMovement'),
                             href: '/stock-movements/create'
                         } : undefined}
                         emptyState={{
                             icon: <CubeIcon className="w-12 h-12" />,
-                            title: tableConfig.stockMovements.emptyStateTitle,
-                            description: tableConfig.stockMovements.emptyStateDescription
+                            title: t('noData'),
+                            description: t('noDataDescription')
                         }}
                         idField="movement_id"
                         fullWidth={true}

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from 'react-i18next';
 import {
     BanknotesIcon,
     DocumentTextIcon,
@@ -304,6 +305,9 @@ export default function DashboardNew({
     charts,
     tables,
 }: DashboardNewProps) {
+    const { t } = useTranslation('dashboard');
+    // Type-safe wrapper for dynamic translation keys
+    const tAny = t as any;
 
     const chartConfig = {
         responsive: true,
@@ -333,7 +337,7 @@ export default function DashboardNew({
 
     return (
         <AuthenticatedLayout>
-            <Head title="İdarə Paneli" />
+            <Head title={t('title')} />
 
             <div className="min-h-screen bg-gray-100">
                 <div className="py-4 sm:py-6 lg:py-8">
@@ -344,9 +348,9 @@ export default function DashboardNew({
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <div>
                                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                                        Xoş gəlmisiniz, {user.name}
+                                        {t('welcomeBack', { name: user.name })}
                                     </h1>
-                                    <p className="text-xs sm:text-sm text-gray-500 mt-1">Hesab: {account.name}</p>
+                                    <p className="text-xs sm:text-sm text-gray-500 mt-1">{tAny('new.accountLabel')}: {account.name}</p>
                                 </div>
                             </div>
                         </div>
@@ -355,27 +359,27 @@ export default function DashboardNew({
                         {(online_orders.pending > 0 || alerts.low_stock > 0 || (rentals && rentals.overdue > 0)) && (
                             <AlertBannerStack>
                                 {online_orders.pending > 0 && (
-                                    <AlertBanner type="warning" message={`Sizdə ${online_orders.pending} gözləyən online sifariş var`} actionLabel="Sifarişlərə baxın" actionHref="/online-orders" />
+                                    <AlertBanner type="warning" message={tAny('new.alerts.pendingOnlineOrders', { count: online_orders.pending })} actionLabel={tAny('new.alerts.viewOrders')} actionHref="/online-orders" />
                                 )}
                                 {alerts.low_stock > 0 && (
-                                    <AlertBanner type="warning" message={`${alerts.low_stock} məhsulun stoku azaldı`} actionLabel="Stoku yoxlayın" actionHref="/alerts" />
+                                    <AlertBanner type="warning" message={tAny('new.alerts.lowStockAlert', { count: alerts.low_stock })} actionLabel={tAny('new.alerts.checkStock')} actionHref="/alerts" />
                                 )}
                                 {rentals && rentals.overdue > 0 && (
-                                    <AlertBanner type="danger" message={`${rentals.overdue} icarə gecikib`} actionLabel="İcarələrə baxın" actionHref="/rentals" />
+                                    <AlertBanner type="danger" message={tAny('new.alerts.overdueRentals', { count: rentals.overdue })} actionLabel={tAny('new.alerts.viewRentals')} actionHref="/rentals" />
                                 )}
                             </AlertBannerStack>
                         )}
 
                         {/* QUICK ACTIONS */}
                         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-                            <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-3 sm:mb-4">Sürətli Əməliyyatlar</h3>
+                            <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-3 sm:mb-4">{t('quickActions.title')}</h3>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-                                <QuickActionBtn label="Yeni Satış" icon={ShoppingCartIcon} href="/pos" variant="primary" />
-                                <QuickActionBtn label="Yeni Servis" icon={WrenchScrewdriverIcon} href="/pos?mode=service" variant="success" />
-                                <QuickActionBtn label="Yeni Müştəri" icon={UserIcon} href="/customers/create" variant="primary" />
-                                <QuickActionBtn label="Yeni Məhsul" icon={CubeIcon} href="/products/create" variant="primary" />
-                                <QuickActionBtn label="Mal Qəbulu" icon={TruckIcon} href="/goods-receipts/create" variant="success" />
-                                <QuickActionBtn label="Yeni Xərc" icon={DocumentTextIcon} href="/expenses/create" variant="warning" />
+                                <QuickActionBtn label={t('quickActions.newSale')} icon={ShoppingCartIcon} href="/pos" variant="primary" />
+                                <QuickActionBtn label={t('quickActions.newService')} icon={WrenchScrewdriverIcon} href="/pos?mode=service" variant="success" />
+                                <QuickActionBtn label={t('quickActions.newCustomer')} icon={UserIcon} href="/customers/create" variant="primary" />
+                                <QuickActionBtn label={t('quickActions.newProduct')} icon={CubeIcon} href="/products/create" variant="primary" />
+                                <QuickActionBtn label={t('quickActions.goodsReceipt')} icon={TruckIcon} href="/goods-receipts/create" variant="success" />
+                                <QuickActionBtn label={tAny('new.quickActions.newExpense')} icon={DocumentTextIcon} href="/expenses/create" variant="warning" />
                             </div>
                         </div>
 
@@ -385,7 +389,7 @@ export default function DashboardNew({
                                 <MainKPICard
                                     icon={BanknotesIcon}
                                     iconBg="bg-gradient-to-br from-green-400 to-green-600"
-                                    label="Gəlir Bu Ay"
+                                    label={tAny('new.financial.revenueThisMonth')}
                                     value={formatCurrency(financial.revenue.value)}
                                     change={financial.revenue.growth}
                                     isPositive={true}
@@ -393,7 +397,7 @@ export default function DashboardNew({
                                 <MainKPICard
                                     icon={DocumentTextIcon}
                                     iconBg="bg-gradient-to-br from-red-400 to-red-600"
-                                    label="Xərclər Bu Ay"
+                                    label={tAny('new.financial.expensesThisMonth')}
                                     value={formatCurrency(financial.expenses.value)}
                                     change={financial.expenses.growth}
                                     isPositive={false}
@@ -401,51 +405,51 @@ export default function DashboardNew({
                                 <MainKPICard
                                     icon={ArrowTrendingUpIcon}
                                     iconBg="bg-gradient-to-br from-blue-400 to-blue-600"
-                                    label="Xalis Mənfəət"
+                                    label={tAny('new.financial.netProfit')}
                                     value={formatCurrency(financial.profit.value)}
                                     change={financial.profit.growth}
                                     isPositive={true}
-                                    subtitle={`Marja: ${financial.profit.margin}%`}
+                                    subtitle={tAny('new.financial.marginLabel', { margin: financial.profit.margin })}
                                 />
                                 <MainKPICard
                                     icon={ClockIcon}
                                     iconBg="bg-gradient-to-br from-orange-400 to-orange-600"
-                                    label="Gözləyən Ödəniş"
+                                    label={t('financial.pendingPayment')}
                                     value={formatCurrency(financial.pending_payments.value)}
-                                    subtitle={`${financial.pending_payments.count} müştəri`}
+                                    subtitle={tAny('new.financial.customerCount', { count: financial.pending_payments.count })}
                                 />
                             </div>
                         </div>
 
                         {/* OPERATIONAL METRICS */}
-                        <SectionCard title="Əməliyyat Göstəriciləri" subtitle="Müştəri və stok statistikası">
+                        <SectionCard title={t('sections.operationalMetrics')} subtitle={tAny('new.operational.subtitle')}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                                 <MiniStatCard
                                     icon={UserIcon}
-                                    label="Aktiv Müştərilər"
+                                    label={t('operational.activeCustomers')}
                                     value={operational.active_customers.toLocaleString()}
-                                    subtitle={`+${operational.new_customers} yeni`}
+                                    subtitle={tAny('new.operational.newCustomers', { count: operational.new_customers })}
                                     color="blue"
                                 />
                                 <MiniStatCard
                                     icon={CubeIcon}
-                                    label="Stokda Məhsullar"
+                                    label={tAny('new.operational.productsInStock')}
                                     value={operational.products_in_stock.toLocaleString()}
-                                    subtitle={`${operational.products_count} ümumi`}
+                                    subtitle={tAny('new.operational.totalProducts', { count: operational.products_count })}
                                     color="purple"
                                 />
                                 <MiniStatCard
                                     icon={BanknotesIcon}
-                                    label="Stok Dəyəri"
+                                    label={t('operational.stockValue')}
                                     value={formatCurrency(operational.stock_value.sale)}
-                                    subtitle="Satış qiyməti"
+                                    subtitle={tAny('new.operational.salePrice')}
                                     color="green"
                                 />
                                 <MiniStatCard
                                     icon={ChartBarIcon}
-                                    label="Dövriyyə Nisbəti"
+                                    label={tAny('new.operational.turnoverRatio')}
                                     value={`${operational.stock_turnover}x`}
-                                    subtitle="İllik dövriyyə"
+                                    subtitle={tAny('new.operational.annualTurnover')}
                                     color="blue"
                                 />
                             </div>
@@ -453,24 +457,24 @@ export default function DashboardNew({
 
                         {/* SERVICE METRICS (conditional) */}
                         {account.modules.services_enabled && services && (
-                            <SectionCard title="Servis Göstəriciləri" subtitle="Servis əməliyyatları və gəlir">
+                            <SectionCard title={tAny('new.services.title')} subtitle={tAny('new.services.subtitle')}>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                    <MiniStatCard icon={ClockIcon} label="Gözləyən Servislər" value={services.pending} subtitle="Növbədə" color="orange" />
-                                    <MiniStatCard icon={WrenchScrewdriverIcon} label="Davam Edən" value={services.in_progress} subtitle="İşləniyor" color="blue" />
-                                    <MiniStatCard icon={ChartBarIcon} label="Bu Ay Tamamlanan" value={services.completed_this_month} subtitle="Bu ay tamamlanan" color="green" />
-                                    <MiniStatCard icon={BanknotesIcon} label="Servis Gəliri" value={formatCurrency(services.revenue)} subtitle="Aylıq gəlir" color="green" />
+                                    <MiniStatCard icon={ClockIcon} label={tAny('new.services.pendingServices')} value={services.pending} subtitle={tAny('new.services.inQueue')} color="orange" />
+                                    <MiniStatCard icon={WrenchScrewdriverIcon} label={tAny('new.services.inProgress')} value={services.in_progress} subtitle={tAny('new.services.working')} color="blue" />
+                                    <MiniStatCard icon={ChartBarIcon} label={tAny('new.services.completedThisMonth')} value={services.completed_this_month} subtitle={tAny('new.services.completedLabel')} color="green" />
+                                    <MiniStatCard icon={BanknotesIcon} label={tAny('new.services.serviceRevenue')} value={formatCurrency(services.revenue)} subtitle={tAny('new.services.monthlyRevenue')} color="green" />
                                 </div>
                             </SectionCard>
                         )}
 
                         {/* RENTAL METRICS (conditional) */}
                         {account.modules.rentals_enabled && rentals && (
-                            <SectionCard title="İcarə Göstəriciləri" subtitle="İcarə əməliyyatları və gəlir">
+                            <SectionCard title={tAny('new.rentals.title')} subtitle={tAny('new.rentals.subtitle')}>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                    <MiniStatCard icon={HomeModernIcon} label="Aktiv İcarələr" value={rentals.active} subtitle="Hazırda icarədə" color="blue" />
-                                    <MiniStatCard icon={BanknotesIcon} label="Aylıq Gəlir" value={formatCurrency(rentals.monthly_revenue)} subtitle="İcarə gəliri" color="green" />
-                                    <MiniStatCard icon={CalendarDaysIcon} label="Gözlənilən Qaytarma" value={rentals.pending_returns} subtitle="3 gün ərzində" color="orange" />
-                                    <MiniStatCard icon={ExclamationTriangleIcon} label="Gecikmiş İcarələr" value={rentals.overdue} subtitle="Təcili!" color="red" />
+                                    <MiniStatCard icon={HomeModernIcon} label={t('rentals.activeRentals')} value={rentals.active} subtitle={tAny('new.rentals.currentlyRented')} color="blue" />
+                                    <MiniStatCard icon={BanknotesIcon} label={tAny('new.rentals.monthlyRevenue')} value={formatCurrency(rentals.monthly_revenue)} subtitle={tAny('new.rentals.rentalRevenue')} color="green" />
+                                    <MiniStatCard icon={CalendarDaysIcon} label={tAny('new.rentals.pendingReturns')} value={rentals.pending_returns} subtitle={tAny('new.rentals.within3Days')} color="orange" />
+                                    <MiniStatCard icon={ExclamationTriangleIcon} label={tAny('new.rentals.overdueRentals')} value={rentals.overdue} subtitle={tAny('new.rentals.urgent')} color="red" />
                                 </div>
                             </SectionCard>
                         )}
@@ -480,37 +484,37 @@ export default function DashboardNew({
                             <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600" />
-                                    <span className="text-xs font-medium text-yellow-800">Az Stok</span>
+                                    <span className="text-xs font-medium text-yellow-800">{t('alerts.lowStock')}</span>
                                 </div>
-                                <p className="text-2xl font-bold text-yellow-900">{alerts.low_stock} məhsul</p>
+                                <p className="text-2xl font-bold text-yellow-900">{tAny('new.inventoryAlerts.productCount', { count: alerts.low_stock })}</p>
                             </div>
                             <div className="bg-red-50 border-l-4 border-red-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-                                    <span className="text-xs font-medium text-red-800">Tükənmiş</span>
+                                    <span className="text-xs font-medium text-red-800">{t('alerts.outOfStock')}</span>
                                 </div>
-                                <p className="text-2xl font-bold text-red-900">{alerts.out_of_stock} məhsul</p>
+                                <p className="text-2xl font-bold text-red-900">{tAny('new.inventoryAlerts.productCount', { count: alerts.out_of_stock })}</p>
                             </div>
                             <div className="bg-purple-50 border-l-4 border-purple-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <ExclamationTriangleIcon className="w-5 h-5 text-purple-600" />
-                                    <span className="text-xs font-medium text-purple-800">Mənfi Stok</span>
+                                    <span className="text-xs font-medium text-purple-800">{t('alerts.negativeStock')}</span>
                                 </div>
-                                <p className="text-2xl font-bold text-purple-900">{alerts.negative_stock} məhsul</p>
+                                <p className="text-2xl font-bold text-purple-900">{tAny('new.inventoryAlerts.productCount', { count: alerts.negative_stock })}</p>
                             </div>
                             <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <TruckIcon className="w-5 h-5 text-blue-600" />
-                                    <span className="text-xs font-medium text-blue-800">Gözləyən MQ</span>
+                                    <span className="text-xs font-medium text-blue-800">{tAny('new.inventoryAlerts.pendingGR')}</span>
                                 </div>
-                                <p className="text-2xl font-bold text-blue-900">{alerts.pending_goods_receipts} qəbul</p>
+                                <p className="text-2xl font-bold text-blue-900">{tAny('new.inventoryAlerts.receiptCount', { count: alerts.pending_goods_receipts })}</p>
                             </div>
                         </div>
 
                         {/* CHARTS & ANALYTICS */}
                         <div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                                <ChartCard title="Gəlir Trendi">
+                                <ChartCard title={tAny('new.charts.revenueTrend')}>
                                     {charts.sales_trend && charts.sales_trend.length > 0 ? (
                                         <div className="h-64 sm:h-72">
                                             <Line
@@ -530,12 +534,12 @@ export default function DashboardNew({
                                         </div>
                                     ) : (
                                         <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
-                                            <p className="text-sm">Məlumat yoxdur</p>
+                                            <p className="text-sm">{t('charts.noData')}</p>
                                         </div>
                                     )}
                                 </ChartCard>
 
-                                <ChartCard title="Ödəniş Üsulları">
+                                <ChartCard title={t('charts.paymentMethods')}>
                                     {charts.payment_methods && charts.payment_methods.values.some(v => v > 0) ? (
                                         <div className="h-64 sm:h-72 flex items-center justify-center">
                                             <Doughnut
@@ -556,12 +560,12 @@ export default function DashboardNew({
                                         </div>
                                     ) : (
                                         <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
-                                            <p className="text-sm">Məlumat yoxdur</p>
+                                            <p className="text-sm">{t('charts.noData')}</p>
                                         </div>
                                     )}
                                 </ChartCard>
 
-                                <ChartCard title="Top 5 Məhsullar">
+                                <ChartCard title={tAny('new.charts.top5Products')}>
                                     {charts.top_products && charts.top_products.length > 0 ? (
                                         <div className="h-64 sm:h-72">
                                             <Bar
@@ -577,12 +581,12 @@ export default function DashboardNew({
                                         </div>
                                     ) : (
                                         <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
-                                            <p className="text-sm">Məlumat yoxdur</p>
+                                            <p className="text-sm">{t('charts.noData')}</p>
                                         </div>
                                     )}
                                 </ChartCard>
 
-                                <ChartCard title="Xərc Bölgüsü">
+                                <ChartCard title={t('charts.expenseBreakdown')}>
                                     {charts.expense_breakdown && charts.expense_breakdown.length > 0 ? (
                                         <div className="h-64 sm:h-72 flex items-center justify-center">
                                             <Pie
@@ -601,7 +605,7 @@ export default function DashboardNew({
                                         </div>
                                     ) : (
                                         <div className="h-64 sm:h-72 flex items-center justify-center text-gray-500">
-                                            <p className="text-sm">Məlumat yoxdur</p>
+                                            <p className="text-sm">{t('charts.noData')}</p>
                                         </div>
                                     )}
                                 </ChartCard>
@@ -609,12 +613,12 @@ export default function DashboardNew({
                         </div>
 
                         {/* CREDIT STATISTICS */}
-                        <SectionCard title="Borc Statistikaları" subtitle="Müştəri borcları və ödənişlər">
+                        <SectionCard title={t('sections.creditStatistics')} subtitle={tAny('new.credits.subtitle')}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                <MiniStatCard icon={BanknotesIcon} label="Ümumi Borc" value={formatCurrency(credits.total_outstanding)} color="red" />
-                                <MiniStatCard icon={ArrowTrendingUpIcon} label="Bu Ay Verilən" value={formatCurrency(credits.credits_given_this_month)} color="orange" />
-                                <MiniStatCard icon={ArrowTrendingDownIcon} label="Bu Ay Ödənilən" value={formatCurrency(credits.payments_received_this_month)} color="green" />
-                                <MiniStatCard icon={UserIcon} label="Borclu Müştərilər" value={credits.active_credit_customers} color="orange" />
+                                <MiniStatCard icon={BanknotesIcon} label={t('credits.totalOutstanding')} value={formatCurrency(credits.total_outstanding)} color="red" />
+                                <MiniStatCard icon={ArrowTrendingUpIcon} label={t('credits.givenThisMonth')} value={formatCurrency(credits.credits_given_this_month)} color="orange" />
+                                <MiniStatCard icon={ArrowTrendingDownIcon} label={t('credits.paidThisMonth')} value={formatCurrency(credits.payments_received_this_month)} color="green" />
+                                <MiniStatCard icon={UserIcon} label={tAny('new.credits.debtorCustomers')} value={credits.active_credit_customers} color="orange" />
                             </div>
                         </SectionCard>
 
@@ -623,8 +627,8 @@ export default function DashboardNew({
                             {/* Recent Sales */}
                             <div className="bg-white rounded-lg shadow">
                                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between">
-                                    <h3 className="text-sm sm:text-base font-semibold text-gray-800">Son Satışlar (Son 10)</h3>
-                                    <Link href="/sales" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">Hamısı →</Link>
+                                    <h3 className="text-sm sm:text-base font-semibold text-gray-800">{tAny('new.tables.recentSalesLast10')}</h3>
+                                    <Link href="/sales" className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">{tAny('new.tables.viewAll')}</Link>
                                 </div>
                                 <div className="divide-y divide-gray-100">
                                     {tables.recent_sales && tables.recent_sales.length > 0 ? (
@@ -646,7 +650,7 @@ export default function DashboardNew({
                                         ))
                                     ) : (
                                         <div className="px-4 sm:px-6 py-8 text-center text-gray-500">
-                                            <p className="text-sm">Hələ ki satış yoxdur</p>
+                                            <p className="text-sm">{tAny('new.tables.noSalesYet')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -655,7 +659,7 @@ export default function DashboardNew({
                             {/* Low Stock Alerts */}
                             <div className="bg-white rounded-lg shadow">
                                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                                    <h3 className="text-sm sm:text-base font-semibold text-gray-800">Az Stoklu Məhsullar (Təcili)</h3>
+                                    <h3 className="text-sm sm:text-base font-semibold text-gray-800">{tAny('new.tables.lowStockProductsUrgent')}</h3>
                                 </div>
                                 <div className="divide-y divide-gray-100">
                                     {tables.low_stock_products && tables.low_stock_products.length > 0 ? (
@@ -664,7 +668,7 @@ export default function DashboardNew({
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex-1">
                                                         <p className="font-medium text-gray-900 text-sm">{product.name}</p>
-                                                        <p className="text-xs text-gray-500">{product.warehouse || 'Bütün anbarlar'}</p>
+                                                        <p className="text-xs text-gray-500">{product.warehouse || t('tables.allWarehouses')}</p>
                                                     </div>
                                                     <div className="text-right ml-4">
                                                         <p className="text-sm font-semibold text-gray-900">
@@ -685,7 +689,7 @@ export default function DashboardNew({
                                         ))
                                     ) : (
                                         <div className="px-4 sm:px-6 py-8 text-center text-gray-500">
-                                            <p className="text-sm">Az stoklu məhsul yoxdur</p>
+                                            <p className="text-sm">{tAny('new.tables.noLowStockProducts')}</p>
                                         </div>
                                     )}
                                 </div>

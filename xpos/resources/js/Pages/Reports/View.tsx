@@ -8,6 +8,7 @@ import {
     DocumentArrowDownIcon,
     ChartBarIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface ReportData {
     summary: any;
@@ -26,18 +27,11 @@ interface Props {
 }
 
 export default function View({ reportId, reportType, data, dateRange }: Props) {
+    const { t } = useTranslation(['reports', 'common']);
+
     const getReportTitle = (type: string) => {
-        const titles: { [key: string]: string } = {
-            'end_of_day': 'Günlük Qapanış Hesabatı',
-            'sales': 'Satış hesabatı',
-            'inventory': 'Anbar hesabatı',
-            'financial': 'Maliyyə hesabatı',
-            'customer': 'Müştəri hesabatı',
-            'service': 'Servis Hesabatı',
-            'rental': 'Kirayə Hesabatı',
-            'cash_drawer': 'Kassa Hesabatı'
-        };
-        return titles[type] || 'Hesabat';
+        const typeKey = type.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        return t(`types.${typeKey}`, { defaultValue: t('view.title') });
     };
 
     const formatCurrency = (amount: number) => {
@@ -60,19 +54,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Satış Sayı</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.salesCount')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_sales)}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Ümumi Gəlir</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.totalRevenue')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatCurrency(data.summary.total_revenue)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Orta Çek</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.averageTransaction')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{formatCurrency(data.summary.average_transaction)}</p>
                         </div>
                         <div className="bg-indigo-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-indigo-600">Satılan Məhsul</h3>
+                            <h3 className="text-sm font-medium text-indigo-600">{t('summary.soldProducts')}</h3>
                             <p className="text-2xl font-bold text-indigo-900">{formatNumber(data.summary.total_items_sold)}</p>
                         </div>
                     </div>
@@ -81,19 +75,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Cəmi Satışlar</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.totalSales')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_sales)}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Cəmi Gəlir</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.totalIncome')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatCurrency(data.summary.total_revenue)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Ortalama Satış</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.averageSale')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{formatCurrency(data.summary.average_sale)}</p>
                         </div>
                         <div className="bg-indigo-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-indigo-600">Ən Çox Alış-veriş Edən</h3>
+                            <h3 className="text-sm font-medium text-indigo-600">{t('summary.topCustomer')}</h3>
                             <p className="text-lg font-bold text-indigo-900">{data.summary.top_customer?.name || 'N/A'}</p>
                             <p className="text-sm text-indigo-600">{data.summary.top_customer?.total ? formatCurrency(data.summary.top_customer.total) : ''}</p>
                         </div>
@@ -103,19 +97,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Cəmi Məhsullar</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.totalProducts')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_products)}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Stok Dəyəri</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.stockValue')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatCurrency(data.summary.total_stock_value)}</p>
                         </div>
                         <div className="bg-yellow-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-yellow-600">Az Stok</h3>
+                            <h3 className="text-sm font-medium text-yellow-600">{t('summary.lowStock')}</h3>
                             <p className="text-2xl font-bold text-yellow-900">{formatNumber(data.summary.low_stock_items)}</p>
                         </div>
                         <div className="bg-red-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-red-600">Tükənmiş</h3>
+                            <h3 className="text-sm font-medium text-red-600">{t('summary.outOfStock')}</h3>
                             <p className="text-2xl font-bold text-red-900">{formatNumber(data.summary.out_of_stock_items)}</p>
                         </div>
                     </div>
@@ -124,19 +118,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Cəmi Gəlir</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.totalIncome')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatCurrency(data.summary.total_revenue)}</p>
                         </div>
                         <div className="bg-red-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-red-600">Cəmi Xərclər</h3>
+                            <h3 className="text-sm font-medium text-red-600">{t('summary.totalExpenses')}</h3>
                             <p className="text-2xl font-bold text-red-900">{formatCurrency(data.summary.total_expenses)}</p>
                         </div>
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Xalis Mənfəət</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.netProfit')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatCurrency(data.summary.net_profit)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Mənfəət Marjası</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.profitMargin')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{data.summary.profit_margin.toFixed(1)}%</p>
                         </div>
                     </div>
@@ -145,19 +139,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Cəmi Müştərilər</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.totalCustomers')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_customers)}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Aktiv Müştərilər</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.activeCustomers')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatNumber(data.summary.active_customers)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Ortalama Dəyər</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.averageValue')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{formatCurrency(data.summary.average_customer_value || 0)}</p>
                         </div>
                         <div className="bg-indigo-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-indigo-600">Ən Çox Alış-veriş</h3>
+                            <h3 className="text-sm font-medium text-indigo-600">{t('summary.topShopping')}</h3>
                             <p className="text-lg font-bold text-indigo-900">{data.summary.top_customer?.name || 'N/A'}</p>
                         </div>
                     </div>
@@ -166,19 +160,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Cəmi Servislər</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.totalServices')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_services)}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Tamamlanmış</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.completed')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatNumber(data.summary.completed_services)}</p>
                         </div>
                         <div className="bg-yellow-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-yellow-600">Gözləyən</h3>
+                            <h3 className="text-sm font-medium text-yellow-600">{t('summary.pending')}</h3>
                             <p className="text-2xl font-bold text-yellow-900">{formatNumber(data.summary.pending_services)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Ortalama Dəyər</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.averageValue')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{formatCurrency(data.summary.average_service_cost || 0)}</p>
                         </div>
                     </div>
@@ -187,19 +181,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Cəmi Kirayələr</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.totalRentals')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatNumber(data.summary.total_rentals)}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Aktiv Kirayələr</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.activeRentals')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatNumber(data.summary.active_rentals)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Cəmi Gəlir</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.rentalRevenue')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{formatCurrency(data.summary.total_rental_revenue || 0)}</p>
                         </div>
                         <div className="bg-yellow-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-yellow-600">Gecikmiş</h3>
+                            <h3 className="text-sm font-medium text-yellow-600">{t('summary.overdue')}</h3>
                             <p className="text-2xl font-bold text-yellow-900">{formatNumber(data.summary.overdue_rentals)}</p>
                         </div>
                     </div>
@@ -208,19 +202,19 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-green-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-green-600">Nağd Satış</h3>
+                            <h3 className="text-sm font-medium text-green-600">{t('summary.cashSales')}</h3>
                             <p className="text-2xl font-bold text-green-900">{formatCurrency(data.summary.total_cash_sales)}</p>
                         </div>
                         <div className="bg-red-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-red-600">Nağd Xərclər</h3>
+                            <h3 className="text-sm font-medium text-red-600">{t('summary.cashExpenses')}</h3>
                             <p className="text-2xl font-bold text-red-900">{formatCurrency(data.summary.total_cash_expenses)}</p>
                         </div>
                         <div className="bg-blue-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-blue-600">Xalis Nağd</h3>
+                            <h3 className="text-sm font-medium text-blue-600">{t('summary.netCash')}</h3>
                             <p className="text-2xl font-bold text-blue-900">{formatCurrency(data.summary.net_cash_flow)}</p>
                         </div>
                         <div className="bg-purple-50 rounded-lg p-6">
-                            <h3 className="text-sm font-medium text-purple-600">Əməliyyat Sayı</h3>
+                            <h3 className="text-sm font-medium text-purple-600">{t('summary.transactionCount')}</h3>
                             <p className="text-2xl font-bold text-purple-900">{formatNumber(data.summary.total_transactions)}</p>
                         </div>
                     </div>
@@ -258,7 +252,7 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`${getReportTitle(reportType)} - Hesabat`} />
+            <Head title={`${getReportTitle(reportType)} - ${t('view.title')}`} />
 
             <div className="py-6">
                 <div className="max-w-full mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -267,8 +261,8 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                         <div className="px-6 py-4 border-b border-gray-200">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
-                                    <Link 
-                                        href="/reports" 
+                                    <Link
+                                        href="/reports"
                                         className="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                                     >
                                         <ArrowLeftIcon className="h-5 w-5" />
@@ -286,14 +280,14 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                 <div className="flex space-x-3">
                                     <button className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                                         <PrinterIcon className="h-4 w-4 mr-2" />
-                                        Çap Et
+                                        {t('view.print')}
                                     </button>
                                     <a
                                         href={route('reports.download', reportId)}
                                         className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                                     >
                                         <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-                                        CSV Yüklə
+                                        {t('view.downloadCsv')}
                                     </a>
                                 </div>
                             </div>
@@ -307,7 +301,7 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                     {(reportType === 'end_of_day' || reportType === 'sales' || reportType === 'financial') && (
                         <div className="bg-white rounded-lg shadow">
                             <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-lg font-medium text-gray-900">Ödəmə Üsulları</h3>
+                                <h3 className="text-lg font-medium text-gray-900">{t('sections.paymentMethods')}</h3>
                             </div>
                             <div className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -315,17 +309,17 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                         Object.entries(data.summary.payment_methods).map(([method, methodData]: [string, any]) => (
                                             <div key={method} className="bg-gray-50 rounded-lg p-4">
                                                 <h4 className="text-sm font-medium text-gray-600 mb-2">
-                                                    {method === 'nağd' ? 'Nağd' : method === 'kart' ? 'Kart' : method === 'köçürmə' ? 'Köçürmə' : method}
+                                                    {t(`paymentMethods.${method}`, { defaultValue: method })}
                                                 </h4>
                                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(methodData.total)}</p>
-                                                <p className="text-sm text-gray-600">{methodData.count} əməliyyat</p>
+                                                <p className="text-sm text-gray-600">{methodData.count} {t('table.transactions')}</p>
                                             </div>
                                         ))
                                     ) : reportType === 'financial' && data.summary.revenue_by_payment_method ? (
                                         Object.entries(data.summary.revenue_by_payment_method).map(([method, amount]: [string, any]) => (
                                             <div key={method} className="bg-gray-50 rounded-lg p-4">
                                                 <h4 className="text-sm font-medium text-gray-600 mb-2">
-                                                    {method === 'nağd' ? 'Nağd' : method === 'kart' ? 'Kart' : method === 'köçürmə' ? 'Köçürmə' : method}
+                                                    {t(`paymentMethods.${method}`, { defaultValue: method })}
                                                 </h4>
                                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(amount)}</p>
                                             </div>
@@ -334,7 +328,7 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                         Object.entries(data.summary.payment_methods || {}).map(([method, amount]: [string, any]) => (
                                             <div key={method} className="bg-gray-50 rounded-lg p-4">
                                                 <h4 className="text-sm font-medium text-gray-600 mb-2">
-                                                    {method === 'nağd' ? 'Nağd' : method === 'kart' ? 'Kart' : method === 'köçürmə' ? 'Köçürmə' : method}
+                                                    {t(`paymentMethods.${method}`, { defaultValue: method })}
                                                 </h4>
                                                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(amount)}</p>
                                             </div>
@@ -353,16 +347,16 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                             {data.hourly_breakdown && data.hourly_breakdown.length > 0 && (
                                 <div className="bg-white rounded-lg shadow">
                                     <div className="px-6 py-4 border-b border-gray-200">
-                                        <h3 className="text-lg font-medium text-gray-900">Saatlıq Satışlar</h3>
+                                        <h3 className="text-lg font-medium text-gray-900">{t('sections.hourlySales')}</h3>
                                     </div>
                                     <div className="p-6">
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full divide-y divide-gray-200">
                                                 <thead>
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saat</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satış Sayı</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gəlir</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.hour')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.salesCount')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.revenue')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-200">
@@ -384,17 +378,17 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                             {data.employee_sales && data.employee_sales.length > 0 && (
                                 <div className="bg-white rounded-lg shadow">
                                     <div className="px-6 py-4 border-b border-gray-200">
-                                        <h3 className="text-lg font-medium text-gray-900">İşçi Satış Məlumatları</h3>
+                                        <h3 className="text-lg font-medium text-gray-900">{t('sections.employeeSalesData')}</h3>
                                     </div>
                                     <div className="p-6">
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full divide-y divide-gray-200">
                                                 <thead>
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşçi Adı</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satış Sayı</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gəlir</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satılan Məhsul</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.employeeName')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.salesCount')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.revenue')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.soldProducts')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-200">
@@ -417,17 +411,17 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                             {data.top_products && data.top_products.length > 0 && (
                                 <div className="bg-white rounded-lg shadow">
                                     <div className="px-6 py-4 border-b border-gray-200">
-                                        <h3 className="text-lg font-medium text-gray-900">Çox Satılan Məhsullar</h3>
+                                        <h3 className="text-lg font-medium text-gray-900">{t('sections.topProducts')}</h3>
                                     </div>
                                     <div className="p-6">
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full divide-y divide-gray-200">
                                                 <thead>
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Məhsul Adı</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Miqdar</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gəlir</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.productName')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.sku')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.quantity')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.revenue')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-200">
@@ -450,18 +444,18 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                             {reportType === 'cash_drawer' && data.daily_breakdown && data.daily_breakdown.length > 0 && (
                                 <div className="bg-white rounded-lg shadow">
                                     <div className="px-6 py-4 border-b border-gray-200">
-                                        <h3 className="text-lg font-medium text-gray-900">Günlük Kassa Hesabatı</h3>
+                                        <h3 className="text-lg font-medium text-gray-900">{t('sections.dailyCashReport')}</h3>
                                     </div>
                                     <div className="p-6">
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full divide-y divide-gray-200">
                                                 <thead>
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarix</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nağd Satış</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nağd Xərc</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Xalis Nağd</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Əməliyyat</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.date')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.cashSales')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.cashExpenses')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.netCash')}</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('table.operations')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-200">
@@ -485,7 +479,7 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                         /* Data Table for other report types */
                         <div className="bg-white rounded-lg shadow">
                             <div className="px-6 py-4 border-b border-gray-200">
-                                <h3 className="text-lg font-medium text-gray-900">Təfərrüatlı Məlumatlar</h3>
+                                <h3 className="text-lg font-medium text-gray-900">{t('view.detailedData')}</h3>
                             </div>
 
                             {tableData.length > 0 ? (
@@ -506,16 +500,14 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                     hideFilters={true}
                                     hidePerPageSelect={true}
                                     className="border-none shadow-none"
-                                mobileClickable={true}
-
-                                hideMobileActions={true}
-
+                                    mobileClickable={true}
+                                    hideMobileActions={true}
                                 />
                             ) : (
                                 <div className="p-6 text-center py-8">
                                     <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900">Məlumat yoxdur</h3>
-                                    <p className="mt-1 text-sm text-gray-500">Bu hesabat növü üçün məlumat tapılmadı.</p>
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">{t('view.noData')}</h3>
+                                    <p className="mt-1 text-sm text-gray-500">{t('view.noDataDescription')}</p>
                                 </div>
                             )}
                         </div>

@@ -1,0 +1,66 @@
+{
+  "title": "Online Orders",
+  "subtitle": "Manage orders from online channels",
+  "create": "New Order",
+  "noOrders": "No orders found",
+  "searchPlaceholder": "Search orders...",
+
+  "status": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "ready": "Ready for Pickup",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled"
+  },
+
+  "form": {
+    "orderInfo": "Order Information",
+    "orderNumber": "Order Number",
+    "customer": "Customer",
+    "orderDate": "Order Date",
+    "deliveryMethod": "Delivery Method",
+    "deliveryAddress": "Delivery Address",
+    "items": "Order Items",
+    "status": "Status",
+    "notes": "Notes"
+  },
+
+  "show": {
+    "title": "Order Details",
+    "orderNumber": "Order #",
+    "back": "Back to Orders",
+    "edit": "Edit",
+    "print": "Print",
+    "updateStatus": "Update Status",
+
+    "customerInfo": "Customer Information",
+    "orderInfo": "Order Information",
+    "items": "Order Items",
+    "totals": "Order Totals",
+    "timeline": "Order Timeline"
+  },
+
+  "actions": {
+    "markReady": "Mark as Ready",
+    "markShipped": "Mark as Shipped",
+    "markDelivered": "Mark as Delivered",
+    "cancel": "Cancel Order"
+  },
+
+  "messages": {
+    "updateSuccess": "Order updated successfully",
+    "cancelSuccess": "Order cancelled successfully",
+    "confirmCancel": "Are you sure you want to cancel this order?"
+  },
+
+  "table": {
+    "orderNumber": "Order #",
+    "customer": "Customer",
+    "orderDate": "Date",
+    "items": "Items",
+    "total": "Total",
+    "status": "Status",
+    "actions": "Actions"
+  }
+}

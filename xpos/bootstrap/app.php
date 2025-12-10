@@ -157,6 +157,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\SecurityHeaders::class,  // Security: Add security headers to all responses
+            \App\Http\Middleware\SetLocale::class,  // Set application locale based on user preference
+        ]);
+
+        $middleware->api(append: [
+            \App\Http\Middleware\SetLocale::class,  // Set application locale for API requests
         ]);
 
         $middleware->alias([

@@ -1,0 +1,80 @@
+{
+  "title": "Integrations",
+  "subtitle": "Manage third-party integrations and connections",
+  "smsTitle": "SMS Integration",
+  "smsSubtitle": "Configure SMS notifications and messaging",
+  "telegramTitle": "Telegram Integration",
+  "telegramSubtitle": "Connect Telegram bot for notifications",
+
+  "sms": {
+    "title": "SMS Settings",
+    "provider": "SMS Provider",
+    "selectProvider": "Select provider...",
+    "apiKey": "API Key",
+    "apiSecret": "API Secret",
+    "senderName": "Sender Name",
+    "testMode": "Test Mode",
+    "enabled": "SMS Enabled",
+
+    "notifications": "SMS Notifications",
+    "orderConfirmation": "Order Confirmation",
+    "paymentReceived": "Payment Received",
+    "rentalReminder": "Rental Reminder",
+    "serviceReady": "Service Ready",
+    "lowStock": "Low Stock Alert",
+
+    "sendSms": "Send SMS",
+    "sendTestSms": "Send Test SMS",
+    "recipient": "Recipient",
+    "message": "Message",
+    "sending": "Sending...",
+    "sendSuccess": "SMS sent successfully",
+    "sendError": "Error sending SMS",
+
+    "logs": {
+      "title": "SMS Logs",
+      "recipient": "Recipient",
+      "message": "Message",
+      "status": "Status",
+      "sentAt": "Sent At",
+      "cost": "Cost",
+      "noLogs": "No SMS logs"
+    }
+  },
+
+  "telegram": {
+    "title": "Telegram Settings",
+    "botToken": "Bot Token",
+    "chatId": "Chat ID",
+    "enabled": "Telegram Enabled",
+    "testConnection": "Test Connection",
+    "connectionSuccess": "Connection successful",
+    "connectionError": "Connection failed",
+
+    "notifications": "Telegram Notifications",
+    "newOrder": "New Order",
+    "lowStock": "Low Stock",
+    "dailyReport": "Daily Report"
+  },
+
+  "status": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "error": "Error"
+  },
+
+  "actions": {
+    "save": "Save Settings",
+    "saving": "Saving...",
+    "test": "Test Connection",
+    "disconnect": "Disconnect",
+    "connect": "Connect"
+  },
+
+  "messages": {
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Error saving settings",
+    "testSuccess": "Test successful",
+    "testError": "Test failed"
+  }
+}

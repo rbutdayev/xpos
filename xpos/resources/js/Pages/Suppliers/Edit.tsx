@@ -6,12 +6,14 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     supplier: Supplier;
 }
 
 export default function Edit({ supplier }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
     const { data, setData, put, processing, errors, reset } = useForm<SupplierFormData>({
         name: supplier.name || '',
         contact_person: supplier.contact_person || '',
@@ -33,7 +35,7 @@ export default function Edit({ supplier }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Düzəlt - ${supplier.name}`} />
+            <Head title={t('editSupplierTitle', { name: supplier.name })} />
 
             <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -48,7 +50,7 @@ export default function Edit({ supplier }: Props) {
                                 </Link>
                                 <div>
                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                        Təchizatçını Düzəlt
+                                        {t('editSupplier')}
                                     </h2>
                                     <p className="text-gray-600">{supplier.name}</p>
                                 </div>
@@ -59,11 +61,11 @@ export default function Edit({ supplier }: Props) {
                             {/* Basic Information */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Əsas Məlumatlar
+                                    {t('sections.basicInfo')}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2">
-                                        <InputLabel htmlFor="name" value="Təchizatçı Adı *" />
+                                        <InputLabel htmlFor="name" value={t('fields.supplierName')} />
                                         <TextInput
                                             id="name"
                                             type="text"
@@ -77,7 +79,7 @@ export default function Edit({ supplier }: Props) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="contact_person" value="Əlaqə Şəxsi" />
+                                        <InputLabel htmlFor="contact_person" value={t('fields.contactPerson')} />
                                         <TextInput
                                             id="contact_person"
                                             type="text"
@@ -90,21 +92,21 @@ export default function Edit({ supplier }: Props) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="phone" value="Telefon" />
+                                        <InputLabel htmlFor="phone" value={t('fields.phone')} />
                                         <TextInput
                                             id="phone"
                                             type="tel"
                                             name="phone"
                                             value={data.phone}
                                             className="mt-1 block w-full"
-                                            placeholder="+994 XX XXX XX XX"
+                                            placeholder={t('placeholders.phone')}
                                             onChange={(e) => setData('phone', e.target.value)}
                                         />
                                         <InputError message={errors.phone} className="mt-2" />
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="email" value="E-poçt" />
+                                        <InputLabel htmlFor="email" value={t('fields.email')} />
                                         <TextInput
                                             id="email"
                                             type="email"
@@ -117,7 +119,7 @@ export default function Edit({ supplier }: Props) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="tax_number" value="Vergi Nömrəsi" />
+                                        <InputLabel htmlFor="tax_number" value={t('fields.taxNumber')} />
                                         <TextInput
                                             id="tax_number"
                                             type="text"
@@ -130,7 +132,7 @@ export default function Edit({ supplier }: Props) {
                                     </div>
 
                                     <div className="md:col-span-2">
-                                        <InputLabel htmlFor="address" value="Ünvan" />
+                                        <InputLabel htmlFor="address" value={t('fields.address')} />
                                         <textarea
                                             id="address"
                                             name="address"
@@ -147,11 +149,11 @@ export default function Edit({ supplier }: Props) {
                             {/* Bank Information */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Bank Məlumatları
+                                    {t('sections.bankInfo')}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <InputLabel htmlFor="bank_name" value="Bank Adı" />
+                                        <InputLabel htmlFor="bank_name" value={t('fields.bankName')} />
                                         <TextInput
                                             id="bank_name"
                                             type="text"
@@ -164,7 +166,7 @@ export default function Edit({ supplier }: Props) {
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="bank_account" value="Hesab Nömrəsi" />
+                                        <InputLabel htmlFor="bank_account" value={t('fields.accountNumber')} />
                                         <TextInput
                                             id="bank_account"
                                             type="text"
@@ -181,11 +183,11 @@ export default function Edit({ supplier }: Props) {
                             {/* Payment Terms */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Ödəniş Şərtləri
+                                    {t('sections.paymentTerms')}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <InputLabel htmlFor="payment_terms_days" value="Ödəniş Müddəti (gün)" />
+                                        <InputLabel htmlFor="payment_terms_days" value={t('fields.paymentTerms')} />
                                         <TextInput
                                             id="payment_terms_days"
                                             type="number"
@@ -198,7 +200,7 @@ export default function Edit({ supplier }: Props) {
                                         />
                                         <InputError message={errors.payment_terms_days} className="mt-2" />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            0 = nağd ödəniş, digər rəqəmlər kredit günləri
+                                            {t('placeholders.paymentTermsHint')}
                                         </p>
                                     </div>
                                 </div>
@@ -207,10 +209,10 @@ export default function Edit({ supplier }: Props) {
                             {/* Notes */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Əlavə Məlumatlar
+                                    {t('sections.additionalInfo')}
                                 </h3>
                                 <div>
-                                    <InputLabel htmlFor="notes" value="Qeydlər" />
+                                    <InputLabel htmlFor="notes" value={t('fields.notes')} />
                                     <textarea
                                         id="notes"
                                         name="notes"
@@ -218,7 +220,7 @@ export default function Edit({ supplier }: Props) {
                                         onChange={(e) => setData('notes', e.target.value)}
                                         rows={4}
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                        placeholder="Təchizatçı haqqında əlavə qeydlər..."
+                                        placeholder={t('placeholders.notes')}
                                     />
                                     <InputError message={errors.notes} className="mt-2" />
                                 </div>
@@ -227,7 +229,7 @@ export default function Edit({ supplier }: Props) {
                             {/* Status */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Status
+                                    {t('fields.status')}
                                 </h3>
                                 <label className="flex items-center">
                                     <input
@@ -237,7 +239,7 @@ export default function Edit({ supplier }: Props) {
                                         className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                     />
                                     <span className="ml-2 text-sm text-gray-600">
-                                        Təchizatçı aktiv
+                                        {t('status.supplierActive')}
                                     </span>
                                 </label>
                             </div>
@@ -248,10 +250,10 @@ export default function Edit({ supplier }: Props) {
                                     href={route('suppliers.show', supplier.id)}
                                     className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
-                                    Ləğv et
+                                    {t('actions.cancel', { ns: 'common' })}
                                 </Link>
                                 <PrimaryButton className="ml-4" disabled={processing}>
-                                    {processing ? 'Yadda saxlanır...' : 'Dəyişiklikləri Yadda Saxla'}
+                                    {processing ? t('actions.saving') : t('actions.saveChanges')}
                                 </PrimaryButton>
                             </div>
                         </form>

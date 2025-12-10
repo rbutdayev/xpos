@@ -9,8 +9,10 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 export default function Create() {
+    const { t } = useTranslation('customers');
     const { data, setData, post, processing, errors, reset } = useForm<CustomerFormData>({
         name: '',
         phone: '',
@@ -60,7 +62,7 @@ export default function Create() {
             setCardValidation({
                 isValidating: false,
                 isValid: false,
-                message: error.response?.data?.message || 'Kart yoxlanılarkən xəta baş verdi',
+                message: error.response?.data?.message || t('messages.cardError'),
             });
         }
     };
@@ -69,7 +71,7 @@ export default function Create() {
         e.preventDefault();
         post('/customers', {
             onSuccess: () => {
-                toast.success('Müştəri uğurla yaradıldı');
+                toast.success(t('messages.created'));
             },
             onError: (errs) => {
                 // Show toast notifications for all errors
@@ -86,7 +88,7 @@ export default function Create() {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Yeni Müştəri" />
+            <Head title={t('newCustomer')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
@@ -94,7 +96,7 @@ export default function Create() {
                         <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Customer Name */}
                             <div>
-                                <InputLabel htmlFor="name" value="Müştəri adı *" />
+                                <InputLabel htmlFor="name" value={t('fields.name')} />
                                 <TextInput
                                     id="name"
                                     type="text"
@@ -110,7 +112,7 @@ export default function Create() {
 
                             {/* Customer Type */}
                             <div>
-                                <InputLabel htmlFor="customer_type" value="Müştəri növü *" />
+                                <InputLabel htmlFor="customer_type" value={t('fields.customerType')} />
                                 <select
                                     id="customer_type"
                                     name="customer_type"
@@ -118,15 +120,15 @@ export default function Create() {
                                     onChange={(e) => setData('customer_type', e.target.value as 'individual' | 'corporate')}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <option value="individual">Fiziki şəxs</option>
-                                    <option value="corporate">Hüquqi şəxs</option>
+                                    <option value="individual">{t('types.individual')}</option>
+                                    <option value="corporate">{t('types.corporate')}</option>
                                 </select>
                                 <InputError message={errors.customer_type} className="mt-2" />
                             </div>
 
                             {/* Phone */}
                             <div>
-                                <InputLabel htmlFor="phone" value="Telefon" />
+                                <InputLabel htmlFor="phone" value={t('fields.phone')} />
                                 <div className="mt-1 flex rounded-md shadow-sm">
                                     <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                                         +994
@@ -137,7 +139,7 @@ export default function Create() {
                                         name="phone"
                                         value={data.phone.startsWith('+994') ? data.phone.slice(4) : data.phone}
                                         className="flex-1 block w-full rounded-l-none"
-                                        placeholder="501234567"
+                                        placeholder={t('placeholders.phone')}
                                         onChange={(e) => {
                                             const value = e.target.value.replace(/\D/g, '');
                                             setData('phone', value ? `+994${value}` : '');
@@ -146,13 +148,13 @@ export default function Create() {
                                 </div>
                                 <InputError message={errors.phone} className="mt-2" />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Məsələn: 501234567 (9 rəqəm)
+                                    {t('placeholders.phoneExample')}
                                 </p>
                             </div>
 
                             {/* Email */}
                             <div>
-                                <InputLabel htmlFor="email" value="E-poçt" />
+                                <InputLabel htmlFor="email" value={t('fields.email')} />
                                 <TextInput
                                     id="email"
                                     type="email"
@@ -168,7 +170,7 @@ export default function Create() {
                             {/* Birthday (only for individual) */}
                             {data.customer_type === 'individual' && (
                                 <div>
-                                    <InputLabel htmlFor="birthday" value="Doğum tarixi" />
+                                    <InputLabel htmlFor="birthday" value={t('fields.birthday')} />
                                     <TextInput
                                         id="birthday"
                                         type="date"
@@ -184,14 +186,14 @@ export default function Create() {
                             {/* Tax Number (only for corporate) */}
                             {data.customer_type === 'corporate' && (
                                 <div>
-                                    <InputLabel htmlFor="tax_number" value="VÖEN" />
+                                    <InputLabel htmlFor="tax_number" value={t('fields.taxNumber')} />
                                     <TextInput
                                         id="tax_number"
                                         type="text"
                                         name="tax_number"
                                         value={data.tax_number}
                                         className="mt-1 block w-full"
-                                        placeholder="1234567890"
+                                        placeholder={t('placeholders.taxNumber')}
                                         onChange={(e) => setData('tax_number', e.target.value)}
                                     />
                                     <InputError message={errors.tax_number} className="mt-2" />
@@ -200,7 +202,7 @@ export default function Create() {
 
                             {/* Address */}
                             <div>
-                                <InputLabel htmlFor="address" value="Ünvan" />
+                                <InputLabel htmlFor="address" value={t('fields.address')} />
                                 <textarea
                                     id="address"
                                     name="address"
@@ -208,14 +210,14 @@ export default function Create() {
                                     onChange={(e) => setData('address', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Müştərinin ünvanı..."
+                                    placeholder={t('placeholders.address')}
                                 />
                                 <InputError message={errors.address} className="mt-2" />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('fields.notes')} />
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -223,14 +225,14 @@ export default function Create() {
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Əlavə məlumatlar..."
+                                    placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
 
                             {/* Loyalty Card */}
                             <div>
-                                <InputLabel htmlFor="card_number" value="Loaylıq Kartı" />
+                                <InputLabel htmlFor="card_number" value={t('fields.loyaltyCard')} />
                                 <div className="mt-1">
                                     <TextInput
                                         id="card_number"
@@ -238,7 +240,7 @@ export default function Create() {
                                         name="card_number"
                                         value={data.card_number}
                                         className="block w-full uppercase"
-                                        placeholder="14 simvollu kart nömrəsi"
+                                        placeholder={t('placeholders.cardNumber')}
                                         maxLength={14}
                                         onChange={(e) => setData('card_number', e.target.value.toUpperCase())}
                                     />
@@ -248,7 +250,7 @@ export default function Create() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Yoxlanılır...
+                                            {t('messages.validating')}
                                         </div>
                                     )}
                                     {cardValidation.isValid === true && (
@@ -270,7 +272,7 @@ export default function Create() {
                                 </div>
                                 <InputError message={errors.card_number} className="mt-2" />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    İstəyə bağlı. Fiziki loaylıq kartının nömrəsini daxil edin.
+                                    {t('info.cardOptional')}
                                 </p>
                             </div>
 
@@ -285,7 +287,7 @@ export default function Create() {
                                         onChange={(e) => setData('is_active', e.target.checked)}
                                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                     />
-                                    <InputLabel htmlFor="is_active" value="Aktiv müştəri" className="ml-2" />
+                                    <InputLabel htmlFor="is_active" value={t('fields.activeCustomer')} className="ml-2" />
                                 </div>
                                 <InputError message={errors.is_active} className="mt-2" />
                             </div>
@@ -293,15 +295,15 @@ export default function Create() {
                             {/* Action Buttons */}
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
                                 <SecondaryButton type="button" onClick={() => reset()} className="w-full sm:w-auto">
-                                    Sıfırla
+                                    {t('actions.reset')}
                                 </SecondaryButton>
                                 <Link href="/customers" className="w-full sm:w-auto">
                                     <SecondaryButton type="button" className="w-full sm:w-auto">
-                                        Ləğv et
+                                        {t('actions.cancel')}
                                     </SecondaryButton>
                                 </Link>
                                 <PrimaryButton disabled={processing} className="w-full sm:w-auto">
-                                    {processing ? 'Yadda saxlanır...' : 'Yadda saxla'}
+                                    {processing ? t('actions.saving') : t('actions.save')}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -309,12 +311,12 @@ export default function Create() {
 
                     {/* Help Text */}
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-blue-900 mb-2">Məlumat</h3>
+                        <h3 className="text-sm font-medium text-blue-900 mb-2">{t('info.title')}</h3>
                         <ul className="text-sm text-blue-700 space-y-1">
-                            <li>• Müştəri adı və növü mütləq sahələrdir</li>
-                            <li>• Telefon nömrəsini beynəlxalq formatda daxil edin (+994...)</li>
-                            <li>• Hüquqi şəxslər üçün VÖEN məcburidir</li>
-                            <li>• Müştəri yaradıldıqdan sonra ona nəqliyyat vasitələri əlavə edə bilərsiniz</li>
+                            <li>• {t('info.nameRequired')}</li>
+                            <li>• {t('info.phoneFormat')}</li>
+                            <li>• {t('info.taxRequired')}</li>
+                            <li>• {t('info.vehiclesAfterCreate')}</li>
                         </ul>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 import FilterDropdown from './FilterDropdown';
 
 export interface FilterOption {
@@ -33,7 +34,7 @@ interface SearchFiltersProps {
 export default function SearchFilters({
     searchValue,
     onSearchChange,
-    searchPlaceholder = "Axtar...",
+    searchPlaceholder,
     filters = [],
     onSearch,
     onReset,
@@ -41,6 +42,8 @@ export default function SearchFilters({
     className = "",
     children
 }: SearchFiltersProps) {
+    const { t } = useTranslation();
+    const defaultSearchPlaceholder = searchPlaceholder || t('actions.search');
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             onSearch();
@@ -63,7 +66,7 @@ export default function SearchFilters({
                                         value={searchValue}
                                         onChange={(e) => onSearchChange(e.target.value)}
                                         onKeyDown={handleKeyDown}
-                                        placeholder={searchPlaceholder}
+                                        placeholder={defaultSearchPlaceholder}
                                         className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     />
                                 </div>
@@ -118,13 +121,13 @@ export default function SearchFilters({
                                 onClick={onSearch}
                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                Axtar
+                                {t('actions.search')}
                             </button>
                             <button
                                 onClick={onReset}
                                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                             >
-                                Sıfırla
+                                {t('actions.reset')}
                             </button>
                         </div>
                     </div>
@@ -135,7 +138,7 @@ export default function SearchFilters({
             {totalResults !== undefined && (
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div className="p-4 text-sm text-gray-600">
-                        {totalResults} nəticə tapıldı
+                        {t('messages.resultsFound', { count: totalResults })}
                     </div>
                 </div>
             )}

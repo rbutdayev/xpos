@@ -8,6 +8,7 @@ import PayGoodsReceiptModal from '@/Components/Modals/PayGoodsReceiptModal';
 import { GoodsReceipt, PageProps } from '@/types';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     receipts: {
@@ -40,6 +41,7 @@ interface Props {
 }
 
 export default function Index({ receipts, warehouses, suppliers, categories, branches, paymentMethods, filters, flash, errors }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
     const [search, setSearch] = useState(filters.search || '');
     const [warehouseId, setWarehouseId] = useState(filters.warehouse_id || '');
     const [supplierId, setSupplierId] = useState(filters.supplier_id || '');
@@ -60,11 +62,11 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
     };
 
     const handleDelete = (receipt: GoodsReceipt) => {
-        const confirmMessage = 'Bu qəbulu silmək istədiyinizdən əminsiniz?';
+        const confirmMessage = t('goodsReceipts.deleteConfirm');
         if (confirm(confirmMessage)) {
             router.delete(route('goods-receipts.destroy', receipt.id), {
                 onSuccess: () => {
-                    toast.success('Mal qəbulu uğurla silindi');
+                    toast.success(t('goodsReceipts.deleteSuccess'));
                 },
                 onError: (errors) => {
                     // Display all error messages as toasts
@@ -99,21 +101,21 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
         {
             key: 'warehouse_id',
             type: 'dropdown' as const,
-            label: 'Anbar',
+            label: t('filters.warehouse'),
             value: warehouseId,
             onChange: setWarehouseId,
-            options: [{ value: '', label: 'Bütün anbarlar' }, ...warehouses.map(w => ({ value: String(w.id), label: w.name }))]
+            options: [{ value: '', label: t('filters.allWarehouses') }, ...warehouses.map(w => ({ value: String(w.id), label: w.name }))]
         },
         {
             key: 'supplier_id',
             type: 'dropdown' as const,
-            label: 'Təchizatçı',
+            label: t('filters.supplier'),
             value: supplierId,
             onChange: setSupplierId,
-            options: [{ value: '', label: 'Bütün təchizatçılar' }, ...suppliers.map(s => ({ value: String(s.id), label: s.name }))]
+            options: [{ value: '', label: t('filters.allSuppliers') }, ...suppliers.map(s => ({ value: String(s.id), label: s.name }))]
         },
-        { key: 'date_from', type: 'date' as const, label: 'Başlanğıc', value: dateFrom, onChange: setDateFrom },
-        { key: 'date_to', type: 'date' as const, label: 'Son', value: dateTo, onChange: setDateTo }
+        { key: 'date_from', type: 'date' as const, label: t('filters.startDate'), value: dateFrom, onChange: setDateFrom },
+        { key: 'date_to', type: 'date' as const, label: t('filters.endDate'), value: dateTo, onChange: setDateTo }
     ];
 
     useEffect(() => {
@@ -128,12 +130,14 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
         if (action.label === 'Ödə') {
             return {
                 ...action,
+                label: t('goodsReceipts.pay'),
                 onClick: handlePayClick
             };
         }
         if (action.label === 'Sil') {
             return {
                 ...action,
+                label: t('actions.delete', { ns: 'common' }),
                 onClick: handleDelete
             };
         }
@@ -142,7 +146,7 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
 
     return (
         <AuthenticatedLayout>
-            <Head title="Mal Qəbulları" />
+            <Head title={t('goodsReceipts.title')} />
             <div className="w-full min-h-screen bg-gray-50 -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                 <div className="w-full max-w-full overflow-hidden">
                     {/* Flash Messages */}
@@ -173,7 +177,7 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                     )}
 
                     <SharedDataTable
-                        title="Mal Qəbulları"
+                        title={t('goodsReceipts.title')}
                         data={receipts}
                         columns={goodsReceiptsTableConfig.columns}
                         actions={tableActions}
@@ -183,7 +187,7 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                         filters={filtersUI}
                         onSearch={handleSearch}
                         onReset={handleReset}
-                        createButton={{ label: 'Yeni Mal Qəbulu', href: route('goods-receipts.create') }}
+                        createButton={{ label: t('goodsReceipts.newReceipt'), href: route('goods-receipts.create') }}
                         dense={true}
                         fullWidth={true}
 

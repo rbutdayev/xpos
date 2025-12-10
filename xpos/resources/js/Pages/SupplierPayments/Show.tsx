@@ -1,6 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { CurrencyDollarIcon, CalendarIcon, BuildingOfficeIcon, CreditCardIcon } from '@heroicons/react/24/outline';
+import { useTranslations } from '@/Hooks/useTranslations';
 
 interface SupplierPayment {
     id: number;
@@ -26,6 +28,9 @@ interface Props {
 }
 
 export default function Show({ payment: supplier_payment }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
+    const { translatePaymentMethod } = useTranslations();
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('az-AZ', {
             style: 'currency',
@@ -45,15 +50,6 @@ export default function Show({ payment: supplier_payment }: Props) {
         return new Date(dateString).toLocaleString('az-AZ');
     };
 
-    const getPaymentMethodLabel = (method: string) => {
-        const methods: { [key: string]: string } = {
-            'nağd': 'Nağd',
-            'köçürmə': 'Köçürmə',
-            'kart': 'Kart',
-        };
-        return methods[method] || method;
-    };
-
     const getPaymentMethodIcon = (method: string) => {
         switch (method) {
             case 'nağd':
@@ -70,7 +66,7 @@ export default function Show({ payment: supplier_payment }: Props) {
     return (
         <AuthenticatedLayout
         >
-            <Head title={`Ödəniş - ${supplier_payment.supplier.name}`} />
+            <Head title={`${t('payments.paymentDetails')} - ${supplier_payment.supplier.name}`} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
@@ -100,7 +96,7 @@ export default function Show({ payment: supplier_payment }: Props) {
                                     <div className="flex items-center">
                                         {getPaymentMethodIcon(supplier_payment.payment_method)}
                                         <span className="ml-1">
-                                            {getPaymentMethodLabel(supplier_payment.payment_method)}
+                                            {translatePaymentMethod(supplier_payment.payment_method)}
                                         </span>
                                     </div>
                                 </div>
@@ -111,34 +107,34 @@ export default function Show({ payment: supplier_payment }: Props) {
                                 {/* Payment Information */}
                                 <div className="space-y-4">
                                     <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                                        Ödəniş Məlumatları
+                                        {t('payments.paymentInfo')}
                                     </h4>
-                                    
+
                                     <div>
-                                        <dt className="text-sm font-medium text-gray-500">Məbləğ</dt>
+                                        <dt className="text-sm font-medium text-gray-500">{t('payments.fields.amount')}</dt>
                                         <dd className="mt-1 text-2xl font-bold text-green-600">
                                             {formatCurrency(supplier_payment.amount)}
                                         </dd>
                                     </div>
 
                                     <div>
-                                        <dt className="text-sm font-medium text-gray-500">Ödəniş tarixi</dt>
+                                        <dt className="text-sm font-medium text-gray-500">{t('payments.fields.paymentDate')}</dt>
                                         <dd className="mt-1 text-sm text-gray-900">{formatDate(supplier_payment.payment_date)}</dd>
                                     </div>
 
                                     <div>
-                                        <dt className="text-sm font-medium text-gray-500">Ödəniş üsulu</dt>
+                                        <dt className="text-sm font-medium text-gray-500">{t('payments.fields.paymentMethod')}</dt>
                                         <dd className="mt-1 flex items-center">
                                             {getPaymentMethodIcon(supplier_payment.payment_method)}
                                             <span className="ml-2 text-sm text-gray-900">
-                                                {getPaymentMethodLabel(supplier_payment.payment_method)}
+                                                {translatePaymentMethod(supplier_payment.payment_method)}
                                             </span>
                                         </dd>
                                     </div>
 
                                     {supplier_payment.reference_number && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">Əməliyyat nömrəsi</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('payments.fields.referenceNumber')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900 font-mono">
                                                 {supplier_payment.reference_number}
                                             </dd>
@@ -147,7 +143,7 @@ export default function Show({ payment: supplier_payment }: Props) {
 
                                     {supplier_payment.invoice_number && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">İnvoys nömrəsi</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('payments.fields.invoiceNumber')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900 font-mono">
                                                 {supplier_payment.invoice_number}
                                             </dd>
@@ -158,38 +154,38 @@ export default function Show({ payment: supplier_payment }: Props) {
                                 {/* Supplier Information */}
                                 <div className="space-y-4">
                                     <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">
-                                        Təchizatçı Məlumatları
+                                        {t('sections.contactInfo')}
                                     </h4>
 
                                     <div>
-                                        <dt className="text-sm font-medium text-gray-500">Təchizatçı adı</dt>
+                                        <dt className="text-sm font-medium text-gray-500">{t('fields.supplierName')}</dt>
                                         <dd className="mt-1 text-sm text-gray-900">{supplier_payment.supplier.name}</dd>
                                     </div>
 
                                     {supplier_payment.supplier.company && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">Şirkət adı</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('fields.companyName')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900">{supplier_payment.supplier.company}</dd>
                                         </div>
                                     )}
 
                                     {supplier_payment.supplier.phone && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">Telefon</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('fields.phone')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900">{supplier_payment.supplier.phone}</dd>
                                         </div>
                                     )}
 
                                     {supplier_payment.supplier.email && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">Email</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('fields.email')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900">{supplier_payment.supplier.email}</dd>
                                         </div>
                                     )}
 
                                     {supplier_payment.notes && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">Qeydlər</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('payments.fields.notes')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
                                                 {supplier_payment.notes}
                                             </dd>
@@ -200,14 +196,14 @@ export default function Show({ payment: supplier_payment }: Props) {
 
                             {/* System Information */}
                             <div className="border-t pt-6">
-                                <h4 className="text-lg font-semibold text-gray-900 mb-4">Sistem Məlumatları</h4>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4">{t('sections.systemInfo')}</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                                     <div>
-                                        <dt className="font-medium">Yaradılma tarixi</dt>
+                                        <dt className="font-medium">{t('labels.createdAt')}</dt>
                                         <dd>{formatDateTime(supplier_payment.created_at)}</dd>
                                     </div>
                                     <div>
-                                        <dt className="font-medium">Son yeniləmə</dt>
+                                        <dt className="font-medium">{t('labels.lastModified')}</dt>
                                         <dd>{formatDateTime(supplier_payment.updated_at)}</dd>
                                     </div>
                                 </div>

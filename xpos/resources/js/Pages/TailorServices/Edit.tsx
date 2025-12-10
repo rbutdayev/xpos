@@ -8,6 +8,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { PageProps } from '@/types';
 import { getServiceConfig, getCurrentServiceType, routeParamToServiceType, serviceTypeToRouteParam } from '@/config/serviceTypes';
+import { useTranslations } from '@/Hooks/useTranslations';
 
 interface TailorService {
     id: number;
@@ -55,6 +56,7 @@ interface ServiceItem {
 }
 
 export default function Edit({ service, customers, customerItems, employees, products, branches, serviceType }: Props) {
+    const { translatePaymentMethod } = useTranslations();
     // Get service type from props or determine from URL/localStorage
     const currentServiceType = serviceType
         ? routeParamToServiceType(serviceType)
@@ -523,7 +525,7 @@ export default function Edit({ service, customers, customerItems, employees, pro
                                                 <InputError message={errors.paid_amount} className="mt-2" />
                                                 {data.payment_status === 'paid' && (
                                                     <p className="text-xs text-gray-500 mt-1">
-                                                        Tam ödəniş - məbləğ avtomatik hesablanır (Nağd)
+                                                        Tam ödəniş - məbləğ avtomatik hesablanır ({translatePaymentMethod('cash')})
                                                     </p>
                                                 )}
                                             </div>

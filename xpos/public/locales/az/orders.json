@@ -1,0 +1,66 @@
+{
+  "title": "Onlayn Sifarişlər",
+  "subtitle": "Onlayn kanallardan sifarişləri idarə edin",
+  "create": "Yeni Sifariş",
+  "noOrders": "Sifariş tapılmadı",
+  "searchPlaceholder": "Sifariş axtar...",
+
+  "status": {
+    "pending": "Gözləyir",
+    "processing": "İcrada",
+    "ready": "Götürülməyə Hazırdır",
+    "shipped": "Göndərilib",
+    "delivered": "Çatdırılıb",
+    "cancelled": "Ləğv Edilib"
+  },
+
+  "form": {
+    "orderInfo": "Sifariş Məlumatları",
+    "orderNumber": "Sifariş Nömrəsi",
+    "customer": "Müştəri",
+    "orderDate": "Sifariş Tarixi",
+    "deliveryMethod": "Çatdırılma Üsulu",
+    "deliveryAddress": "Çatdırılma Ünvanı",
+    "items": "Sifariş Məhsulları",
+    "status": "Status",
+    "notes": "Qeydlər"
+  },
+
+  "show": {
+    "title": "Sifariş Təfərrüatları",
+    "orderNumber": "Sifariş #",
+    "back": "Sifarişlərə Qayıt",
+    "edit": "Düzəliş Et",
+    "print": "Çap Et",
+    "updateStatus": "Statusu Yenilə",
+
+    "customerInfo": "Müştəri Məlumatları",
+    "orderInfo": "Sifariş Məlumatları",
+    "items": "Sifariş Məhsulları",
+    "totals": "Sifariş Cəmləri",
+    "timeline": "Sifariş Tarixçəsi"
+  },
+
+  "actions": {
+    "markReady": "Hazır Kimi İşarələ",
+    "markShipped": "Göndərildi Kimi İşarələ",
+    "markDelivered": "Çatdırıldı Kimi İşarələ",
+    "cancel": "Sifarişi Ləğv Et"
+  },
+
+  "messages": {
+    "updateSuccess": "Sifariş uğurla yeniləndi",
+    "cancelSuccess": "Sifariş uğurla ləğv edildi",
+    "confirmCancel": "Bu sifarişi ləğv etmək istədiyinizə əminsiniz?"
+  },
+
+  "table": {
+    "orderNumber": "Sifariş #",
+    "customer": "Müştəri",
+    "orderDate": "Tarix",
+    "items": "Məhsullar",
+    "total": "Cəmi",
+    "status": "Status",
+    "actions": "Əməliyyatlar"
+  }
+}

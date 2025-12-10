@@ -7,6 +7,7 @@ import { EyeIcon, ArrowUturnLeftIcon, XCircleIcon, PlusCircleIcon } from '@heroi
 import { PageProps } from '@/types';
 import SalesNavigation from '@/Components/SalesNavigation';
 import ReturnModal from '@/Components/ReturnModal';
+import { useTranslation } from 'react-i18next';
 
 interface SaleReturn {
     return_id: number;
@@ -60,6 +61,7 @@ interface ReturnsIndexProps extends PageProps {
 }
 
 export default function Index({ auth, returns, filters, statistics, discountsEnabled, giftCardsEnabled }: ReturnsIndexProps) {
+    const { t } = useTranslation(['inventory', 'common']);
     const [localFilters, setLocalFilters] = useState(filters);
     const [searchInput, setSearchInput] = useState(filters.search || '');
     const [returnModalOpen, setReturnModalOpen] = useState(false);
@@ -108,9 +110,9 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
 
     const getStatusBadge = (status: string) => {
         const badges = {
-            completed: { color: 'bg-green-100 text-green-800', text: 'Tamamlandı' },
-            pending: { color: 'bg-yellow-100 text-yellow-800', text: 'Gözləyir' },
-            cancelled: { color: 'bg-red-100 text-red-800', text: 'Ləğv edilib' },
+            completed: { color: 'bg-green-100 text-green-800', text: t('returns.statuses.completed') },
+            pending: { color: 'bg-yellow-100 text-yellow-800', text: t('returns.statuses.pending') },
+            cancelled: { color: 'bg-red-100 text-red-800', text: t('returns.statuses.cancelled') },
         };
         const badge = badges[status as keyof typeof badges] || badges.completed;
         return (
@@ -123,7 +125,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
     const columns: Column[] = [
         {
             key: 'return_number',
-            label: 'Qaytarma №',
+            label: t('returns.returnNumber'),
             sortable: true,
             render: (returnItem: SaleReturn) => (
                 <Link
@@ -136,7 +138,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
         },
         {
             key: 'sale.sale_number',
-            label: 'Orijinal Satış',
+            label: t('returns.saleNumber'),
             sortable: true,
             render: (returnItem: SaleReturn) => (
                 returnItem.sale ? (
@@ -151,32 +153,32 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
         },
         {
             key: 'customer.name',
-            label: 'Müştəri',
+            label: t('returns.customer'),
             sortable: true,
-            render: (returnItem: SaleReturn) => returnItem.customer?.name || 'Anonim',
+            render: (returnItem: SaleReturn) => returnItem.customer?.name || t('anonymous'),
         },
         {
             key: 'total',
-            label: 'Qaytarılan Məbləğ',
+            label: t('returns.total'),
             sortable: true,
             render: (returnItem: SaleReturn) => `${returnItem.total} ₼`,
             className: 'text-right font-semibold',
         },
         {
             key: 'status',
-            label: 'Status',
+            label: t('returns.status'),
             sortable: true,
             render: (returnItem: SaleReturn) => getStatusBadge(returnItem.status),
         },
         {
             key: 'return_date',
-            label: 'Tarix',
+            label: t('returns.returnDate'),
             sortable: true,
             render: (returnItem: SaleReturn) => new Date(returnItem.return_date).toLocaleString('az-AZ'),
         },
         {
             key: 'user.name',
-            label: 'İstifadəçi',
+            label: t('returns.processedBy'),
             sortable: true,
             render: (returnItem: SaleReturn) => returnItem.user?.name || '-',
         },
@@ -185,27 +187,27 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
     const tableFilters: Filter[] = [
         {
             key: 'status',
-            label: 'Status',
+            label: t('returns.status'),
             type: 'dropdown',
             value: localFilters.status || '',
             options: [
-                { value: '', label: 'Hamısı' },
-                { value: 'completed', label: 'Tamamlandı' },
-                { value: 'pending', label: 'Gözləyir' },
-                { value: 'cancelled', label: 'Ləğv edilib' },
+                { value: '', label: t('returns.statuses.allStatuses') },
+                { value: 'completed', label: t('returns.statuses.completed') },
+                { value: 'pending', label: t('returns.statuses.pending') },
+                { value: 'cancelled', label: t('returns.statuses.cancelled') },
             ],
             onChange: (value) => handleFilter('status', value),
         },
         {
             key: 'start_date',
-            label: 'Başlanğıc Tarixi',
+            label: t('startDate'),
             type: 'date',
             value: localFilters.start_date || '',
             onChange: (value) => handleFilter('start_date', value),
         },
         {
             key: 'end_date',
-            label: 'Bitmə Tarixi',
+            label: t('endDate'),
             type: 'date',
             value: localFilters.end_date || '',
             onChange: (value) => handleFilter('end_date', value),
@@ -214,7 +216,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
 
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('view'),
             onClick: (returnItem: SaleReturn) => router.visit(route('returns.show', returnItem.return_id)),
             className: 'text-blue-600 hover:text-blue-800',
         },
@@ -222,7 +224,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
 
     return (
         <AuthenticatedLayout>
-            <Head title="Mal Qaytarma" />
+            <Head title={t('returns.title')} />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
                 <SalesNavigation currentRoute="returns" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
                     <button
@@ -230,7 +232,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                     >
                         <ArrowUturnLeftIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">Mal Qaytarma</span>
+                        <span className="font-semibold">{t('returns.newReturn')}</span>
                     </button>
                 </SalesNavigation>
             </div>
@@ -239,7 +241,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                     {/* Statistics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <div className="text-sm text-gray-600">Bugünkü Qaytarmalar</div>
+                            <div className="text-sm text-gray-600">{t('returns.statistics.todayReturns')}</div>
                             <div className="text-2xl font-bold text-gray-900 mt-1">
                                 {statistics.today_returns}
                             </div>
@@ -249,7 +251,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                         </div>
 
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <div className="text-sm text-gray-600">Ümumi Qaytarmalar</div>
+                            <div className="text-sm text-gray-600">{t('returns.statistics.totalReturns')}</div>
                             <div className="text-2xl font-bold text-gray-900 mt-1">
                                 {statistics.total_returns}
                             </div>
@@ -259,7 +261,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                         </div>
 
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <div className="text-sm text-gray-600">Ortalama Qaytarma</div>
+                            <div className="text-sm text-gray-600">{t('average')}</div>
                             <div className="text-2xl font-bold text-gray-900 mt-1">
                                 {statistics.total_returns > 0
                                     ? (parseFloat(statistics.total_amount.toString()) / statistics.total_returns).toFixed(2)
@@ -277,7 +279,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
-                                Bugünkü Qaytarmalar
+                                {t('returns.filters.todayReturns')}
                             </button>
                         </div>
                     </div>
@@ -301,7 +303,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                             searchValue={searchInput}
                             onSearch={() => {}}
                             onSearchChange={handleSearchInput}
-                            searchPlaceholder="Qaytarma nömrəsi, satış nömrəsi və ya müştəri adı ilə axtar..."
+                            searchPlaceholder={t('returns.searchPlaceholder')}
                         />
                     </div>
                 </div>

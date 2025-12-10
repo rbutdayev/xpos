@@ -8,6 +8,7 @@ export interface User {
     status: string;
     account_id: number;
     last_login_at?: string;
+    language?: string;
     // Employee fields
     position?: string;
     hire_date?: string;
@@ -995,6 +996,14 @@ export type PageProps<
     servicesEnabled?: boolean;
     rentEnabled?: boolean;
     discountsEnabled?: boolean;
+    locale?: string;
+    translations?: {
+        payment_methods?: Record<string, string>;
+        expense_types?: Record<string, string>;
+        subscription_plans?: Record<string, string>;
+        user_roles?: Record<string, string>;
+        sale_statuses?: Record<string, string>;
+    };
     flash?: {
         success?: string;
         error?: string;

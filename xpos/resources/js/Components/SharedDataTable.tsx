@@ -1,8 +1,8 @@
 import React, { ReactNode, useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { 
-    ChevronUpDownIcon, 
-    ChevronUpIcon, 
+import {
+    ChevronUpDownIcon,
+    ChevronUpIcon,
     ChevronDownIcon,
     MagnifyingGlassIcon,
     FunnelIcon,
@@ -13,6 +13,7 @@ import {
     PencilIcon,
     TrashIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 import AdvancedPagination from './AdvancedPagination';
 
 export interface Column {
@@ -155,10 +156,10 @@ export default function SharedDataTable({
     columns,
     actions = [],
     bulkActions = [],
-    
+
     searchValue = '',
     onSearchChange,
-    searchPlaceholder = "Axtar...",
+    searchPlaceholder,
     filters = [],
     
     onSort,
@@ -202,11 +203,15 @@ export default function SharedDataTable({
     onMobileRowClick,
     hideMobileActions = true
 }: SharedDataTableProps) {
+    const { t } = useTranslation('common');
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
     const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set());
     const [showFilters, setShowFilters] = useState(false);
     const [mobileDetailItem, setMobileDetailItem] = useState<any>(null);
     const [isMobile, setIsMobile] = useState(false);
+
+    // Get translated placeholder if not provided
+    const effectiveSearchPlaceholder = searchPlaceholder || t('dataTable.searchPlaceholder');
 
     // Detect mobile screen size
     React.useEffect(() => {
@@ -350,7 +355,7 @@ export default function SharedDataTable({
                                         onClick={onRefresh}
                                         className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
-                                        Yenilə
+                                        {t('dataTable.refresh')}
                                     </button>
                                 )}
                                 
@@ -384,7 +389,7 @@ export default function SharedDataTable({
                                                 value={searchValue}
                                                 onChange={(e) => onSearchChange(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && onSearch?.()}
-                                                placeholder={searchPlaceholder}
+                                                placeholder={effectiveSearchPlaceholder}
                                                 className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                             />
                                         </div>
@@ -398,16 +403,16 @@ export default function SharedDataTable({
                                             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                                         >
                                             <FunnelIcon className="w-4 h-4" />
-                                            Filtrlər
+                                            {t('dataTable.filters')}
                                         </button>
                                     )}
-                                    
+
                                     {onSearch && (
                                         <button
                                             onClick={onSearch}
                                             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
                                         >
-                                            Axtar
+                                            {t('dataTable.search')}
                                         </button>
                                     )}
                                     
@@ -437,7 +442,7 @@ export default function SharedDataTable({
                                                     onChange={(e) => filter.onChange(e.target.value)}
                                                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                                 >
-                                                    <option value="">{filter.placeholder || 'Seçin'}</option>
+                                                    <option value="">{filter.placeholder || t('dataTable.selectPlaceholder')}</option>
                                                     {filter.options?.map(option => (
                                                         <option key={option.value} value={option.value}>
                                                             {option.label}
@@ -474,7 +479,7 @@ export default function SharedDataTable({
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-blue-700">
-                            {selectedIds.length} element seçildi
+                            {t('dataTable.selected', { count: selectedIds.length })}
                         </span>
                         <div className="flex items-center gap-2">
                             {bulkActions.map((action, index) => (
@@ -502,7 +507,7 @@ export default function SharedDataTable({
                     <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                         <div className="text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                            <p className="mt-2 text-sm text-gray-500">Yüklənir...</p>
+                            <p className="mt-2 text-sm text-gray-500">{t('dataTable.loading')}</p>
                         </div>
                     </div>
                 )}
@@ -564,7 +569,7 @@ export default function SharedDataTable({
                                         {/* Actions Column */}
                                         {actions.length > 0 && !(isMobile && effectiveHideMobileActions) && (
                                             <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
-                                                Əməliyyatlar
+                                                {t('dataTable.operations')}
                                             </th>
                                         )}
                                     </tr>
@@ -718,10 +723,10 @@ export default function SharedDataTable({
                             <DocumentTextIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                         )}
                         <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            {emptyState?.title || 'Məlumat tapılmadı'}
+                            {emptyState?.title || t('dataTable.emptyTitle')}
                         </h3>
                         <p className="text-gray-500 mb-4">
-                            {emptyState?.description || 'Axtarış meyarlarını dəyişməyi cəhd edin.'}
+                            {emptyState?.description || t('dataTable.emptyDescription')}
                         </p>
                         {emptyState?.action && emptyState.action}
                     </div>
@@ -735,7 +740,7 @@ export default function SharedDataTable({
                         {/* Modal Header */}
                         <div className="flex justify-between items-center pb-3 border-b border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-900">
-                                Ətraflı məlumat
+                                {t('dataTable.detailsTitle')}
                             </h3>
                             <button
                                 onClick={() => setMobileDetailItem(null)}
@@ -833,7 +838,7 @@ export default function SharedDataTable({
                                 onClick={() => setMobileDetailItem(null)}
                                 className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                             >
-                                Bağla
+                                {t('dataTable.close')}
                             </button>
                         </div>
                     </div>

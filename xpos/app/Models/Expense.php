@@ -138,11 +138,11 @@ class Expense extends Model
 
     public static function getPaymentMethods(): array
     {
-        return [
-            'nağd' => 'Nağd',
-            'kart' => 'Kart',
-            'köçürmə' => 'Köçürmə'
-        ];
+        $methods = [];
+        foreach (\App\Enums\PaymentMethod::cases() as $method) {
+            $methods[$method->value] = $method->label();
+        }
+        return $methods;
     }
 
     protected static function boot()

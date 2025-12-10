@@ -275,6 +275,25 @@ class UserController extends Controller
             ->with('success', 'İstifadəçi silindi.');
     }
 
+    /**
+     * Update the authenticated user's language preference
+     */
+    public function updateLanguage(Request $request)
+    {
+        $validated = $request->validate([
+            'language' => 'required|in:en,az',
+        ]);
+
+        Auth::user()->update([
+            'language' => $validated['language'],
+        ]);
+
+        return response()->json([
+            'message' => __('messages.updated', ['model' => __('models.user')]),
+            'language' => $validated['language'],
+        ]);
+    }
+
     private function getRoleOptions(): array
     {
         return [

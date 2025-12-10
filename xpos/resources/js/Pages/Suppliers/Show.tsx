@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Supplier } from '@/types';
-import { 
+import {
     ArrowLeftIcon,
     PencilIcon,
     BuildingOffice2Icon,
@@ -12,6 +12,7 @@ import {
     ClockIcon,
     TagIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     supplier: Supplier & {
@@ -23,6 +24,8 @@ interface Props {
 }
 
 export default function Show({ supplier }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('az-AZ', {
             style: 'currency',
@@ -48,7 +51,7 @@ export default function Show({ supplier }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`${supplier.name} - Təchizatçı Təfərrüatları`} />
+            <Head title={`${supplier.name} - ${t('supplierDetails')}`} />
 
             <div className="mx-auto sm:px-6 lg:px-8">
                 {/* Header */}
@@ -65,25 +68,25 @@ export default function Show({ supplier }: Props) {
                             <div className="flex items-center mt-1 space-x-3">
                                 <div className="flex items-center">
                                     <BuildingOffice2Icon className="w-4 h-4 text-gray-500 mr-1" />
-                                    <span className="text-sm text-gray-600">Təchizatçı</span>
+                                    <span className="text-sm text-gray-600">{t('fields.supplier')}</span>
                                 </div>
                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                    supplier.is_active 
-                                        ? 'bg-green-100 text-green-800' 
+                                    supplier.is_active
+                                        ? 'bg-green-100 text-green-800'
                                         : 'bg-red-100 text-red-800'
                                 }`}>
-                                    {supplier.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
+                                    {supplier.is_active ? t('status.active') : t('status.inactive')}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    
+
                     <Link
                         href={`/suppliers/${supplier.id}/edit`}
                         className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150"
                     >
                         <PencilIcon className="w-4 h-4 mr-2" />
-                        Düzəlt
+                        {t('actions.edit')}
                     </Link>
                 </div>
 
@@ -93,27 +96,27 @@ export default function Show({ supplier }: Props) {
                         {/* Contact Information */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-lg font-semibold text-gray-900">Əlaqə Məlumatları</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">{t('sections.contactInfo')}</h2>
                             </div>
                             <div className="p-6">
                                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <dt className="text-sm font-medium text-gray-500">Şirkət Adı</dt>
+                                        <dt className="text-sm font-medium text-gray-500">{t('fields.companyName')}</dt>
                                         <dd className="mt-1 text-sm text-gray-900">{supplier.name}</dd>
                                     </div>
-                                    
+
                                     {supplier.contact_person && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">Əlaqə Şəxsi</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('fields.contactPerson')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900">{supplier.contact_person}</dd>
                                         </div>
                                     )}
-                                    
+
                                     {supplier.phone && (
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
                                                 <PhoneIcon className="w-4 h-4 inline mr-1" />
-                                                Telefon
+                                                {t('fields.phone')}
                                             </dt>
                                             <dd className="mt-1 text-sm text-gray-900">
                                                 <a href={`tel:${supplier.phone}`} className="text-blue-600 hover:text-blue-800">
@@ -122,12 +125,12 @@ export default function Show({ supplier }: Props) {
                                             </dd>
                                         </div>
                                     )}
-                                    
+
                                     {supplier.email && (
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
                                                 <EnvelopeIcon className="w-4 h-4 inline mr-1" />
-                                                E-mail
+                                                {t('fields.email')}
                                             </dt>
                                             <dd className="mt-1 text-sm text-gray-900">
                                                 <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:text-blue-800">
@@ -136,19 +139,19 @@ export default function Show({ supplier }: Props) {
                                             </dd>
                                         </div>
                                     )}
-                                    
+
                                     {supplier.tax_number && (
                                         <div>
-                                            <dt className="text-sm font-medium text-gray-500">VÖEN</dt>
+                                            <dt className="text-sm font-medium text-gray-500">{t('fields.taxNumber')}</dt>
                                             <dd className="mt-1 text-sm text-gray-900 font-mono">{supplier.tax_number}</dd>
                                         </div>
                                     )}
-                                    
+
                                     {supplier.address && (
                                         <div className="md:col-span-2">
                                             <dt className="text-sm font-medium text-gray-500">
                                                 <MapPinIcon className="w-4 h-4 inline mr-1" />
-                                                Ünvan
+                                                {t('fields.address')}
                                             </dt>
                                             <dd className="mt-1 text-sm text-gray-900">{supplier.address}</dd>
                                         </div>
@@ -161,20 +164,20 @@ export default function Show({ supplier }: Props) {
                         {(supplier.bank_account || supplier.bank_name) && (
                             <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div className="p-6 border-b border-gray-200">
-                                    <h2 className="text-lg font-semibold text-gray-900">Bank Məlumatları</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900">{t('sections.bankInfo')}</h2>
                                 </div>
                                 <div className="p-6">
                                     <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {supplier.bank_name && (
                                             <div>
-                                                <dt className="text-sm font-medium text-gray-500">Bank Adı</dt>
+                                                <dt className="text-sm font-medium text-gray-500">{t('fields.bankName')}</dt>
                                                 <dd className="mt-1 text-sm text-gray-900">{supplier.bank_name}</dd>
                                             </div>
                                         )}
-                                        
+
                                         {supplier.bank_account && (
                                             <div>
-                                                <dt className="text-sm font-medium text-gray-500">Hesab Nömrəsi</dt>
+                                                <dt className="text-sm font-medium text-gray-500">{t('fields.accountNumber')}</dt>
                                                 <dd className="mt-1 text-sm text-gray-900 font-mono">{supplier.bank_account}</dd>
                                             </div>
                                         )}
@@ -190,7 +193,7 @@ export default function Show({ supplier }: Props) {
                                     <div className="flex items-center">
                                         <TagIcon className="w-5 h-5 text-gray-400 mr-2" />
                                         <h2 className="text-lg font-semibold text-gray-900">
-                                            Təchiz Edilən Məhsullar ({supplier.products.length})
+                                            {t('sections.suppliedProducts', { count: supplier.products.length })}
                                         </h2>
                                     </div>
                                 </div>
@@ -199,7 +202,7 @@ export default function Show({ supplier }: Props) {
                                         {supplier.products.map((product) => (
                                             <div key={product.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-md">
                                                 <div>
-                                                    <Link 
+                                                    <Link
                                                         href={`/products/${product.id}`}
                                                         className="font-medium text-blue-600 hover:text-blue-800"
                                                     >
@@ -217,7 +220,7 @@ export default function Show({ supplier }: Props) {
                                                     )}
                                                     {product.pivot?.lead_time_days && (
                                                         <div className="text-xs text-gray-500">
-                                                            Təslim: {product.pivot.lead_time_days} gün
+                                                            {t('products.deliveryDays', { days: product.pivot.lead_time_days })}
                                                         </div>
                                                     )}
                                                 </div>
@@ -232,7 +235,7 @@ export default function Show({ supplier }: Props) {
                         {supplier.notes && (
                             <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div className="p-6 border-b border-gray-200">
-                                    <h2 className="text-lg font-semibold text-gray-900">Qeydlər</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900">{t('fields.notes')}</h2>
                                 </div>
                                 <div className="p-6">
                                     <p className="text-sm text-gray-900 whitespace-pre-line">{supplier.notes}</p>
@@ -246,13 +249,13 @@ export default function Show({ supplier }: Props) {
                         {/* Payment Terms */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-lg font-semibold text-gray-900">Ödəniş Şərtləri</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">{t('sections.paymentTerms')}</h2>
                             </div>
                             <div className="p-6 space-y-4">
                                 <div>
-                                    <div className="text-sm font-medium text-gray-500">Ödəniş Müddəti</div>
+                                    <div className="text-sm font-medium text-gray-500">{t('fields.paymentTermsLabel')}</div>
                                     <div className="text-lg font-semibold text-gray-900">
-                                        {supplier.payment_terms_days ? `${supplier.payment_terms_days} gün` : 'Müəyyən edilməyib'}
+                                        {supplier.payment_terms_days ? `${supplier.payment_terms_days} ${t('products.deliveryDays', { days: '' }).split(':')[0]}` : t('stats.notSpecified')}
                                     </div>
                                 </div>
                             </div>
@@ -262,21 +265,21 @@ export default function Show({ supplier }: Props) {
                         {(supplier.total_orders || supplier.total_spent) && (
                             <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                                 <div className="p-6 border-b border-gray-200">
-                                    <h2 className="text-lg font-semibold text-gray-900">Statistikalar</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900">{t('stats.totalOrders')}</h2>
                                 </div>
                                 <div className="p-6 space-y-4">
                                     {supplier.total_orders && (
                                         <div>
-                                            <div className="text-sm font-medium text-gray-500">Ümumi Sifarişlər</div>
+                                            <div className="text-sm font-medium text-gray-500">{t('stats.totalOrders')}</div>
                                             <div className="text-lg font-semibold text-gray-900">
                                                 {supplier.total_orders}
                                             </div>
                                         </div>
                                     )}
-                                    
+
                                     {supplier.total_spent && (
                                         <div>
-                                            <div className="text-sm font-medium text-gray-500">Ümumi Xərc</div>
+                                            <div className="text-sm font-medium text-gray-500">{t('stats.totalSpent')}</div>
                                             <div className="text-lg font-semibold text-green-600">
                                                 {formatCurrency(supplier.total_spent)}
                                             </div>
@@ -289,13 +292,13 @@ export default function Show({ supplier }: Props) {
                         {/* Metadata */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-lg font-semibold text-gray-900">Tarixçə</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">{t('sections.history')}</h2>
                             </div>
                             <div className="p-6 space-y-3 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">
                                         <CalendarIcon className="w-4 h-4 inline mr-1" />
-                                        Qeydiyyat
+                                        {t('stats.registered')}
                                     </span>
                                     <span className="text-gray-900">
                                         {formatDate(supplier.created_at || '')}
@@ -304,7 +307,7 @@ export default function Show({ supplier }: Props) {
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">
                                         <ClockIcon className="w-4 h-4 inline mr-1" />
-                                        Son dəyişiklik
+                                        {t('stats.lastModified')}
                                     </span>
                                     <span className="text-gray-900">
                                         {formatDate(supplier.updated_at || '')}

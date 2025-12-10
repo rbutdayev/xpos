@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Branch;
 use App\Models\Warehouse;
+use App\Models\Currency;
 use App\Services\DocumentUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,15 +60,20 @@ class CompanyController extends Controller
     public function setupWizard()
     {
         Gate::authorize('manage-account');
-        
+
         // Check if setup is already completed
         $hasCompany = Auth::user()->account->companies()->exists();
-        
+
         if ($hasCompany) {
             return redirect()->route('dashboard');
         }
-        
-        return Inertia::render('Company/SetupWizard');
+
+        // Get all active currencies
+        $currencies = Currency::active()->orderBy('code')->get();
+
+        return Inertia::render('Company/SetupWizard', [
+            'currencies' => $currencies,
+        ]);
     }
 
     public function store(Request $request)
@@ -121,6 +127,7 @@ class CompanyController extends Controller
             'email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
+            'currency_code' => 'nullable|string|size:3|exists:currencies,code',
 
             // Branch data
             'branch_name' => 'required|string|max:255',
@@ -136,7 +143,15 @@ class CompanyController extends Controller
 
         DB::transaction(function () use ($request) {
             $account = Auth::user()->account;
-            
+
+            // Get currency info (default to USD if not provided)
+            $currencyCode = $request->currency_code ?? 'USD';
+            $currency = Currency::find($currencyCode);
+
+            if (!$currency) {
+                $currency = Currency::find('USD');
+            }
+
             // Create the single company for this account
             $account->companies()->create([
                 'name' => $request->company_name,
@@ -147,6 +162,10 @@ class CompanyController extends Controller
                 'website' => $request->website,
                 'description' => $request->description,
                 'default_language' => 'az',
+                'currency_code' => $currency->code,
+                'currency_symbol' => $currency->symbol,
+                'currency_decimal_places' => $currency->decimal_places,
+                'currency_symbol_position' => $currency->symbol_position,
                 'is_active' => true,
             ]);
 
@@ -210,15 +229,19 @@ class CompanyController extends Controller
     {
         Gate::authorize('manage-account');
         Gate::authorize('access-account-data', $company);
-        
+
         // Prepare company data with logo URL
         $companyData = $company->toArray();
         if ($company->logo_path) {
             $companyData['logo_url'] = $this->documentService->getFileUrl($company->logo_path);
         }
-        
+
+        // Get all active currencies
+        $currencies = Currency::active()->orderBy('code')->get();
+
         return Inertia::render('Company/Edit', [
-            'company' => $companyData
+            'company' => $companyData,
+            'currencies' => $currencies,
         ]);
     }
 
@@ -236,15 +259,29 @@ class CompanyController extends Controller
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
             'default_language' => 'required|in:az,en,tr',
+            'currency_code' => 'nullable|string|size:3|exists:currencies,code',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ]);
 
         DB::transaction(function () use ($request, $company) {
             // Update basic company information
-            $company->update($request->only([
-                'name', 'address', 'tax_number', 'phone', 'email', 
+            $updateData = $request->only([
+                'name', 'address', 'tax_number', 'phone', 'email',
                 'website', 'description', 'default_language'
-            ]));
+            ]);
+
+            // Handle currency update if provided
+            if ($request->has('currency_code')) {
+                $currency = Currency::find($request->currency_code);
+                if ($currency) {
+                    $updateData['currency_code'] = $currency->code;
+                    $updateData['currency_symbol'] = $currency->symbol;
+                    $updateData['currency_decimal_places'] = $currency->decimal_places;
+                    $updateData['currency_symbol_position'] = $currency->symbol_position;
+                }
+            }
+
+            $company->update($updateData);
 
             // Handle logo upload if provided
             if ($request->hasFile('logo')) {

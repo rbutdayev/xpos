@@ -5,6 +5,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
     id: number;
@@ -44,6 +45,7 @@ interface StockMovementFormData {
 }
 
 export default function Edit({ movement, products, warehouses, movementTypes }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
     const { data, setData, put, processing, errors } = useForm<StockMovementFormData>({
         unit_cost: movement.unit_cost?.toString() || '',
         notes: movement.notes || '',
@@ -59,7 +61,7 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
 
     return (
         <AuthenticatedLayout>
-            <Head title="Stok Hərəkətini Redaktə Et" />
+            <Head title={t('editStockMovement')} />
 
             <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -74,9 +76,9 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
                                 </Link>
                                 <div>
                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                        Stok Hərəkətini Redaktə Et
+                                        {t('editStockMovement')}
                                     </h2>
-                                    <p className="text-gray-600">Stok hərəkəti məlumatlarını yenilə</p>
+                                    <p className="text-gray-600">{t('updateMovementDetails')}</p>
                                 </div>
                             </div>
                         </div>
@@ -85,16 +87,16 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
                         <div className="bg-gray-50 p-4 rounded-lg mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <span className="font-semibold">Məhsul:</span> {product?.name} ({product?.sku})
+                                    <span className="font-semibold">{t('product')}:</span> {product?.name} ({product?.sku})
                                 </div>
                                 <div>
-                                    <span className="font-semibold">Anbar:</span> {warehouse?.name}
+                                    <span className="font-semibold">{t('stockMovements.warehouse')}:</span> {warehouse?.name}
                                 </div>
                                 <div>
-                                    <span className="font-semibold">Hərəkət növü:</span> {movementTypes[movement.movement_type]}
+                                    <span className="font-semibold">{t('stockMovements.movementType')}:</span> {movementTypes[movement.movement_type]}
                                 </div>
                                 <div>
-                                    <span className="font-semibold">Miqdar:</span> {movement.quantity}
+                                    <span className="font-semibold">{t('quantity')}:</span> {movement.quantity}
                                 </div>
                             </div>
                         </div>
@@ -103,7 +105,7 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Unit Cost */}
                                 <div>
-                                    <InputLabel htmlFor="unit_cost" value="Vahid dəyəri (İxtiyari)" />
+                                    <InputLabel htmlFor="unit_cost" value={`${t('stockMovements.unitCost')} (${t('optional')})`} />
                                     <TextInput
                                         id="unit_cost"
                                         type="number"
@@ -121,14 +123,14 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər (İxtiyari)" />
+                                <InputLabel htmlFor="notes" value={`${t('notes')} (${t('optional')})`} />
                                 <textarea
                                     id="notes"
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    placeholder="Əlavə məlumat"
+                                    placeholder={t('additionalInfo')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
@@ -138,10 +140,10 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
                                     href={route('stock-movements.index')}
                                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
                                 >
-                                    Ləğv et
+                                    {t('cancel')}
                                 </Link>
                                 <PrimaryButton disabled={processing}>
-                                    {processing ? 'Emal edilir...' : 'Yenilə'}
+                                    {processing ? t('processing') : t('update')}
                                 </PrimaryButton>
                             </div>
                         </form>

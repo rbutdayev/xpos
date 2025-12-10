@@ -12,6 +12,7 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Checkbox from '@/Components/Checkbox';
 import { PageProps } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface Warehouse {
     id: number;
@@ -39,6 +40,7 @@ export default function ShopSettings({
     warehouses,
     sms_configured,
 }: ShopSettingsProps) {
+    const { t } = useTranslation('settings');
     const form = useForm({
         shop_enabled: shop_settings.shop_enabled || false,
         shop_slug: shop_settings.shop_slug || '',
@@ -61,7 +63,7 @@ export default function ShopSettings({
     return (
         <AuthenticatedLayout
         >
-            <Head title="Online Mağaza" />
+            <Head title={t('shop.onlineShop')} />
 
             <div className="py-6 sm:py-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,7 +74,7 @@ export default function ShopSettings({
                                 <div className="flex items-center">
                                     <ShoppingBagIcon className="w-6 h-6 text-blue-600 mr-3" />
                                     <h3 className="text-lg font-semibold text-gray-900">
-                                        Mağaza Statusu
+                                        {t('shop.shopStatus')}
                                     </h3>
                                 </div>
                             </div>
@@ -83,7 +85,7 @@ export default function ShopSettings({
                                         onChange={(e) => setData('shop_enabled', e.target.checked)}
                                     />
                                     <label className="text-sm font-medium text-gray-700">
-                                        Online mağazanı aktiv et
+                                        {t('shop.enableShop')}
                                     </label>
                                 </div>
 
@@ -105,7 +107,7 @@ export default function ShopSettings({
                                             </div>
                                             <div className="ml-3">
                                                 <p className="text-sm text-green-800">
-                                                    Mağaza aktiv və işlək vəziyyətdədir
+                                                    {t('shop.shopActive')}
                                                 </p>
                                             </div>
                                         </div>
@@ -120,7 +122,7 @@ export default function ShopSettings({
                                 <div className="flex items-center">
                                     <GlobeAltIcon className="w-6 h-6 text-blue-600 mr-3" />
                                     <h3 className="text-lg font-semibold text-gray-900">
-                                        Mağaza Konfiqurasiyası
+                                        {t('shop.shopConfiguration')}
                                     </h3>
                                 </div>
                             </div>
@@ -128,7 +130,7 @@ export default function ShopSettings({
                                 {/* Shop Slug */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Mağaza URL (slug)
+                                        {t('shop.shopSlug')}
                                     </label>
                                     <TextInput
                                         value={data.shop_slug}
@@ -151,7 +153,7 @@ export default function ShopSettings({
                                                 <GlobeAltIcon className="w-5 h-5 text-blue-600 mr-2" />
                                                 <div>
                                                     <p className="text-sm text-blue-800 font-medium">
-                                                        Mağaza URL:
+                                                        {t('shop.shopUrlLabel')}
                                                     </p>
                                                     <a
                                                         href={`${window.location.origin}/shop/${data.shop_slug}`}
@@ -171,7 +173,7 @@ export default function ShopSettings({
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         <BuildingStorefrontIcon className="w-5 h-5 inline mr-1" />
-                                        Anbar / Filial
+                                        {t('shop.warehouse')}
                                     </label>
                                     <select
                                         value={data.shop_warehouse_id}
@@ -179,7 +181,7 @@ export default function ShopSettings({
                                         disabled={!data.shop_enabled}
                                         className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
                                     >
-                                        <option value="">Bütün anbarlar</option>
+                                        <option value="">{t('shop.warehouseAll')}</option>
                                         {warehouses.map((warehouse) => (
                                             <option key={warehouse.id} value={warehouse.id}>
                                                 {warehouse.name}
@@ -187,8 +189,7 @@ export default function ShopSettings({
                                         ))}
                                     </select>
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Seçilmiş anbardan məhsullar online mağazada göstəriləcək. Boş
-                                        buraxdıqda bütün anbarlardan məhsullar göstərilir.
+                                        {t('shop.warehouseHint')}
                                     </p>
                                     {errors.shop_warehouse_id && (
                                         <p className="mt-1 text-sm text-red-600">
@@ -205,7 +206,7 @@ export default function ShopSettings({
                                 <div className="flex items-center">
                                     <BellIcon className="w-6 h-6 text-blue-600 mr-3" />
                                     <h3 className="text-lg font-semibold text-gray-900">
-                                        Bildiriş Parametrləri
+                                        {t('shop.notificationSettings')}
                                     </h3>
                                 </div>
                             </div>
@@ -228,15 +229,14 @@ export default function ShopSettings({
                                             </div>
                                             <div className="ml-3">
                                                 <p className="text-sm text-yellow-800">
-                                                    SMS xidməti konfiqurasiya edilməyib. Bildirişlər göndərmək
-                                                    üçün əvvəlcə{' '}
+                                                    {t('shop.smsNotConfigured')}{' '}
                                                     <a
                                                         href="/integrations/sms"
                                                         className="font-medium underline hover:text-yellow-900"
                                                     >
-                                                        SMS parametrlərini
+                                                        {t('shop.smsParameters')}
                                                     </a>{' '}
-                                                    quraşdırın.
+                                                    {t('shop.smsParametersLink')}
                                                 </p>
                                             </div>
                                         </div>
@@ -257,7 +257,7 @@ export default function ShopSettings({
                                             disabled={!data.shop_enabled || !sms_configured}
                                         />
                                         <label className="text-sm font-medium text-gray-700">
-                                            Yeni sifariş bildirişləri (Satıcı)
+                                            {t('shop.merchantNotifications')}
                                         </label>
                                     </div>
 
@@ -265,7 +265,7 @@ export default function ShopSettings({
                                         <div className="ml-7">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 <DevicePhoneMobileIcon className="w-4 h-4 inline mr-1" />
-                                                Bildiriş telefonu
+                                                {t('shop.notificationPhoneText')}
                                             </label>
                                             <TextInput
                                                 value={data.shop_notification_phone}
@@ -277,7 +277,7 @@ export default function ShopSettings({
                                                 className="mt-1 block w-full"
                                             />
                                             <p className="mt-1 text-xs text-gray-500">
-                                                Yeni sifariş haqqında SMS bu nömrəyə göndəriləcək
+                                                {t('shop.notificationPhoneHintShort')}
                                             </p>
                                         </div>
                                     )}
@@ -297,14 +297,14 @@ export default function ShopSettings({
                                             disabled={!data.shop_enabled || !sms_configured}
                                         />
                                         <label className="text-sm font-medium text-gray-700">
-                                            Sifariş təsdiq bildirişləri (Müştəri)
+                                            {t('shop.customerNotificationsAlt')}
                                         </label>
                                     </div>
 
                                     {data.shop_sms_customer_notifications && (
                                         <div className="ml-7">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                SMS Şablon
+                                                {t('shop.smsTemplate')}
                                             </label>
                                             <textarea
                                                 value={data.shop_customer_sms_template}
@@ -317,7 +317,7 @@ export default function ShopSettings({
                                                 placeholder="Sizin sifarişiniz qəbul edildi. Sifariş nömrəsi: {order_number}"
                                             />
                                             <p className="mt-1 text-xs text-gray-500">
-                                                İstifadə edə biləcəyiniz dəyişənlər: {'{order_number}'},{' '}
+                                                {t('shop.templateVariablesYouCanUse')}: {'{order_number}'},{' '}
                                                 {'{customer_name}'}, {'{total}'}
                                             </p>
                                         </div>
@@ -330,11 +330,11 @@ export default function ShopSettings({
                         <div className="flex items-center justify-end gap-4 pt-4">
                             {recentlySuccessful && (
                                 <p className="text-sm text-green-600 dark:text-green-400">
-                                    Parametrlər yadda saxlanıldı
+                                    {t('shop.saved')}
                                 </p>
                             )}
                             <PrimaryButton type="submit" disabled={processing}>
-                                {processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}
+                                {processing ? t('actions.saving') : t('actions.saveChanges')}
                             </PrimaryButton>
                         </div>
                     </form>

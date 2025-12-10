@@ -1,0 +1,168 @@
+{
+  "title": "Dərzilik Xidmətləri",
+  "subtitle": "Dərzilik və dəyişiklik xidmətlərini idarə edin",
+  "create": "Yeni Xidmət",
+  "createButton": "Yeni Xidmət Yarat",
+  "edit": "Xidməti Düzəliş Et",
+  "delete": "Sil",
+  "view": "Görüntülə",
+  "noServices": "Xidmət tapılmadı",
+  "firstService": "İlk Xidməti Yarat",
+  "searchPlaceholder": "Xidmət axtar...",
+
+  "status": {
+    "pending": "Gözləyir",
+    "inProgress": "İcrada",
+    "ready": "Hazırdır",
+    "completed": "Tamamlanıb",
+    "cancelled": "Ləğv edilib",
+    "onHold": "Dayandırılıb"
+  },
+
+  "priority": {
+    "low": "Aşağı",
+    "normal": "Normal",
+    "high": "Yüksək",
+    "urgent": "Təcili"
+  },
+
+  "serviceType": {
+    "alteration": "Dəyişiklik",
+    "repair": "Təmir",
+    "custom": "Xüsusi Tikiş",
+    "cleaning": "Təmizləmə",
+    "other": "Digər"
+  },
+
+  "form": {
+    "basicInfo": "Əsas Məlumatlar",
+    "customerInfo": "Müştəri Məlumatları",
+    "serviceDetails": "Xidmət Təfərrüatları",
+    "measurements": "Ölçülər",
+    "pricing": "Qiymətləndirmə",
+    "schedule": "Cədvəl",
+
+    "customer": "Müştəri",
+    "selectCustomer": "Müştəri seçin...",
+    "serviceType": "Xidmət Növü",
+    "selectServiceType": "Növ seçin...",
+    "description": "Açıqlama",
+    "priority": "Prioritet",
+    "selectPriority": "Prioritet seçin...",
+
+    "garmentType": "Geyim Növü",
+    "garmentColor": "Rəng",
+    "garmentSize": "Ölçü",
+    "fabric": "Parça Növü",
+
+    "receivedDate": "Qəbul Tarixi",
+    "dueDate": "Bitirmə Tarixi",
+    "completedDate": "Tamamlanma Tarixi",
+
+    "servicePrice": "Xidmət Qiyməti",
+    "deposit": "Depozit",
+    "totalPrice": "Ümumi Qiymət",
+    "paidAmount": "Ödənilmiş Məbləğ",
+    "balance": "Qalıq",
+
+    "notes": "Xidmət Qeydləri",
+    "internalNotes": "Daxili Qeydlər",
+    "customerNotes": "Müştəri Göstərişləri"
+  },
+
+  "show": {
+    "title": "Xidmət Təfərrüatları",
+    "serviceNumber": "Xidmət #",
+    "back": "Xidmətlərə Qayıt",
+    "edit": "Düzəliş Et",
+    "markReady": "Hazır Kimi İşarələ",
+    "markCompleted": "Tamamlandı Kimi İşarələ",
+    "print": "Çap Et",
+    "sendSMS": "SMS Göndər",
+
+    "customerInfo": "Müştəri Məlumatları",
+    "name": "Ad",
+    "phone": "Telefon",
+    "email": "Email",
+
+    "serviceInfo": "Xidmət Məlumatları",
+    "type": "Xidmət Növü",
+    "description": "Açıqlama",
+    "priority": "Prioritet",
+    "status": "Status",
+    "garment": "Geyim",
+
+    "schedule": "Cədvəl",
+    "receivedDate": "Qəbul",
+    "dueDate": "Bitirmə Tarixi",
+    "completedDate": "Tamamlanma",
+
+    "measurements": "Ölçülər",
+
+    "financialInfo": "Maliyyə Məlumatları",
+    "servicePrice": "Xidmət Qiyməti",
+    "deposit": "Depozit",
+    "totalPrice": "Ümumi Qiymət",
+    "paidAmount": "Ödənilib",
+    "balance": "Qalıq",
+
+    "payments": "Ödəniş Tarixçəsi",
+    "paymentMethod": "Üsul",
+    "amount": "Məbləğ",
+    "date": "Tarix",
+    "noPayments": "Ödəniş yoxdur",
+
+    "notes": "Qeydlər",
+    "customerInstructions": "Müştəri Göstərişləri",
+    "internalNotes": "Daxili Qeydlər",
+
+    "systemInfo": "Sistem Məlumatları",
+    "createdAt": "Yaradılıb",
+    "updatedAt": "Yenilənib",
+    "assignedTo": "Təyin Edilib",
+
+    "overdue": "Xidmət gecikib!",
+    "dueToday": "Xidmət bu gün bitməlidir!"
+  },
+
+  "actions": {
+    "create": "Xidmət Yarat",
+    "creating": "Yaradılır...",
+    "save": "Dəyişiklikləri Yadda Saxla",
+    "saving": "Yadda Saxlanır...",
+    "cancel": "Ləğv Et",
+    "addPayment": "Ödəniş Əlavə Et",
+    "viewDetails": "Təfərrüatları Gör"
+  },
+
+  "messages": {
+    "createSuccess": "Xidmət uğurla yaradıldı",
+    "updateSuccess": "Xidmət uğurla yeniləndi",
+    "deleteSuccess": "Xidmət uğurla silindi",
+    "confirmDelete": "Bu xidməti silmək istədiyinizə əminsiniz?",
+    "selectCustomer": "Zəhmət olmasa müştəri seçin",
+    "invalidDates": "Bitirmə tarixi qəbul tarixindən sonra olmalıdır"
+  },
+
+  "filters": {
+    "all": "Hamısı",
+    "status": "Status",
+    "priority": "Prioritet",
+    "type": "Xidmət Növü",
+    "overdue": "Yalnız Gecikmiş"
+  },
+
+  "table": {
+    "serviceNumber": "Xidmət #",
+    "customer": "Müştəri",
+    "type": "Növ",
+    "description": "Açıqlama",
+    "receivedDate": "Qəbul",
+    "dueDate": "Bitirmə",
+    "priority": "Prioritet",
+    "status": "Status",
+    "totalPrice": "Qiymət",
+    "balance": "Qalıq",
+    "actions": "Əməliyyatlar"
+  }
+}

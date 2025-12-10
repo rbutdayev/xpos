@@ -1,6 +1,7 @@
 import { Product } from '@/types';
 import { MagnifyingGlassIcon, CubeIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatQuantityWithUnit } from '@/utils/formatters';
 import axios from 'axios';
 
@@ -18,11 +19,11 @@ interface Props {
     useAjaxSearch?: boolean; // New prop to enable AJAX search
 }
 
-export default function ProductSelect({ 
-    products = [], 
-    value, 
-    onChange, 
-    placeholder = "Məhsul seçin...",
+export default function ProductSelect({
+    products = [],
+    value,
+    onChange,
+    placeholder,
     required = false,
     disabled = false,
     className = "",
@@ -31,6 +32,8 @@ export default function ProductSelect({
     onlyInStock = false,
     useAjaxSearch = false
 }: Props) {
+    const { t } = useTranslation();
+    const defaultPlaceholder = placeholder || t('productSelect.placeholder');
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [filteredProducts, setFilteredProducts] = useState(products);
@@ -164,13 +167,13 @@ export default function ProductSelect({
     const getStockStatus = (product: Product) => {
         const stock = product.total_stock || 0;
         const minLevel = product.min_level || 0;
-        
+
         if (stock <= 0) {
-            return { text: 'Stokda yoxdur', color: 'text-red-600' };
+            return { text: t('productSelect.outOfStock'), color: 'text-red-600' };
         } else if (stock <= minLevel) {
-            return { text: 'Az qalıb', color: 'text-yellow-600' };
+            return { text: t('productSelect.lowStock'), color: 'text-yellow-600' };
         } else {
-            return { text: 'Stokda var', color: 'text-green-600' };
+            return { text: t('productSelect.inStock'), color: 'text-green-600' };
         }
     };
 
@@ -200,7 +203,7 @@ export default function ProductSelect({
                                 )}
                             </span>
                         ) : (
-                            <span className="text-gray-500">{placeholder}</span>
+                            <span className="text-gray-500">{defaultPlaceholder}</span>
                         )}
                     </span>
                 </span>
@@ -221,7 +224,7 @@ export default function ProductSelect({
                                     ref={searchRef}
                                     type="text"
                                     className="w-full rounded-md border-gray-300 pl-10 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    placeholder="Məhsul axtar (ad, SKU, barkod)..."
+                                    placeholder={t('productSelect.searchPlaceholder')}
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     onKeyDown={(e) => {
@@ -247,7 +250,7 @@ export default function ProductSelect({
                             onClick={handleClear}
                         >
                             <span className="font-normal block truncate text-gray-500 italic">
-                                Məhsul seçməyin
+                                {t('productSelect.noProduct')}
                             </span>
                         </div>
                     )}
@@ -255,17 +258,17 @@ export default function ProductSelect({
                     {isSearching ? (
                         <div className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900">
                             <span className="font-normal block truncate text-gray-500">
-                                Axtarılır...
+                                {t('messages.searching')}
                             </span>
                         </div>
                     ) : filteredProducts.length === 0 ? (
                         <div className="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-900">
                             <span className="font-normal block truncate text-gray-500">
-                                {useAjaxSearch && search.length < 2 ? 
-                                    "Ən azı 2 hərf yazın" :
-                                    onlyInStock ? 
-                                        "Stokda məhsul tapılmadı" :
-                                        "Məhsul tapılmadı"
+                                {useAjaxSearch && search.length < 2 ?
+                                    t('productSelect.minChars') :
+                                    onlyInStock ?
+                                        t('productSelect.noStockProducts') :
+                                        t('productSelect.notFound')
                                 }
                             </span>
                         </div>

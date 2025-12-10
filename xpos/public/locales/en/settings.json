@@ -1,0 +1,407 @@
+{
+  "title": "Settings",
+  "description": "Manage your company information and system settings",
+  "generalSettings": "General Settings",
+  "companySettings": "Company Settings",
+  "userSettings": "User Settings",
+  "systemSettings": "System Settings",
+
+  "tabs": {
+    "company": "Company Information",
+    "pos": "POS Settings",
+    "preferences": "Preferences",
+    "notifications": "Notifications",
+    "channels": "Notification Channels",
+    "sms": "SMS Settings",
+    "telegram": "Telegram Settings"
+  },
+
+  "company": {
+    "title": "Company Information",
+    "basicInfo": "Basic Information",
+    "companyName": "Company Name",
+    "taxNumber": "Tax Number",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website",
+    "description": "Description",
+    "defaultLanguage": "Default Language"
+  },
+
+  "preferences": {
+    "languageSettings": "Language Settings",
+    "changeLanguage": "Change Language",
+    "defaultLanguage": "Default System Language",
+    "languageHint": "Select your preferred language. This will update the interface language immediately."
+  },
+
+  "pos": {
+    "title": "POS Settings",
+    "autoPrintReceipt": "Auto-print receipt",
+    "autoPrintDescription": "When active, receipt will be printed automatically after sale is completed."
+  },
+
+  "system": {
+    "title": "System Configuration",
+    "description": "Printer, receipt, integration and log settings",
+    "printer": {
+      "title": "Printer",
+      "subtitle": "Configuration"
+    },
+    "receipt": {
+      "title": "Receipt",
+      "subtitle": "Templates"
+    },
+    "bridge": {
+      "title": "Bridge",
+      "subtitle": "Tokens"
+    },
+    "notification": {
+      "title": "Notification",
+      "subtitle": "Channels"
+    }
+  },
+
+  "logs": {
+    "title": "System Logs",
+    "description": "SMS, Telegram, Audit and Fiscal Printer logs",
+    "sms": "SMS",
+    "telegram": "Telegram",
+    "audit": "Audit",
+    "fiscalPrinter": "Fiscal Printer",
+    "queue": "Queue",
+    "logsLabel": "Logs"
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "description": "Manage SMS and Telegram notifications",
+    "channelsTab": "Notification Channels",
+    "smsTab": "SMS Settings",
+    "telegramTab": "Telegram Settings",
+    "merchantTitle": "Merchant Notifications",
+    "merchantDescription": "Notifications sent to you when a new order is received",
+    "customerTitle": "Customer Notifications",
+    "customerDescription": "Confirmation notifications sent to customers",
+    "channels": "Notification Channels",
+    "enableNew": "Enable new order notifications",
+    "enableCustomer": "Enable customer confirmation notifications",
+    "activateNotifications": "Enable new order notifications",
+    "activateCustomer": "Enable customer confirmation notifications",
+    "sent": "sent",
+    "noChannels": "No channels configured. Please configure SMS or Telegram settings.",
+    "recipientPhone": "Recipient Phone (SMS)",
+    "recipientPhoneHint": "If left empty, account phone will be used",
+    "recipientSMS": "SMS Recipient Phone",
+    "chatId": "Telegram Chat ID",
+    "chatIdHint": "If left empty, default chat ID will be used",
+    "defaultChatHint": "If left empty, default chat ID will be used",
+    "recommended": "Recommended",
+    "maxCharacters": "Maximum {{count}} characters"
+  },
+
+  "sms": {
+    "title": "SMS Settings",
+    "lsimTitle": "LSim SMS Settings",
+    "description": "Enter your LSim SMS gateway credentials",
+    "configured": "SMS configured",
+    "notConfigured": "SMS settings not configured",
+    "login": "Login",
+    "password": "Password",
+    "senderName": "Sender Name",
+    "senderNameHint": "Maximum 11 characters",
+    "gatewayUrl": "Gateway URL",
+    "enableService": "Enable SMS service",
+    "stats": {
+      "sent": "Sent",
+      "failed": "Failed"
+    }
+  },
+
+  "telegram": {
+    "title": "Telegram Settings",
+    "botTitle": "Telegram Bot Settings",
+    "description": "Enter your Telegram bot credentials",
+    "configured": "Telegram configured",
+    "notConfigured": "Telegram settings not configured",
+    "bot": "Bot",
+    "lastTest": "Last test",
+    "instructions": {
+      "title": "How to Create a Telegram Bot:",
+      "step1": "Find @BotFather bot on Telegram",
+      "step2": "Send /newbot command",
+      "step3": "Set bot name and username",
+      "step4": "Enter the Bot Token below",
+      "step5": "To get Chat ID: send a message to your bot and get it from @userinfobot"
+    },
+    "botToken": "Bot Token",
+    "botUsername": "Bot Username (Optional)",
+    "defaultChatId": "Default Chat ID",
+    "defaultChatIdHint": "Default chat where notifications will be sent",
+    "enableService": "Enable Telegram service",
+    "testConnection": "Test Connection"
+  },
+
+  "shop": {
+    "title": "Shop Settings",
+    "onlineShop": "Online Shop",
+    "description": "Manage your online shop and configure settings",
+    "basicSettings": "Basic Settings",
+    "basicDescription": "Configure your online shop basic settings",
+    "enableShop": "Enable online shop",
+    "enableShopHint": "Customers will be able to place online orders",
+    "businessName": "Business Name (URL)",
+    "businessNameHint": "Use only lowercase letters, numbers and hyphens (minimum 3 characters)",
+    "shopUrl": "Shop URL",
+    "shopUrlLabel": "Shop URL:",
+    "shopStatus": "Shop Status",
+    "shopActive": "Shop is active and operational",
+    "shopConfiguration": "Shop Configuration",
+    "shopSlug": "Shop URL (slug)",
+    "warehouse": "Warehouse / Branch",
+    "warehouseAll": "All warehouses",
+    "warehouseHint": "Products from selected warehouse will be displayed in online shop. If empty, products from all warehouses will be shown.",
+    "notificationSettings": "Notification Settings",
+    "smsNotifications": "SMS Notifications",
+    "smsDescription": "Manage SMS notifications for orders",
+    "smsBalance": "Your SMS Balance",
+    "sms": "SMS",
+    "smsNotConfigured": "SMS service not configured. To send notifications, please",
+    "smsParameters": "configure SMS settings",
+    "smsParametersLink": "first.",
+    "merchantNotifications": "New order notifications (Merchant)",
+    "merchantNotificationsHint": "You will receive SMS notification for every new online order",
+    "notificationPhone": "Notification Phone (Optional)",
+    "notificationPhoneText": "Notification phone",
+    "notificationPhoneHint": "If left empty, account phone will be used",
+    "notificationPhoneHintShort": "New order SMS will be sent to this number",
+    "customerNotifications": "Send confirmation SMS to customers",
+    "customerNotificationsAlt": "Order confirmation notifications (Customer)",
+    "customerNotificationsHint": "Confirmation SMS will be sent to customer after placing order",
+    "customerTemplate": "Customer SMS Template (Optional)",
+    "smsTemplate": "SMS Template",
+    "customerTemplateHint": "If left empty, default template will be used",
+    "templateVariables": "Variables",
+    "templateVariablesYouCanUse": "Variables you can use:",
+    "notConfiguredTitle": "SMS settings not configured",
+    "notConfiguredDescription": "To use SMS notifications, please configure SMS settings first.",
+    "saved": "Settings saved"
+  },
+
+  "loyalty": {
+    "title": "Loyalty Program",
+    "moduleDisabled": "Module Disabled",
+    "moduleDisabledDescription": "Loyalty program module is currently deactivated. Click the button to activate the module or use the \"Danger Zone\" section below.",
+    "activateModule": "Activate Module",
+    "programStatus": "Program Status",
+    "editProgram": "Edit",
+    "stopProgram": "Stop Program",
+    "startProgram": "Start Program",
+    "currentConfig": "Current Configuration",
+    "pointsEarned": "Points earned",
+    "perCurrency": "points / ₼1",
+    "redemptionRate": "Redemption rate",
+    "pointsEquals": "points = ₼1 discount",
+    "minRedemption": "Minimum redemption",
+    "points": "points",
+    "expiryPeriod": "Expiry period",
+    "days": "days",
+    "neverExpires": "Never expires",
+    "configureTitle": "Configure Loyalty Program",
+    "editTitle": "Edit Configuration",
+    "configureDescription": "Customers earn points with every purchase and can use these points for discounts.",
+    "earningParams": "Points Earning Parameters",
+    "pointsPerCurrency": "Points per ₼1",
+    "pointsPerCurrencyHint": "Example: 1 = customer earns 1 point for every ₼1 spent",
+    "maxPointsPerTransaction": "Maximum points (per transaction)",
+    "maxPointsPerTransactionHint": "Leave empty = no limit",
+    "unlimited": "Unlimited",
+    "earnOnDiscounted": "Points can be earned on discounted items",
+    "redemptionParams": "Points Redemption Parameters",
+    "redemptionRateLabel": "Points needed for ₼1 discount",
+    "redemptionRateHint": "Example: 100 = 100 points gives ₼1 discount",
+    "minRedemptionPoints": "Minimum points (for redemption)",
+    "minRedemptionPointsHint": "Customer must accumulate this many points",
+    "expiryParams": "Points Expiry Period",
+    "expiryDays": "How many days until points expire?",
+    "expiryDaysPlaceholder": "Example: 365",
+    "expiryDaysHint": "0 or empty = points never expire",
+    "programStatusLabel": "Program Status",
+    "activateProgram": "Activate loyalty program",
+    "activateProgramHint": "When active, customers can automatically earn and use points",
+    "howItWorks": {
+      "title": "How Loyalty Program Works?",
+      "point1": "Customers automatically earn points when making purchases",
+      "point2": "They can use accumulated points for discounts on next purchases",
+      "point3": "Customer's point balance is visible when selecting customer in POS",
+      "point4": "During payment, customer can use their points to get discount",
+      "point5": "All point movements are recorded in customer history"
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "enabledWarning": "Be careful when completely disabling the loyalty program module. When module is disabled, it will be hidden from menu and no one can use this feature.",
+      "disabledInfo": "Loyalty program module is currently disabled. When activated, it will appear in menu and be ready to use.",
+      "disableModule": "Completely Disable Module",
+      "activateModule": "Activate Module"
+    },
+    "confirmDisable": {
+      "title": "Disable Loyalty Program Module",
+      "description": "Are you sure you want to disable the module? This operation will:",
+      "point1": "Hide loyalty program from menu",
+      "point2": "Not allow anyone to use this feature",
+      "point3": "Keep existing program data",
+      "point4": "Safely store customer points",
+      "point5": "Can be reactivated at any time",
+      "confirm": "Yes, Disable"
+    }
+  },
+
+  "bridgeTokens": {
+    "title": "Bridge Tokens",
+    "description": "Create a separate token for each POS terminal. With the token, bridge program connects to server and executes fiscal printing jobs.",
+    "download": {
+      "title": "Download Bridge Program",
+      "version": "Version",
+      "windows": "Windows",
+      "macosIntel": "macOS (Intel)",
+      "macosArm": "macOS (Apple Silicon)",
+      "downloadButton": "Download",
+      "instructions": {
+        "title": "Installation steps:",
+        "step1": "Download the installer for your platform above",
+        "step2": "Install and open the program",
+        "step3": "Create a new token below",
+        "step4": "Copy the token and paste it into the bridge program",
+        "step5": "Start the program - printer settings will load automatically"
+      },
+      "requirements": "System requirements"
+    },
+    "noTokens": "No tokens created yet",
+    "createFirst": "Create First Token",
+    "table": {
+      "name": "Name",
+      "token": "Token",
+      "status": "Status",
+      "lastSeen": "Last Seen",
+      "version": "Version",
+      "actions": "Actions"
+    },
+    "status": {
+      "revoked": "Revoked",
+      "online": "Online",
+      "idle": "Idle",
+      "offline": "Offline",
+      "never": "Never"
+    },
+    "actions": {
+      "copy": "Copy",
+      "revoke": "Revoke"
+    },
+    "modal": {
+      "createTitle": "New Bridge Token",
+      "tokenName": "Token Name",
+      "tokenNamePlaceholder": "Example: Main Cashier Terminal",
+      "tokenNameHint": "Give a name to identify the terminal",
+      "creating": "Creating..."
+    },
+    "showToken": {
+      "title": "Token Created - Copy Now!",
+      "warning": "WARNING: This token is shown only once. Copy it now and store it in a safe place.",
+      "tokenLabel": "Token:",
+      "copyButton": "Copy",
+      "nextSteps": "Next steps:",
+      "step1": "Open bridge program on terminal",
+      "step2": "Edit config.json file",
+      "step3": "Paste this token into \"token\" field",
+      "step4": "Restart the program"
+    },
+    "messages": {
+      "tokenCopied": "Token copied!",
+      "confirmRevoke": "Are you sure you want to revoke \"{{name}}\" token? Bridge will stop working.",
+      "confirmDelete": "Are you sure you want to delete \"{{name}}\" token? This operation cannot be undone.",
+      "tokenRevoked": "Token revoked",
+      "tokenDeleted": "Token deleted",
+      "errorOccurred": "An error occurred",
+      "errorCreating": "Error creating token"
+    }
+  },
+
+  "fiscalPrinter": {
+    "title": "Fiscal Printer Settings",
+    "infoBox": {
+      "title": "About Fiscal Printer",
+      "description": "Integration with electronic cash register devices approved by the Ministry of Taxes. Fiscal receipt will be automatically printed when sale is completed.",
+      "important": "Important: Fiscal printer and XPOS must be on the same local network."
+    },
+    "selectProvider": "Select Fiscal Printer Provider",
+    "notAvailable": "Not available",
+    "configTitle": "Configuration",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "provider": "Provider",
+    "configName": "Configuration Name",
+    "configNamePlaceholder": "Example: Main Cashier",
+    "ipAddress": "IP Address",
+    "port": "Port",
+    "apiPath": "API Path",
+    "defaultLabel": "Default",
+    "providerFields": {
+      "username": "Username",
+      "password": "Password",
+      "merchantId": "Merchant ID",
+      "securityKey": "Security Key",
+      "deviceSerial": "Device S/N (last 4 digits)",
+      "bankPort": "Bank Port"
+    },
+    "creditContract": "Bank Credit Contract",
+    "creditContractPlaceholder": "Example: BirKart contract number",
+    "creditContractHint": "Required for bank credit sales. If this field is empty, \"Bank Credit\" payment type will not appear on POS screen.",
+    "taxName": "Tax Name",
+    "taxRate": "Tax Rate (%)",
+    "checkboxes": {
+      "autoSend": "Send automatically (create fiscal receipt automatically when sale is completed)",
+      "showInTerminal": "Show in terminal",
+      "active": "Active"
+    },
+    "confirmDelete": "Are you sure you want to delete fiscal printer configuration?",
+    "passwordPlaceholder": "(enter new password to change)"
+  },
+
+  "fields": {
+    "companyName": "Company Name",
+    "companyEmail": "Company Email",
+    "companyPhone": "Company Phone",
+    "companyAddress": "Company Address",
+    "logo": "Company Logo",
+    "currency": "Currency",
+    "language": "Language",
+    "timezone": "Timezone",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format",
+    "taxRate": "Default Tax Rate",
+    "receiptFooter": "Receipt Footer Text"
+  },
+
+  "sections": {
+    "appearance": "Appearance",
+    "localization": "Localization",
+    "notifications": "Notifications",
+    "security": "Security",
+    "integrations": "Integrations",
+    "backup": "Backup & Restore"
+  },
+
+  "actions": {
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "saved": "Settings saved",
+    "smsSaved": "SMS settings saved",
+    "telegramSaved": "Telegram settings saved"
+  },
+
+  "messages": {
+    "settingsSaved": "Settings saved successfully",
+    "settingsError": "Error saving settings"
+  }
+}

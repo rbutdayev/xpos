@@ -5,10 +5,12 @@ import WarehouseSelector from './Components/WarehouseSelector';
 import InventoryDashboard from './Components/InventoryDashboard';
 import InventoryNavigation from '@/Components/InventoryNavigation';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props { warehouses: Warehouse[]; selectedWarehouse?: number | null; }
 
 export default function Index({ warehouses, selectedWarehouse }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
     const [warehouseId, setWarehouseId] = useState<string>(selectedWarehouse ? String(selectedWarehouse) : '');
 
     const goToWarehouse = (id: string) => {
@@ -18,7 +20,7 @@ export default function Index({ warehouses, selectedWarehouse }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="İnventar" />
+            <Head title={t('title')} />
             <div className="mx-auto sm:px-6 lg:px-8 space-y-6">
                 {/* Enterprise Navigation Menu */}
                 <InventoryNavigation currentRoute="inventory" />

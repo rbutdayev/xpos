@@ -29,4 +29,12 @@ Route::prefix('bridge')->name('bridge.')->group(function () {
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/jobs/sale/{saleId}/status', [\App\Http\Controllers\Api\JobStatusController::class, 'getSaleJobStatus'])->name('jobs.sale.status');
     Route::get('/shift-status', [\App\Http\Controllers\Api\ShiftStatusController::class, 'getStatus'])->name('shift.status');
+
+    // User Language Settings
+    Route::post('/user/language', [\App\Http\Controllers\UserController::class, 'updateLanguage'])->name('user.language.update');
+
+    // Currency Management
+    Route::get('/currencies', [\App\Http\Controllers\Api\CurrencyController::class, 'index'])->name('currencies.index');
+    Route::get('/company/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'show'])->name('company.currency.show');
+    Route::put('/company/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'update'])->name('company.currency.update');
 });

@@ -1,0 +1,407 @@
+{
+  "title": "Parametrlər",
+  "description": "Şirkətinizin məlumatlarını və sistem ayarlarını idarə edin",
+  "generalSettings": "Ümumi parametrlər",
+  "companySettings": "Şirkət parametrləri",
+  "userSettings": "İstifadəçi parametrləri",
+  "systemSettings": "Sistem parametrləri",
+
+  "tabs": {
+    "company": "Şirkət Məlumatları",
+    "pos": "POS Parametrləri",
+    "preferences": "Tənzimləmələr",
+    "notifications": "Bildirişlər",
+    "channels": "Bildiriş Kanalları",
+    "sms": "SMS Parametrləri",
+    "telegram": "Telegram Parametrləri"
+  },
+
+  "company": {
+    "title": "Şirkət Məlumatları",
+    "basicInfo": "Əsas Məlumatlar",
+    "companyName": "Şirkət Adı",
+    "taxNumber": "Vergi Nömrəsi",
+    "address": "Ünvan",
+    "phone": "Telefon",
+    "email": "E-poçt",
+    "website": "Vebsayt",
+    "description": "Təsvir",
+    "defaultLanguage": "Standart Dil"
+  },
+
+  "preferences": {
+    "languageSettings": "Dil Parametrləri",
+    "changeLanguage": "Dili Dəyiş",
+    "defaultLanguage": "Standart Sistem Dili",
+    "languageHint": "Üstünlük verdiyiniz dili seçin. İnterfeys dili dərhal yenilənəcək."
+  },
+
+  "pos": {
+    "title": "POS Parametrləri",
+    "autoPrintReceipt": "Qəbzi avtomatik çap et",
+    "autoPrintDescription": "Aktiv olduqda, satış tamamlandıqdan sonra qəbz avtomatik olaraq çap ediləcək."
+  },
+
+  "system": {
+    "title": "Sistem Konfiqurasiyası",
+    "description": "Printer, qəbz, inteqrasiya və log parametrləri",
+    "printer": {
+      "title": "Printer",
+      "subtitle": "Konfiqurasiya"
+    },
+    "receipt": {
+      "title": "Qəbz",
+      "subtitle": "Şablonları"
+    },
+    "bridge": {
+      "title": "Bridge",
+      "subtitle": "Tokenlər"
+    },
+    "notification": {
+      "title": "Bildiriş",
+      "subtitle": "Kanalları"
+    }
+  },
+
+  "logs": {
+    "title": "Sistem Logları",
+    "description": "SMS, Telegram, Audit və Fiskal Printer logları",
+    "sms": "SMS",
+    "telegram": "Telegram",
+    "audit": "Audit",
+    "fiscalPrinter": "Fiskal Printer",
+    "queue": "Növbəsi",
+    "logsLabel": "Logları"
+  },
+
+  "notifications": {
+    "title": "Bildirişlər",
+    "description": "SMS və Telegram bildirişlərini idarə edin",
+    "channelsTab": "Bildiriş Kanalları",
+    "smsTab": "SMS Parametrləri",
+    "telegramTab": "Telegram Parametrləri",
+    "merchantTitle": "Tacir Bildirişləri",
+    "merchantDescription": "Yeni sifariş daxil olduqda sizə göndəriləcək bildirişlər",
+    "customerTitle": "Müştəri Bildirişləri",
+    "customerDescription": "Müştərilərə göndəriləcək təsdiq bildirişləri",
+    "channels": "Bildiriş Kanalları",
+    "enableNew": "Yeni sifariş bildirişlərini aktiv et",
+    "enableCustomer": "Müştəri təsdiq bildirişlərini aktiv et",
+    "activateNotifications": "Yeni sifariş bildirişlərini aktiv et",
+    "activateCustomer": "Müştəri təsdiq bildirişlərini aktiv et",
+    "sent": "göndərildi",
+    "noChannels": "Heç bir kanal konfiqurasiya edilməyib. Zəhmət olmasa SMS və ya Telegram parametrlərini konfiqurasiya edin.",
+    "recipientPhone": "SMS Alıcı Telefon",
+    "recipientPhoneHint": "Boş buraxsanız, hesab telefonunuz istifadə ediləcək",
+    "recipientSMS": "SMS Alıcı Telefon",
+    "chatId": "Telegram Chat ID",
+    "chatIdHint": "Boş buraxsanız, default chat ID istifadə ediləcək",
+    "defaultChatHint": "Boş buraxsanız, default chat ID istifadə ediləcək",
+    "recommended": "Tövsiyə olunur",
+    "maxCharacters": "Maksimum {{count}} simvol"
+  },
+
+  "sms": {
+    "title": "SMS Parametrləri",
+    "lsimTitle": "LSim SMS Parametrləri",
+    "description": "LSim SMS gateway məlumatlarınızı daxil edin",
+    "configured": "SMS konfiqurasiya edilib",
+    "notConfigured": "SMS parametrləri konfiqurasiya edilməyib",
+    "login": "Login",
+    "password": "Password",
+    "senderName": "Göndərən Adı (Sender Name)",
+    "senderNameHint": "Maksimum 11 simvol",
+    "gatewayUrl": "Gateway URL",
+    "enableService": "SMS xidmətini aktiv et",
+    "stats": {
+      "sent": "Göndərilən",
+      "failed": "Uğursuz"
+    }
+  },
+
+  "telegram": {
+    "title": "Telegram Parametrləri",
+    "botTitle": "Telegram Bot Parametrləri",
+    "description": "Telegram bot məlumatlarınızı daxil edin",
+    "configured": "Telegram konfiqurasiya edilib",
+    "notConfigured": "Telegram parametrləri konfiqurasiya edilməyib",
+    "bot": "Bot",
+    "lastTest": "Son test",
+    "instructions": {
+      "title": "Telegram Bot Yaratma Təlimatı:",
+      "step1": "Telegram-da @BotFather botunu tapın",
+      "step2": "/newbot əmrini göndərin",
+      "step3": "Bot adını və username-ni təyin edin",
+      "step4": "Aldığınız Bot Token-i aşağıya daxil edin",
+      "step5": "Chat ID əldə etmək üçün: botunuza mesaj göndərin və @userinfobot-dan öyrənin"
+    },
+    "botToken": "Bot Token",
+    "botUsername": "Bot Username (İstəyə bağlı)",
+    "defaultChatId": "Default Chat ID",
+    "defaultChatIdHint": "Bildirişlərin göndəriləcəyi default chat",
+    "enableService": "Telegram xidmətini aktiv et",
+    "testConnection": "Bağlantını Test Et"
+  },
+
+  "shop": {
+    "title": "Mağaza Parametrləri",
+    "onlineShop": "Online Mağaza",
+    "description": "Online mağazanızı idarə edin və parametrləri tənzimləyin",
+    "basicSettings": "Əsas Parametrlər",
+    "basicDescription": "Online mağazanızın əsas parametrlərini konfiqurasiya edin",
+    "enableShop": "Online mağazanı aktiv et",
+    "enableShopHint": "Müştərilər online sifariş verə biləcək",
+    "businessName": "Biznes Adı (URL)",
+    "businessNameHint": "Yalnız kiçik hərflər, rəqəmlər və tire istifadə edin (minimum 3 simvol)",
+    "shopUrl": "Mağaza URL",
+    "shopUrlLabel": "Mağaza URL:",
+    "shopStatus": "Mağaza Statusu",
+    "shopActive": "Mağaza aktiv və işlək vəziyyətdədir",
+    "shopConfiguration": "Mağaza Konfiqurasiyası",
+    "shopSlug": "Mağaza URL (slug)",
+    "warehouse": "Anbar / Filial",
+    "warehouseAll": "Bütün anbarlar",
+    "warehouseHint": "Seçilmiş anbardan məhsullar online mağazada göstəriləcək. Boş buraxdıqda bütün anbarlardan məhsullar göstərilir.",
+    "notificationSettings": "Bildiriş Parametrləri",
+    "smsNotifications": "SMS Bildirişləri",
+    "smsDescription": "Sifarişlər üzrə SMS bildirişlərini idarə edin",
+    "smsBalance": "SMS Balansınız",
+    "sms": "SMS",
+    "smsNotConfigured": "SMS xidməti konfiqurasiya edilməyib. Bildirişlər göndərmək üçün əvvəlcə",
+    "smsParameters": "SMS parametrlərini",
+    "smsParametersLink": "quraşdırın.",
+    "merchantNotifications": "Yeni sifariş bildirişləri (Satıcı)",
+    "merchantNotificationsHint": "Hər yeni online sifariş haqqında SMS bildirişi alacaqsınız",
+    "notificationPhone": "Bildiriş Telefonu (İstəyə bağlı)",
+    "notificationPhoneText": "Bildiriş telefonu",
+    "notificationPhoneHint": "Boş buraxsanız, hesab telefonunuz istifadə ediləcək",
+    "notificationPhoneHintShort": "Yeni sifariş haqqında SMS bu nömrəyə göndəriləcək",
+    "customerNotifications": "Müştərilərə təsdiq SMS-i göndər",
+    "customerNotificationsAlt": "Sifariş təsdiq bildirişləri (Müştəri)",
+    "customerNotificationsHint": "Sifariş verdikdən sonra müştəriyə təsdiq SMS-i göndəriləcək",
+    "customerTemplate": "Müştəri SMS Şablonu (İstəyə bağlı)",
+    "smsTemplate": "SMS Şablon",
+    "customerTemplateHint": "Boş buraxsanız, standart şablon istifadə ediləcək",
+    "templateVariables": "Dəyişənlər",
+    "templateVariablesYouCanUse": "İstifadə edə biləcəyiniz dəyişənlər:",
+    "notConfiguredTitle": "SMS parametrləri konfiqurasiya edilməyib",
+    "notConfiguredDescription": "SMS bildirişlərindən istifadə etmək üçün əvvəlcə SMS parametrlərini konfiqurasiya edin.",
+    "saved": "Parametrlər yadda saxlanıldı"
+  },
+
+  "loyalty": {
+    "title": "Loyallıq Proqramı",
+    "moduleDisabled": "Modul Söndürülüb",
+    "moduleDisabledDescription": "Loyallıq proqramı modulu hazırda deaktivdir. Modulu aktivləşdirmək üçün düyməyə klikləyin və ya aşağıdakı \"Təhlükəli Zona\" bölməsindən istifadə edin.",
+    "activateModule": "Modulu Aktivləşdir",
+    "programStatus": "Proqram Statusu",
+    "editProgram": "Redaktə et",
+    "stopProgram": "Proqramı Dayandır",
+    "startProgram": "Proqramı İşə Sal",
+    "currentConfig": "Cari Konfiqurasiya",
+    "pointsEarned": "Qazanılan ballar",
+    "perCurrency": "bal / ₼1",
+    "redemptionRate": "İstifadə nisbəti",
+    "pointsEquals": "bal = ₼1 endirim",
+    "minRedemption": "Minimum istifadə",
+    "points": "bal",
+    "expiryPeriod": "Bitmə müddəti",
+    "days": "gün",
+    "neverExpires": "Bitmir",
+    "configureTitle": "Loyallıq Proqramını Konfiqurasiya et",
+    "editTitle": "Konfiqurasiyanı Redaktə et",
+    "configureDescription": "Müştərilər hər alış-verişdən sonra bal qazanır və bu balları endirim üçün istifadə edə bilərlər.",
+    "earningParams": "Bal Qazanma Parametrləri",
+    "pointsPerCurrency": "Hər ₼1 üçün bal",
+    "pointsPerCurrencyHint": "Məsələn: 1 = müştəri hər ₼1 xərclədikdə 1 bal qazanır",
+    "maxPointsPerTransaction": "Maksimum bal (hər alış-veriş)",
+    "maxPointsPerTransactionHint": "Boş qoyun = limit yoxdur",
+    "unlimited": "Limitsiz",
+    "earnOnDiscounted": "Endirimli məhsullardan da bal qazanıla bilər",
+    "redemptionParams": "Bal İstifadəsi Parametrləri",
+    "redemptionRateLabel": "₼1 endirim üçün bal sayı",
+    "redemptionRateHint": "Məsələn: 100 = 100 bal ₼1 endirim verir",
+    "minRedemptionPoints": "Minimum bal (istifadə üçün)",
+    "minRedemptionPointsHint": "Müştəri bu qədər bal yığmalıdır",
+    "expiryParams": "Bal Bitmə Müddəti",
+    "expiryDays": "Ballar neçə gündən sonra bitir?",
+    "expiryDaysPlaceholder": "Məsələn: 365",
+    "expiryDaysHint": "0 və ya boş = ballar heç vaxt bitmir",
+    "programStatusLabel": "Proqram Statusu",
+    "activateProgram": "Loyallıq proqramını aktiv et",
+    "activateProgramHint": "Aktiv olduqda müştərilər avtomatik bal qazanıb istifadə edə biləcəklər",
+    "howItWorks": {
+      "title": "Loyallıq Proqramı Necə İşləyir?",
+      "point1": "Müştərilər alış-veriş edərkən avtomatik bal qazanırlar",
+      "point2": "Yığdıqları balları növbəti alış-verişlərində endirim üçün istifadə edə bilərlər",
+      "point3": "POS sistemində müştəri seçdikdə onun bal balansı görünür",
+      "point4": "Ödəniş zamanı müştəri ballarını istifadə edərək endirim ala bilər",
+      "point5": "Bütün bal hərəkətləri müştəri tarixçəsində qeyd olunur"
+    },
+    "dangerZone": {
+      "title": "Təhlükəli Zona",
+      "enabledWarning": "Loyallıq proqramı modulunu tamamilə söndürərkən diqqətli olun. Modul söndürüldükdə menyu siyahısından gizlədilir və heç kim bu funksiyanı istifadə edə bilməz.",
+      "disabledInfo": "Loyallıq proqramı modulu hazırda söndürülüb. Aktivləşdirdikdə menyu siyahısında görünəcək və istifadəyə hazır olacaq.",
+      "disableModule": "Modulu Tamamilə Söndür",
+      "activateModule": "Modulu Aktivləşdir"
+    },
+    "confirmDisable": {
+      "title": "Loyallıq Proqramı Modulunu Söndür",
+      "description": "Modulu söndürmək istədiyinizə əminsiniz? Bu əməliyyat:",
+      "point1": "Menyu siyahısından loyallıq proqramını gizlədəcək",
+      "point2": "Heç kimin bu funksiyanı istifadə etməsinə icazə verməyəcək",
+      "point3": "Mövcud proqram məlumatları saxlanılacaq",
+      "point4": "Müştərilərin balları təhlükəsiz saxlanılacaq",
+      "point5": "İstənilən vaxt yenidən aktivləşdirə bilərsiniz",
+      "confirm": "Bəli, Söndür"
+    }
+  },
+
+  "bridgeTokens": {
+    "title": "Bridge Tokenlər",
+    "description": "Hər POS terminal üçün ayrı token yaradın. Token ilə bridge proqramı serverə qoşulur və fiskal çap işlərini icra edir.",
+    "download": {
+      "title": "Bridge Proqramını Yüklə",
+      "version": "Versiya",
+      "windows": "Windows",
+      "macosIntel": "macOS (Intel)",
+      "macosArm": "macOS (Apple Silicon)",
+      "downloadButton": "Yüklə",
+      "instructions": {
+        "title": "Quraşdırma addımları:",
+        "step1": "Yuxarıdan öz platformanız üçün installer-i yükləyin",
+        "step2": "Proqramı quraşdırın və açın",
+        "step3": "Aşağıdan yeni token yaradın",
+        "step4": "Tokeni kopyalayın və bridge proqramına yapışdırın",
+        "step5": "Proqramı başladın - printer parametrləri avtomatik yüklənəcək"
+      },
+      "requirements": "Sistem tələbləri"
+    },
+    "noTokens": "Hələ heç bir token yaradılmayıb",
+    "createFirst": "İlk Tokeni Yarat",
+    "table": {
+      "name": "Ad",
+      "token": "Token",
+      "status": "Status",
+      "lastSeen": "Son Görünmə",
+      "version": "Versiya",
+      "actions": "Əməliyyatlar"
+    },
+    "status": {
+      "revoked": "Ləğv edilib",
+      "online": "Onlayn",
+      "idle": "Gözləmə",
+      "offline": "Oflayn",
+      "never": "Heç vaxt"
+    },
+    "actions": {
+      "copy": "Kopyala",
+      "revoke": "Ləğv et"
+    },
+    "modal": {
+      "createTitle": "Yeni Bridge Token",
+      "tokenName": "Token Adı",
+      "tokenNamePlaceholder": "Məsələn: Əsas Kassa Terminali",
+      "tokenNameHint": "Terminalı tanımaq üçün ad verin",
+      "creating": "Yaradılır..."
+    },
+    "showToken": {
+      "title": "Token Yaradıldı - İndi Kopyalayın!",
+      "warning": "DİQQƏT: Bu token yalnız bir dəfə göstərilir. İndi kopyalayın və təhlükəsiz yerdə saxlayın.",
+      "tokenLabel": "Token:",
+      "copyButton": "Kopyala",
+      "nextSteps": "Növbəti addımlar:",
+      "step1": "Bridge proqramını terminalda açın",
+      "step2": "config.json faylını redaktə edin",
+      "step3": "Bu tokeni \"token\" sahəsinə yapışdırın",
+      "step4": "Proqramı yenidən başladın"
+    },
+    "messages": {
+      "tokenCopied": "Token kopyalandı!",
+      "confirmRevoke": "\"{{name}}\" tokenini ləğv etmək istədiyinizə əminsiniz? Bridge artıq işləməyəcək.",
+      "confirmDelete": "\"{{name}}\" tokenini silmək istədiyinizə əminsiniz? Bu əməliyyatı geri qaytarmaq mümkün deyil.",
+      "tokenRevoked": "Token ləğv edildi",
+      "tokenDeleted": "Token silindi",
+      "errorOccurred": "Xəta baş verdi",
+      "errorCreating": "Token yaradılarkən xəta baş verdi"
+    }
+  },
+
+  "fiscalPrinter": {
+    "title": "Fiskal Printer Parametrləri",
+    "infoBox": {
+      "title": "Fiskal Printer Haqqında",
+      "description": "Vergilər Nazirliyi tərəfindən təsdiq edilmiş elektron kassa cihazları ilə inteqrasiya. Satış tamamlananda avtomatik olaraq fiskal çek çap olunacaq.",
+      "important": "Vacib: Fiskal printer və XPOS eyni lokal şəbəkədə olmalıdır."
+    },
+    "selectProvider": "Fiskal Printer Provayderini seçin",
+    "notAvailable": "Uygun deyil",
+    "configTitle": "Konfiqurasiya",
+    "testConnection": "Əlaqəni Yoxla",
+    "testing": "Yoxlanılır...",
+    "provider": "Provayder",
+    "configName": "Konfiqurasiya Adı",
+    "configNamePlaceholder": "Məsələn: Əsas Kassa",
+    "ipAddress": "IP Ünvanı",
+    "port": "Port",
+    "apiPath": "API Path",
+    "defaultLabel": "Default",
+    "providerFields": {
+      "username": "İstifadəçi adı",
+      "password": "Şifrə",
+      "merchantId": "Merchant ID",
+      "securityKey": "Təhlükəsizlik Açarı",
+      "deviceSerial": "Cihaz S/N (son 4 rəqəm)",
+      "bankPort": "Bank Port"
+    },
+    "creditContract": "Bank Kredit Müqaviləsi",
+    "creditContractPlaceholder": "Məsələn: BirKart müqavilə nömrəsi",
+    "creditContractHint": "Bank kredit satışları üçün lazımdır. Bu xana dolmadığı halda \"Bank Kredit\" ödəniş növü POS ekranında görünməyəcək.",
+    "taxName": "Vergi Adı",
+    "taxRate": "Vergi Dərəcəsi (%)",
+    "checkboxes": {
+      "autoSend": "Avtomatik göndərilsin (satış bağlandıqda avtomatik fiskal çek yaradılsın)",
+      "showInTerminal": "Terminalda göstər",
+      "active": "Aktiv"
+    },
+    "confirmDelete": "Fiskal printer konfiqurasiyasını silmək istədiyinizə əminsiniz?",
+    "passwordPlaceholder": "(dəyişdirmək üçün yeni şifrə daxil edin)"
+  },
+
+  "fields": {
+    "companyName": "Şirkətin adı",
+    "companyEmail": "Şirkət e-poçtu",
+    "companyPhone": "Şirkət telefonu",
+    "companyAddress": "Şirkət ünvanı",
+    "logo": "Şirkət loqosu",
+    "currency": "Valyuta",
+    "language": "Dil",
+    "timezone": "Saat qurşağı",
+    "dateFormat": "Tarix formatı",
+    "timeFormat": "Vaxt formatı",
+    "taxRate": "Standart vergi dərəcəsi",
+    "receiptFooter": "Qəbz altlıq mətni"
+  },
+
+  "sections": {
+    "appearance": "Görünüş",
+    "localization": "Lokallaşdırma",
+    "notifications": "Bildirişlər",
+    "security": "Təhlükəsizlik",
+    "integrations": "İnteqrasiyalar",
+    "backup": "Ehtiyat nüsxə və bərpa"
+  },
+
+  "actions": {
+    "saveChanges": "Dəyişiklikləri Saxla",
+    "saving": "Yadda saxlanır...",
+    "saved": "Parametrlər yadda saxlanıldı",
+    "smsSaved": "SMS parametrləri yadda saxlanıldı",
+    "telegramSaved": "Telegram parametrləri yadda saxlanıldı"
+  },
+
+  "messages": {
+    "settingsSaved": "Parametrlər uğurla saxlanıldı",
+    "settingsError": "Parametrlər saxlanarkən xəta"
+  }
+}

@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatCurrency } from '../Utils/dashboardCalculations';
 import { getRankingColor, calculateChartMaxValue } from '../Utils/widgetHelpers';
 
@@ -16,6 +17,7 @@ interface TopProductsProps {
 }
 
 const TopProducts = memo(function TopProducts({ products }: TopProductsProps) {
+    const { t } = useTranslation('dashboard');
     const maxRevenue = useMemo(() => {
         return calculateChartMaxValue(products, 'total_revenue');
     }, [products]);
@@ -23,8 +25,8 @@ const TopProducts = memo(function TopProducts({ products }: TopProductsProps) {
     return (
         <div className="-m-6 p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Ən Çox Satılan Məhsullar</h3>
-                <span className="text-sm text-gray-500">Bu ay</span>
+                <h3 className="text-lg font-semibold text-gray-900">{t('widgets.topProducts.title')}</h3>
+                <span className="text-sm text-gray-500">{t('widgets.topProducts.thisMonth')}</span>
             </div>
 
             {products.length > 0 ? (
@@ -44,7 +46,7 @@ const TopProducts = memo(function TopProducts({ products }: TopProductsProps) {
                                             {product.name}
                                         </h4>
                                         <p className="text-xs text-gray-500 truncate">
-                                            {product.category_name || 'Kateqoriyasız'}
+                                            {product.category_name || t('widgets.topProducts.uncategorized')}
                                         </p>
                                     </div>
                                     <div className="text-right ml-2 flex-shrink-0">
@@ -52,7 +54,7 @@ const TopProducts = memo(function TopProducts({ products }: TopProductsProps) {
                                             {formatCurrency(product.total_revenue)}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            {product.total_sold} ədəd
+                                            {product.total_sold} {t('widgets.topProducts.pieces')}
                                         </p>
                                     </div>
                                 </div>
@@ -74,7 +76,7 @@ const TopProducts = memo(function TopProducts({ products }: TopProductsProps) {
                                         product.stock_quantity > 5 ? 'bg-yellow-100 text-yellow-800' :
                                         'bg-red-100 text-red-800'
                                     }`}>
-                                        Stok: {product.stock_quantity}
+                                        {t('widgets.topProducts.stock')}: {product.stock_quantity}
                                     </span>
                                 </div>
                             </div>
@@ -88,7 +90,7 @@ const TopProducts = memo(function TopProducts({ products }: TopProductsProps) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                         </svg>
                     </div>
-                    <p className="text-gray-500 mt-2">Məlumat tapılmadı</p>
+                    <p className="text-gray-500 mt-2">{t('widgets.topProducts.noData')}</p>
                 </div>
             )}
         </div>

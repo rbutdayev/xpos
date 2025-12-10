@@ -1,0 +1,44 @@
+{
+  "title": "Profile",
+  "edit": {
+    "title": "Edit Profile",
+    "heading": "Profile"
+  },
+  "information": {
+    "title": "Profile Information",
+    "description": "Update your account's profile information and email address.",
+    "name": "Name",
+    "email": "Email",
+    "language": "Language / Dil",
+    "languageDescription": "User interface language",
+    "emailUnverified": "Your email address is unverified.",
+    "resendVerification": "Click here to re-send the verification email.",
+    "verificationSent": "A new verification link has been sent to your email address.",
+    "saved": "Saved."
+  },
+  "password": {
+    "title": "Update Password",
+    "description": "Ensure your account is using a long, random password to stay secure.",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm Password",
+    "saved": "Saved."
+  },
+  "delete": {
+    "title": "Delete Account",
+    "description": "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.",
+    "button": "Delete Account",
+    "confirm": "Are you sure you want to delete your account?",
+    "confirmDescription": "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
+    "password": "Password",
+    "passwordPlaceholder": "Password"
+  },
+  "languages": {
+    "en": "English",
+    "az": "Azerbaijani"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel"
+  }
+}

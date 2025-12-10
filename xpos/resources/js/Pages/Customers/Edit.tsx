@@ -9,12 +9,14 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     customer: Customer;
 }
 
 export default function Edit({ customer }: Props) {
+    const { t } = useTranslation('customers');
     const { data, setData, put, processing, errors } = useForm<CustomerFormData>({
         name: customer.name || '',
         phone: customer.phone || '',
@@ -45,7 +47,7 @@ export default function Edit({ customer }: Props) {
             }, 500);
             return () => clearTimeout(timer);
         } else if (data.card_number === customer.loyalty_card?.card_number) {
-            setCardValidation({ isValidating: false, isValid: true, message: 'Mövcud kart' });
+            setCardValidation({ isValidating: false, isValid: true, message: t('messages.existingCard') });
         } else {
             setCardValidation({ isValidating: false, isValid: null, message: '' });
         }
@@ -66,7 +68,7 @@ export default function Edit({ customer }: Props) {
             setCardValidation({
                 isValidating: false,
                 isValid: false,
-                message: error.response?.data?.message || 'Kart yoxlanılarkən xəta baş verdi',
+                message: error.response?.data?.message || t('messages.cardError'),
             });
         }
     };
@@ -75,7 +77,7 @@ export default function Edit({ customer }: Props) {
         e.preventDefault();
         put(`/customers/${customer.id}`, {
             onSuccess: () => {
-                toast.success('Müştəri məlumatları yeniləndi');
+                toast.success(t('messages.updated'));
             },
             onError: (errs) => {
                 // Show toast notifications for all errors
@@ -92,7 +94,7 @@ export default function Edit({ customer }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Düzəliş et: ${customer.name}`} />
+            <Head title={t('editCustomerTitle', { name: customer.name })} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
@@ -100,7 +102,7 @@ export default function Edit({ customer }: Props) {
                         <form onSubmit={submit} className="p-6 space-y-6">
                             {/* Customer Name */}
                             <div>
-                                <InputLabel htmlFor="name" value="Müştəri adı *" />
+                                <InputLabel htmlFor="name" value={t('fields.name')} />
                                 <TextInput
                                     id="name"
                                     type="text"
@@ -116,7 +118,7 @@ export default function Edit({ customer }: Props) {
 
                             {/* Customer Type */}
                             <div>
-                                <InputLabel htmlFor="customer_type" value="Müştəri növü *" />
+                                <InputLabel htmlFor="customer_type" value={t('fields.customerType')} />
                                 <select
                                     id="customer_type"
                                     name="customer_type"
@@ -124,15 +126,15 @@ export default function Edit({ customer }: Props) {
                                     onChange={(e) => setData('customer_type', e.target.value as 'individual' | 'corporate')}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <option value="individual">Fiziki şəxs</option>
-                                    <option value="corporate">Hüquqi şəxs</option>
+                                    <option value="individual">{t('types.individual')}</option>
+                                    <option value="corporate">{t('types.corporate')}</option>
                                 </select>
                                 <InputError message={errors.customer_type} className="mt-2" />
                             </div>
 
                             {/* Phone */}
                             <div>
-                                <InputLabel htmlFor="phone" value="Telefon" />
+                                <InputLabel htmlFor="phone" value={t('fields.phone')} />
                                 <div className="mt-1 flex rounded-md shadow-sm">
                                     <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                                         +994
@@ -143,7 +145,7 @@ export default function Edit({ customer }: Props) {
                                         name="phone"
                                         value={data.phone.startsWith('+994') ? data.phone.slice(4) : data.phone}
                                         className="flex-1 block w-full rounded-l-none"
-                                        placeholder="501234567"
+                                        placeholder={t('placeholders.phone')}
                                         onChange={(e) => {
                                             const value = e.target.value.replace(/\D/g, '');
                                             setData('phone', value ? `+994${value}` : '');
@@ -152,13 +154,13 @@ export default function Edit({ customer }: Props) {
                                 </div>
                                 <InputError message={errors.phone} className="mt-2" />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Məsələn: 501234567 (9 rəqəm)
+                                    {t('placeholders.phoneExample')}
                                 </p>
                             </div>
 
                             {/* Email */}
                             <div>
-                                <InputLabel htmlFor="email" value="E-poçt" />
+                                <InputLabel htmlFor="email" value={t('fields.email')} />
                                 <TextInput
                                     id="email"
                                     type="email"
@@ -174,7 +176,7 @@ export default function Edit({ customer }: Props) {
                             {/* Birthday (only for individual) */}
                             {data.customer_type === 'individual' && (
                                 <div>
-                                    <InputLabel htmlFor="birthday" value="Doğum tarixi" />
+                                    <InputLabel htmlFor="birthday" value={t('fields.birthday')} />
                                     <TextInput
                                         id="birthday"
                                         type="date"
@@ -190,14 +192,14 @@ export default function Edit({ customer }: Props) {
                             {/* Tax Number (only for corporate) */}
                             {data.customer_type === 'corporate' && (
                                 <div>
-                                    <InputLabel htmlFor="tax_number" value="VÖEN" />
+                                    <InputLabel htmlFor="tax_number" value={t('fields.taxNumber')} />
                                     <TextInput
                                         id="tax_number"
                                         type="text"
                                         name="tax_number"
                                         value={data.tax_number}
                                         className="mt-1 block w-full"
-                                        placeholder="1234567890"
+                                        placeholder={t('placeholders.taxNumber')}
                                         onChange={(e) => setData('tax_number', e.target.value)}
                                     />
                                     <InputError message={errors.tax_number} className="mt-2" />
@@ -206,7 +208,7 @@ export default function Edit({ customer }: Props) {
 
                             {/* Address */}
                             <div>
-                                <InputLabel htmlFor="address" value="Ünvan" />
+                                <InputLabel htmlFor="address" value={t('fields.address')} />
                                 <textarea
                                     id="address"
                                     name="address"
@@ -214,14 +216,14 @@ export default function Edit({ customer }: Props) {
                                     onChange={(e) => setData('address', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Müştərinin ünvanı..."
+                                    placeholder={t('placeholders.address')}
                                 />
                                 <InputError message={errors.address} className="mt-2" />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('fields.notes')} />
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -229,14 +231,14 @@ export default function Edit({ customer }: Props) {
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Əlavə məlumatlar..."
+                                    placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
 
                             {/* Loyalty Card */}
                             <div>
-                                <InputLabel htmlFor="card_number" value="Loaylıq Kartı" />
+                                <InputLabel htmlFor="card_number" value={t('fields.loyaltyCard')} />
                                 <div className="mt-1">
                                     <TextInput
                                         id="card_number"
@@ -244,7 +246,7 @@ export default function Edit({ customer }: Props) {
                                         name="card_number"
                                         value={data.card_number}
                                         className="block w-full uppercase"
-                                        placeholder="14 simvollu kart nömrəsi"
+                                        placeholder={t('placeholders.cardNumber')}
                                         maxLength={14}
                                         onChange={(e) => setData('card_number', e.target.value.toUpperCase())}
                                     />
@@ -254,7 +256,7 @@ export default function Edit({ customer }: Props) {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Yoxlanılır...
+                                            {t('messages.validating')}
                                         </div>
                                     )}
                                     {cardValidation.isValid === true && (
@@ -276,8 +278,8 @@ export default function Edit({ customer }: Props) {
                                 </div>
                                 <InputError message={errors.card_number} className="mt-2" />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    İstəyə bağlı. Fiziki loaylıq kartının nömrəsini daxil edin.
-                                    {customer.loyalty_card && ' Kartı dəyişmək və ya boş buraxmaq onu silər.'}
+                                    {t('info.cardOptional')}
+                                    {customer.loyalty_card && ` ${t('info.cardChangeWarning')}`}
                                 </p>
                             </div>
 
@@ -292,7 +294,7 @@ export default function Edit({ customer }: Props) {
                                         onChange={(e) => setData('is_active', e.target.checked)}
                                         className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                     />
-                                    <InputLabel htmlFor="is_active" value="Aktiv müştəri" className="ml-2" />
+                                    <InputLabel htmlFor="is_active" value={t('fields.activeCustomer')} className="ml-2" />
                                 </div>
                                 <InputError message={errors.is_active} className="mt-2" />
                             </div>
@@ -301,11 +303,11 @@ export default function Edit({ customer }: Props) {
                             <div className="flex items-center justify-end space-x-4 pt-6 border-t">
                                 <Link href={`/customers/${customer.id}`}>
                                     <SecondaryButton type="button">
-                                        Ləğv et
+                                        {t('actions.cancel')}
                                     </SecondaryButton>
                                 </Link>
                                 <PrimaryButton disabled={processing}>
-                                    {processing ? 'Yenilənir...' : 'Dəyişiklikləri yadda saxla'}
+                                    {processing ? t('actions.updating') : t('actions.update')}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -313,25 +315,25 @@ export default function Edit({ customer }: Props) {
 
                     {/* Customer Stats */}
                     <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-900 mb-3">Müştəri statistikası</h3>
+                        <h3 className="text-sm font-medium text-gray-900 mb-3">{t('customerDetails')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                             <div>
-                                <span className="text-gray-500">Yaradılma tarixi:</span>
+                                <span className="text-gray-500">{t('stats.createdAt')}</span>
                                 <div className="font-medium">
                                     {customer.created_at ? new Date(customer.created_at).toLocaleDateString('az-AZ') : '-'}
                                 </div>
                             </div>
                             <div>
-                                <span className="text-gray-500">Aktiv məhsullar:</span>
+                                <span className="text-gray-500">{t('stats.activeItems')}</span>
                                 <div className="font-medium">{customer.active_customerItems_count || 0}</div>
                             </div>
                             <div>
-                                <span className="text-gray-500">Ümumi servislər:</span>
+                                <span className="text-gray-500">{t('stats.totalServices')}</span>
                                 <div className="font-medium">{customer.total_tailor_services || 0}</div>
                             </div>
                             {customer.last_service_date && (
                                 <div>
-                                    <span className="text-gray-500">Son servis:</span>
+                                    <span className="text-gray-500">{t('stats.lastService')}</span>
                                     <div className="font-medium">
                                         {new Date(customer.last_service_date).toLocaleDateString('az-AZ')}
                                     </div>
@@ -339,7 +341,7 @@ export default function Edit({ customer }: Props) {
                             )}
                             {customer.has_pending_credits && (
                                 <div>
-                                    <span className="text-gray-500">Borc məbləği:</span>
+                                    <span className="text-gray-500">{t('stats.debt')}</span>
                                     <div className="font-medium text-red-600">
                                         {customer.total_credit_amount?.toFixed(2) || '0.00'} AZN
                                     </div>
@@ -351,10 +353,9 @@ export default function Edit({ customer }: Props) {
                     {/* Warning for service records */}
                     {(customer.total_tailor_services || 0) > 0 && (
                         <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <h3 className="text-sm font-medium text-yellow-900 mb-2">Diqqət</h3>
+                            <h3 className="text-sm font-medium text-yellow-900 mb-2">{t('warning.title')}</h3>
                             <p className="text-sm text-yellow-700">
-                                Bu müştərinin {customer.total_tailor_services} servis qeydi mövcuddur.
-                                Müştərini silmək istəyirsinizsə, əvvəlcə bütün servis qeydlərini silməlisiniz.
+                                {t('warning.hasServices', { count: customer.total_tailor_services })}
                             </p>
                         </div>
                     )}

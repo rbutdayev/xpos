@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps, Product, Customer, Branch, LoyaltyProgram } from '@/types';
 import CustomerSection from './components/CustomerSection';
@@ -35,6 +36,7 @@ interface POSIndexProps extends PageProps {
 }
 
 export default function Index({ auth, branches, customers, fiscalPrinterEnabled, fiscalConfig, loyaltyProgram, giftCardsEnabled }: POSIndexProps) {
+  const { t } = useTranslation('sales');
 
   // Determine initial branch selection
   const getUserBranch = () => {
@@ -142,7 +144,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
         if (data.status === 'completed') {
           setFiscalPrintStatus('completed');
           setFiscalPrintLoading(false);
-          toast.success(`Fiskal çap tamamlandı! №${data.fiscal_number}`, {
+          toast.success(t('pos.fiscalPrintCompleted', { fiscalNumber: data.fiscal_number }), {
             duration: 5000,
             icon: '✅'
           });
@@ -150,7 +152,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
         } else if (data.status === 'failed') {
           setFiscalPrintStatus('failed');
           setFiscalPrintLoading(false);
-          toast.error(`Fiskal çap xətası: ${data.error || 'Naməlum xəta'}`, {
+          toast.error(t('pos.fiscalPrintError', { error: data.error || 'Unknown error' }), {
             duration: 7000,
             icon: '❌'
           });
@@ -175,7 +177,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
         if (interval) clearInterval(interval);
         if (fiscalPrintLoading) {
           setFiscalPrintLoading(false);
-          toast.error('Fiskal çap müddəti doldu. Bridge aktiv deyilmi?', {
+          toast.error(t('pos.fiscalPrintTimeout'), {
             duration: 5000
           });
         }
@@ -255,7 +257,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Növbə açılır...', { duration: 3000 });
+        toast.success(t('pos.shiftOpening'), { duration: 3000 });
 
         // Wait a bit for the shift to actually open
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -264,19 +266,19 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
         const status = await checkShiftStatus();
 
         if (status.shift_open) {
-          toast.success('Növbə açıldı!', { duration: 2000 });
+          toast.success(t('pos.shiftOpened'), { duration: 2000 });
           setShiftWarningModalOpen(false);
           // Now submit the sale
           submitSale();
         } else {
-          toast.error('Növbə açılmadı. Yenidən cəhd edin.');
+          toast.error(t('pos.shiftNotOpened'));
         }
       } else {
         throw new Error(data.error || 'Unknown error');
       }
     } catch (error: any) {
       console.error('Error opening shift:', error);
-      toast.error(`Növbə açılarkən xəta: ${error.message}`, { duration: 5000 });
+      toast.error(t('pos.shiftOpenError', { error: error.message }), { duration: 5000 });
     }
   };
 
@@ -346,12 +348,12 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
     setErrors({});
 
     const newErrors: Record<string, string> = {};
-    if (!formData.branch_id) newErrors.branch_id = 'Filial seçmək məcburidir';
-    if (cart.length === 0) newErrors.items = 'Ən azı bir məhsul əlavə edilməlidir';
+    if (!formData.branch_id) newErrors.branch_id = t('pos.errors.branchRequired');
+    if (cart.length === 0) newErrors.items = t('pos.errors.minOneProduct');
 
     // For credit or partial payment, customer is required
     if ((formData.payment_status === 'credit' || formData.payment_status === 'partial') && !formData.customer_id) {
-      newErrors.customer_id = 'Borc və ya qismən ödəniş üçün müştəri seçmək məcburidir';
+      newErrors.customer_id = t('pos.errors.customerRequiredForCredit');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -389,7 +391,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
 
   return (
     <AuthenticatedLayout>
-      <Head title="POS Satış" />
+      <Head title={t('pos.title')} />
       <div className="py-6">
         <div className="w-full">
           {/* Fiscal Print Status Banner */}
@@ -404,7 +406,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-blue-700">
-                    Fiskal çap gözləyir... ({fiscalPrintStatus === 'processing' ? 'İşlənir' : 'Növbədə'})
+                    {t('pos.fiscalPrintWaiting', { status: fiscalPrintStatus === 'processing' ? t('messages.processing') : t('messages.queued') })}
                   </p>
                 </div>
               </div>
@@ -453,7 +455,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      Hədiyyə Kartı
+                      {t('pos.giftCard')}
                     </button>
                   )}
                 </div>
@@ -474,7 +476,7 @@ export default function Index({ auth, branches, customers, fiscalPrinterEnabled,
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
-                    <span>Mal Qaytarma</span>
+                    <span>{t('pos.returnProduct')}</span>
                   </button>
                 </div>
 

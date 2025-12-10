@@ -6,12 +6,14 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function DeleteUserForm({
     className = '',
 }: {
     className?: string;
 }) {
+    const { t } = useTranslation(['profile', 'common']);
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
     const passwordInput = useRef<HTMLInputElement>(null);
 
@@ -53,36 +55,32 @@ export default function DeleteUserForm({
         <section className={`space-y-6 ${className}`}>
             <header>
                 <h2 className="text-lg font-medium text-gray-900">
-                    Hesabı Sil
+                    {t('delete.title')}
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-600">
-                    Hesabınız silindikdən sonra, onun bütün resursları və məlumatları 
-                    həmişəlik silinəcək. Hesabınızı silməzdən əvvəl, saxlamaq istədiyiniz 
-                    hər hansı məlumat və ya məlumatları endirin.
+                    {t('delete.description')}
                 </p>
             </header>
 
             <DangerButton onClick={confirmUserDeletion}>
-                Hesabı Sil
+                {t('delete.button')}
             </DangerButton>
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
                 <form onSubmit={deleteUser} className="p-6">
                     <h2 className="text-lg font-medium text-gray-900">
-                        Hesabınızı silmək istədiyinizə əminsiniz?
+                        {t('delete.confirm')}
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-600">
-                        Hesabınız silindikdən sonra, onun bütün resursları və 
-                        məlumatları həmişəlik silinəcək. Hesabınızı həmişəlik silmək 
-                        istədiyinizi təsdiqləmək üçün şifrənizi daxil edin.
+                        {t('delete.confirmDescription')}
                     </p>
 
                     <div className="mt-6">
                         <InputLabel
                             htmlFor="password"
-                            value="Şifrə"
+                            value={t('delete.password')}
                             className="sr-only"
                         />
 
@@ -97,7 +95,7 @@ export default function DeleteUserForm({
                             }
                             className="mt-1 block w-3/4"
                             isFocused
-                            placeholder="Şifrə"
+                            placeholder={t('delete.passwordPlaceholder')}
                         />
 
                         <InputError
@@ -108,11 +106,11 @@ export default function DeleteUserForm({
 
                     <div className="mt-6 flex justify-end">
                         <SecondaryButton onClick={closeModal}>
-                            Ləğv et
+                            {t('actions.cancel')}
                         </SecondaryButton>
 
                         <DangerButton className="ms-3" disabled={processing}>
-                            Hesabı Sil
+                            {t('delete.button')}
                         </DangerButton>
                     </div>
                 </form>

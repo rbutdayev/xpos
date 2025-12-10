@@ -1,0 +1,107 @@
+{
+  "title": "Gift Cards",
+  "subtitle": "Manage gift cards and vouchers",
+  "create": "New Gift Card",
+  "createButton": "Create New Gift Card",
+  "configure": "Configure Gift Cards",
+  "noGiftCards": "No gift cards found",
+  "searchPlaceholder": "Search gift cards...",
+
+  "status": {
+    "active": "Active",
+    "used": "Used",
+    "expired": "Expired",
+    "cancelled": "Cancelled"
+  },
+
+  "form": {
+    "basicInfo": "Basic Information",
+    "cardNumber": "Card Number",
+    "generateNumber": "Generate Number",
+    "balance": "Balance",
+    "initialBalance": "Initial Balance",
+    "currentBalance": "Current Balance",
+    "expiryDate": "Expiry Date",
+    "status": "Status",
+    "customer": "Customer (Optional)",
+    "selectCustomer": "Select customer...",
+    "notes": "Notes"
+  },
+
+  "configure": {
+    "title": "Gift Card Configuration",
+    "enabled": "Gift Cards Enabled",
+    "numberPrefix": "Card Number Prefix",
+    "numberLength": "Card Number Length",
+    "defaultValidity": "Default Validity (Days)",
+    "minAmount": "Minimum Amount",
+    "maxAmount": "Maximum Amount",
+    "allowPartialUse": "Allow Partial Use",
+    "requirePin": "Require PIN"
+  },
+
+  "show": {
+    "title": "Gift Card Details",
+    "cardNumber": "Card Number",
+    "back": "Back to Gift Cards",
+    "edit": "Edit",
+    "cancel": "Cancel Card",
+    "recharge": "Recharge",
+
+    "cardInfo": "Card Information",
+    "status": "Status",
+    "initialBalance": "Initial Balance",
+    "currentBalance": "Current Balance",
+    "usedAmount": "Used Amount",
+    "issuedDate": "Issued Date",
+    "expiryDate": "Expiry Date",
+    "customer": "Customer",
+
+    "transactions": "Transaction History",
+    "type": "Type",
+    "amount": "Amount",
+    "balance": "Balance After",
+    "date": "Date",
+    "reference": "Reference",
+    "noTransactions": "No transactions",
+
+    "usage": {
+      "purchase": "Purchase",
+      "recharge": "Recharge",
+      "refund": "Refund",
+      "adjustment": "Adjustment"
+    }
+  },
+
+  "actions": {
+    "create": "Create Gift Card",
+    "creating": "Creating...",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "recharge": "Recharge Card",
+    "checkBalance": "Check Balance"
+  },
+
+  "messages": {
+    "createSuccess": "Gift card created successfully",
+    "updateSuccess": "Gift card updated successfully",
+    "cancelSuccess": "Gift card cancelled successfully",
+    "rechargeSuccess": "Gift card recharged successfully",
+    "confirmCancel": "Are you sure you want to cancel this gift card?",
+    "insufficientBalance": "Insufficient balance",
+    "expired": "Gift card has expired",
+    "invalidCard": "Invalid gift card number"
+  },
+
+  "table": {
+    "cardNumber": "Card Number",
+    "customer": "Customer",
+    "initialBalance": "Initial Balance",
+    "currentBalance": "Current Balance",
+    "issuedDate": "Issued",
+    "expiryDate": "Expires",
+    "status": "Status",
+    "actions": "Actions"
+  }
+}

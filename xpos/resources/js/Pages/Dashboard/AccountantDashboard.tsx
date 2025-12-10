@@ -2,6 +2,7 @@ import { BanknotesIcon, DocumentTextIcon, ArrowTrendingUpIcon, ArrowTrendingDown
 import { Doughnut } from 'react-chartjs-2';
 import { CompactKPICard } from '@/Components/Dashboard/KPICard';
 import { SectionGroup } from '@/Components/Dashboard/SectionGroup';
+import { useTranslation } from 'react-i18next';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -43,6 +44,8 @@ interface Props {
 }
 
 export default function AccountantDashboard({ financial, revenue_breakdown, expense_breakdown, credits, inventory_valuation, charts, user }: Props) {
+    const { t } = useTranslation('dashboard');
+
     const paymentMethodsData = {
         labels: charts.payment_methods.labels,
         datasets: [{
@@ -52,7 +55,7 @@ export default function AccountantDashboard({ financial, revenue_breakdown, expe
     };
 
     const revenueData = {
-        labels: ['Satış', 'Servis', 'İcarə'].filter((_, i) => [revenue_breakdown.sales, revenue_breakdown.services, revenue_breakdown.rentals][i]),
+        labels: [t('charts.sales'), t('charts.service'), t('charts.rental')].filter((_, i) => [revenue_breakdown.sales, revenue_breakdown.services, revenue_breakdown.rentals][i]),
         datasets: [{
             data: [revenue_breakdown.sales, revenue_breakdown.services || 0, revenue_breakdown.rentals || 0].filter(v => v > 0),
             backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(34, 197, 94, 0.8)'],
@@ -70,80 +73,80 @@ export default function AccountantDashboard({ financial, revenue_breakdown, expe
     return (
         <div className="space-y-4">
             <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg shadow-lg p-6 text-white">
-                <h2 className="text-2xl font-bold mb-2">Salam, {user.name}!</h2>
-                <p className="text-emerald-100">Maliyyə hesabatları və statistika</p>
+                <h2 className="text-2xl font-bold mb-2">{t('welcomeBack', { name: user.name })}</h2>
+                <p className="text-emerald-100">{t('roles.accountantPanel')}</p>
             </div>
 
-            <SectionGroup title="Maliyyə İcmalı" icon={<BanknotesIcon />} variant="highlight">
+            <SectionGroup title={t('sections.financialSummary')} icon={<BanknotesIcon />} variant="highlight">
                 <CompactKPICard
-                    title="Bu Ay Gəlir"
+                    title={t('financial.thisMonthRevenue')}
                     value={formatCurrency(financial.revenue.value)}
                     icon={<BanknotesIcon />}
                     variant="success"
                     trend={{ value: Math.abs(financial.revenue.growth), isPositive: financial.revenue.growth >= 0 }}
                 />
                 <CompactKPICard
-                    title="Bu Ay Xərclər"
+                    title={t('financial.thisMonthExpenses')}
                     value={formatCurrency(financial.expenses.value)}
                     icon={<DocumentTextIcon />}
                     variant="warning"
                     trend={{ value: Math.abs(financial.expenses.growth), isPositive: financial.expenses.growth < 0 }}
                 />
                 <CompactKPICard
-                    title="Mənfəət"
+                    title={t('financial.profit')}
                     value={formatCurrency(financial.profit.value)}
                     icon={<ArrowTrendingUpIcon />}
                     variant="success"
-                    subtitle={`${financial.profit.margin}% margin`}
+                    subtitle={`${financial.profit.margin}% ${t('financial.margin')}`}
                     trend={{ value: Math.abs(financial.profit.growth), isPositive: financial.profit.growth >= 0 }}
                 />
                 <CompactKPICard
-                    title="Gözləyən Ödəniş"
+                    title={t('financial.pendingPayment')}
                     value={formatCurrency(financial.pending_payments.value)}
                     icon={<DocumentTextIcon />}
                     variant="warning"
-                    subtitle={`${financial.pending_payments.count} müştəri`}
+                    subtitle={`${financial.pending_payments.count} ${t('financial.customer')}`}
                 />
             </SectionGroup>
 
-            <SectionGroup title="Borc Statistikası" icon={<DocumentTextIcon />}>
+            <SectionGroup title={t('sections.creditStatistics')} icon={<DocumentTextIcon />}>
                 <CompactKPICard
-                    title="Ümumi Borc"
+                    title={t('credits.totalOutstanding')}
                     value={formatCurrency(credits.total_outstanding)}
                     icon={<BanknotesIcon />}
                     variant="warning"
-                    subtitle={`${credits.active_credit_customers} müştəri`}
+                    subtitle={`${credits.active_credit_customers} ${t('financial.customer')}`}
                 />
                 <CompactKPICard
-                    title="Bu Ay Verilən"
+                    title={t('credits.givenThisMonth')}
                     value={formatCurrency(credits.credits_given_this_month)}
                     icon={<ArrowTrendingDownIcon />}
                     variant="danger"
                 />
                 <CompactKPICard
-                    title="Bu Ay Ödənilən"
+                    title={t('credits.paidThisMonth')}
                     value={formatCurrency(credits.payments_received_this_month)}
                     icon={<ArrowTrendingUpIcon />}
                     variant="success"
                 />
             </SectionGroup>
 
-            <SectionGroup title="Anbar Qiymətləndirilməsi" icon={<CubeIcon />}>
+            <SectionGroup title={t('sections.warehouseValuation')} icon={<CubeIcon />}>
                 <CompactKPICard
-                    title="Maya Dəyəri"
+                    title={t('stock.costPrice')}
                     value={formatCurrency(inventory_valuation.cost)}
                     icon={<BanknotesIcon />}
                     variant="primary"
-                    subtitle={`${inventory_valuation.items_count} məhsul`}
+                    subtitle={`${inventory_valuation.items_count} ${t('stock.product')}`}
                 />
                 <CompactKPICard
-                    title="Satış Dəyəri"
+                    title={t('stock.saleValue')}
                     value={formatCurrency(inventory_valuation.sale)}
                     icon={<BanknotesIcon />}
                     variant="success"
                 />
                 <CompactKPICard
-                    title="Potensial Mənfəət"
+                    title={t('stock.potentialProfit')}
                     value={formatCurrency(inventory_valuation.potential_profit)}
                     icon={<ArrowTrendingUpIcon />}
                     variant="success"
@@ -152,26 +155,26 @@ export default function AccountantDashboard({ financial, revenue_breakdown, expe
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg shadow-sm p-4">
-                    <h3 className="text-lg font-semibold mb-4">Gəlir Bölgüsü</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('charts.revenueBreakdown')}</h3>
                     <div className="h-64 flex items-center justify-center">
                         <Doughnut data={revenueData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} />
                     </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-4">
-                    <h3 className="text-lg font-semibold mb-4">Ödəniş Üsulları</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('charts.paymentMethods')}</h3>
                     <div className="h-64 flex items-center justify-center">
                         <Doughnut data={paymentMethodsData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} />
                     </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-4">
-                    <h3 className="text-lg font-semibold mb-4">Xərc Bölgüsü</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('charts.expenseBreakdown')}</h3>
                     <div className="h-64 flex items-center justify-center">
                         {expense_breakdown.length > 0 ? (
                             <Doughnut data={expenseData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} />
                         ) : (
-                            <p className="text-gray-500 text-sm">Xərc yoxdur</p>
+                            <p className="text-gray-500 text-sm">{t('charts.noExpenses')}</p>
                         )}
                     </div>
                 </div>

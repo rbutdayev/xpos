@@ -1,0 +1,223 @@
+{
+  "title": "Rentals",
+  "subtitle": "Manage product rentals and track returns",
+  "create": "New Rental",
+  "createButton": "Create New Rental",
+  "edit": "Edit Rental",
+  "delete": "Delete",
+  "view": "View",
+  "return": "Return",
+  "noRentals": "No rentals found",
+  "firstRental": "Create First Rental",
+  "searchPlaceholder": "Search rentals...",
+
+  "status": {
+    "active": "Active",
+    "returned": "Returned",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled",
+    "pending": "Pending"
+  },
+
+  "paymentStatus": {
+    "paid": "Paid",
+    "partial": "Partially Paid",
+    "unpaid": "Unpaid",
+    "refund": "Refund Due"
+  },
+
+  "collateralType": {
+    "none": "None",
+    "cash": "Cash",
+    "document": "Document",
+    "item": "Item"
+  },
+
+  "form": {
+    "basicInfo": "Basic Information",
+    "customerInfo": "Customer Information",
+    "rentalPeriod": "Rental Period",
+    "products": "Products",
+    "pricing": "Pricing",
+    "collateral": "Collateral",
+    "notes": "Notes",
+
+    "customer": "Customer",
+    "selectCustomer": "Select customer...",
+    "branch": "Branch",
+    "selectBranch": "Select branch...",
+
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "expectedDuration": "Expected Duration",
+    "days": "days",
+
+    "product": "Product",
+    "selectProduct": "Select product...",
+    "quantity": "Quantity",
+    "rentalPrice": "Rental Price",
+    "depositPerItem": "Deposit per Item",
+    "addProduct": "Add Product",
+    "removeProduct": "Remove",
+
+    "totalRentalPrice": "Total Rental Price",
+    "totalDeposit": "Total Deposit",
+    "totalCost": "Total Cost",
+
+    "collateralType": "Collateral Type",
+    "selectCollateralType": "Select type...",
+    "collateralAmount": "Collateral Amount",
+    "documentType": "Document Type",
+    "documentNumber": "Document Number",
+    "collateralPhoto": "Collateral Photo",
+    "uploadPhoto": "Upload Photo",
+    "collateralNotes": "Collateral Notes",
+
+    "rentalNotes": "Rental Notes",
+    "internalNotes": "Internal Notes"
+  },
+
+  "return": {
+    "title": "Return Rental",
+    "subtitle": "Process return and calculate final charges",
+    "rentalInfo": "Rental Information",
+    "returnDate": "Return Date",
+    "actualReturnDate": "Actual Return Date",
+    "daysRented": "Days Rented",
+    "daysOverdue": "Days Overdue",
+    "itemCondition": "Item Condition",
+    "checkCondition": "Check Condition",
+    "conditionChecklist": "Condition Checklist",
+    "charges": "Charges",
+    "lateFee": "Late Fee",
+    "damageFee": "Damage Fee",
+    "totalCharges": "Total Charges",
+    "depositRefund": "Deposit Refund",
+    "finalAmount": "Final Amount",
+    "processingReturn": "Processing Return...",
+    "processReturn": "Process Return",
+    "returnSuccess": "Rental returned successfully",
+    "returnError": "Error processing return",
+    "itemsReturned": "Items Returned",
+    "returnCondition": "Return Condition",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "damaged": "Damaged"
+  },
+
+  "show": {
+    "title": "Rental Details",
+    "rentalNumber": "Rental #",
+    "back": "Back to Rentals",
+    "edit": "Edit",
+    "processReturn": "Process Return",
+    "print": "Print",
+    "sendSMS": "Send SMS",
+    "cancel": "Cancel Rental",
+
+    "customerInfo": "Customer Information",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+
+    "rentalInfo": "Rental Information",
+    "branch": "Branch",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "actualReturnDate": "Actual Return Date",
+    "duration": "Duration",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+
+    "items": "Rented Items",
+    "product": "Product",
+    "quantity": "Quantity",
+    "rentalPrice": "Rental Price",
+    "deposit": "Deposit",
+    "condition": "Condition",
+
+    "financialInfo": "Financial Information",
+    "rentalPrice": "Rental Price",
+    "depositAmount": "Deposit Amount",
+    "lateFee": "Late Fee",
+    "damageFee": "Damage Fee",
+    "totalCost": "Total Cost",
+    "paidAmount": "Paid Amount",
+    "creditAmount": "Credit Amount",
+    "remainingBalance": "Remaining Balance",
+
+    "collateralInfo": "Collateral Information",
+    "type": "Type",
+    "amount": "Amount",
+    "documentType": "Document Type",
+    "documentNumber": "Document Number",
+    "photo": "Photo",
+    "viewPhoto": "View Photo",
+    "notes": "Notes",
+    "returned": "Returned",
+    "notReturned": "Not Returned",
+    "returnedAt": "Returned At",
+
+    "payments": "Payment History",
+    "paymentMethod": "Payment Method",
+    "amount": "Amount",
+    "date": "Date",
+    "noPayments": "No payments recorded",
+
+    "systemInfo": "System Information",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "createdBy": "Created By",
+
+    "overdueAlert": "This rental is overdue by {{days}} days!",
+    "dueTodayAlert": "This rental is due today!",
+    "hasAgreement": "Agreement Signed",
+    "noAgreement": "No Agreement"
+  },
+
+  "actions": {
+    "create": "Create Rental",
+    "creating": "Creating...",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "addPayment": "Add Payment",
+    "viewDetails": "View Details"
+  },
+
+  "messages": {
+    "createSuccess": "Rental created successfully",
+    "updateSuccess": "Rental updated successfully",
+    "deleteSuccess": "Rental deleted successfully",
+    "returnSuccess": "Rental returned successfully",
+    "confirmDelete": "Are you sure you want to delete this rental?",
+    "confirmCancel": "Are you sure you want to cancel this rental?",
+    "selectCustomer": "Please select a customer",
+    "selectProducts": "Please add at least one product",
+    "invalidDates": "End date must be after start date"
+  },
+
+  "filters": {
+    "all": "All",
+    "status": "Status",
+    "paymentStatus": "Payment Status",
+    "branch": "Branch",
+    "overdue": "Overdue Only"
+  },
+
+  "table": {
+    "rentalNumber": "Rental #",
+    "customer": "Customer",
+    "branch": "Branch",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "items": "Items",
+    "totalCost": "Total Cost",
+    "paidAmount": "Paid",
+    "balance": "Balance",
+    "status": "Status",
+    "paymentStatus": "Payment",
+    "actions": "Actions"
+  }
+}

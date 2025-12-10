@@ -9,7 +9,8 @@ import {
     DocumentDuplicateIcon,
     KeyIcon,
     ChartBarIcon,
-    ComputerDesktopIcon
+    ComputerDesktopIcon,
+    LanguageIcon
 } from '@heroicons/react/24/outline';
 import { AdminLayout, SettingsSection, FormGrid, FormField } from '@/Components/Admin';
 import { useAdminState } from '@/Hooks/Admin/useAdminState';
@@ -17,8 +18,10 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Checkbox from '@/Components/Checkbox';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import { InformationCircleIcon, PhoneIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { Company } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     company?: Company;
@@ -39,29 +42,12 @@ interface CompanyFormData {
 }
 
 export default function Index({ company, pos_settings }: Props) {
-    const { activeTab, setActiveTab } = useAdminState('company');
-
-    const { data, setData, put, processing, errors } = useForm<CompanyFormData>({
-        name: company?.name || '',
-        address: company?.address || '',
-        tax_number: company?.tax_number || '',
-        phone: company?.phone || '',
-        email: company?.email || '',
-        website: company?.website || '',
-        description: company?.description || '',
-        default_language: company?.default_language || 'az',
-    });
+    const { t } = useTranslation('settings');
+    const { activeTab, setActiveTab } = useAdminState('preferences');
 
     const { data: posData, setData: setPosData, post: postPos, processing: processingPos } = useForm({
         auto_print_receipt: pos_settings?.auto_print_receipt || false,
     });
-
-    const submitCompanyForm = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (company) {
-            put(route('companies.update', company.id));
-        }
-    };
 
     const submitPOSForm = (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,29 +56,22 @@ export default function Index({ company, pos_settings }: Props) {
 
     const tabs = [
         {
-            id: 'company',
-            name: 'Şirkət Məlumatları',
-            icon: BuildingOffice2Icon,
-            current: activeTab === 'company',
-            onClick: () => setActiveTab('company')
-        },
-        {
-            id: 'pos',
-            name: 'POS Parametrləri',
-            icon: ComputerDesktopIcon,
-            current: activeTab === 'pos',
-            onClick: () => setActiveTab('pos')
-        },
-        {
             id: 'preferences',
-            name: 'Tənzimləmələr',
+            name: t('tabs.preferences'),
             icon: CogIcon,
             current: activeTab === 'preferences',
             onClick: () => setActiveTab('preferences')
         },
         {
+            id: 'pos',
+            name: t('tabs.pos'),
+            icon: ComputerDesktopIcon,
+            current: activeTab === 'pos',
+            onClick: () => setActiveTab('pos')
+        },
+        {
             id: 'notifications',
-            name: 'Bildirişlər',
+            name: t('tabs.notifications'),
             icon: BellIcon,
             current: activeTab === 'notifications',
             onClick: () => setActiveTab('notifications')
@@ -101,48 +80,33 @@ export default function Index({ company, pos_settings }: Props) {
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'company':
+            case 'preferences':
                 return (
-                    <form onSubmit={submitCompanyForm} className="space-y-6">
+                    <div className="space-y-6">
                         <SettingsSection
-                            title="Əsas Məlumatlar"
-                            icon={InformationCircleIcon}
-                            iconColor="text-blue-600"
+                            title={t('preferences.languageSettings')}
+                            icon={LanguageIcon}
+                            iconColor="text-purple-600"
                         >
-                            <FormGrid>
-                                <FormField label="Şirkət Adı" required error={errors.name} className="md:col-span-2">
-                                    <TextInput
-                                        type="text"
-                                        name="name"
-                                        value={data.name}
-                                        className="block w-full"
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        required
-                                    />
-                                </FormField>
-                                <FormField label="Vergi Nömrəsi" error={errors.tax_number}>
-                                    <TextInput
-                                        type="text"
-                                        name="tax_number"
-                                        value={data.tax_number}
-                                        className="block w-full"
-                                        onChange={(e) => setData('tax_number', e.target.value)}
-                                    />
-                                </FormField>
-                            </FormGrid>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        {t('preferences.changeLanguage')}
+                                    </label>
+                                    <LanguageSwitcher />
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        {t('preferences.languageHint')}
+                                    </p>
+                                </div>
+                            </div>
                         </SettingsSection>
-                        <div className="flex items-center justify-end pt-6 border-t border-gray-200">
-                            <PrimaryButton disabled={processing}>
-                                {processing ? 'Yadda saxlanır...' : 'Dəyişiklikləri Saxla'}
-                            </PrimaryButton>
-                        </div>
-                    </form>
+                    </div>
                 );
             case 'pos':
                 return (
                     <form onSubmit={submitPOSForm} className="space-y-6">
                         <SettingsSection
-                            title="POS Parametrləri"
+                            title={t('pos.title')}
                             icon={ComputerDesktopIcon}
                             iconColor="text-indigo-600"
                         >
@@ -154,34 +118,32 @@ export default function Index({ company, pos_settings }: Props) {
                                         onChange={(e) => setPosData('auto_print_receipt', e.target.checked)}
                                     />
                                     <span className="ml-2 text-sm text-gray-700">
-                                        Qəbzi avtomatik çap et
+                                        {t('pos.autoPrintReceipt')}
                                     </span>
                                 </label>
                                 <p className="text-sm text-gray-500">
-                                    Aktiv olduqda, satış tamamlandıqdan sonra qəbz avtomatik olaraq çap ediləcək.
+                                    {t('pos.autoPrintDescription')}
                                 </p>
                             </div>
                         </SettingsSection>
                         <div className="flex items-center justify-end pt-6 border-t border-gray-200">
                             <PrimaryButton disabled={processingPos}>
-                                {processingPos ? 'Yadda saxlanır...' : 'Dəyişiklikləri Saxla'}
+                                {processingPos ? t('actions.saving') : t('actions.saveChanges')}
                             </PrimaryButton>
                         </div>
                     </form>
                 );
-            case 'preferences':
-                return <div>Tənzimləmələr</div>;
             case 'notifications':
-                return <div>Bildirişlər</div>;
+                return <div>{t('tabs.notifications')}</div>;
             default:
                 return null;
         }
     };
 
     return (
-        <AdminLayout 
-            title="Şirkət Məlumatları"
-            description="Şirkətinizin məlumatlarını və sistem ayarlarını idarə edin"
+        <AdminLayout
+            title={t('company.title')}
+            description={t('description')}
             tabs={tabs}
         >
             <div className="bg-white rounded-lg shadow">
@@ -194,8 +156,8 @@ export default function Index({ company, pos_settings }: Props) {
             {/* System Configuration Section */}
             <div className="mt-8 bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Sistem Konfiqurasiyası</h3>
-                    <p className="mt-1 text-sm text-gray-500">Printer, qəbz, inteqrasiya və log parametrləri</p>
+                    <h3 className="text-lg font-medium text-gray-900">{t('system.title')}</h3>
+                    <p className="mt-1 text-sm text-gray-500">{t('system.description')}</p>
                 </div>
                 <div className="p-6">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -207,8 +169,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <PrinterIcon className="h-8 w-8 text-blue-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Printer</h4>
-                                    <p className="text-xs text-gray-500">Konfiqurasiya</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('system.printer.title')}</h4>
+                                    <p className="text-xs text-gray-500">{t('system.printer.subtitle')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -221,8 +183,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <DocumentDuplicateIcon className="h-8 w-8 text-green-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Qəbz</h4>
-                                    <p className="text-xs text-gray-500">Şablonları</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('system.receipt.title')}</h4>
+                                    <p className="text-xs text-gray-500">{t('system.receipt.subtitle')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -235,8 +197,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <KeyIcon className="h-8 w-8 text-purple-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Bridge</h4>
-                                    <p className="text-xs text-gray-500">Tokenlər</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('system.bridge.title')}</h4>
+                                    <p className="text-xs text-gray-500">{t('system.bridge.subtitle')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -249,8 +211,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <BellIcon className="h-8 w-8 text-yellow-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Bildiriş</h4>
-                                    <p className="text-xs text-gray-500">Kanalları</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('system.notification.title')}</h4>
+                                    <p className="text-xs text-gray-500">{t('system.notification.subtitle')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -261,8 +223,8 @@ export default function Index({ company, pos_settings }: Props) {
             {/* System Logs Section */}
             <div className="mt-8 bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Sistem Logları</h3>
-                    <p className="mt-1 text-sm text-gray-500">SMS, Telegram, Audit və Fiskal Printer logları</p>
+                    <h3 className="text-lg font-medium text-gray-900">{t('logs.title')}</h3>
+                    <p className="mt-1 text-sm text-gray-500">{t('logs.description')}</p>
                 </div>
                 <div className="p-6">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -274,8 +236,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <ChartBarIcon className="h-8 w-8 text-indigo-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">SMS</h4>
-                                    <p className="text-xs text-gray-500">Logları</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('logs.sms')}</h4>
+                                    <p className="text-xs text-gray-500">{t('logs.logsLabel')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -288,8 +250,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <ChartBarIcon className="h-8 w-8 text-blue-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Telegram</h4>
-                                    <p className="text-xs text-gray-500">Logları</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('logs.telegram')}</h4>
+                                    <p className="text-xs text-gray-500">{t('logs.logsLabel')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -302,8 +264,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <ClockIcon className="h-8 w-8 text-gray-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Audit</h4>
-                                    <p className="text-xs text-gray-500">Logları</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('logs.audit')}</h4>
+                                    <p className="text-xs text-gray-500">{t('logs.logsLabel')}</p>
                                 </div>
                             </div>
                         </Link>
@@ -316,8 +278,8 @@ export default function Index({ company, pos_settings }: Props) {
                             <div className="flex items-center">
                                 <PrinterIcon className="h-8 w-8 text-red-600" />
                                 <div className="ml-4">
-                                    <h4 className="text-sm font-medium text-gray-900">Fiskal Printer</h4>
-                                    <p className="text-xs text-gray-500">Növbəsi</p>
+                                    <h4 className="text-sm font-medium text-gray-900">{t('logs.fiscalPrinter')}</h4>
+                                    <p className="text-xs text-gray-500">{t('logs.queue')}</p>
                                 </div>
                             </div>
                         </Link>

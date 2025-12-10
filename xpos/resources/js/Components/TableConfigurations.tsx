@@ -1,6 +1,6 @@
-import { 
-    UserIcon, 
-    TruckIcon, 
+import {
+    UserIcon,
+    TruckIcon,
     WrenchScrewdriverIcon,
     BuildingOfficeIcon,
     BuildingOffice2Icon,
@@ -29,6 +29,7 @@ import { router } from '@inertiajs/react';
 import { Column, Filter, Action } from './SharedDataTable';
 import { formatQuantityWithUnit } from '@/utils/formatters';
 import { formatFullDateTime } from '@/utils/dateFormatters';
+import { translatePaymentMethod, getPaymentMethodColor } from '@/utils/enumTranslations';
 
 // Role translations
 const roleTranslations: Record<string, string> = {
@@ -1517,14 +1518,9 @@ export const expenseTableConfig = {
             align: 'center',
             render: (expense: any) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    expense.payment_method === 'nağd' 
-                        ? 'bg-green-100 text-green-800' 
-                        : expense.payment_method === 'kart' 
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
+                    getPaymentMethodColor(expense.payment_method)
                 }`}>
-                    {expense.payment_method === 'nağd' ? 'Nağd' : 
-                     expense.payment_method === 'kart' ? 'Kart' : 'Köçürmə'}
+                    {translatePaymentMethod(expense.payment_method)}
                 </span>
             ),
             width: '120px'
@@ -1692,12 +1688,9 @@ export const supplierPaymentTableConfig = {
             align: 'center',
             render: (payment: any) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    payment.payment_method === 'nağd' ? 'bg-green-100 text-green-800' :
-                    payment.payment_method === 'kart' ? 'bg-blue-100 text-blue-800' :
-                    'bg-purple-100 text-purple-800'
+                    getPaymentMethodColor(payment.payment_method)
                 }`}>
-                    {payment.payment_method === 'nağd' ? 'Nağd' :
-                     payment.payment_method === 'kart' ? 'Kart' : 'Köçürmə'}
+                    {translatePaymentMethod(payment.payment_method)}
                 </span>
             ),
             width: '100px'
@@ -2347,9 +2340,14 @@ export const goodsReceiptsTableConfig = {
             align: 'center',
             render: (r: GoodsReceipt) => {
                 const getPaymentMethodText = (method: string) => {
-                    return method === 'instant' ? 'Nağd' : 'Borc';
+                    // For goods receipts: instant = Cash, credit = Credit
+                    if (method === 'instant') {
+                        return translatePaymentMethod('cash');
+                    }
+                    // Return 'Borc' for credit (TODO: add to translation system)
+                    return method === 'credit' ? (localStorage.getItem('i18nextLng') === 'en' ? 'Credit' : 'Borc') : method;
                 };
-                
+
                 return (
                     <div className="text-sm text-gray-900">
                         {r.payment_method ? getPaymentMethodText(r.payment_method) : '-'}

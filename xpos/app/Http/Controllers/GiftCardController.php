@@ -60,6 +60,23 @@ class GiftCardController extends Controller
         ]);
     }
 
+    /**
+     * AJAX endpoint for quick view modal
+     */
+    public function details(Request $request, GiftCard $card)
+    {
+        Gate::authorize('use-gift-cards');
+
+        // Ensure card belongs to this account
+        if ($card->account_id !== auth()->user()->account_id) {
+            abort(403, 'Bu kart sizin hesabınıza aid deyil.');
+        }
+
+        $card->load(['customer', 'transactions.user']);
+
+        return response()->json($card);
+    }
+
     public function activate(Request $request)
     {
         Gate::authorize('use-gift-cards');

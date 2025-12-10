@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -58,6 +59,7 @@ export default function PaymentForm({
     errors = {},
     disabled = false
 }: PaymentFormProps) {
+    const { t } = useTranslation();
     const [showAddPaymentForm, setShowAddPaymentForm] = React.useState(false);
     const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
     const remainingAmount = totalAmount - totalPaid;
@@ -95,7 +97,7 @@ export default function PaymentForm({
     if (mode === 'sale') {
         return (
             <div className="space-y-4">
-                <h4 className="text-md font-medium text-gray-900">Ödəmə</h4>
+                <h4 className="text-md font-medium text-gray-900">{t('payment.title')}</h4>
                 
                 {/* Credit Sale Toggle */}
                 <div className="flex items-center space-x-2">
@@ -108,7 +110,7 @@ export default function PaymentForm({
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <label htmlFor="is_credit_sale" className="text-sm font-medium text-gray-700">
-                        Borc satışı
+                        {t('payment.creditSale')}
                     </label>
                 </div>
                 
@@ -124,13 +126,13 @@ export default function PaymentForm({
                             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
-                            Ödəmə Əlavə Et
+                            {t('actions.addPayment')}
                         </button>
                         
                         {/* Payment List */}
                         {payments.length > 0 && (
                             <div className="bg-gray-50 rounded-md p-3 space-y-2">
-                                <div className="text-sm font-medium text-gray-900">Əlavə edilən ödəmələr:</div>
+                                <div className="text-sm font-medium text-gray-900">{t('payment.addedPayments')}</div>
                                 {payments.map((payment, index) => (
                                     <div key={index} className="flex items-center justify-between text-xs">
                                         <span className="flex items-center space-x-2">
@@ -160,11 +162,11 @@ export default function PaymentForm({
                                 {/* Payment Summary */}
                                 <div className="pt-2 border-t border-gray-300 space-y-1">
                                     <div className="flex justify-between text-xs">
-                                        <span>Ödənilən:</span>
+                                        <span>{t('payment.paid')}:</span>
                                         <span className="font-medium">{totalPaid.toFixed(2)} AZN</span>
                                     </div>
                                     <div className="flex justify-between text-xs">
-                                        <span>Qalan:</span>
+                                        <span>{t('payment.remaining')}:</span>
                                         <span className={`font-medium ${remainingAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                             {remainingAmount.toFixed(2)} AZN
                                         </span>
@@ -177,25 +179,25 @@ export default function PaymentForm({
                         {showAddPaymentForm && (
                             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                                 <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Ödəmə Əlavə Et</h3>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">{t('actions.addPayment')}</h3>
                                     
                                     <div className="space-y-4">
                                         <div>
-                                            <InputLabel htmlFor="payment_method" value="Ödəmə Üsulu" />
+                                            <InputLabel htmlFor="payment_method" value={t('payment.method')} />
                                             <select
                                                 id="payment_method"
                                                 value={newPayment.method}
                                                 onChange={(e) => setNewPayment(prev => ({ ...prev, method: e.target.value as any }))}
                                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                             >
-                                                <option value="nağd">Nağd</option>
-                                                <option value="kart">Kart</option>
-                                                <option value="köçürmə">Köçürmə</option>
+                                                <option value="nağd">{t('payment.cash')}</option>
+                                                <option value="kart">{t('payment.card')}</option>
+                                                <option value="köçürmə">{t('payment.transfer')}</option>
                                             </select>
                                         </div>
-                                        
+
                                         <div>
-                                            <InputLabel htmlFor="payment_amount" value="Məbləğ" />
+                                            <InputLabel htmlFor="payment_amount" value={t('labels.amount')} />
                                             <TextInput
                                                 id="payment_amount"
                                                 type="number"
@@ -205,34 +207,34 @@ export default function PaymentForm({
                                                 className="mt-1 block w-full"
                                                 min="0"
                                                 max={remainingAmount}
-                                                placeholder={`Maksimum: ${remainingAmount.toFixed(2)} AZN`}
+                                                placeholder={t('payment.maxAmount', { amount: remainingAmount.toFixed(2) })}
                                             />
                                         </div>
 
                                         {newPayment.method === 'kart' && (
                                             <div>
-                                                <InputLabel htmlFor="card_type" value="Kart Növü" />
+                                                <InputLabel htmlFor="card_type" value={t('payment.cardType')} />
                                                 <TextInput
                                                     id="card_type"
                                                     type="text"
                                                     value={newPayment.card_type || ''}
                                                     onChange={(e) => setNewPayment(prev => ({ ...prev, card_type: e.target.value }))}
                                                     className="mt-1 block w-full"
-                                                    placeholder="Visa, MasterCard, AmEx..."
+                                                    placeholder={t('payment.cardTypePlaceholder')}
                                                 />
                                             </div>
                                         )}
 
                                         {(newPayment.method === 'kart' || newPayment.method === 'köçürmə') && (
                                             <div>
-                                                <InputLabel htmlFor="transaction_id" value="Əməliyyat ID" />
+                                                <InputLabel htmlFor="transaction_id" value={t('payment.transactionId')} />
                                                 <TextInput
                                                     id="transaction_id"
                                                     type="text"
                                                     value={newPayment.transaction_id || ''}
                                                     onChange={(e) => setNewPayment(prev => ({ ...prev, transaction_id: e.target.value }))}
                                                     className="mt-1 block w-full"
-                                                    placeholder="Əməliyyat identifikatoru"
+                                                    placeholder={t('payment.transactionPlaceholder')}
                                                 />
                                             </div>
                                         )}
@@ -245,14 +247,14 @@ export default function PaymentForm({
                                             disabled={newPayment.amount <= 0}
                                             className="flex-1 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            Əlavə Et
+                                            {t('actions.add')}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setShowAddPaymentForm(false)}
                                             className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                         >
-                                            Ləğv Et
+                                            {t('actions.cancel')}
                                         </button>
                                     </div>
                                 </div>
@@ -269,8 +271,8 @@ export default function PaymentForm({
     // Service mode
     return (
         <div className="space-y-4">
-            <h4 className="text-md font-medium text-gray-900">Ödəmə</h4>
-            
+            <h4 className="text-md font-medium text-gray-900">{t('payment.title')}</h4>
+
             <div>
                 <select
                     value={paymentStatus}
@@ -278,9 +280,9 @@ export default function PaymentForm({
                     disabled={disabled}
                     className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                    <option value="paid">Tam Ödənildi</option>
-                    <option value="credit">Tam Borc</option>
-                    <option value="partial">Qismən Ödənildi</option>
+                    <option value="paid">{t('payment.status.paid')}</option>
+                    <option value="credit">{t('payment.status.credit')}</option>
+                    <option value="partial">{t('payment.status.partial')}</option>
                 </select>
                 <InputError message={errors.payment_status} />
             </div>
@@ -288,7 +290,7 @@ export default function PaymentForm({
             {paymentStatus === 'partial' && (
                 <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <InputLabel value="Ödənilən" className="text-xs text-gray-600" />
+                        <InputLabel value={t('payment.paidAmount')} className="text-xs text-gray-600" />
                         <TextInput
                             type="number"
                             step="0.01"
@@ -306,7 +308,7 @@ export default function PaymentForm({
                         <InputError message={errors.paid_amount} />
                     </div>
                     <div>
-                        <InputLabel value="Borc" className="text-xs text-gray-600" />
+                        <InputLabel value={t('payment.creditAmount')} className="text-xs text-gray-600" />
                         <TextInput
                             type="number"
                             step="0.01"
@@ -328,7 +330,7 @@ export default function PaymentForm({
 
             {(paymentStatus === 'credit' || paymentStatus === 'partial') && (
                 <div>
-                    <InputLabel value="Son Ödəmə Tarixi" className="text-xs text-gray-600" />
+                    <InputLabel value={t('payment.creditDueDate')} className="text-xs text-gray-600" />
                     <TextInput
                         type="date"
                         value={creditDueDate}

@@ -1,0 +1,249 @@
+{
+  "title": "İdarə Paneli",
+  "loading": "Yüklənir...",
+  "welcome": "Xoş gəlmisiniz",
+  "welcomeBack": "Xoş gəlmisiniz, {{name}}!",
+  "dashboardLoading": "İdarə paneli yüklənir...",
+
+  "quickActions": {
+    "title": "Sürətli Əməliyyatlar",
+    "newSale": "Yeni Satış",
+    "newService": "Yeni Servis",
+    "newCustomer": "Yeni Müştəri",
+    "newProduct": "Yeni Məhsul",
+    "goodsReceipt": "Mal Qəbulu",
+    "productList": "Məhsul Siyahısı"
+  },
+
+  "sections": {
+    "financialSummary": "Maliyyə İcmalı",
+    "operationalMetrics": "Əməliyyat Göstəriciləri",
+    "serviceStatistics": "Servis Statistikası",
+    "rentalStatistics": "İcarə Statistikası",
+    "creditStatistics": "Borc Statistikaları",
+    "stockIndicators": "Stok Göstəriciləri",
+    "myPerformance": "Mənim Performansım",
+    "myServiceQueue": "Servis Növbəm",
+    "branchStatistics": "Filial Statistikası",
+    "todaySales": "Bugünkü Satışlar",
+    "paymentCollection": "Ödəniş Yığımı",
+    "warehouseValuation": "Anbar Qiymətləndirilməsi"
+  },
+
+  "financial": {
+    "thisMonthRevenue": "Bu Ay Gəlir",
+    "thisMonthExpenses": "Bu Ay Xərclər",
+    "profit": "Mənfəət",
+    "margin": "margin",
+    "pendingPayment": "Gözləyən Ödəniş",
+    "customer": "müştəri",
+    "customers": "müştəri"
+  },
+
+  "operational": {
+    "activeCustomers": "Aktiv Müştərilər",
+    "newThisMonth": "bu ay",
+    "productsInStock": "Stokda Məhsul",
+    "total": "ümumi",
+    "stockValue": "Stok Dəyəri",
+    "costValue": "Maya dəyəri",
+    "totalQuantity": "Ümumi Miqdar",
+    "allUnits": "Bütün vahidlər"
+  },
+
+  "services": {
+    "pending": "Gözləyən",
+    "inProgress": "İcrada",
+    "completed": "Tamamlanan",
+    "completedThisMonth": "Tamamlanan",
+    "revenue": "Gəlir",
+    "notStarted": "Başlanmayıb",
+    "currently": "Hal-hazırda",
+    "thisMonth": "Bu ay",
+    "pendingServices": "Gözləyən Servislər"
+  },
+
+  "rentals": {
+    "activeRentals": "Aktiv İcarələr",
+    "thisMonthRevenue": "Bu Ay Gəlir",
+    "pendingReturns": "Gözlənilən Qaytarmalar",
+    "overdue": "Gecikmiş"
+  },
+
+  "credits": {
+    "totalOutstanding": "Ümumi Borc",
+    "givenThisMonth": "Bu Ay Verilən",
+    "paidThisMonth": "Bu Ay Ödənilən"
+  },
+
+  "stock": {
+    "productsInStock": "Stokda Məhsul",
+    "stockValue": "Stok Dəyəri (Maya)",
+    "costPrice": "Alış qiyməti",
+    "saleValue": "Satış Dəyəri",
+    "potentialRevenue": "Potensial gəlir",
+    "potentialProfit": "Potensial Mənfəət",
+    "saleLessCost": "Satış - Maya",
+    "product": "məhsul"
+  },
+
+  "alerts": {
+    "lowStock": "Az Stok",
+    "outOfStock": "Tükənmiş",
+    "negativeStock": "Mənfi Stok",
+    "pendingReceipt": "Gözləyən Qəbul",
+    "stockWarning": "Stok Xəbərdarlığı",
+    "lowStockDesc": "məhsul az stokludur",
+    "outOfStockDesc": "məhsul tükənib"
+  },
+
+  "onlineOrders": {
+    "pendingOrders": "gözləyən online sifariş",
+    "pendingOrdersPlural": "gözləyən online sifariş",
+    "viewOrders": "Baxın"
+  },
+
+  "paymentAlert": {
+    "title": "Ödəniş Gecikib",
+    "description": "Aylıq ödənişiniz gecikib.",
+    "amount": "Məbləğ:",
+    "dueDate": "Son tarix:",
+    "daysOverdue": "gün gecikib",
+    "understood": "Başa Düşdüm"
+  },
+
+  "charts": {
+    "salesStatistics": "Satış Statistikası",
+    "paymentMethods": "Ödəniş Üsulları",
+    "topSelling": "Ən Çox Satılan",
+    "viewAll": "Hamısını gör",
+    "noData": "Məlumat yoxdur",
+    "revenueBreakdown": "Gəlir Bölgüsü",
+    "expenseBreakdown": "Xərc Bölgüsü",
+    "sales": "Satış",
+    "service": "Servis",
+    "rental": "İcarə",
+    "noExpenses": "Xərc yoxdur"
+  },
+
+  "tables": {
+    "topSellingProducts": "Ən Çox Satılan",
+    "lowStockProducts": "Az Stoklu Məhsullar",
+    "recentSales": "Son Satışlar",
+    "allGood": "Hamısı yaxşıdır",
+    "noSales": "Satış yoxdur",
+    "customer": "Müştəri",
+    "date": "Tarix",
+    "amount": "Məbləğ",
+    "status": "Status",
+    "paid": "Ödənilib",
+    "pending": "Gözləyir",
+    "allWarehouses": "Bütün anbarlar",
+    "min": "Min"
+  },
+
+  "performance": {
+    "mySales": "Satışlarım",
+    "myRevenue": "Gəlirim",
+    "myCustomers": "Müştərilərim",
+    "averageTicket": "Orta Çek"
+  },
+
+  "branch": {
+    "thisMonthRevenue": "Bu Ay Gəlir",
+    "branchRevenue": "Filial gəliri",
+    "sales": "Satışlar",
+    "staff": "İşçilər",
+    "active": "Aktiv",
+    "customers": "Müştərilər"
+  },
+
+  "shift": {
+    "salesCount": "Satış Sayı",
+    "salesRevenue": "Satış Gəliri",
+    "customers": "Müştərilər",
+    "cash": "Nağd",
+    "cardTransfer": "Kart/Köçürmə"
+  },
+
+  "info": {
+    "viewServiceList": "Gözləyən servislərinizi görmək üçün",
+    "serviceList": "Servis Siyahısı",
+    "page": "səhifəsinə daxil olun",
+    "detailedReports": "Detallı hesabatlar üçün",
+    "reports": "Hesabatlar",
+    "section": "bölməsinə keçin"
+  },
+
+  "roles": {
+    "accountOwnerPanel": "Hesab Sahibi Paneli",
+    "accountantPanel": "Maliyyə hesabatları və statistika",
+    "warehousePanel": "Anbar idarəçiliyi paneli",
+    "salesStaffPanel": "Sizin bu ay göstəriciləriniz",
+    "tailorPanel": "Sizin servis növbəniz",
+    "branchManagerPanel": "Filialınızın performansı",
+    "cashierPanel": "Bugünkü növbəniz"
+  },
+
+  "stockByUnit": {
+    "title": "Vahid üzrə Stok",
+    "product": "məhsul"
+  },
+
+  "widgets": {
+    "topProducts": {
+      "title": "Ən Çox Satılan Məhsullar",
+      "thisMonth": "Bu ay",
+      "uncategorized": "Kateqoriyasız",
+      "pieces": "ədəd",
+      "stock": "Stok",
+      "noData": "Məlumat tapılmadı"
+    },
+    "recentSales": {
+      "title": "Son Satışlar",
+      "viewAll": "Hamısını gör",
+      "anonymousCustomer": "Anonim müştəri",
+      "products": "məhsul",
+      "details": "Detallar",
+      "noSales": "Son satış tapılmadı"
+    },
+    "lowStock": {
+      "title": "Az Stok Məhsulları",
+      "viewAll": "Hamısını gör",
+      "uncategorized": "Kateqoriyasız",
+      "noIssue": "Stok problemi yoxdur",
+      "allGoodDesc": "Bütün məhsullar kifayət qədər stokdadır."
+    },
+    "financialSummary": {
+      "title": "Maliyyə Xülasəsi",
+      "today": "Bu gün",
+      "thisMonth": "Bu ay",
+      "thisYear": "Bu il",
+      "financial": "Maliyyə",
+      "revenue": "Gəlir",
+      "expenses": "Xərclər",
+      "netProfit": "Xalis Mənfəət",
+      "profitMargin": "Mənfəət Marjı",
+      "pendingPayments": "Gözləyən Ödənişlər",
+      "financialHealth": "Maliyyə Vəziyyəti",
+      "excellent": "Əla",
+      "good": "Yaxşı",
+      "average": "Orta",
+      "weak": "Zəif"
+    },
+    "salesChart": {
+      "title": "Satış Trendi",
+      "today": "Bugün (saatlıq)",
+      "last7days": "Son 7 gün",
+      "last30days": "Son 30 gün",
+      "last90days": "Son 90 gün",
+      "sales": "Satışlar",
+      "noData": "Məlumat tapılmadı",
+      "totalSales": "Ümumi Satış",
+      "totalRevenue": "Ümumi Gəlir",
+      "avgRevenue": "Orta Gəlir",
+      "revenue": "Gəlir",
+      "salesCount": "Satış sayı"
+    }
+  }
+}

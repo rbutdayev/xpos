@@ -1,4 +1,5 @@
 import { useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatCurrency, formatShortDate } from '../Utils/dashboardCalculations';
 import { calculateChartMaxValue } from '../Utils/widgetHelpers';
 
@@ -14,9 +15,10 @@ interface SalesChartProps {
 }
 
 const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
+    const { t } = useTranslation('dashboard');
     const chartData = useMemo(() => {
         if (!data || data.length === 0) return [];
-        
+
         return data.map(item => ({
             ...item,
             formattedDate: formatShortDate(item.date)
@@ -28,11 +30,11 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
 
     const getPeriodLabel = () => {
         switch (period) {
-            case '1day': return 'Bugün (saatlıq)';
-            case '7days': return 'Son 7 gün';
-            case '30days': return 'Son 30 gün';
-            case '90days': return 'Son 90 gün';
-            default: return 'Satışlar';
+            case '1day': return t('widgets.salesChart.today');
+            case '7days': return t('widgets.salesChart.last7days');
+            case '30days': return t('widgets.salesChart.last30days');
+            case '90days': return t('widgets.salesChart.last90days');
+            default: return t('widgets.salesChart.sales');
         }
     };
 
@@ -40,7 +42,7 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
         return (
             <div className="-m-6 p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Satış Trendi</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('widgets.salesChart.title')}</h3>
                     <span className="text-sm text-gray-500">{getPeriodLabel()}</span>
                 </div>
                 <div className="text-center py-8">
@@ -49,7 +51,7 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                         </svg>
                     </div>
-                    <p className="text-gray-500 mt-2">Məlumat tapılmadı</p>
+                    <p className="text-gray-500 mt-2">{t('widgets.salesChart.noData')}</p>
                 </div>
             </div>
         );
@@ -58,7 +60,7 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
     return (
         <div className="-m-6 p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Satış Trendi</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('widgets.salesChart.title')}</h3>
                 <span className="text-sm text-gray-500">{getPeriodLabel()}</span>
             </div>
 
@@ -129,7 +131,7 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
                                     />
                                     {/* Tooltip on hover - simplified */}
                                     <title>
-                                        {item.formattedDate}: {formatCurrency(item.revenue)} ({item.sales} satış)
+                                        {item.formattedDate}: {formatCurrency(item.revenue)} ({item.sales} {t('widgets.salesChart.sales')})
                                     </title>
                                 </g>
                             );
@@ -160,19 +162,19 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
             {/* Summary Stats */}
             <div className="mt-4 grid grid-cols-3 gap-4 text-center">
                 <div>
-                    <div className="text-sm text-gray-500">Ümumi Satış</div>
+                    <div className="text-sm text-gray-500">{t('widgets.salesChart.totalSales')}</div>
                     <div className="text-lg font-semibold text-gray-900">
                         {chartData.reduce((sum, item) => sum + item.sales, 0)}
                     </div>
                 </div>
                 <div>
-                    <div className="text-sm text-gray-500">Ümumi Gəlir</div>
+                    <div className="text-sm text-gray-500">{t('widgets.salesChart.totalRevenue')}</div>
                     <div className="text-lg font-semibold text-gray-900">
                         {formatCurrency(chartData.reduce((sum, item) => sum + item.revenue, 0))}
                     </div>
                 </div>
                 <div>
-                    <div className="text-sm text-gray-500">Orta Gəlir</div>
+                    <div className="text-sm text-gray-500">{t('widgets.salesChart.avgRevenue')}</div>
                     <div className="text-lg font-semibold text-gray-900">
                         {formatCurrency(chartData.reduce((sum, item) => sum + item.revenue, 0) / Math.max(chartData.length, 1))}
                     </div>
@@ -183,11 +185,11 @@ const SalesChart = memo(function SalesChart({ data, period }: SalesChartProps) {
             <div className="mt-4 flex items-center justify-center space-x-6 text-xs text-gray-500">
                 <div className="flex items-center">
                     <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                    <span>Gəlir</span>
+                    <span>{t('widgets.salesChart.revenue')}</span>
                 </div>
                 <div className="flex items-center">
                     <span className="mr-2">#</span>
-                    <span>Satış sayı</span>
+                    <span>{t('widgets.salesChart.salesCount')}</span>
                 </div>
             </div>
         </div>

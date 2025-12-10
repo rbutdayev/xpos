@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import InstallPrompt from '@/Components/InstallPrompt';
+import LoginLanguageSwitcher from '@/Components/LoginLanguageSwitcher';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import {
@@ -21,12 +22,14 @@ import {
     BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Login({
     status,
 }: {
     status?: string;
 }) {
+    const { t } = useTranslation(['auth', 'common']);
     const [showPassword, setShowPassword] = useState(false);
     const [floatingIcons, setFloatingIcons] = useState<Array<{id: number, x: number, y: number, delay: number, icon: any}>>([]);
 
@@ -65,10 +68,15 @@ export default function Login({
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
-            <Head title="Daxil ol - ONYX xPos" />
+            <Head title={t('login.pageTitle')} />
 
             {/* PWA Install Prompt */}
             <InstallPrompt />
+
+            {/* Language Switcher - Top Right Corner */}
+            <div className="absolute top-6 right-6 z-30">
+                <LoginLanguageSwitcher />
+            </div>
 
             {/* Animated Background Grid */}
             <div
@@ -122,13 +130,13 @@ export default function Login({
                             <div className="absolute -inset-6 bg-gradient-to-r from-indigo-400/30 to-purple-500/30 rounded-full blur-2xl -z-10 animate-pulse" style={{animationDuration: '3s'}}></div>
                         </div>
                         <h1 className="text-5xl font-extrabold mb-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-tight leading-tight animate-fade-in">
-                            ONYX xPos
+                            {t('login.appTitle')}
                         </h1>
                         <p className="text-2xl text-indigo-700 font-semibold mb-2">
-                            Müasir Pərakəndə Satış Sistemi
+                            {t('login.appSubtitle')}
                         </p>
                         <p className="text-lg text-gray-700">
-                            Güclü alətlərlə pərakəndə satış əməliyyatlarınızı sadələşdirin
+                            {t('login.appDescription')}
                         </p>
                     </div>
 
@@ -139,8 +147,8 @@ export default function Login({
                                 <ShoppingBagIcon className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-800 mb-1">Sürətli Kassa</h3>
-                                <p className="text-sm text-gray-600">İldırım sürətli satış və inventar idarəetməsi</p>
+                                <h3 className="font-bold text-gray-800 mb-1">{t('login.features.fastPOS.title')}</h3>
+                                <p className="text-sm text-gray-600">{t('login.features.fastPOS.description')}</p>
                             </div>
                         </div>
 
@@ -149,8 +157,8 @@ export default function Login({
                                 <CubeIcon className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-800 mb-1">Ağıllı İnventar</h3>
-                                <p className="text-sm text-gray-600">Real vaxt anbar izləmə və avtomatik sifariş</p>
+                                <h3 className="font-bold text-gray-800 mb-1">{t('login.features.smartInventory.title')}</h3>
+                                <p className="text-sm text-gray-600">{t('login.features.smartInventory.description')}</p>
                             </div>
                         </div>
 
@@ -159,8 +167,8 @@ export default function Login({
                                 <ChartBarIcon className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-800 mb-1">Biznes Analitikası</h3>
-                                <p className="text-sm text-gray-600">Ətraflı analitika və satış hesabatları</p>
+                                <h3 className="font-bold text-gray-800 mb-1">{t('login.features.businessAnalytics.title')}</h3>
+                                <p className="text-sm text-gray-600">{t('login.features.businessAnalytics.description')}</p>
                             </div>
                         </div>
 
@@ -169,8 +177,8 @@ export default function Login({
                                 <CreditCardIcon className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-800 mb-1">Çoxlu Ödəniş</h3>
-                                <p className="text-sm text-gray-600">Nağd, kart və rəqəmsal ödəniş üsulları</p>
+                                <h3 className="font-bold text-gray-800 mb-1">{t('login.features.multiplePayment.title')}</h3>
+                                <p className="text-sm text-gray-600">{t('payment.cash', { ns: 'common' })}, {t('payment.card', { ns: 'common' })} {t('login.features.multiplePayment.description')}</p>
                             </div>
                         </div>
                     </div>
@@ -187,9 +195,9 @@ export default function Login({
                             style={{animationDuration: '2s'}}
                         />
                         <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                            ONYX xPos
+                            {t('login.appTitle')}
                         </h1>
-                        <p className="text-gray-700 font-medium">Pərakəndə Satış Sistemi</p>
+                        <p className="text-gray-700 font-medium">{t('login.mobileSubtitle')}</p>
                     </div>
 
                     <div className="bg-white rounded-3xl shadow-2xl p-8 relative border-2 border-indigo-100 animate-fade-in">
@@ -200,8 +208,8 @@ export default function Login({
                             <div className="inline-block p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl mb-4">
                                 <BuildingStorefrontIcon className="w-10 h-10 text-indigo-600" />
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Xoş Gəlmisiniz</h2>
-                            <p className="text-gray-600">POS terminalınıza daxil olun</p>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('login.welcomeTitle')}</h2>
+                            <p className="text-gray-600">{t('login.welcomeSubtitle')}</p>
                         </div>
 
                         {status && (
@@ -213,7 +221,7 @@ export default function Login({
 
                         <form onSubmit={submit} className="space-y-6">
                             <div>
-                                <InputLabel htmlFor="email" value="E-poçt Ünvanı" className="text-gray-700 font-semibold mb-2 block" />
+                                <InputLabel htmlFor="email" value={t('login.emailLabel')} className="text-gray-700 font-semibold mb-2 block" />
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <UserIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
@@ -226,7 +234,7 @@ export default function Login({
                                         className="block w-full pl-12 pr-4 py-3.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 hover:border-indigo-300"
                                         autoComplete="username"
                                         isFocused={true}
-                                        placeholder="istifadeci@numune.com"
+                                        placeholder={t('login.emailPlaceholder')}
                                         onChange={(e) => setData('email', e.target.value)}
                                     />
                                 </div>
@@ -234,7 +242,7 @@ export default function Login({
                             </div>
 
                             <div>
-                                <InputLabel htmlFor="password" value="Şifrə" className="text-gray-700 font-semibold mb-2 block" />
+                                <InputLabel htmlFor="password" value={t('login.passwordLabel')} className="text-gray-700 font-semibold mb-2 block" />
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <LockClosedIcon className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
@@ -246,7 +254,7 @@ export default function Login({
                                         value={data.password}
                                         className="block w-full pl-12 pr-14 py-3.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 hover:border-indigo-300"
                                         autoComplete="current-password"
-                                        placeholder="Şifrənizi daxil edin"
+                                        placeholder={t('login.passwordPlaceholder')}
                                         onChange={(e) => setData('password', e.target.value)}
                                     />
                                     <button
@@ -275,7 +283,7 @@ export default function Login({
                                         className="rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
                                     />
                                     <span className="ml-2 text-sm text-gray-600 font-medium group-hover:text-gray-900 transition-colors">
-                                        Məni xatırla
+                                        {t('login.rememberMe')}
                                     </span>
                                 </label>
                             </div>
@@ -291,11 +299,11 @@ export default function Login({
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Daxil olunur...
+                                            {t('login.loggingIn')}
                                         </span>
                                     ) : (
                                         <span className="flex items-center justify-center">
-                                            Daxil ol
+                                            {t('login.loginButton')}
                                             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
@@ -308,7 +316,7 @@ export default function Login({
                         {/* Footer */}
                         <div className="mt-8 pt-6 border-t border-indigo-100">
                             <div className="text-center text-sm text-gray-500 space-y-2">
-                                <p className="font-semibold text-gray-700 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">ONYX tərəfindən</p>
+                                <p className="font-semibold text-gray-700 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{t('login.byOnyx')}</p>
                                 <a
                                     href="https://www.onyx.az"
                                     target="_blank"
@@ -320,7 +328,7 @@ export default function Login({
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                     </svg>
                                 </a>
-                                <p className="text-xs">&copy; 2025 ONYX. Bütün hüquqlar qorunur.</p>
+                                <p className="text-xs">&copy; 2025 ONYX. {t('login.allRightsReserved')}</p>
                             </div>
                         </div>
                     </div>

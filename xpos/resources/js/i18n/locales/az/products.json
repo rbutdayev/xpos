@@ -1,0 +1,128 @@
+{
+  "title": "Məhsullar",
+  "productCatalog": "Məhsul Kataloqu",
+  "addProduct": "Məhsul əlavə et",
+  "editProduct": "Məhsulu redaktə et",
+  "productDetails": "Məhsul təfərrüatları",
+  "productList": "Məhsul siyahısı",
+  "fields": {
+    "productName": "Məhsulun adı",
+    "productCode": "Məhsul kodu",
+    "barcode": "Barkod",
+    "category": "Kateqoriya",
+    "brand": "Brend",
+    "unit": "Vahid",
+    "cost": "Maya dəyəri",
+    "price": "Satış qiyməti",
+    "stock": "Ehtiyat",
+    "stockInfo": "Stok məlumatları",
+    "minStock": "Minimum ehtiyat",
+    "maxStock": "Maksimum ehtiyat",
+    "image": "Məhsul şəkli",
+    "description": "Təsvir",
+    "taxRate": "Vergi dərəcəsi",
+    "type": "Növ",
+    "warehouse": "Anbar",
+    "salePrice": "Satış",
+    "purchasePrice": "Alış"
+  },
+  "types": {
+    "product": "Məhsul",
+    "service": "Xidmət"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Qeyri-aktiv",
+    "deactivate": "deaktiv",
+    "activate": "aktiv"
+  },
+  "messages": {
+    "productAdded": "Məhsul uğurla əlavə edildi",
+    "productUpdated": "Məhsul uğurla yeniləndi",
+    "productDeleted": "Məhsul uğurla silindi",
+    "deleteError": "Məhsul silinərkən xəta baş verdi",
+    "statusChangeError": "Status dəyişdirilərkən xəta baş verdi",
+    "lowStock": "Az stok!",
+    "stockOut": "Ehtiyat bitib",
+    "confirmDelete": "{{name}} məhsulunu silmək istədiyinizə əminsiniz?\n\nQeyd: Stok hərəkəti olan məhsullar silinə bilməz. Əgər məhsul istifadə edilmişsə, yalnız deaktiv edə bilərsiniz.",
+    "confirmStatusChange": "{{name}} məhsulunu {{action}} etmək istədiyinizə əminsiniz?",
+    "warehousesCount": "anbar"
+  },
+  "filters": {
+    "allProducts": "Bütün məhsullar",
+    "allCategories": "Bütün kateqoriyalar",
+    "allWarehouses": "Bütün anbarlar",
+    "allTypes": "Bütün növlər",
+    "allStatuses": "Bütün statuslar",
+    "inStock": "Ehtiyatda",
+    "lowStock": "Az ehtiyat",
+    "outOfStock": "Ehtiyat yoxdur",
+    "byCategory": "Kateqoriyaya görə",
+    "warehouseFilter": "Anbar Filtri",
+    "selectedWarehouse": "Seçilmiş anbar: ",
+    "warehouseFilterActive": "Anbar filtri aktiv: ",
+    "main": "(Əsas)"
+  },
+  "actions": {
+    "view": "Bax",
+    "edit": "Düzəlt",
+    "delete": "Sil",
+    "stockDetails": "Stok Təfərrüatı",
+    "changeStatus": "Status Dəyiş",
+    "viewDetails": "Təfərrüat"
+  },
+  "emptyState": {
+    "title": "Heç bir məhsul tapılmadı",
+    "description": "Başlamaq üçün yeni məhsul əlavə edin."
+  },
+  "searchPlaceholder": "Ad, SKU və ya barkod ilə axtarış...",
+  "newProduct": "Yeni Məhsul",
+  "editSuffix": " - Düzəlt",
+  "editProductTitle": "Məhsulu Düzəlt",
+  "detailsSuffix": " - Məhsul Təfərrüatları",
+  "variant": "Variant:",
+  "stockStatuses": {
+    "outOfStock": "Stokda yoxdur",
+    "lowStockRemaining": "Az qalıb",
+    "inStock": "Stokda var"
+  },
+  "bulk": {
+    "title": "Toplu Məhsul Yaratma",
+    "description": "Eyni kateqoriya və qiymətdə bir neçə məhsulu eyni vaxtda yaradın. Barkodlar avtomatik yaradılacaq.",
+    "commonInfo": "Ümumi Məlumatlar",
+    "products": "Məhsullar",
+    "addProduct": "Məhsul əlavə et",
+    "productNumber": "Məhsul #{{number}}",
+    "productName": "Məhsul Adı *",
+    "sku": "SKU",
+    "barcode": "Barkod",
+    "barcodePlaceholder": "13 rəqəmli barkod - boş buraxsanız avtomatik yaradılacaq",
+    "size": "Ölçü",
+    "sizePlaceholder": "məs: M, 42",
+    "color": "Rəng",
+    "colorPlaceholder": "məs: Qırmızı",
+    "initialStock": "İlkin Stok (seçimə bağlı)",
+    "warehouse": "Anbar",
+    "selectWarehouse": "Anbar seçin",
+    "initialQuantity": "Başlanğıc miqdarı",
+    "cancel": "Ləğv et",
+    "creating": "Yaradılır...",
+    "createProducts": "{{count}} Məhsul Yarat",
+    "validation": {
+      "categoryRequired": "Kateqoriya seçilməlidir",
+      "salePriceRequired": "Satış qiyməti daxil edilməlidir",
+      "purchasePriceRequired": "Alış qiyməti daxil edilməlidir",
+      "warehouseRequired": "İlkin miqdarı olan bütün məhsullar üçün anbar seçilməlidir",
+      "nameRequired": "Bütün məhsulların adı daxil edilməlidir"
+    },
+    "success": "Məhsullar uğurla yaradıldı",
+    "errors": "{{count}} xəta var"
+  },
+  "required": {
+    "category": "Kateqoriya *",
+    "salePrice": "Satış Qiyməti *",
+    "purchasePrice": "Alış Qiyməti *",
+    "unit": "Ölçü vahidi *",
+    "select": "Seçin"
+  }
+}

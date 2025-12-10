@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { useTranslation } from 'react-i18next';
 
 interface Branch {
     id: number;
@@ -32,6 +33,7 @@ interface FormData {
 }
 
 export default function Create({ roleOptions, branches }: Props) {
+    const { t } = useTranslation('users');
     const { data, setData, post, processing, errors } = useForm<FormData>({
         name: '',
         email: '',
@@ -54,7 +56,7 @@ export default function Create({ roleOptions, branches }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Yeni İstifadəçi" />
+            <Head title={t('create')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
@@ -63,12 +65,12 @@ export default function Create({ roleOptions, branches }: Props) {
                             {/* Personal Information */}
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Şəxsi məlumatlar
+                                    {t('form.personalInfo')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="name" value="Ad və Soyad *" />
+                                        <InputLabel htmlFor="name" value={`${t('form.name')} *`} />
                                         <TextInput
                                             id="name"
                                             name="name"
@@ -76,13 +78,13 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('name', e.target.value)}
                                             required
-                                            placeholder="Əli Məmmədov"
+                                            placeholder={t('form.namePlaceholder')}
                                         />
                                         <InputError message={errors.name} className="mt-2" />
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="email" value="Email *" />
+                                        <InputLabel htmlFor="email" value={`${t('form.email')} *`} />
                                         <TextInput
                                             id="email"
                                             type="email"
@@ -91,14 +93,14 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('email', e.target.value)}
                                             required
-                                            placeholder="ali@company.com"
+                                            placeholder={t('form.emailPlaceholder')}
                                         />
                                         <InputError message={errors.email} className="mt-2" />
                                     </div>
                                 </div>
 
                                 <div className="mt-6">
-                                    <InputLabel htmlFor="phone" value="Telefon" />
+                                    <InputLabel htmlFor="phone" value={t('form.phone')} />
                                     <TextInput
                                         id="phone"
                                         type="tel"
@@ -106,7 +108,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                         value={data.phone}
                                         className="mt-1 block w-full"
                                         onChange={(e) => setData('phone', e.target.value)}
-                                        placeholder="+994 XX XXX XX XX"
+                                        placeholder={t('form.phonePlaceholder')}
                                     />
                                     <InputError message={errors.phone} className="mt-2" />
                                 </div>
@@ -115,12 +117,12 @@ export default function Create({ roleOptions, branches }: Props) {
                             {/* Account Settings */}
                             <div className="border-t pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Hesab ayarları
+                                    {t('form.accountSettings')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="role" value="Usta *" />
+                                        <InputLabel htmlFor="role" value={`${t('form.role')} *`} />
                                         <select
                                             id="role"
                                             name="role"
@@ -129,7 +131,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                             required
                                         >
-                                            <option value="">Rol seçin...</option>
+                                            <option value="">{t('form.rolePlaceholder')}</option>
                                             {roleOptions.map((role) => (
                                                 <option key={role.value} value={role.value}>
                                                     {role.label}
@@ -138,12 +140,12 @@ export default function Create({ roleOptions, branches }: Props) {
                                         </select>
                                         <InputError message={errors.role} className="mt-2" />
                                         <p className="mt-1 text-xs text-gray-500">
-                                            İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir
+                                            {t('form.roleHint')}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="status" value="Status *" />
+                                        <InputLabel htmlFor="status" value={`${t('form.status')} *`} />
                                         <select
                                             id="status"
                                             name="status"
@@ -151,8 +153,8 @@ export default function Create({ roleOptions, branches }: Props) {
                                             onChange={(e) => setData('status', e.target.value)}
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         >
-                                            <option value="active">Aktiv</option>
-                                            <option value="inactive">Qeyri-aktiv</option>
+                                            <option value="active">{t('form.active')}</option>
+                                            <option value="inactive">{t('form.inactive')}</option>
                                         </select>
                                         <InputError message={errors.status} className="mt-2" />
                                     </div>
@@ -161,7 +163,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                 {/* Show branch selection for sales_staff role */}
                                 {data.role === 'sales_staff' && (
                                     <div className="mt-6">
-                                        <InputLabel htmlFor="branch_id" value="Filial *" />
+                                        <InputLabel htmlFor="branch_id" value={`${t('form.branch')} *`} />
                                         <select
                                             id="branch_id"
                                             name="branch_id"
@@ -170,7 +172,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                             required={data.role === 'sales_staff'}
                                         >
-                                            <option value="">Filial seçin...</option>
+                                            <option value="">{t('form.branchPlaceholder')}</option>
                                             {(branches || []).map((branch) => (
                                                 <option key={branch.id} value={branch.id}>
                                                     {branch.name}
@@ -185,28 +187,28 @@ export default function Create({ roleOptions, branches }: Props) {
                             {/* Employee Information */}
                             <div className="border-t pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    İşçi məlumatları
+                                    {t('form.employeeInfo')}
                                 </h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="position" value="Vəzifə (İş yeri)" />
+                                        <InputLabel htmlFor="position" value={t('form.position')} />
                                         <TextInput
                                             id="position"
                                             name="position"
                                             value={data.position}
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('position', e.target.value)}
-                                            placeholder="Məsələn: Baş Mexanik, Satış Meneceri"
+                                            placeholder={t('form.positionPlaceholder')}
                                         />
                                         <InputError message={errors.position} className="mt-2" />
                                         <p className="mt-1 text-xs text-gray-500">
-                                            İşçinin konkret vəzifəsi (məsələn: Baş Kassir, Anbar İşçisi)
+                                            {t('form.positionHint')}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="hire_date" value="İşə başlama tarixi" />
+                                        <InputLabel htmlFor="hire_date" value={t('form.hireDate')} />
                                         <TextInput
                                             id="hire_date"
                                             type="date"
@@ -220,7 +222,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                 </div>
 
                                 <div className="mt-6">
-                                    <InputLabel htmlFor="hourly_rate" value="Saatlıq əmək haqqı (AZN)" />
+                                    <InputLabel htmlFor="hourly_rate" value={t('form.hourlyRate')} />
                                     <TextInput
                                         id="hourly_rate"
                                         type="number"
@@ -230,13 +232,13 @@ export default function Create({ roleOptions, branches }: Props) {
                                         value={data.hourly_rate || ''}
                                         className="mt-1 block w-full"
                                         onChange={(e) => setData('hourly_rate', e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        placeholder="15.00"
+                                        placeholder={t('form.hourlyRatePlaceholder')}
                                     />
                                     <InputError message={errors.hourly_rate} className="mt-2" />
                                 </div>
 
                                 <div className="mt-6">
-                                    <InputLabel htmlFor="notes" value="Qeydlər" />
+                                    <InputLabel htmlFor="notes" value={t('form.notes')} />
                                     <textarea
                                         id="notes"
                                         name="notes"
@@ -244,7 +246,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         rows={3}
                                         onChange={(e) => setData('notes', e.target.value)}
-                                        placeholder="Əlavə qeydlər və ya məlumatlar"
+                                        placeholder={t('form.notesPlaceholder')}
                                     />
                                     <InputError message={errors.notes} className="mt-2" />
                                 </div>
@@ -253,12 +255,12 @@ export default function Create({ roleOptions, branches }: Props) {
                             {/* Password */}
                             <div className="border-t pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Giriş məlumatları
+                                    {t('form.loginInfo')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="password" value="Şifrə *" />
+                                        <InputLabel htmlFor="password" value={`${t('form.password')} *`} />
                                         <TextInput
                                             id="password"
                                             type="password"
@@ -267,13 +269,13 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('password', e.target.value)}
                                             required
-                                            placeholder="Minimum 8 simvol"
+                                            placeholder={t('form.passwordPlaceholder')}
                                         />
                                         <InputError message={errors.password} className="mt-2" />
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="password_confirmation" value="Şifrə təkrarı *" />
+                                        <InputLabel htmlFor="password_confirmation" value={`${t('form.passwordConfirm')} *`} />
                                         <TextInput
                                             id="password_confirmation"
                                             type="password"
@@ -282,7 +284,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('password_confirmation', e.target.value)}
                                             required
-                                            placeholder="Şifrəni təkrarlayın"
+                                            placeholder={t('form.passwordConfirmPlaceholder')}
                                         />
                                         <InputError message={errors.password_confirmation} className="mt-2" />
                                     </div>
@@ -293,11 +295,11 @@ export default function Create({ roleOptions, branches }: Props) {
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
                                 <Link href="/users" className="w-full sm:w-auto">
                                     <SecondaryButton type="button" className="w-full sm:w-auto">
-                                        Ləğv et
+                                        {t('actions.cancel')}
                                     </SecondaryButton>
                                 </Link>
                                 <PrimaryButton disabled={processing} className="w-full sm:w-auto">
-                                    {processing ? 'Yadda saxlanır...' : 'İstifadəçi yarat'}
+                                    {processing ? t('actions.creating') : t('actions.create')}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -305,13 +307,13 @@ export default function Create({ roleOptions, branches }: Props) {
 
                     {/* Help Text */}
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-blue-900 mb-2">Məlumat</h3>
+                        <h3 className="text-sm font-medium text-blue-900 mb-2">{t('help.title')}</h3>
                         <ul className="text-sm text-blue-700 space-y-1">
-                            <li>• <strong>Usta:</strong> İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir (məsələn: Admin, Kassir)</li>
-                            <li>• <strong>Vəzifə:</strong> İşçinin konkret iş yerindəki vəzifəsi (məsələn: Baş Mexanik, Satış Meneceri)</li>
-                            <li>• Şifrə minimum 8 simvoldan ibarət olmalıdır</li>
-                            <li>• Satış işçisi rolunu seçərsəniz, filial təyin etmək məcburidir</li>
-                            <li>• Qeyri-aktiv istifadəçilər sistema giriş edə bilməzlər</li>
+                            <li>• {t('help.roleInfo')}</li>
+                            <li>• {t('help.positionInfo')}</li>
+                            <li>• {t('help.passwordInfo')}</li>
+                            <li>• {t('help.branchInfo')}</li>
+                            <li>• {t('help.inactiveInfo')}</li>
                         </ul>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -54,6 +55,8 @@ interface ExpenseFormData {
 }
 
 export default function Create({ categories, branches, paymentMethods, supplierCredit }: Props) {
+    const { t } = useTranslation(['expenses', 'common']);
+
     // Extract receipt number from description (e.g., "Mal qəbulu üçün borc - MQ-2025-000004")
     const extractReceiptNumber = (description: string): string => {
         const match = description.match(/MQ-\d{4}-\d{6}/);
@@ -64,7 +67,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
 
     const { data, setData, post, processing, errors, reset } = useForm<ExpenseFormData>({
         description: supplierCredit
-            ? `${receiptNumber} üçün ödəniş`
+            ? t('supplierCredit.paymentFor', { reference: receiptNumber })
             : '',
         amount: supplierCredit
             ? supplierCredit.remaining_amount.toString()
@@ -75,7 +78,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
         payment_method: 'nağd',
         receipt_file: null,
         notes: supplierCredit
-            ? `Təchizatçı krediti: ${supplierCredit.reference_number}`
+            ? t('supplierCredit.creditNote', { reference: supplierCredit.reference_number })
             : '',
         supplier_credit_id: supplierCredit?.id ?? null,
         credit_payment_amount: supplierCredit?.remaining_amount.toString() ?? null,
@@ -89,7 +92,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
     return (
         <AuthenticatedLayout
         >
-            <Head title="Yeni Xərc" />
+            <Head title={t('createExpense')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
@@ -97,7 +100,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                         <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Description */}
                             <div>
-                                <InputLabel htmlFor="description" value="Təsvir *" />
+                                <InputLabel htmlFor="description" value={`${t('fields.description')} *`} />
                                 <TextInput
                                     id="description"
                                     type="text"
@@ -106,14 +109,14 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     className="mt-1 block w-full"
                                     isFocused={true}
                                     onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Xərcin təsvirini daxil edin"
+                                    placeholder={t('placeholders.description')}
                                 />
                                 <InputError message={errors.description} className="mt-2" />
                             </div>
 
                             {/* Amount */}
                             <div>
-                                <InputLabel htmlFor="amount" value="Məbləğ (AZN) *" />
+                                <InputLabel htmlFor="amount" value={`${t('fields.amountAZN')} *`} />
                                 <TextInput
                                     id="amount"
                                     type="number"
@@ -130,14 +133,14 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                             credit_payment_amount: supplierCredit ? newAmount : null
                                         });
                                     }}
-                                    placeholder="0.00"
+                                    placeholder={t('placeholders.amount')}
                                 />
                                 <InputError message={errors.amount} className="mt-2" />
                             </div>
 
                             {/* Expense Date */}
                             <div>
-                                <InputLabel htmlFor="expense_date" value="Xərc tarixi *" />
+                                <InputLabel htmlFor="expense_date" value={`${t('fields.expenseDate')} *`} />
                                 <TextInput
                                     id="expense_date"
                                     type="date"
@@ -151,7 +154,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
 
                             {/* Category */}
                             <div>
-                                <InputLabel htmlFor="category_id" value="Kateqoriya *" />
+                                <InputLabel htmlFor="category_id" value={`${t('fields.category')} *`} />
                                 <select
                                     id="category_id"
                                     name="category_id"
@@ -160,7 +163,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                     required
                                 >
-                                    <option value="">Kateqoriya seçin</option>
+                                    <option value="">{t('categories.placeholders.selectType')}</option>
                                     {categories.map((category) => (
                                         <option key={category.category_id} value={category.category_id}>
                                             {category.parent ? `${category.parent.name} > ${category.name}` : category.name}
@@ -172,7 +175,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
 
                             {/* Branch */}
                             <div>
-                                <InputLabel htmlFor="branch_id" value="Filial *" />
+                                <InputLabel htmlFor="branch_id" value={`${t('fields.branch')} *`} />
                                 <select
                                     id="branch_id"
                                     name="branch_id"
@@ -181,7 +184,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                     required
                                 >
-                                    <option value="">Filial seçin</option>
+                                    <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {branches.map((branch) => (
                                         <option key={branch.id} value={branch.id}>
                                             {branch.name}
@@ -193,7 +196,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
 
                             {/* Payment Method */}
                             <div>
-                                <InputLabel htmlFor="payment_method" value="Ödəniş üsulu *" />
+                                <InputLabel htmlFor="payment_method" value={`${t('fields.paymentMethod')} *`} />
                                 <select
                                     id="payment_method"
                                     name="payment_method"
@@ -202,7 +205,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                     required
                                 >
-                                    <option value="">Ödəniş üsulu seçin</option>
+                                    <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {Object.entries(paymentMethods).map(([value, label]) => (
                                         <option key={value} value={value}>
                                             {label}
@@ -214,7 +217,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
 
                             {/* Receipt File */}
                             <div>
-                                <InputLabel htmlFor="receipt_file" value="Qəbz (şəkil)" />
+                                <InputLabel htmlFor="receipt_file" value={t('receiptUpload.label')} />
                                 <input
                                     id="receipt_file"
                                     type="file"
@@ -224,14 +227,14 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                 />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Qəbz şəklini və ya PDF faylını yükləyin (İstəyə bağlı)
+                                    {t('receiptUpload.helpText')}
                                 </p>
                                 <InputError message={errors.receipt_file} className="mt-2" />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('fields.notes')} />
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -239,7 +242,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Əlavə qeydlər (istəyə bağlı)"
+                                    placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
@@ -248,7 +251,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-4">
                                 <SecondaryButton className="w-full sm:w-auto">
                                     <Link href="/expenses">
-                                        Ləğv et
+                                        {t('actions.cancel', { ns: 'common' })}
                                     </Link>
                                 </SecondaryButton>
 
@@ -256,7 +259,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     className="w-full sm:w-auto"
                                     disabled={processing}
                                 >
-                                    {processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}
+                                    {processing ? t('messages.saving') : t('actions.save', { ns: 'common' })}
                                 </PrimaryButton>
                             </div>
                         </form>

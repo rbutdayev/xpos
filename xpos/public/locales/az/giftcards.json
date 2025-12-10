@@ -1,0 +1,107 @@
+{
+  "title": "Hədiyyə Kartları",
+  "subtitle": "Hədiyyə kartlarını və vauçerləri idarə edin",
+  "create": "Yeni Hədiyyə Kartı",
+  "createButton": "Yeni Hədiyyə Kartı Yarat",
+  "configure": "Hədiyyə Kartlarını Konfiqurasiya Et",
+  "noGiftCards": "Hədiyyə kartı tapılmadı",
+  "searchPlaceholder": "Hədiyyə kartı axtar...",
+
+  "status": {
+    "active": "Aktiv",
+    "used": "İstifadə Edilib",
+    "expired": "Vaxtı Keçib",
+    "cancelled": "Ləğv Edilib"
+  },
+
+  "form": {
+    "basicInfo": "Əsas Məlumatlar",
+    "cardNumber": "Kart Nömrəsi",
+    "generateNumber": "Nömrə Yarat",
+    "balance": "Balans",
+    "initialBalance": "İlkin Balans",
+    "currentBalance": "Cari Balans",
+    "expiryDate": "Bitmə Tarixi",
+    "status": "Status",
+    "customer": "Müştəri (Seçimli)",
+    "selectCustomer": "Müştəri seçin...",
+    "notes": "Qeydlər"
+  },
+
+  "configure": {
+    "title": "Hədiyyə Kartı Konfiqurasiyası",
+    "enabled": "Hədiyyə Kartları Aktivdir",
+    "numberPrefix": "Kart Nömrəsi Prefiksi",
+    "numberLength": "Kart Nömrəsi Uzunluğu",
+    "defaultValidity": "Standart Etibarlılıq (Gün)",
+    "minAmount": "Minimum Məbləğ",
+    "maxAmount": "Maksimum Məbləğ",
+    "allowPartialUse": "Qismən İstifadəyə İcazə Ver",
+    "requirePin": "PIN Tələb Et"
+  },
+
+  "show": {
+    "title": "Hədiyyə Kartı Təfərrüatları",
+    "cardNumber": "Kart Nömrəsi",
+    "back": "Hədiyyə Kartlarına Qayıt",
+    "edit": "Düzəliş Et",
+    "cancel": "Kartı Ləğv Et",
+    "recharge": "Balansı Artır",
+
+    "cardInfo": "Kart Məlumatları",
+    "status": "Status",
+    "initialBalance": "İlkin Balans",
+    "currentBalance": "Cari Balans",
+    "usedAmount": "İstifadə Edilən Məbləğ",
+    "issuedDate": "Verilmə Tarixi",
+    "expiryDate": "Bitmə Tarixi",
+    "customer": "Müştəri",
+
+    "transactions": "Əməliyyat Tarixçəsi",
+    "type": "Növ",
+    "amount": "Məbləğ",
+    "balance": "Sonrakı Balans",
+    "date": "Tarix",
+    "reference": "İstinad",
+    "noTransactions": "Əməliyyat yoxdur",
+
+    "usage": {
+      "purchase": "Alış",
+      "recharge": "Balans Artırma",
+      "refund": "Geri Qaytarma",
+      "adjustment": "Düzəliş"
+    }
+  },
+
+  "actions": {
+    "create": "Hədiyyə Kartı Yarat",
+    "creating": "Yaradılır...",
+    "save": "Dəyişiklikləri Yadda Saxla",
+    "saving": "Yadda Saxlanır...",
+    "cancel": "Ləğv Et",
+    "recharge": "Balansı Artır",
+    "checkBalance": "Balansı Yoxla"
+  },
+
+  "messages": {
+    "createSuccess": "Hədiyyə kartı uğurla yaradıldı",
+    "updateSuccess": "Hədiyyə kartı uğurla yeniləndi",
+    "cancelSuccess": "Hədiyyə kartı uğurla ləğv edildi",
+    "rechargeSuccess": "Hədiyyə kartının balansı uğurla artırıldı",
+    "confirmCancel": "Bu hədiyyə kartını ləğv etmək istədiyinizə əminsiniz?",
+    "insufficientBalance": "Qeyri-kafi balans",
+    "expired": "Hədiyyə kartının vaxtı keçib",
+    "invalidCard": "Yanlış hədiyyə kartı nömrəsi"
+  },
+
+  "table": {
+    "cardNumber": "Kart Nömrəsi",
+    "customer": "Müştəri",
+    "initialBalance": "İlkin Balans",
+    "currentBalance": "Cari Balans",
+    "issuedDate": "Verilmə",
+    "expiryDate": "Bitmə",
+    "status": "Status",
+    "actions": "Əməliyyatlar"
+  }
+}

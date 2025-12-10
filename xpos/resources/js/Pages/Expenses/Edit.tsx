@@ -1,4 +1,5 @@
 import { Head, useForm, Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -53,6 +54,7 @@ interface ExpenseFormData {
 }
 
 export default function Edit({ expense, categories, branches, paymentMethods, flash, errors: pageErrors }: Props) {
+    const { t } = useTranslation(['expenses', 'common']);
     const { data, setData, put, processing, errors } = useForm<ExpenseFormData>({
         description: expense.description || '',
         amount: expense.amount.toString() || '',
@@ -91,7 +93,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
     return (
         <AuthenticatedLayout
         >
-            <Head title="Xərci Düzəliş Et" />
+            <Head title={t('editExpense')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
@@ -126,7 +128,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                         <form onSubmit={submit} className="p-6 space-y-6">
                             {/* Description */}
                             <div>
-                                <InputLabel htmlFor="description" value="Təsvir *" />
+                                <InputLabel htmlFor="description" value={`${t('fields.description')} *`} />
                                 <TextInput
                                     id="description"
                                     type="text"
@@ -135,14 +137,14 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     className="mt-1 block w-full"
                                     isFocused={true}
                                     onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Xərcin təsvirini daxil edin"
+                                    placeholder={t('placeholders.description')}
                                 />
                                 <InputError message={errors.description} className="mt-2" />
                             </div>
 
                             {/* Amount */}
                             <div>
-                                <InputLabel htmlFor="amount" value="Məbləğ (AZN) *" />
+                                <InputLabel htmlFor="amount" value={`${t('fields.amountAZN')} *`} />
                                 <TextInput
                                     id="amount"
                                     type="number"
@@ -152,14 +154,14 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     step="0.01"
                                     min="0"
                                     onChange={(e) => setData('amount', e.target.value)}
-                                    placeholder="0.00"
+                                    placeholder={t('placeholders.amount')}
                                 />
                                 <InputError message={errors.amount} className="mt-2" />
                             </div>
 
                             {/* Expense Date */}
                             <div>
-                                <InputLabel htmlFor="expense_date" value="Xərc tarixi *" />
+                                <InputLabel htmlFor="expense_date" value={`${t('fields.expenseDate')} *`} />
                                 <TextInput
                                     id="expense_date"
                                     type="date"
@@ -173,7 +175,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
 
                             {/* Category */}
                             <div>
-                                <InputLabel htmlFor="category_id" value="Kateqoriya *" />
+                                <InputLabel htmlFor="category_id" value={`${t('fields.category')} *`} />
                                 <select
                                     id="category_id"
                                     name="category_id"
@@ -181,7 +183,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     onChange={(e) => setData('category_id', e.target.value)}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <option value="">Kateqoriya seçin</option>
+                                    <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {(categories || []).map((category) => (
                                         <option key={category.id} value={category.id?.toString() || ''}>
                                             {category.name}
@@ -193,7 +195,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
 
                             {/* Branch */}
                             <div>
-                                <InputLabel htmlFor="branch_id" value="Filial *" />
+                                <InputLabel htmlFor="branch_id" value={`${t('fields.branch')} *`} />
                                 <select
                                     id="branch_id"
                                     name="branch_id"
@@ -201,7 +203,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     onChange={(e) => setData('branch_id', e.target.value)}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <option value="">Filial seçin</option>
+                                    <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {(branches || []).map((branch) => (
                                         <option key={branch.id} value={branch.id?.toString() || ''}>
                                             {branch.name}
@@ -213,7 +215,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
 
                             {/* Payment Method */}
                             <div>
-                                <InputLabel htmlFor="payment_method" value="Ödəniş üsulu *" />
+                                <InputLabel htmlFor="payment_method" value={`${t('fields.paymentMethod')} *`} />
                                 <select
                                     id="payment_method"
                                     name="payment_method"
@@ -221,7 +223,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     onChange={(e) => setData('payment_method', e.target.value)}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <option value="">Ödəniş üsulu seçin</option>
+                                    <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {Object.entries(paymentMethods || {}).map(([key, value]) => (
                                         <option key={key} value={key}>
                                             {value}
@@ -234,15 +236,15 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                             {/* Current Receipt */}
                             {expense.receipt_file_path && (
                                 <div>
-                                    <InputLabel value="Cari qəbz" />
+                                    <InputLabel value={t('receiptUpload.currentLabel')} />
                                     <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                                        <a 
+                                        <a
                                             href={`/storage/${expense.receipt_file_path}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 hover:text-blue-800 text-sm"
                                         >
-                                            Qəbzi görüntülə
+                                            {t('actions.viewReceipt')}
                                         </a>
                                     </div>
                                 </div>
@@ -250,7 +252,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
 
                             {/* Receipt File */}
                             <div>
-                                <InputLabel htmlFor="receipt_file" value="Yeni qəbz (şəkil)" />
+                                <InputLabel htmlFor="receipt_file" value={t('receiptUpload.newLabel')} />
                                 <input
                                     id="receipt_file"
                                     type="file"
@@ -260,14 +262,14 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                 />
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Yeni qəbz yükləmək istəyirsinizsə seçin (Köhnəsini əvəz edəcək)
+                                    {t('receiptUpload.replaceHelpText')}
                                 </p>
                                 <InputError message={errors.receipt_file} className="mt-2" />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('fields.notes')} />
                                 <textarea
                                     id="notes"
                                     name="notes"
@@ -275,7 +277,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    placeholder="Əlavə qeydlər (istəyə bağlı)"
+                                    placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
@@ -284,7 +286,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                             <div className="flex items-center justify-between pt-4">
                                 <SecondaryButton>
                                     <Link href="/expenses">
-                                        Ləğv et
+                                        {t('actions.cancel', { ns: 'common' })}
                                     </Link>
                                 </SecondaryButton>
 
@@ -292,7 +294,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     className="ms-4"
                                     disabled={processing}
                                 >
-                                    {processing ? 'Yenilənir...' : 'Yenilə'}
+                                    {processing ? t('messages.updating') : t('actions.update', { ns: 'common' })}
                                 </PrimaryButton>
                             </div>
                         </form>

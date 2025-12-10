@@ -1,0 +1,155 @@
+{
+  "title": "Müştərilər",
+  "addCustomer": "Yeni Müştəri Əlavə Et",
+  "editCustomer": "Düzəliş et",
+  "editCustomerTitle": "Düzəliş et: {{name}}",
+  "customerDetails": "Müştəri məlumatları",
+  "customerList": "Müştəri siyahısı",
+  "newCustomer": "Yeni Müştəri",
+  "fields": {
+    "customer": "Müştəri",
+    "name": "Müştəri adı *",
+    "customerType": "Müştəri növü *",
+    "phone": "Telefon",
+    "email": "E-poçt",
+    "birthday": "Doğum tarixi",
+    "taxNumber": "VÖEN",
+    "address": "Ünvan",
+    "notes": "Qeydlər",
+    "loyaltyCard": "Loaylıq Kartı",
+    "activeCustomer": "Aktiv müştəri",
+    "contactInfo": "Əlaqə məlumatları",
+    "phoneEmail": "Telefon / Email",
+    "loyaltyPoints": "Bonus Ballar",
+    "points": "Ballar",
+    "creditStatus": "Borc vəziyyəti",
+    "status": "Status",
+    "totalPoints": "Ümumi: {{points}}",
+    "currentPoints": "Mövcud ballar",
+    "lifetimePoints": "Ümumi qazanılmış",
+    "bonusPoints": "Bonus Ballar"
+  },
+  "types": {
+    "allTypes": "Bütün növlər",
+    "individual": "Fiziki şəxs",
+    "corporate": "Hüquqi şəxs"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Qeyri-aktiv",
+    "allStatuses": "Bütün statuslar",
+    "hasDebt": "Borcludur",
+    "noDebt": "Borcu yox"
+  },
+  "creditStatus": {
+    "label": "Borc vəziyyəti",
+    "all": "Hamısı",
+    "withDebt": "Borclu müştərilər",
+    "noDebt": "Borcu olmayan"
+  },
+  "serviceHistory": {
+    "label": "Servis tarixçəsi",
+    "all": "Hamısı",
+    "withServices": "Servisi olan",
+    "withoutServices": "Servisi olmayan",
+    "noServices": "Servis yoxdur",
+    "lastService": "Son servis",
+    "totalServices": "Ümumi xidmətlər"
+  },
+  "birthMonth": {
+    "label": "Doğum ayı",
+    "allMonths": "Bütün aylar",
+    "january": "Yanvar",
+    "february": "Fevral",
+    "march": "Mart",
+    "april": "Aprel",
+    "may": "May",
+    "june": "İyun",
+    "july": "İyul",
+    "august": "Avqust",
+    "september": "Sentyabr",
+    "october": "Oktyabr",
+    "november": "Noyabr",
+    "december": "Dekabr"
+  },
+  "actions": {
+    "view": "Bax",
+    "edit": "Düzəliş et",
+    "delete": "Sil",
+    "reset": "Sıfırla",
+    "cancel": "Ləğv et",
+    "save": "Yadda saxla",
+    "saving": "Yadda saxlanır...",
+    "update": "Dəyişiklikləri yadda saxla",
+    "updating": "Yenilənir...",
+    "addItem": "Əlavə et",
+    "newService": "Yeni xidmət"
+  },
+  "messages": {
+    "created": "Müştəri uğurla yaradıldı",
+    "updated": "Müştəri məlumatları yeniləndi",
+    "deleted": "Müştəri uğurla silindi",
+    "confirmDelete": "Bu müştərini silmək istədiyinizə əminsiniz?",
+    "confirmDeleteItem": "Bu geyimi silmək istədiyinizə əminsiniz?",
+    "validating": "Yoxlanılır...",
+    "cardError": "Kart yoxlanılarkən xəta baş verdi",
+    "existingCard": "Mövcud kart"
+  },
+  "placeholders": {
+    "search": "Müştəri adı və ya əlaqə məlumatları ilə axtar...",
+    "phone": "501234567",
+    "phoneExample": "Məsələn: 501234567 (9 rəqəm)",
+    "taxNumber": "1234567890",
+    "address": "Müştərinin ünvanı...",
+    "notes": "Əlavə məlumatlar...",
+    "cardNumber": "14 simvollu kart nömrəsi"
+  },
+  "emptyState": {
+    "title": "Heç bir müştəri tapılmadı",
+    "description": "İlk müştərinizi əlavə etməklə başlayın.",
+    "noItems": "Hələ məhsul/cihaz əlavə edilməyib",
+    "addFirstItem": "İlk məhsulu əlavə et",
+    "noServices": "Hələ xidmət qeydi yoxdur",
+    "addFirstService": "İlk xidməti əlavə et"
+  },
+  "stats": {
+    "registered": "{{count}} müştəri qeydiyyatda",
+    "items": "Məhsul/Cihaz",
+    "totalServices": "Ümumi xidmətlər",
+    "debt": "Borc",
+    "createdAt": "Yaradılma tarixi:",
+    "activeItems": "Aktiv məhsullar:",
+    "lastService": "Son servis:"
+  },
+  "info": {
+    "title": "Məlumat",
+    "nameRequired": "Müştəri adı və növü mütləq sahələrdir",
+    "phoneFormat": "Telefon nömrəsini beynəlxalq formatda daxil edin (+994...)",
+    "taxRequired": "Hüquqi şəxslər üçün VÖEN məcburidir",
+    "vehiclesAfterCreate": "Müştəri yaradıldıqdan sonra ona nəqliyyat vasitələri əlavə edə bilərsiniz",
+    "cardOptional": "İstəyə bağlı. Fiziki loaylıq kartının nömrəsini daxil edin.",
+    "cardChangeWarning": "Kartı dəyişmək və ya boş buraxmaq onu silər."
+  },
+  "warning": {
+    "title": "Diqqət",
+    "hasServices": "Bu müştərinin {{count}} servis qeydi mövcuddur. Müştərini silmək istəyirsinizsə, əvvəlcə bütün servis qeydlərini silməlisiniz."
+  },
+  "itemsDevices": {
+    "title": "Məhsullar/Cihazlar",
+    "fabric": "Parça: {{type}}",
+    "size": "Ölçü: {{size}}"
+  },
+  "vehiclesServices": {
+    "vehicles": "Nəqliyyat vasitələri",
+    "vehiclesCount": "{{count}} ədəd",
+    "servicesCount": "{{count}} servis"
+  },
+  "serviceDetails": {
+    "title": "Xidmətlər tarixçəsi",
+    "date": "Tarix:",
+    "item": "Məhsul:",
+    "amount": "Məbləğ:",
+    "employee": "İşçi:",
+    "viewAll": "Bütün xidmət qeydlərini gör →"
+  }
+}

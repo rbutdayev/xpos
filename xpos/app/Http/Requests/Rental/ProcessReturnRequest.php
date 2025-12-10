@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Rental;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class ProcessReturnRequest extends FormRequest
 {
@@ -38,7 +40,7 @@ class ProcessReturnRequest extends FormRequest
 
             // Payment information
             'payment_type' => 'nullable|in:full,partial,credit',
-            'payment_method' => 'nullable|in:cash,card,transfer',
+            'payment_method' => ['nullable', new Enum(PaymentMethod::class)],
             'payment_amount' => 'nullable|numeric|min:0',
 
             // Notification settings
@@ -48,15 +50,14 @@ class ProcessReturnRequest extends FormRequest
     }
 
     /**
-     * Get custom messages for validator errors.
+     * Get custom attribute names for validator errors.
      */
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'return_date.date' => 'Qaytarma tarixi düzgün formatda olmalıdır.',
-            'items.*.item_id.required' => 'Məhsul ID-si tələb olunur.',
-            'items.*.item_id.exists' => 'Seçilmiş məhsul mövcud deyil.',
-            'items.*.damage_fee.min' => 'Zədə haqqı mənfi ola bilməz.',
+            'return_date' => __('validation.attributes.return_date'),
+            'payment_method' => __('validation.attributes.method'),
+            'payment_amount' => __('validation.attributes.amount'),
         ];
     }
 }

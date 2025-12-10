@@ -13,6 +13,7 @@ import {
     CurrencyDollarIcon,
     ClockIcon,
 } from '@heroicons/react/24/outline';
+import { useTranslations } from '@/Hooks/useTranslations';
 
 interface Customer {
     id: number;
@@ -80,6 +81,7 @@ interface Props {
 
 export default function Return({ rental, rentalCategory = 'general', conditionChecklist = [] }: Props) {
     const { flash } = usePage().props as any;
+    const { translatePaymentMethod } = useTranslations();
 
     // Ensure conditionChecklist is always an array (defensive programming)
     const checklistArray = Array.isArray(conditionChecklist) ? conditionChecklist : [];
@@ -908,7 +910,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                         >
-                                            Nağd
+                                            {translatePaymentMethod('cash')}
                                         </button>
                                         <button
                                             type="button"
@@ -919,7 +921,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                         >
-                                            Kart
+                                            {translatePaymentMethod('card')}
                                         </button>
                                         <button
                                             type="button"
@@ -930,7 +932,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                         >
-                                            Köçürmə
+                                            {translatePaymentMethod('bank_transfer')}
                                         </button>
                                     </div>
                                 </div>

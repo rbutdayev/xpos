@@ -1,0 +1,155 @@
+{
+  "title": "Təchizatçılar",
+  "newSupplier": "Yeni Təchizatçı",
+  "editSupplier": "Təchizatçını Düzəlt",
+  "editSupplierTitle": "Düzəlt: {{name}}",
+  "supplierDetails": "Təchizatçı Təfərrüatları",
+  "manageSuppliers": "Təchizatçı şirkətlərinizi idarə edin",
+  "fields": {
+    "supplierName": "Təchizatçı Adı *",
+    "contactPerson": "Əlaqə Şəxsi",
+    "phone": "Telefon",
+    "email": "E-poçt",
+    "taxNumber": "Vergi Nömrəsi",
+    "address": "Ünvan",
+    "bankName": "Bank Adı",
+    "accountNumber": "Hesab Nömrəsi",
+    "paymentTerms": "Ödəniş Müddəti (gün)",
+    "paymentTermsLabel": "Ödəniş Müddəti",
+    "notes": "Qeydlər",
+    "companyName": "Şirkət Adı",
+    "status": "Status",
+    "supplier": "Təchizatçı"
+  },
+  "sections": {
+    "basicInfo": "Əsas Məlumatlar",
+    "bankInfo": "Bank Məlumatları",
+    "paymentTerms": "Ödəniş Şərtləri",
+    "additionalInfo": "Əlavə Məlumatlar",
+    "contactInfo": "Əlaqə Məlumatları",
+    "suppliedProducts": "Təchiz Edilən Məhsullar ({{count}})",
+    "history": "Tarixçə",
+    "systemInfo": "Sistem Məlumatları"
+  },
+  "labels": {
+    "createdAt": "Yaradılma tarixi",
+    "lastModified": "Son dəyişiklik",
+    "product": "Məhsul"
+  },
+  "status": {
+    "active": "Aktiv",
+    "inactive": "Qeyri-aktiv",
+    "supplierActive": "Təchizatçı aktiv",
+    "all": "Hamısı"
+  },
+  "actions": {
+    "view": "Bax",
+    "edit": "Düzəlt",
+    "delete": "Sil",
+    "products": "Məhsullar",
+    "cancel": "Ləğv et",
+    "createSupplier": "Təchizatçını Yarad",
+    "saveChanges": "Dəyişiklikləri Yadda Saxla",
+    "saving": "Yadda saxlanır...",
+    "close": "Bağla"
+  },
+  "products": {
+    "title": "{{name}} - Məhsullar",
+    "productName": "Məhsul adı",
+    "price": "Qiymət",
+    "lastPrice": "Son qiymət",
+    "totalPurchased": "Cəmi alınıb",
+    "lastPurchase": "Son alış",
+    "averagePrice": "Orta qiymət",
+    "times": "{{count}} dəfə",
+    "deliveryDays": "Təslim: {{days}} gün"
+  },
+  "placeholders": {
+    "search": "Təchizatçı adı, əlaqə şəxsi və ya email axtarın...",
+    "phone": "+994 XX XXX XX XX",
+    "notes": "Təchizatçı haqqında əlavə qeydlər...",
+    "paymentTermsHint": "0 = nağd ödəniş, digər rəqəmlər kredit günləri"
+  },
+  "emptyState": {
+    "title": "Təchizatçı yoxdur",
+    "description": "Başlamaq üçün yeni təchizatçı yaradın.",
+    "noProducts": "Məhsul yoxdur",
+    "noProductsDescription": "Bu təchizatçıdan məhsul tapılmadı."
+  },
+  "messages": {
+    "confirmDelete": "{{name}} təchizatçısını silmək istədiyinizə əminsiniz?",
+    "created": "Təchizatçı uğurla yaradıldı",
+    "updated": "Təchizatçı uğurla yeniləndi",
+    "deleted": "Təchizatçı uğurla silindi"
+  },
+  "stats": {
+    "registered": "Qeydiyyat",
+    "lastModified": "Son dəyişiklik",
+    "totalOrders": "Ümumi Sifarişlər",
+    "totalSpent": "Ümumi Xərc",
+    "notSpecified": "Müəyyən edilməyib"
+  },
+  "payments": {
+    "title": "Təchizatçı Ödənişləri",
+    "newPayment": "Yeni Təchizatçı Ödənişi",
+    "editPayment": "Ödənişi Düzəliş Et",
+    "editPaymentTitle": "Redaktə Et - {{name}}",
+    "paymentDetails": "Ödəniş Detalları",
+    "paymentInfo": "Ödəniş Məlumatları",
+    "fields": {
+      "supplier": "Təchizatçı",
+      "amount": "Məbləğ (AZN)",
+      "description": "Təsvir",
+      "paymentDate": "Ödəniş tarixi",
+      "paymentMethod": "Ödəniş üsulu",
+      "invoiceNumber": "İnvoys nömrəsi",
+      "notes": "Qeydlər",
+      "referenceNumber": "Əməliyyat nömrəsi",
+      "branch": "Filial",
+      "category": "Xərc kateqoriyası"
+    },
+    "placeholders": {
+      "search": "Təsvir, nömrə və ya kateqoriya ilə axtar...",
+      "amount": "0.00",
+      "description": "Ödəniş məqsədi və ya açıqlaması",
+      "invoiceNumber": "Ödənilən invoys nömrəsi",
+      "notes": "Əlavə qeydlər (istəyə bağlı)",
+      "selectSupplier": "Təchizatçı seçin",
+      "selectBranch": "Filial seçin",
+      "selectCategory": "Kateqoriya seçin (istəyə bağlı)"
+    },
+    "filters": {
+      "allSuppliers": "Bütün təchizatçılar",
+      "allMethods": "Bütün ödəniş üsulları",
+      "startDate": "Başlanğıc tarixi",
+      "endDate": "Bitiş tarixi"
+    },
+    "goodsReceipt": {
+      "label": "Ödənilməmiş Mal Qəbulu Seçin (İstəyə bağlı)",
+      "helpText": "Mal qəbulu seçsəniz, məlumatlar avtomatik doldurulacaq",
+      "select": "Mal qəbulu seçin",
+      "search": "Mal qəbulu axtar (№, təchizatçı, məhsul)",
+      "remaining": "Qalıq",
+      "partiallyPaid": "(Qismən ödənilib)",
+      "selected": "Seçilmiş: {{number}}",
+      "cancel": "Ləğv et",
+      "debt": "Qalıq borc: {{amount}} AZN",
+      "paymentFor": "Mal qəbulu ödəməsi - {{reference}}"
+    },
+    "actions": {
+      "view": "Bax",
+      "edit": "Düzəliş",
+      "delete": "Sil",
+      "cancel": "Ləğv et",
+      "save": "Yadda saxla",
+      "update": "Yenilə",
+      "saving": "Yadda saxlanılır...",
+      "updating": "Yenilənir..."
+    },
+    "messages": {
+      "confirmDelete": "Silməyə əminsiniz?",
+      "noPaymentsFound": "Heç bir təchizatçı ödənişi tapılmadı",
+      "startAddingPayments": "İlk təchizatçı ödənişinizi əlavə etməklə başlayın."
+    }
+  }
+}

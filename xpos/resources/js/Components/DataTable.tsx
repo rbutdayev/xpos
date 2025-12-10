@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AdvancedPagination from './AdvancedPagination';
 import SortableHeader from './SortableHeader';
 
@@ -57,6 +58,7 @@ export default function DataTable({
     emptyState,
     className = ""
 }: DataTableProps) {
+    const { t } = useTranslation();
     return (
         <div className={`bg-white overflow-hidden shadow-sm sm:rounded-lg ${className}`}>
             {data.data.length > 0 ? (
@@ -88,7 +90,7 @@ export default function DataTable({
                                     ))}
                                     {actions && actions.length > 0 && (
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Əməliyyatlar
+                                            {t('labels.operations')}
                                         </th>
                                     )}
                                 </tr>
@@ -165,10 +167,10 @@ export default function DataTable({
                         </div>
                     )}
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        {emptyState?.title || 'Məlumat tapılmadı'}
+                        {emptyState?.title || t('dataTable.emptyTitle')}
                     </h3>
                     <p className="text-gray-500 mb-4">
-                        {emptyState?.description || 'Axtarış meyarlarını dəyişməyi cəhd edin.'}
+                        {emptyState?.description || t('dataTable.emptyDescription')}
                     </p>
                     {emptyState?.action && emptyState.action}
                 </div>

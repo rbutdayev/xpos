@@ -10,6 +10,7 @@ import {
     PencilIcon,
     TrashIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface ExpenseCategory {
     category_id: number;
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export default function Index({ categories, types }: Props) {
+    const { t } = useTranslation(['expenses', 'common']);
     const [search, setSearch] = useState('');
     const [selectedType, setSelectedType] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
@@ -39,7 +41,7 @@ export default function Index({ categories, types }: Props) {
     const columns: Column[] = [
         {
             key: 'category_info',
-            label: 'Kateqoriya',
+            label: t('categories.categoryInfo'),
             sortable: true,
             render: (category: ExpenseCategory) => (
                 <div className="flex items-center">
@@ -54,7 +56,7 @@ export default function Index({ categories, types }: Props) {
                         </div>
                         {category.parent && (
                             <div className="text-xs text-gray-500">
-                                {category.parent.name} altında
+                                {t('categories.messages.underParent', { parent: category.parent.name })}
                             </div>
                         )}
                         {category.description && (
@@ -69,7 +71,7 @@ export default function Index({ categories, types }: Props) {
         },
         {
             key: 'type',
-            label: 'Növ',
+            label: t('categories.type'),
             sortable: true,
             render: (category: ExpenseCategory) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -92,7 +94,7 @@ export default function Index({ categories, types }: Props) {
         },
         {
             key: 'children_count',
-            label: 'Alt kateqoriyalar',
+            label: t('categories.subCategories'),
             align: 'center',
             render: (category: ExpenseCategory) => (
                 <div className="text-sm text-gray-900">
@@ -103,22 +105,22 @@ export default function Index({ categories, types }: Props) {
         },
         {
             key: 'is_active',
-            label: 'Status',
+            label: t('categories.fields.status'),
             align: 'center',
             render: (category: ExpenseCategory) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    category.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                    category.is_active
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
-                    {category.is_active ? 'Aktiv' : 'Deaktiv'}
+                    {category.is_active ? t('categories.fields.isActive') : t('fields.inactive')}
                 </span>
             ),
             width: '100px'
         },
         {
             key: 'created_at',
-            label: 'Yaradılma tarixi',
+            label: t('fields.createdAt'),
             sortable: true,
             render: (category: ExpenseCategory) => (
                 <div className="text-sm text-gray-900">
@@ -134,11 +136,11 @@ export default function Index({ categories, types }: Props) {
         {
             key: 'type',
             type: 'dropdown',
-            label: 'Növ',
+            label: t('categories.type'),
             value: selectedType,
             onChange: setSelectedType,
             options: [
-                { value: '', label: 'Bütün növlər' },
+                { value: '', label: t('categories.filters.allTypes') },
                 ...Object.entries(types).map(([value, label]) => ({
                     value,
                     label
@@ -149,13 +151,13 @@ export default function Index({ categories, types }: Props) {
         {
             key: 'is_active',
             type: 'dropdown',
-            label: 'Status',
+            label: t('categories.fields.status'),
             value: selectedStatus,
             onChange: setSelectedStatus,
             options: [
-                { value: '', label: 'Bütün statuslar' },
-                { value: '1', label: 'Aktiv' },
-                { value: '0', label: 'Deaktiv' }
+                { value: '', label: t('categories.filters.allStatuses') },
+                { value: '1', label: t('categories.fields.isActive') },
+                { value: '0', label: t('fields.inactive') }
             ],
             className: 'min-w-[120px]'
         }
@@ -164,19 +166,19 @@ export default function Index({ categories, types }: Props) {
     // Define actions
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('actions.view'),
             href: (category: ExpenseCategory) => `/expense-categories/${category.category_id}`,
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'primary'
         },
         {
-            label: 'Düzəliş',
+            label: t('actions.edit'),
             href: (category: ExpenseCategory) => `/expense-categories/${category.category_id}/edit`,
             icon: <PencilIcon className="w-4 h-4" />,
             variant: 'secondary'
         },
         {
-            label: 'Sil',
+            label: t('actions.delete'),
             onClick: (category: ExpenseCategory) => handleDelete(category),
             icon: <TrashIcon className="w-4 h-4" />,
             variant: 'danger'
@@ -207,11 +209,11 @@ export default function Index({ categories, types }: Props) {
 
     const handleDelete = (category: ExpenseCategory) => {
         if (category.children.length > 0) {
-            alert('Alt kateqoriyaları olan kateqoriya silinə bilməz.');
+            alert(t('categories.messages.cannotDeleteWithChildren'));
             return;
         }
-        
-        if (confirm('Bu kateqoriyanı silmək istədiyinizə əminsiniz?')) {
+
+        if (confirm(t('categories.messages.confirmDelete'))) {
             router.delete(`/expense-categories/${category.category_id}`);
         }
     };
@@ -249,7 +251,7 @@ export default function Index({ categories, types }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Xərc kateqoriyaları" />
+            <Head title={t('categories.title')} />
 
             <div className="py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -264,16 +266,16 @@ export default function Index({ categories, types }: Props) {
                         filters={tableFilters}
                         searchValue={search}
                         onSearchChange={setSearch}
-                        searchPlaceholder="Kateqoriya adı və ya təsviri ilə axtar..."
+                        searchPlaceholder={t('categories.placeholders.searchCategories')}
                         onSearch={handleSearch}
                         onReset={handleReset}
                         createButton={{
-                            label: 'Kateqoriya əlavə et',
+                            label: t('categories.addCategory'),
                             href: '/expense-categories/create'
                         }}
                         emptyState={{
-                            title: 'Heç bir kateqoriya tapılmadı',
-                            description: 'İlk xərc kateqoriyanızı əlavə etməklə başlayın.',
+                            title: t('categories.messages.noCategoriesFound'),
+                            description: t('categories.messages.startAddingCategories'),
                             icon: <TagIcon className="w-12 h-12 text-gray-400" />
                         }}
                     />

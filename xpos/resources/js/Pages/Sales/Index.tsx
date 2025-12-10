@@ -9,6 +9,7 @@ import { Sale, PageProps } from '@/types';
 import SalesNavigation from '@/Components/SalesNavigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface SalesIndexProps extends PageProps {
     sales: {
@@ -47,6 +48,7 @@ interface SalesIndexProps extends PageProps {
 }
 
 export default function Index({ auth, sales, filters, branches, dailySummary, summaryDate, discountsEnabled, giftCardsEnabled }: SalesIndexProps) {
+    const { t } = useTranslation('sales');
     const [localFilters, setLocalFilters] = useState(filters);
     const [searchInput, setSearchInput] = useState(filters.search || '');
     const [selectedSummaryDate, setSelectedSummaryDate] = useState(summaryDate);
@@ -111,10 +113,10 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
     const columns: Column[] = [
         {
             key: 'sale_number',
-            label: 'Sifariş №',
+            label: t('orderNumber'),
             sortable: true,
             render: (sale: Sale) => (
-                <Link 
+                <Link
                     href={route('sales.show', sale.sale_id)}
                     className="text-blue-600 hover:text-blue-800 font-medium"
                 >
@@ -124,26 +126,26 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
         },
         {
             key: 'branch.name',
-            label: 'Filial',
+            label: t('branch'),
             sortable: true,
             render: (sale: Sale) => sale.branch?.name,
         },
         {
             key: 'customer.name',
-            label: 'Müştəri',
+            label: t('fields.customer'),
             sortable: true,
-            render: (sale: Sale) => sale.customer?.name || 'Anonim',
+            render: (sale: Sale) => sale.customer?.name || t('anonymous'),
         },
         {
             key: 'total',
-            label: 'Cəmi məbləğ',
+            label: t('totalAmount'),
             sortable: true,
             render: (sale: Sale) => `${sale.total} ₼`,
             className: 'text-right font-semibold',
         },
         {
             key: 'payment_info',
-            label: 'Ödəniş',
+            label: t('payment'),
             sortable: true,
             render: (sale: Sale) => (
                 <div className="text-right space-y-1">
@@ -153,17 +155,17 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                     <div>
                         {sale.payment_status === 'credit' || sale.payment_status === 'partial' ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                {sale.payment_status === 'credit' ? 'Borc' : 'Qismən'}
+                                {sale.payment_status === 'credit' ? t('paymentStatus.credit') : t('paymentStatus.partial')}
                             </span>
                         ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Ödənilib
+                                {t('paymentStatus.paid')}
                             </span>
                         )}
                     </div>
                     {sale.customer_credit && sale.customer_credit.remaining_amount > 0 && (
                         <div className="text-xs text-red-600">
-                            {Number(sale.customer_credit.remaining_amount || 0).toFixed(2)} ₼ borc
+                            {Number(sale.customer_credit.remaining_amount || 0).toFixed(2)} ₼ {t('paymentStatus.debt')}
                         </div>
                     )}
                 </div>
@@ -171,22 +173,22 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
         },
         {
             key: 'has_negative_stock',
-            label: 'Stok',
+            label: t('stockLabel'),
             render: (sale: Sale) => sale.has_negative_stock ? (
-                <span className="text-red-600 text-xs">⚠️ Mənfi</span>
+                <span className="text-red-600 text-xs">{t('stock.negative')}</span>
             ) : (
-                <span className="text-green-600 text-xs">✓ Normal</span>
+                <span className="text-green-600 text-xs">{t('stock.normal')}</span>
             ),
         },
         {
             key: 'sale_date',
-            label: 'Satış tarixi',
+            label: t('saleDate'),
             sortable: true,
             render: (sale: Sale) => new Date(sale.sale_date).toLocaleDateString('az-AZ'),
         },
         {
             key: 'user.name',
-            label: 'İşçi',
+            label: t('employee'),
             render: (sale: Sale) => sale.user?.name,
         },
     ];
@@ -194,23 +196,23 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
     const filters_config: Filter[] = [
         {
             key: 'payment_status',
-            label: 'Ödəniş statusu',
+            label: t('filters.paymentStatus'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Hamısı' },
-                { value: 'paid', label: 'Ödənilib' },
-                { value: 'partial', label: 'Qismən ödənilib' },
-                { value: 'credit', label: 'Borc' },
+                { value: '', label: t('filters.all') },
+                { value: 'paid', label: t('paymentStatus.paid') },
+                { value: 'partial', label: t('paymentStatus.partial') },
+                { value: 'credit', label: t('paymentStatus.credit') },
             ],
             value: localFilters.payment_status || '',
             onChange: (value: string) => handleFilter('payment_status', value),
         },
         {
             key: 'branch_id',
-            label: 'Filial',
+            label: t('filters.branch'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Hamısı' },
+                { value: '', label: t('filters.all') },
                 ...branches.map(branch => ({ value: branch.id.toString(), label: branch.name })),
             ],
             value: localFilters.branch_id || '',
@@ -218,26 +220,26 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
         },
         {
             key: 'date_from',
-            label: 'Başlanğıc tarixi',
+            label: t('filters.startDate'),
             type: 'date',
             value: localFilters.date_from || '',
             onChange: (value: string) => handleFilter('date_from', value),
         },
         {
             key: 'date_to',
-            label: 'Son tarix',
+            label: t('filters.endDate'),
             type: 'date',
             value: localFilters.date_to || '',
             onChange: (value: string) => handleFilter('date_to', value),
         },
         {
             key: 'has_negative_stock',
-            label: 'Mənfi stok',
+            label: t('filters.negativeStock'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Hamısı' },
-                { value: 'true', label: 'Mənfi stoklu' },
-                { value: 'false', label: 'Normal stoklu' },
+                { value: '', label: t('filters.all') },
+                { value: 'true', label: t('stock.withNegative') },
+                { value: 'false', label: t('stock.withNormal') },
             ],
             value: localFilters.has_negative_stock?.toString() || '',
             onChange: (value: string) => handleFilter('has_negative_stock', value),
@@ -245,7 +247,7 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
     ];
 
     const handleReprintFiscal = async (sale: Sale) => {
-        if (!confirm(`Fiskal qəbzi təkrar çap etmək istədiyinizə əminsiniz?\n\nSatış №: ${sale.sale_number}\nFiskal №: ${sale.fiscal_number}`)) {
+        if (!confirm(t('messages.confirmFiscalReprint', { saleNumber: sale.sale_number, fiscalNumber: sale.fiscal_number }))) {
             return;
         }
 
@@ -254,29 +256,29 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
             if (response.data.success) {
                 toast.success(response.data.message);
             } else {
-                toast.error(response.data.message || 'Çap uğursuz oldu');
+                toast.error(response.data.message || t('messages.printFailed'));
             }
         } catch (error: any) {
-            toast.error('Xəta: ' + (error.response?.data?.message || error.message));
+            toast.error(t('messages.error') + (error.response?.data?.message || error.message));
         }
     };
 
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('actions.view'),
             href: (sale: Sale) => route('sales.show', sale.sale_id),
             variant: 'view',
             icon: <EyeIcon className="w-4 h-4" />,
         },
         {
-            label: 'Düzəliş et',
+            label: t('actions.edit'),
             href: (sale: Sale) => route('sales.edit', sale.sale_id),
             variant: 'edit',
             icon: <PencilIcon className="w-4 h-4" />,
             condition: (sale: Sale) => sale.status !== 'refunded', // Allow edit for all except refunded
         },
         {
-            label: 'Fiskal Çap',
+            label: t('fiscalPrint'),
             onClick: (sale: Sale) => handleReprintFiscal(sale),
             variant: 'secondary',
             icon: <PrinterIcon className="w-4 h-4" />,
@@ -286,7 +288,7 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
 
     return (
         <AuthenticatedLayout>
-            <Head title="Satışlar" />
+            <Head title={t('title')} />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
                 <SalesNavigation currentRoute="sales" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
                     <Link
@@ -294,7 +296,7 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                     >
                         <PlusCircleIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">Satış et</span>
+                        <span className="font-semibold">{t('makeSale')}</span>
                     </Link>
                 </SalesNavigation>
             </div>
@@ -317,7 +319,7 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                             }`}
                         >
-                            Bugünkü Satışlar
+                            {t('todaySales')}
                         </button>
                     </div>
 
@@ -336,10 +338,10 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                         filters={filters_config}
                         actions={actions}
                         searchValue={searchInput}
-                        searchPlaceholder="Sifariş nömrəsi, müştəri adı və ya telefonu axtar..."
+                        searchPlaceholder={t('searchPlaceholder')}
                         emptyState={{
-                            title: "Heç bir satış tapılmadı",
-                            description: "Hələ ki heç bir satış edilməyib."
+                            title: t('emptyState.title'),
+                            description: t('emptyState.description')
                         }}
                         onSearchChange={(search: string) => handleSearchInput(search)}
                         onSort={(field: string) => handleSort(field, 'asc')}

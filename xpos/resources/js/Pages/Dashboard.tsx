@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 // Role-specific dashboard components
 import AccountOwnerDashboard from './Dashboard/AccountOwnerDashboard';
@@ -43,12 +44,13 @@ interface DashboardData extends PageProps {
 
 export default function Dashboard(props: DashboardData) {
     const { user } = props;
+    const { t } = useTranslation('dashboard');
 
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-600">Yüklənir...</p>
+                    <p className="text-gray-600">{t('loading')}</p>
                 </div>
             </div>
         );
@@ -84,10 +86,10 @@ export default function Dashboard(props: DashboardData) {
                     <div className="min-h-screen flex items-center justify-center">
                         <div className="text-center">
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                                Xoş gəlmisiniz
+                                {t('welcome')}
                             </h1>
                             <p className="text-gray-600">
-                                İdarə paneli yüklənir...
+                                {t('dashboardLoading')}
                             </p>
                         </div>
                     </div>
@@ -97,7 +99,7 @@ export default function Dashboard(props: DashboardData) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="İdarə Paneli" />
+            <Head title={t('title')} />
             {renderDashboard()}
         </AuthenticatedLayout>
     );

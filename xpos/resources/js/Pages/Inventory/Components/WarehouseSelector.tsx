@@ -1,5 +1,6 @@
 import { Warehouse } from '@/types';
 import { BuildingStorefrontIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     warehouses: Warehouse[];
@@ -8,9 +9,11 @@ interface Props {
 }
 
 export default function WarehouseSelector({ warehouses, value, onChange }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
+
     return (
         <div className="bg-white shadow-sm rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Anbar seçin</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('selectWarehouse')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {warehouses.map((warehouse) => {
                     const isSelected = String(warehouse.id) === value;
@@ -65,7 +68,7 @@ export default function WarehouseSelector({ warehouses, value, onChange }: Props
             {warehouses.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                     <BuildingStorefrontIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-sm">Anbar tapılmadı</p>
+                    <p className="text-sm">{t('warehouseNotFound')}</p>
                 </div>
             )}
         </div>

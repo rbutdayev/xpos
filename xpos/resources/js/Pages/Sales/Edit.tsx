@@ -7,6 +7,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import { PageProps, Sale, Customer } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface SalesEditProps extends PageProps {
     sale: Sale & {
@@ -30,6 +31,7 @@ interface SalesEditProps extends PageProps {
 }
 
 export default function Edit({ auth, sale, customers }: SalesEditProps) {
+    const { t } = useTranslation('sales');
     const [showAddPayment, setShowAddPayment] = useState(false);
 
     const { data, setData, put, processing, errors } = useForm({
@@ -56,7 +58,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
         // Client-side validation to prevent overpayment
         const paymentAmount = Number(paymentData.amount);
         if (paymentAmount > maxPayableAmount) {
-            alert(`Ödəniş məbləği maksimum ${formatCurrency(maxPayableAmount)} ola bilər.`);
+            alert(t('edit.maxPaymentError', { amount: formatCurrency(maxPayableAmount) }));
             return;
         }
         
@@ -86,25 +88,25 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Satış düzəliş et - #${sale.sale_number}`} />
+            <Head title={t('edit.title', { saleNumber: sale.sale_number })} />
 
             <div className="py-12">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    
+
                     {/* Sale Summary (Read-only) */}
                     <div className="bg-gray-50 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Satış məlumatları (dəyişdirilə bilməz)</h3>
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">{t('edit.saleInfo')}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Satış nömrəsi</h4>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('edit.saleNumber')}</h4>
                                 <p className="font-medium">{sale.sale_number}</p>
                             </div>
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Ümumi məbləğ</h4>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('edit.totalAmount')}</h4>
                                 <p className="font-medium text-lg">{formatCurrency(sale.total)}</p>
                             </div>
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Satış tarixi</h4>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('edit.saleDate')}</h4>
                                 <p className="font-medium">{formatDate(sale.sale_date)}</p>
                             </div>
                         </div>
@@ -113,42 +115,42 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                     {/* Payment Status */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-medium text-gray-900">Ödəniş statusu</h3>
+                            <h3 className="text-lg font-medium text-gray-900">{t('edit.paymentInfo')}</h3>
                             {(remainingBalance > 0 || (sale.customer_credit_id && sale.credit_amount && sale.credit_amount > 0)) && (
-                                <PrimaryButton 
+                                <PrimaryButton
                                     onClick={() => setShowAddPayment(!showAddPayment)}
                                     disabled={paymentProcessing}
                                 >
-                                    {showAddPayment ? 'Ləğv et' : 'Ödəniş əlavə et'}
+                                    {showAddPayment ? t('edit.cancel') : t('edit.addPayment')}
                                 </PrimaryButton>
                             )}
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Ödənilmiş</h4>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('edit.totalPaid')}</h4>
                                 <p className="text-lg font-semibold text-green-600">{formatCurrency(totalPaid)}</p>
                             </div>
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Qalan</h4>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('edit.remainingBalance')}</h4>
                                 <p className={`text-lg font-semibold ${remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                     {formatCurrency(remainingBalance)}
                                 </p>
                             </div>
                             <div>
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">Status</h4>
+                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('edit.status')}</h4>
                                 <div>
                                     {remainingBalance <= 0 ? (
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            ✅ Tam ödənilmiş
+                                            {t('show.fullyPaidBadge')}
                                         </span>
                                     ) : sale.customer_credit_id ? (
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            ❌ Kredit (Borclu)
+                                            {t('show.unpaidBadge')}
                                         </span>
                                     ) : (
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            ⏳ Qismən ödənilmiş
+                                            {t('show.partiallyPaidBadge')}
                                         </span>
                                     )}
                                 </div>
@@ -159,10 +161,10 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                         {showAddPayment && (
                             <div className="border-t pt-6">
                                 <form onSubmit={handleAddPayment} className="bg-blue-50 p-4 rounded-lg">
-                                    <h4 className="text-lg font-medium text-gray-900 mb-4">Yeni ödəniş əlavə et</h4>
+                                    <h4 className="text-lg font-medium text-gray-900 mb-4">{t('edit.addPaymentButton')}</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <InputLabel htmlFor="payment_method" value="Ödəniş üsulu" />
+                                            <InputLabel htmlFor="payment_method" value={t('edit.paymentMethod')} />
                                             <select
                                                 id="payment_method"
                                                 value={paymentData.method}
@@ -170,14 +172,14 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                                 required
                                             >
-                                                <option value="nağd">Nağd</option>
-                                                <option value="kart">Kart</option>
-                                                <option value="köçürmə">Bank köçürməsi</option>
+                                                <option value="nağd">{t('paymentMethods.cash')}</option>
+                                                <option value="kart">{t('paymentMethods.card')}</option>
+                                                <option value="köçürmə">{t('paymentMethods.transfer')}</option>
                                             </select>
                                             <InputError message={paymentErrors.method} className="mt-2" />
                                         </div>
                                         <div>
-                                            <InputLabel htmlFor="amount" value="Ödəniş məbləği" />
+                                            <InputLabel htmlFor="amount" value={t('edit.paymentAmount')} />
                                             <TextInput
                                                 id="amount"
                                                 type="number"
@@ -185,19 +187,19 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                                 max={maxPayableAmount}
                                                 value={paymentData.amount}
                                                 onChange={(e) => setPaymentData('amount', e.target.value)}
-                                                placeholder={`Maksimum: ${formatCurrency(maxPayableAmount)}`}
+                                                placeholder={`${t('edit.paymentAmount')}: ${formatCurrency(maxPayableAmount)}`}
                                                 className="mt-1 block w-full"
                                                 required
                                             />
                                             <InputError message={paymentErrors.amount} className="mt-2" />
                                         </div>
                                         <div>
-                                            <InputLabel htmlFor="description" value="Qeyd" />
+                                            <InputLabel htmlFor="description" value={t('edit.paymentDescription')} />
                                             <TextInput
                                                 id="description"
                                                 value={paymentData.description}
                                                 onChange={(e) => setPaymentData('description', e.target.value)}
-                                                placeholder="Ödəniş haqqında qeyd..."
+                                                placeholder={t('edit.paymentDescription')}
                                                 className="mt-1 block w-full"
                                             />
                                             <InputError message={paymentErrors.description} className="mt-2" />
@@ -205,10 +207,10 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                     </div>
                                     <div className="mt-4 flex gap-2">
                                         <PrimaryButton type="submit" disabled={paymentProcessing}>
-                                            {paymentProcessing ? 'Əlavə edilir...' : 'Ödəniş əlavə et'}
+                                            {t('edit.savePayment')}
                                         </PrimaryButton>
                                         <SecondaryButton type="button" onClick={() => setShowAddPayment(false)}>
-                                            Ləğv et
+                                            {t('edit.cancel')}
                                         </SecondaryButton>
                                     </div>
                                 </form>
@@ -218,7 +220,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                         {/* Payment History */}
                         {sale.payments.length > 0 && (
                             <div className="border-t pt-6">
-                                <h4 className="text-lg font-medium text-gray-900 mb-4">Ödəniş tarixçəsi</h4>
+                                <h4 className="text-lg font-medium text-gray-900 mb-4">{t('edit.existingPayments')}</h4>
                                 <div className="space-y-2">
                                     {sale.payments.map((payment) => (
                                         <div key={payment.payment_id} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
@@ -237,18 +239,18 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                     {/* Editable Fields */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                            <h3 className="text-lg font-medium text-gray-900">Düzəliş edilə bilən sahələr</h3>
+                            <h3 className="text-lg font-medium text-gray-900">{t('edit.editableFields')}</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <InputLabel htmlFor="customer_id" value="Müştəri" />
+                                    <InputLabel htmlFor="customer_id" value={t('edit.customer')} />
                                     <select
                                         id="customer_id"
                                         value={data.customer_id}
                                         onChange={(e) => setData('customer_id', e.target.value)}
                                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     >
-                                        <option value="">Müştəri seçin</option>
+                                        <option value="">{t('edit.selectCustomer')}</option>
                                         {customers.map((customer) => (
                                             <option key={customer.id} value={customer.id}>
                                                 {customer.name} {customer.phone && `(${customer.phone})`}
@@ -259,7 +261,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                 </div>
 
                                 <div>
-                                    <InputLabel htmlFor="status" value="Status" />
+                                    <InputLabel htmlFor="status" value={t('edit.status')} />
                                     <select
                                         id="status"
                                         value={data.status}
@@ -267,9 +269,9 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         required
                                     >
-                                        <option value="pending">Gözləyir</option>
-                                        <option value="completed">Tamamlandı</option>
-                                        <option value="cancelled">Ləğv edildi</option>
+                                        <option value="pending">{t('status.pending')}</option>
+                                        <option value="completed">{t('status.completed')}</option>
+                                        <option value="cancelled">{t('status.cancelled')}</option>
                                     </select>
                                     <InputError message={errors.status} className="mt-2" />
                                 </div>
@@ -278,7 +280,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                             {sale.customer_credit_id && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="credit_due_date" value="Kredit son tarixi" />
+                                        <InputLabel htmlFor="credit_due_date" value={t('edit.creditDueDate')} />
                                         <TextInput
                                             id="credit_due_date"
                                             type="date"
@@ -293,13 +295,13 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                             )}
 
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <InputLabel htmlFor="notes" value={t('edit.notes')} />
                                 <textarea
                                     id="notes"
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={4}
-                                    placeholder="Satış haqqında əlavə qeydlər..."
+                                    placeholder={t('edit.notesPlaceholder')}
                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
@@ -307,12 +309,12 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
 
                             <div className="flex items-center gap-4">
                                 <PrimaryButton type="submit" disabled={processing}>
-                                    {processing ? 'Yenilənir...' : 'Məlumatları yenilə'}
+                                    {t('edit.saveChanges')}
                                 </PrimaryButton>
 
                                 <Link href={route('sales.show', sale.sale_id)}>
                                     <SecondaryButton>
-                                        Ləğv et
+                                        {t('edit.backToSale')}
                                     </SecondaryButton>
                                 </Link>
                             </div>

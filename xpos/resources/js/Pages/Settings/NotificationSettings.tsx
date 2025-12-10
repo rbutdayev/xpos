@@ -15,6 +15,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 import Checkbox from '@/Components/Checkbox';
+import { useTranslation } from 'react-i18next';
 
 interface SmsCredential {
     id: number;
@@ -55,6 +56,7 @@ interface Props {
 }
 
 export default function NotificationSettings({ sms, telegram, notification_settings, account_phone }: Props) {
+    const { t } = useTranslation('settings');
     const [activeTab, setActiveTab] = useState<'channels' | 'sms' | 'telegram'>('channels');
 
     // Notification settings form
@@ -170,17 +172,17 @@ export default function NotificationSettings({ sms, telegram, notification_setti
     const customerSettings = notificationForm.data.notification_settings.customer?.order_confirmation || { enabled: false, channels: [], recipients: {} };
 
     return (
-        <AdminLayout title="Bildirişlər">
-            <Head title="Bildirişlər" />
+        <AdminLayout title={t('notifications.title')}>
+            <Head title={t('notifications.title')} />
 
             <div className="py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-6">
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            Bildirişlər
+                            {t('notifications.title')}
                         </h1>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            SMS və Telegram bildirişlərini idarə edin
+                            {t('notifications.description')}
                         </p>
                     </div>
 
@@ -201,7 +203,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     `}
                                 >
                                     <BellIcon className={`w-5 h-5 ${activeTab === 'channels' ? 'text-white' : 'text-gray-400'}`} />
-                                    <span className="font-semibold">Bildiriş Kanalları</span>
+                                    <span className="font-semibold">{t('notifications.channelsTab')}</span>
                                     {activeTab === 'channels' && (
                                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
                                     )}
@@ -219,7 +221,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     `}
                                 >
                                     <DevicePhoneMobileIcon className={`w-5 h-5 ${activeTab === 'sms' ? 'text-white' : 'text-gray-400'}`} />
-                                    <span className="font-semibold">SMS Parametrləri</span>
+                                    <span className="font-semibold">{t('notifications.smsTab')}</span>
                                     {activeTab === 'sms' && (
                                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
                                     )}
@@ -237,7 +239,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     `}
                                 >
                                     <ChatBubbleLeftRightIcon className={`w-5 h-5 ${activeTab === 'telegram' ? 'text-white' : 'text-gray-400'}`} />
-                                    <span className="font-semibold">Telegram Parametrləri</span>
+                                    <span className="font-semibold">{t('notifications.telegramTab')}</span>
                                     {activeTab === 'telegram' && (
                                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
                                     )}
@@ -251,8 +253,8 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                         <form onSubmit={handleNotificationSubmit} className="space-y-6">
                             {/* Merchant Notifications */}
                             <SettingsSection
-                                title="Tacir Bildirişləri"
-                                description="Yeni sifariş daxil olduqda sizə göndəriləcək bildirişlər"
+                                title={t('notifications.merchantTitle')}
+                                description={t('notifications.merchantDescription')}
                                 icon={BellIcon}
                             >
                                 <FormGrid>
@@ -263,7 +265,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                 onChange={() => toggleNotificationEnabled('merchant.new_order')}
                                             />
                                             <span className="text-sm font-medium text-gray-900">
-                                                Yeni sifariş bildirişlərini aktiv et
+                                                {t('notifications.activateNotifications')}
                                             </span>
                                         </label>
                                     </div>
@@ -271,7 +273,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     {merchantSettings.enabled && (
                                         <>
                                             <div className="sm:col-span-6">
-                                                <InputLabel value="Bildiriş Kanalları" />
+                                                <InputLabel value={t('notifications.channels')} />
                                                 <div className="mt-2 space-y-2">
                                                     {sms.configured && (
                                                         <label className="flex items-center space-x-3">
@@ -282,7 +284,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                             <DevicePhoneMobileIcon className="w-5 h-5 text-gray-500" />
                                                             <span className="text-sm text-gray-900">SMS</span>
                                                             <span className="text-xs text-gray-500">
-                                                                ({sms.stats.sent} göndərildi)
+                                                                ({sms.stats.sent} {t('notifications.sent')})
                                                             </span>
                                                         </label>
                                                     )}
@@ -295,20 +297,20 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                             <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-500" />
                                                             <span className="text-sm text-gray-900">Telegram</span>
                                                             <span className="text-xs text-gray-500">
-                                                                ({telegram.stats.sent} göndərildi)
+                                                                ({telegram.stats.sent} {t('notifications.sent')})
                                                             </span>
                                                         </label>
                                                     )}
                                                     {!sms.configured && !telegram.configured && (
                                                         <p className="text-sm text-yellow-600">
-                                                            Heç bir kanal konfiqurasiya edilməyib. Zəhmət olmasa SMS və ya Telegram parametrlərini konfiqurasiya edin.
+                                                            {t('notifications.noChannels')}
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {merchantSettings.channels?.includes('sms') && (
-                                                <FormField label="SMS Alıcı Telefon" className="sm:col-span-6">
+                                                <FormField label={t('notifications.recipientSMS')} className="sm:col-span-6">
                                                     <TextInput
                                                         value={merchantSettings.recipients?.sms || ''}
                                                         onChange={(e) => updateRecipient('merchant.new_order', 'sms', e.target.value)}
@@ -316,13 +318,13 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                         className="mt-1 block w-full"
                                                     />
                                                     <p className="mt-1 text-xs text-gray-500">
-                                                        Boş buraxsanız, hesab telefonunuz istifadə ediləcək
+                                                        {t('notifications.recipientPhoneHint')}
                                                     </p>
                                                 </FormField>
                                             )}
 
                                             {merchantSettings.channels?.includes('telegram') && (
-                                                <FormField label="Telegram Chat ID" className="sm:col-span-6">
+                                                <FormField label={t('notifications.chatId')} className="sm:col-span-6">
                                                     <TextInput
                                                         value={merchantSettings.recipients?.telegram || ''}
                                                         onChange={(e) => updateRecipient('merchant.new_order', 'telegram', e.target.value)}
@@ -330,7 +332,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                         className="mt-1 block w-full"
                                                     />
                                                     <p className="mt-1 text-xs text-gray-500">
-                                                        Boş buraxsanız, default chat ID istifadə ediləcək
+                                                        {t('notifications.defaultChatHint')}
                                                     </p>
                                                 </FormField>
                                             )}
@@ -341,8 +343,8 @@ export default function NotificationSettings({ sms, telegram, notification_setti
 
                             {/* Customer Notifications */}
                             <SettingsSection
-                                title="Müştəri Bildirişləri"
-                                description="Müştərilərə göndəriləcək təsdiq bildirişləri"
+                                title={t('notifications.customerTitle')}
+                                description={t('notifications.customerDescription')}
                                 icon={BellIcon}
                             >
                                 <FormGrid>
@@ -353,14 +355,14 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                 onChange={() => toggleNotificationEnabled('customer.order_confirmation')}
                                             />
                                             <span className="text-sm font-medium text-gray-900">
-                                                Müştəri təsdiq bildirişlərini aktiv et
+                                                {t('notifications.activateCustomer')}
                                             </span>
                                         </label>
                                     </div>
 
                                     {customerSettings.enabled && (
                                         <div className="sm:col-span-6">
-                                            <InputLabel value="Bildiriş Kanalları" />
+                                            <InputLabel value={t('notifications.channels')} />
                                             <div className="mt-2 space-y-2">
                                                 {sms.configured && (
                                                     <label className="flex items-center space-x-3">
@@ -369,7 +371,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                             onChange={() => toggleChannel('customer.order_confirmation', 'sms')}
                                                         />
                                                         <DevicePhoneMobileIcon className="w-5 h-5 text-gray-500" />
-                                                        <span className="text-sm text-gray-900">SMS (Tövsiyə olunur)</span>
+                                                        <span className="text-sm text-gray-900">SMS ({t('notifications.recommended')})</span>
                                                     </label>
                                                 )}
                                             </div>
@@ -381,11 +383,11 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                             <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {notificationForm.recentlySuccessful && (
                                     <p className="text-sm text-green-600 dark:text-green-400">
-                                        Parametrlər yadda saxlanıldı
+                                        {t('actions.saved')}
                                     </p>
                                 )}
                                 <PrimaryButton type="submit" disabled={notificationForm.processing}>
-                                    {notificationForm.processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}
+                                    {notificationForm.processing ? t('actions.saving') : t('actions.saveChanges')}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -395,8 +397,8 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                     {activeTab === 'sms' && (
                         <form onSubmit={handleSmsSubmit} className="space-y-6">
                             <SettingsSection
-                                title="LSim SMS Parametrləri"
-                                description="LSim SMS gateway məlumatlarınızı daxil edin"
+                                title={t('sms.lsimTitle')}
+                                description={t('sms.description')}
                                 icon={DevicePhoneMobileIcon}
                             >
                                 <FormGrid>
@@ -405,16 +407,16 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                             <div className="flex items-center">
                                                 <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
                                                 <span className="text-sm font-medium text-green-900">
-                                                    SMS konfiqurasiya edilib
+                                                    {t('sms.configured')}
                                                 </span>
                                             </div>
                                             <div className="mt-2 text-xs text-green-700">
-                                                <p>Göndərilən: {sms.stats.sent} | Uğursuz: {sms.stats.failed}</p>
+                                                <p>{t('sms.stats.sent')}: {sms.stats.sent} | {t('sms.stats.failed')}: {sms.stats.failed}</p>
                                             </div>
                                         </div>
                                     )}
 
-                                    <FormField label="Login" className="sm:col-span-3">
+                                    <FormField label={t('sms.login')} className="sm:col-span-3">
                                         <TextInput
                                             value={smsForm.data.login}
                                             onChange={(e) => smsForm.setData('login', e.target.value)}
@@ -423,7 +425,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                         />
                                     </FormField>
 
-                                    <FormField label="Password" className="sm:col-span-3">
+                                    <FormField label={t('sms.password')} className="sm:col-span-3">
                                         <TextInput
                                             type="password"
                                             value={smsForm.data.password}
@@ -434,7 +436,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                         />
                                     </FormField>
 
-                                    <FormField label="Göndərən Adı (Sender Name)" className="sm:col-span-3">
+                                    <FormField label={t('sms.senderName')} className="sm:col-span-3">
                                         <TextInput
                                             value={smsForm.data.sender_name}
                                             onChange={(e) => smsForm.setData('sender_name', e.target.value)}
@@ -443,11 +445,11 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                             className="mt-1 block w-full"
                                         />
                                         <p className="mt-1 text-xs text-gray-500">
-                                            Maksimum 11 simvol
+                                            {t('sms.senderNameHint')}
                                         </p>
                                     </FormField>
 
-                                    <FormField label="Gateway URL" className="sm:col-span-3">
+                                    <FormField label={t('sms.gatewayUrl')} className="sm:col-span-3">
                                         <TextInput
                                             value={smsForm.data.gateway_url}
                                             onChange={(e) => smsForm.setData('gateway_url', e.target.value)}
@@ -463,7 +465,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                 onChange={(e) => smsForm.setData('is_active', e.target.checked)}
                                             />
                                             <span className="text-sm font-medium text-gray-900">
-                                                SMS xidmətini aktiv et
+                                                {t('sms.enableService')}
                                             </span>
                                         </label>
                                     </div>
@@ -473,11 +475,11 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                             <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {smsForm.recentlySuccessful && (
                                     <p className="text-sm text-green-600 dark:text-green-400">
-                                        SMS parametrləri yadda saxlanıldı
+                                        {t('actions.smsSaved')}
                                     </p>
                                 )}
                                 <PrimaryButton type="submit" disabled={smsForm.processing}>
-                                    {smsForm.processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}
+                                    {smsForm.processing ? t('actions.saving') : t('actions.saveChanges')}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -487,8 +489,8 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                     {activeTab === 'telegram' && (
                         <form onSubmit={handleTelegramSubmit} className="space-y-6">
                             <SettingsSection
-                                title="Telegram Bot Parametrləri"
-                                description="Telegram bot məlumatlarınızı daxil edin"
+                                title={t('telegram.botTitle')}
+                                description={t('telegram.description')}
                                 icon={ChatBubbleLeftRightIcon}
                             >
                                 <FormGrid>
@@ -498,14 +500,14 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                 <div className="flex items-center">
                                                     <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
                                                     <span className="text-sm font-medium text-green-900">
-                                                        Telegram konfiqurasiya edilib
+                                                        {t('telegram.configured')}
                                                     </span>
                                                 </div>
                                                 <div className="mt-2 text-xs text-green-700">
-                                                    <p>Bot: @{telegram.credential?.bot_username || 'N/A'}</p>
-                                                    <p>Göndərilən: {telegram.stats.sent} | Uğursuz: {telegram.stats.failed}</p>
+                                                    <p>{t('telegram.bot')}: @{telegram.credential?.bot_username || 'N/A'}</p>
+                                                    <p>{t('sms.stats.sent')}: {telegram.stats.sent} | {t('sms.stats.failed')}: {telegram.stats.failed}</p>
                                                     {telegram.credential?.last_tested_at && (
-                                                        <p>Son test: {new Date(telegram.credential.last_tested_at).toLocaleString('az')}</p>
+                                                        <p>{t('telegram.lastTest')}: {new Date(telegram.credential.last_tested_at).toLocaleString('az')}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -513,17 +515,17 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     )}
 
                                     <div className="sm:col-span-6 bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-blue-900 mb-2">Telegram Bot Yaratma Təlimatı:</h4>
+                                        <h4 className="text-sm font-medium text-blue-900 mb-2">{t('telegram.instructions.title')}</h4>
                                         <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
-                                            <li>Telegram-da @BotFather botunu tapın</li>
-                                            <li>/newbot əmrini göndərin</li>
-                                            <li>Bot adını və username-ni təyin edin</li>
-                                            <li>Aldığınız Bot Token-i aşağıya daxil edin</li>
-                                            <li>Chat ID əldə etmək üçün: botunuza mesaj göndərin və @userinfobot-dan öyrənin</li>
+                                            <li>{t('telegram.instructions.step1')}</li>
+                                            <li>{t('telegram.instructions.step2')}</li>
+                                            <li>{t('telegram.instructions.step3')}</li>
+                                            <li>{t('telegram.instructions.step4')}</li>
+                                            <li>{t('telegram.instructions.step5')}</li>
                                         </ol>
                                     </div>
 
-                                    <FormField label="Bot Token" className="sm:col-span-6">
+                                    <FormField label={t('telegram.botToken')} className="sm:col-span-6">
                                         <TextInput
                                             value={telegramForm.data.bot_token}
                                             onChange={(e) => telegramForm.setData('bot_token', e.target.value)}
@@ -533,7 +535,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                         />
                                     </FormField>
 
-                                    <FormField label="Bot Username (İstəyə bağlı)" className="sm:col-span-3">
+                                    <FormField label={t('telegram.botUsername')} className="sm:col-span-3">
                                         <TextInput
                                             value={telegramForm.data.bot_username}
                                             onChange={(e) => telegramForm.setData('bot_username', e.target.value)}
@@ -542,7 +544,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                         />
                                     </FormField>
 
-                                    <FormField label="Default Chat ID" className="sm:col-span-3">
+                                    <FormField label={t('telegram.defaultChatId')} className="sm:col-span-3">
                                         <TextInput
                                             value={telegramForm.data.default_chat_id}
                                             onChange={(e) => telegramForm.setData('default_chat_id', e.target.value)}
@@ -550,7 +552,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                             className="mt-1 block w-full"
                                         />
                                         <p className="mt-1 text-xs text-gray-500">
-                                            Bildirişlərin göndəriləcəyi default chat
+                                            {t('telegram.defaultChatIdHint')}
                                         </p>
                                     </FormField>
 
@@ -561,7 +563,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                                 onChange={(e) => telegramForm.setData('is_active', e.target.checked)}
                                             />
                                             <span className="text-sm font-medium text-gray-900">
-                                                Telegram xidmətini aktiv et
+                                                {t('telegram.enableService')}
                                             </span>
                                         </label>
                                     </div>
@@ -576,16 +578,16 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                         disabled={telegramForm.processing}
                                     >
                                         <ArrowPathIcon className="w-4 h-4 mr-2" />
-                                        Bağlantını Test Et
+                                        {t('telegram.testConnection')}
                                     </SecondaryButton>
                                 )}
                                 {telegramForm.recentlySuccessful && (
                                     <p className="text-sm text-green-600 dark:text-green-400">
-                                        Telegram parametrləri yadda saxlanıldı
+                                        {t('actions.telegramSaved')}
                                     </p>
                                 )}
                                 <PrimaryButton type="submit" disabled={telegramForm.processing}>
-                                    {telegramForm.processing ? 'Yadda saxlanılır...' : 'Yadda saxla'}
+                                    {telegramForm.processing ? t('actions.saving') : t('actions.saveChanges')}
                                 </PrimaryButton>
                             </div>
                         </form>

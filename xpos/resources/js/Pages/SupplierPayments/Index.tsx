@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
@@ -56,16 +57,17 @@ interface Props {
 }
 
 export default function Index({ payments, suppliers, filters, paymentMethods }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
     const [selectedPayments, setSelectedPayments] = useState<number[]>([]);
 
     const filterOptions: Filter[] = [
         {
             key: 'supplier_id',
-            label: 'Təchizatçı',
+            label: t('payments.fields.supplier'),
             type: 'dropdown',
             value: filters.supplier_id || '',
             options: [
-                { value: '', label: 'Bütün təchizatçılar' },
+                { value: '', label: t('payments.filters.allSuppliers') },
                 ...suppliers.map(supplier => ({
                     value: supplier.id.toString(),
                     label: supplier.name
@@ -75,11 +77,11 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
         },
         {
             key: 'payment_method',
-            label: 'Ödəniş üsulu',
+            label: t('payments.fields.paymentMethod'),
             type: 'dropdown',
             value: filters.payment_method || '',
             options: [
-                { value: '', label: 'Bütün ödəniş üsulları' },
+                { value: '', label: t('payments.filters.allMethods') },
                 ...Object.entries(paymentMethods).map(([key, value]) => ({
                     value: key,
                     label: value
@@ -89,14 +91,14 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
         },
         {
             key: 'start_date',
-            label: 'Başlanğıc tarixi',
+            label: t('payments.filters.startDate'),
             type: 'date',
             value: filters.start_date || '',
             onChange: (value: string) => {}
         },
         {
             key: 'end_date',
-            label: 'Bitiş tarixi',
+            label: t('payments.filters.endDate'),
             type: 'date',
             value: filters.end_date || '',
             onChange: (value: string) => {}
@@ -105,19 +107,19 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
 
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('payments.actions.view'),
             onClick: (payment: SupplierPayment) => router.get(`/supplier-payments/${payment.payment_id}`),
             variant: 'view'
         },
         {
-            label: 'Düzəliş',
+            label: t('payments.actions.edit'),
             onClick: (payment: SupplierPayment) => router.get(`/supplier-payments/${payment.payment_id}/edit`),
             variant: 'edit'
         },
         {
-            label: 'Sil',
+            label: t('payments.actions.delete'),
             onClick: (payment: SupplierPayment) => {
-                if (confirm('Silməyə əminsiniz?')) {
+                if (confirm(t('payments.messages.confirmDelete'))) {
                     router.delete(`/supplier-payments/${payment.payment_id}`);
                 }
             },
@@ -127,7 +129,7 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
 
     const handleBulkAction = (action: string, selectedIds: number[]) => {
         if (action === 'delete') {
-            if (confirm('Silməyə əminsiniz?')) {
+            if (confirm(t('payments.messages.confirmDelete'))) {
                 router.post('/supplier-payments/bulk-delete', {
                     ids: selectedIds
                 });
@@ -138,7 +140,7 @@ export default function Index({ payments, suppliers, filters, paymentMethods }: 
     return (
         <AuthenticatedLayout
         >
-            <Head title="Təchizatçı Ödənişləri" />
+            <Head title={t('payments.title')} />
 
             <div className="py-12">
                 <div className="w-full">

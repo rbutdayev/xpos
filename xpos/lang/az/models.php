@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'product' => 'Məhsul',
+    'products' => 'Məhsullar',
+    'customer' => 'Müştəri',
+    'customers' => 'Müştərilər',
+    'sale' => 'Satış',
+    'sales' => 'Satışlar',
+    'expense' => 'Xərc',
+    'expenses' => 'Xərclər',
+    'payment' => 'Ödəniş',
+    'payments' => 'Ödənişlər',
+    'supplier' => 'Təchizatçı',
+    'suppliers' => 'Təchizatçılar',
+    'category' => 'Kateqoriya',
+    'categories' => 'Kateqoriyalar',
+    'inventory' => 'İnventar',
+    'report' => 'Hesabat',
+    'reports' => 'Hesabatlar',
+    'user' => 'İstifadəçi',
+    'users' => 'İstifadəçilər',
+    'company' => 'Şirkət',
+    'companies' => 'Şirkətlər',
+    'account' => 'Hesab',
+    'accounts' => 'Hesablar',
+];

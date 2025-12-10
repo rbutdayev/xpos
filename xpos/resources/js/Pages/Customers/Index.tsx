@@ -5,6 +5,7 @@ import SalesNavigation from '@/Components/SalesNavigation';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import { Customer, PageProps } from '@/types';
 import { PlusCircleIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface CustomersIndexProps extends PageProps {
     customers: {
@@ -30,6 +31,7 @@ interface CustomersIndexProps extends PageProps {
 }
 
 export default function Index({ auth, customers, filters, discountsEnabled, giftCardsEnabled }: CustomersIndexProps) {
+    const { t } = useTranslation('customers');
     const [localFilters, setLocalFilters] = useState(filters);
 
     const handleSearch = (search: string) => {
@@ -67,8 +69,8 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
     const columns: Column[] = [
         {
             key: 'name',
-            label: 'Müştəri',
-            mobileLabel: 'Ad',
+            label: t('fields.customer'),
+            mobileLabel: t('fields.name'),
             sortable: true,
             render: (customer: Customer) => (
                 <div className="flex items-center">
@@ -93,8 +95,8 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
         },
         {
             key: 'contact',
-            label: 'Əlaqə məlumatları',
-            mobileLabel: 'Telefon / Email',
+            label: t('fields.contactInfo'),
+            mobileLabel: t('fields.phoneEmail'),
             render: (customer: Customer) => (
                 <div>
                     {customer.phone && (
@@ -115,8 +117,8 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
         },
         {
             key: 'loyalty_points',
-            label: 'Bonus Ballar',
-            mobileLabel: 'Ballar',
+            label: t('fields.bonusPoints'),
+            mobileLabel: t('fields.points'),
             hideOnMobile: true,
             render: (customer: Customer) => (
                 <div>
@@ -132,7 +134,7 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
                             </div>
                             {customer.lifetime_points && customer.lifetime_points > 0 && (
                                 <div className="text-xs text-gray-500">
-                                    Ümumi: {customer.lifetime_points}
+                                    {t('fields.totalPoints', { points: customer.lifetime_points })}
                                 </div>
                             )}
                         </div>
@@ -144,14 +146,14 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
         },
         {
             key: 'credit_status',
-            label: 'Borc vəziyyəti',
+            label: t('fields.creditStatus'),
             hideOnMobile: true, // Hide on mobile - less critical information
             render: (customer: Customer) => (
                 <div className="space-y-1">
                     {customer.has_pending_credits ? (
                         <div>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                Borcludur
+                                {t('status.hasDebt')}
                             </span>
                             {customer.total_credit_amount && customer.total_credit_amount > 0 && (
                                 <div className="text-xs text-gray-600 mt-1">
@@ -161,7 +163,7 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
                         </div>
                     ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Borcu yox
+                            {t('status.noDebt')}
                         </span>
                     )}
                 </div>
@@ -169,7 +171,7 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
         },
         {
             key: 'is_active',
-            label: 'Status',
+            label: t('fields.status'),
             sortable: true,
             render: (customer: Customer) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -177,7 +179,7 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                 }`}>
-                    {customer.is_active ? 'Aktiv' : 'Qeyri-aktiv'}
+                    {customer.is_active ? t('status.active') : t('status.inactive')}
                 </span>
             ),
         },
@@ -186,70 +188,70 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
     const filters_config: Filter[] = [
         {
             key: 'type',
-            label: 'Müştəri növü',
+            label: t('fields.customerType'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Bütün növlər' },
-                { value: 'individual', label: 'Fiziki şəxs' },
-                { value: 'corporate', label: 'Hüquqi şəxs' },
+                { value: '', label: t('types.allTypes') },
+                { value: 'individual', label: t('types.individual') },
+                { value: 'corporate', label: t('types.corporate') },
             ],
             value: localFilters.type || '',
             onChange: (value: string) => handleFilter('type', value),
         },
         {
             key: 'status',
-            label: 'Status',
+            label: t('fields.status'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Bütün statuslar' },
-                { value: 'active', label: 'Aktiv' },
-                { value: 'inactive', label: 'Qeyri-aktiv' },
+                { value: '', label: t('status.allStatuses') },
+                { value: 'active', label: t('status.active') },
+                { value: 'inactive', label: t('status.inactive') },
             ],
             value: localFilters.status || '',
             onChange: (value: string) => handleFilter('status', value),
         },
         {
             key: 'credit_status',
-            label: 'Borc vəziyyəti',
+            label: t('creditStatus.label'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Hamısı' },
-                { value: 'with_debt', label: 'Borclu müştərilər' },
-                { value: 'no_debt', label: 'Borcu olmayan' },
+                { value: '', label: t('creditStatus.all') },
+                { value: 'with_debt', label: t('creditStatus.withDebt') },
+                { value: 'no_debt', label: t('creditStatus.noDebt') },
             ],
             value: localFilters.credit_status || '',
             onChange: (value: string) => handleFilter('credit_status', value),
         },
         {
             key: 'has_services',
-            label: 'Servis tarixçəsi',
+            label: t('serviceHistory.label'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Hamısı' },
-                { value: 'yes', label: 'Servisi olan' },
-                { value: 'no', label: 'Servisi olmayan' },
+                { value: '', label: t('serviceHistory.all') },
+                { value: 'yes', label: t('serviceHistory.withServices') },
+                { value: 'no', label: t('serviceHistory.withoutServices') },
             ],
             value: localFilters.has_services || '',
             onChange: (value: string) => handleFilter('has_services', value),
         },
         {
             key: 'birthday_month',
-            label: 'Doğum ayı',
+            label: t('birthMonth.label'),
             type: 'dropdown',
             options: [
-                { value: '', label: 'Bütün aylar' },
-                { value: '1', label: 'Yanvar' },
-                { value: '2', label: 'Fevral' },
-                { value: '3', label: 'Mart' },
-                { value: '4', label: 'Aprel' },
-                { value: '5', label: 'May' },
-                { value: '6', label: 'İyun' },
-                { value: '7', label: 'İyul' },
-                { value: '8', label: 'Avqust' },
-                { value: '9', label: 'Sentyabr' },
-                { value: '10', label: 'Oktyabr' },
-                { value: '11', label: 'Noyabr' },
-                { value: '12', label: 'Dekabr' },
+                { value: '', label: t('birthMonth.allMonths') },
+                { value: '1', label: t('birthMonth.january') },
+                { value: '2', label: t('birthMonth.february') },
+                { value: '3', label: t('birthMonth.march') },
+                { value: '4', label: t('birthMonth.april') },
+                { value: '5', label: t('birthMonth.may') },
+                { value: '6', label: t('birthMonth.june') },
+                { value: '7', label: t('birthMonth.july') },
+                { value: '8', label: t('birthMonth.august') },
+                { value: '9', label: t('birthMonth.september') },
+                { value: '10', label: t('birthMonth.october') },
+                { value: '11', label: t('birthMonth.november') },
+                { value: '12', label: t('birthMonth.december') },
             ],
             value: localFilters.birthday_month || '',
             onChange: (value: string) => handleFilter('birthday_month', value),
@@ -258,19 +260,19 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
 
     const actions: Action[] = [
         {
-            label: 'Bax',
+            label: t('actions.view'),
             href: (customer: Customer) => route('customers.show', customer.id),
             variant: 'primary',
         },
         {
-            label: 'Düzəliş et',
+            label: t('actions.edit'),
             href: (customer: Customer) => route('customers.edit', customer.id),
             variant: 'secondary',
         },
         {
-            label: 'Sil',
+            label: t('actions.delete'),
             onClick: (customer: Customer) => {
-                if (confirm('Bu müştərini silmək istədiyinizə əminsiniz?')) {
+                if (confirm(t('messages.confirmDelete'))) {
                     router.delete(route('customers.destroy', customer.id));
                 }
             },
@@ -280,7 +282,7 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
 
     return (
         <AuthenticatedLayout>
-            <Head title="Müştərilər" />
+            <Head title={t('title')} />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
                 <SalesNavigation currentRoute="customers" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
                     <Link
@@ -288,7 +290,7 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                     >
                         <PlusCircleIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">Yeni Müştəri Əlavə Et</span>
+                        <span className="font-semibold">{t('addCustomer')}</span>
                     </Link>
                 </SalesNavigation>
             </div>
@@ -310,10 +312,10 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
                             filters={filters_config}
                             actions={actions}
                             searchValue={localFilters.search || ''}
-                            searchPlaceholder="Müştəri adı və ya əlaqə məlumatları ilə axtar..."
+                            searchPlaceholder={t('placeholders.search')}
                             emptyState={{
-                                title: "Heç bir müştəri tapılmadı",
-                                description: "İlk müştərinizi əlavə etməklə başlayın."
+                                title: t('emptyState.title'),
+                                description: t('emptyState.description')
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
                             onSort={(field: string) => handleSort(field, 'asc')}

@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { useTranslation } from 'react-i18next';
 
 interface User {
     id: number;
@@ -47,6 +48,7 @@ interface FormData {
 }
 
 export default function Edit({ user, roleOptions, branches }: Props) {
+    const { t } = useTranslation('users');
     const { data, setData, put, processing, errors } = useForm<FormData>({
         name: user.name || '',
         email: user.email || '',
@@ -71,7 +73,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="İstifadəçini Düzəliş Et" />
+            <Head title={t('edit')} />
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
@@ -80,12 +82,12 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                             {/* Personal Information */}
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Şəxsi məlumatlar
+                                    {t('form.personalInfo')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="name" value="Ad və Soyad *" />
+                                        <InputLabel htmlFor="name" value={`${t('form.name')} *`} />
                                         <TextInput
                                             id="name"
                                             name="name"
@@ -93,13 +95,13 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('name', e.target.value)}
                                             required
-                                            placeholder="Əli Məmmədov"
+                                            placeholder={t('form.namePlaceholder')}
                                         />
                                         <InputError message={errors.name} className="mt-2" />
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="email" value="Email *" />
+                                        <InputLabel htmlFor="email" value={`${t('form.email')} *`} />
                                         <TextInput
                                             id="email"
                                             type="email"
@@ -108,14 +110,14 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('email', e.target.value)}
                                             required
-                                            placeholder="ali@company.com"
+                                            placeholder={t('form.emailPlaceholder')}
                                         />
                                         <InputError message={errors.email} className="mt-2" />
                                     </div>
                                 </div>
 
                                 <div className="mt-6">
-                                    <InputLabel htmlFor="phone" value="Telefon" />
+                                    <InputLabel htmlFor="phone" value={t('form.phone')} />
                                     <TextInput
                                         id="phone"
                                         type="tel"
@@ -123,7 +125,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                         value={data.phone}
                                         className="mt-1 block w-full"
                                         onChange={(e) => setData('phone', e.target.value)}
-                                        placeholder="+994 XX XXX XX XX"
+                                        placeholder={t('form.phonePlaceholder')}
                                     />
                                     <InputError message={errors.phone} className="mt-2" />
                                 </div>
@@ -132,19 +134,19 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                             {/* Account Settings */}
                             <div className="border-t pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Hesab ayarları
+                                    {t('form.accountSettings')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="role" value="Sistem Rolu *" />
+                                        <InputLabel htmlFor="role" value={`${t('form.role')} *`} />
                                         {isAccountOwner ? (
                                             <>
                                                 <div className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-md shadow-sm text-gray-700 font-medium">
-                                                    Hesab Sahibi (account_owner)
+                                                    {t('show.accountOwnerDisplay')}
                                                 </div>
                                                 <p className="mt-2 text-sm text-amber-600">
-                                                    ⚠️ Hesab sahibinin rolunu dəyişdirmək mümkün deyil
+                                                    {t('form.accountOwnerWarning')}
                                                 </p>
                                             </>
                                         ) : (
@@ -157,7 +159,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     required
                                                 >
-                                                    <option value="">Rol seçin...</option>
+                                                    <option value="">{t('form.rolePlaceholder')}</option>
                                                     {(roleOptions || []).map((role) => (
                                                         <option key={role.value} value={role.value}>
                                                             {role.label}
@@ -166,14 +168,14 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                                 </select>
                                                 <InputError message={errors.role} className="mt-2" />
                                                 <p className="mt-1 text-xs text-gray-500">
-                                                    İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir
+                                                    {t('form.roleHint')}
                                                 </p>
                                             </>
                                         )}
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="status" value="Status *" />
+                                        <InputLabel htmlFor="status" value={`${t('form.status')} *`} />
                                         <select
                                             id="status"
                                             name="status"
@@ -181,8 +183,8 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             onChange={(e) => setData('status', e.target.value)}
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         >
-                                            <option value="active">Aktiv</option>
-                                            <option value="inactive">Qeyri-aktiv</option>
+                                            <option value="active">{t('form.active')}</option>
+                                            <option value="inactive">{t('form.inactive')}</option>
                                         </select>
                                         <InputError message={errors.status} className="mt-2" />
                                     </div>
@@ -191,7 +193,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                 {/* Show branch selection for sales_staff role */}
                                 {data.role === 'sales_staff' && (
                                     <div className="mt-6">
-                                        <InputLabel htmlFor="branch_id" value="Filial *" />
+                                        <InputLabel htmlFor="branch_id" value={`${t('form.branch')} *`} />
                                         <select
                                             id="branch_id"
                                             name="branch_id"
@@ -200,7 +202,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                             required={data.role === 'sales_staff'}
                                         >
-                                            <option value="">Filial seçin...</option>
+                                            <option value="">{t('form.branchPlaceholder')}</option>
                                             {(branches || []).map((branch) => (
                                                 <option key={branch.id} value={branch.id}>
                                                     {branch.name}
@@ -215,28 +217,28 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                             {/* Employee Information */}
                             <div className="border-t pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    İşçi məlumatları
+                                    {t('form.employeeInfo')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="position" value="Vəzifə (İş yeri)" />
+                                        <InputLabel htmlFor="position" value={t('form.position')} />
                                         <TextInput
                                             id="position"
                                             name="position"
                                             value={data.position}
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('position', e.target.value)}
-                                            placeholder="Məsələn: Baş Mexanik, Satış Meneceri"
+                                            placeholder={t('form.positionPlaceholder')}
                                         />
                                         <InputError message={errors.position} className="mt-2" />
                                         <p className="mt-1 text-xs text-gray-500">
-                                            İşçinin konkret vəzifəsi (məsələn: Baş Kassir, Anbar İşçisi)
+                                            {t('form.positionHint')}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="hire_date" value="İşə başlama tarixi" />
+                                        <InputLabel htmlFor="hire_date" value={t('form.hireDate')} />
                                         <TextInput
                                             id="hire_date"
                                             type="date"
@@ -250,7 +252,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                 </div>
 
                                 <div className="mt-6">
-                                    <InputLabel htmlFor="hourly_rate" value="Saatlıq əmək haqqı (AZN)" />
+                                    <InputLabel htmlFor="hourly_rate" value={t('form.hourlyRate')} />
                                     <TextInput
                                         id="hourly_rate"
                                         type="number"
@@ -260,13 +262,13 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                         value={data.hourly_rate || ''}
                                         className="mt-1 block w-full"
                                         onChange={(e) => setData('hourly_rate', e.target.value ? parseFloat(e.target.value) : undefined)}
-                                        placeholder="15.00"
+                                        placeholder={t('form.hourlyRatePlaceholder')}
                                     />
                                     <InputError message={errors.hourly_rate} className="mt-2" />
                                 </div>
 
                                 <div className="mt-6">
-                                    <InputLabel htmlFor="notes" value="Qeydlər" />
+                                    <InputLabel htmlFor="notes" value={t('form.notes')} />
                                     <textarea
                                         id="notes"
                                         name="notes"
@@ -274,7 +276,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         rows={3}
                                         onChange={(e) => setData('notes', e.target.value)}
-                                        placeholder="Əlavə qeydlər və ya məlumatlar"
+                                        placeholder={t('form.notesPlaceholder')}
                                     />
                                     <InputError message={errors.notes} className="mt-2" />
                                 </div>
@@ -283,12 +285,12 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                             {/* Password (Optional) */}
                             <div className="border-t pt-6">
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Şifrə dəyişikliyi (məcburi deyil)
+                                    {t('form.passwordChange')}
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <InputLabel htmlFor="password" value="Yeni şifrə" />
+                                        <InputLabel htmlFor="password" value={t('form.passwordNew')} />
                                         <TextInput
                                             id="password"
                                             type="password"
@@ -296,13 +298,13 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             value={data.password}
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('password', e.target.value)}
-                                            placeholder="Boş buraxın dəyişdirmək istəmirsinizsə"
+                                            placeholder={t('form.passwordNewPlaceholder')}
                                         />
                                         <InputError message={errors.password} className="mt-2" />
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="password_confirmation" value="Şifrə təkrarı" />
+                                        <InputLabel htmlFor="password_confirmation" value={t('form.passwordRepeat')} />
                                         <TextInput
                                             id="password_confirmation"
                                             type="password"
@@ -310,7 +312,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             value={data.password_confirmation}
                                             className="mt-1 block w-full"
                                             onChange={(e) => setData('password_confirmation', e.target.value)}
-                                            placeholder="Yeni şifrəni təkrarlayın"
+                                            placeholder={t('form.passwordRepeatPlaceholder')}
                                         />
                                         <InputError message={errors.password_confirmation} className="mt-2" />
                                     </div>
@@ -321,11 +323,11 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                             <div className="flex items-center justify-end space-x-4 pt-6 border-t">
                                 <Link href="/users">
                                     <SecondaryButton type="button">
-                                        Ləğv et
+                                        {t('actions.cancel')}
                                     </SecondaryButton>
                                 </Link>
                                 <PrimaryButton disabled={processing}>
-                                    {processing ? 'Yadda saxlanır...' : 'Dəyişiklikləri yadda saxla'}
+                                    {processing ? t('actions.saving') : t('actions.save')}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -333,14 +335,14 @@ export default function Edit({ user, roleOptions, branches }: Props) {
 
                     {/* Help Text */}
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-blue-900 mb-2">Məlumat</h3>
+                        <h3 className="text-sm font-medium text-blue-900 mb-2">{t('help.title')}</h3>
                         <ul className="text-sm text-blue-700 space-y-1">
-                            <li>• <strong>Sistem Rolu:</strong> İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir (məsələn: Admin, Kassir)</li>
-                            <li>• <strong>Vəzifə:</strong> İşçinin konkret iş yerindəki vəzifəsi (məsələn: Baş Mexanik, Satış Meneceri)</li>
-                            <li>• Şifrə sahəsini boş buraxsanız, mövcud şifrə dəyişməyəcək</li>
-                            <li>• Satış işçisi rolunu seçərsəniz, filial təyin etmək məcburidir</li>
-                            <li>• Qeyri-aktiv istifadəçilər sistema giriş edə bilməzlər</li>
-                            <li>• Email ünvanı unikal olmalıdır</li>
+                            <li>• {t('help.roleInfo')}</li>
+                            <li>• {t('help.positionInfo')}</li>
+                            <li>• {t('help.passwordChangeInfo')}</li>
+                            <li>• {t('help.branchInfo')}</li>
+                            <li>• {t('help.inactiveInfo')}</li>
+                            <li>• {t('help.emailInfo')}</li>
                         </ul>
                     </div>
                 </div>

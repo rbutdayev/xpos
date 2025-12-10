@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Supplier, Product } from '@/types';
-import { 
-    PlusIcon, 
+import {
+    PlusIcon,
     EyeIcon,
     PencilIcon,
     TrashIcon,
@@ -13,6 +13,7 @@ import {
 import SharedDataTable from '@/Components/SharedDataTable';
 import { supplierTableConfig } from '@/Components/TableConfigurations';
 import SupplierProductSelector from '@/Components/SupplierProductSelector';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     suppliers: {
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function Index({ suppliers, filters }: Props) {
+    const { t } = useTranslation(['suppliers', 'common']);
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -55,7 +57,7 @@ export default function Index({ suppliers, filters }: Props) {
     };
 
     const deleteSupplier = (supplier: Supplier) => {
-        if (confirm(`${supplier.name} təchizatçısını silmək istədiyinizə əminsiniz?`)) {
+        if (confirm(t('messages.confirmDelete', { name: supplier.name }))) {
             router.delete(route('suppliers.destroy', supplier.id));
         }
     };
@@ -77,38 +79,38 @@ export default function Index({ suppliers, filters }: Props) {
         {
             key: 'status',
             type: 'dropdown' as const,
-            label: 'Status',
+            label: t('labels.status', { ns: 'common' }),
             value: status,
             onChange: setStatus,
             options: [
-                { value: '', label: 'Hamısı' },
-                { value: 'active', label: 'Aktiv' },
-                { value: 'inactive', label: 'Qeyri-aktiv' }
+                { value: '', label: t('status.all') },
+                { value: 'active', label: t('status.active') },
+                { value: 'inactive', label: t('status.inactive') }
             ]
         }
     ];
 
     const tableActions = [
         {
-            label: 'Bax',
+            label: t('actions.view'),
             href: (supplier: Supplier) => route('suppliers.show', supplier.id),
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'view' as const
         },
         {
-            label: 'Məhsullar',
+            label: t('actions.products'),
             icon: <ShoppingBagIcon className="w-4 h-4" />,
             variant: 'secondary' as const,
             onClick: viewSupplierProducts
         },
         {
-            label: 'Düzəlt',
+            label: t('actions.edit'),
             href: (supplier: Supplier) => route('suppliers.edit', supplier.id),
             icon: <PencilIcon className="w-4 h-4" />,
             variant: 'edit' as const
         },
         {
-            label: 'Sil',
+            label: t('actions.delete'),
             icon: <TrashIcon className="w-4 h-4" />,
             variant: 'delete' as const,
             onClick: deleteSupplier
@@ -117,7 +119,7 @@ export default function Index({ suppliers, filters }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Təchizatçılar" />
+            <Head title={t('title')} />
 
             <div className="w-full">
                 <SharedDataTable
@@ -126,20 +128,20 @@ export default function Index({ suppliers, filters }: Props) {
                     actions={tableActions}
                     searchValue={search}
                     onSearchChange={setSearch}
-                    searchPlaceholder="Təchizatçı adı, əlaqə şəxsi və ya email axtarın..."
+                    searchPlaceholder={t('placeholders.search')}
                     filters={tableFilters}
                     onSearch={handleSearch}
                     onReset={handleReset}
-                    title="Təchizatçılar"
-                    subtitle="Təchizatçı şirkətlərinizi idarə edin"
+                    title={t('title')}
+                    subtitle={t('manageSuppliers')}
                     createButton={{
-                        label: 'Yeni Təchizatçı',
+                        label: t('newSupplier'),
                         href: route('suppliers.create')
                     }}
                     emptyState={{
                         icon: <TruckIcon className="w-12 h-12" />,
-                        title: 'Təchizatçı yoxdur',
-                        description: 'Başlamaq üçün yeni təchizatçı yaradın.'
+                        title: t('emptyState.title'),
+                        description: t('emptyState.description')
                     }}
                     fullWidth={true}
 
@@ -164,13 +166,13 @@ export default function Index({ suppliers, filters }: Props) {
                             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                        {selectedSupplier.name} - Məhsullar
+                                        {t('products.title', { name: selectedSupplier.name })}
                                     </h3>
                                     <button
                                         onClick={() => setShowProducts(false)}
                                         className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
                                     >
-                                        <span className="sr-only">Bağla</span>
+                                        <span className="sr-only">{t('actions.close')}</span>
                                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -192,7 +194,7 @@ export default function Index({ suppliers, filters }: Props) {
                                         columns={[
                                             {
                                                 key: 'name',
-                                                label: 'Məhsul adı',
+                                                label: t('products.productName'),
                                                 sortable: true,
                                                 render: (product: any) => (
                                                     <div>
@@ -205,7 +207,7 @@ export default function Index({ suppliers, filters }: Props) {
                                             },
                                             {
                                                 key: 'pricing',
-                                                label: 'Qiymət',
+                                                label: t('products.price'),
                                                 sortable: true,
                                                 render: (product: any) => (
                                                     <div className="text-sm">
@@ -216,14 +218,14 @@ export default function Index({ suppliers, filters }: Props) {
                                                             }).format(product.pivot?.supplier_price || 0)}
                                                         </div>
                                                         <div className="text-xs text-gray-500">
-                                                            Orta qiymət
+                                                            {t('products.averagePrice')}
                                                         </div>
                                                     </div>
                                                 )
                                             },
                                             {
                                                 key: 'latest_price',
-                                                label: 'Son qiymət',
+                                                label: t('products.lastPrice'),
                                                 render: (product: any) => (
                                                     <span className="text-sm text-gray-700">
                                                         {new Intl.NumberFormat('az-AZ', {
@@ -235,24 +237,24 @@ export default function Index({ suppliers, filters }: Props) {
                                             },
                                             {
                                                 key: 'quantity',
-                                                label: 'Cəmi alınıb',
+                                                label: t('products.totalPurchased'),
                                                 render: (product: any) => (
                                                     <div className="text-sm">
                                                         <div className="font-medium text-gray-900">
                                                             {product.pivot?.total_purchased || 0}
                                                         </div>
                                                         <div className="text-xs text-gray-500">
-                                                            {product.pivot?.purchase_count || 0} dəfə
+                                                            {t('products.times', { count: product.pivot?.purchase_count || 0 })}
                                                         </div>
                                                     </div>
                                                 )
                                             },
                                             {
                                                 key: 'last_purchase',
-                                                label: 'Son alış',
+                                                label: t('products.lastPurchase'),
                                                 render: (product: any) => (
                                                     <span className="text-sm text-gray-500">
-                                                        {product.pivot?.last_purchased 
+                                                        {product.pivot?.last_purchased
                                                             ? new Date(product.pivot.last_purchased).toLocaleDateString('az-AZ')
                                                             : 'N/A'
                                                         }
@@ -262,15 +264,15 @@ export default function Index({ suppliers, filters }: Props) {
                                         ]}
                                         emptyState={{
                                             icon: <ShoppingBagIcon className="w-12 h-12" />,
-                                            title: 'Məhsul yoxdur',
-                                            description: 'Bu təchizatçıdan məhsul tapılmadı.'
+                                            title: t('emptyState.noProducts'),
+                                            description: t('emptyState.noProductsDescription')
                                         }}
                                     />
                                 ) : (
                                     <div className="text-center py-12">
                                         <ShoppingBagIcon className="mx-auto h-12 w-12 text-gray-400" />
-                                        <h3 className="mt-2 text-sm font-medium text-gray-900">Məhsul yoxdur</h3>
-                                        <p className="mt-1 text-sm text-gray-500">Bu təchizatçıdan məhsul tapılmadı.</p>
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900">{t('emptyState.noProducts')}</h3>
+                                        <p className="mt-1 text-sm text-gray-500">{t('emptyState.noProductsDescription')}</p>
                                     </div>
                                 )}
                             </div>

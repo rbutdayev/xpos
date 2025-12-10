@@ -5,8 +5,10 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ConfirmPassword() {
+    const { t } = useTranslation('auth');
     const { data, setData, post, processing, errors, reset } = useForm({
         password: '',
     });
@@ -21,16 +23,15 @@ export default function ConfirmPassword() {
 
     return (
         <GuestLayout>
-            <Head title="Şifrəni Təsdiq Et" />
+            <Head title={t('confirmPassword.pageTitle')} />
 
             <div className="mb-4 text-sm text-gray-600">
-                Bu, tətbiqin təhlükəsiz bir sahəsidir. Davam etməzdən əvvəl 
-                şifrənizi təsdiqləyin.
+                {t('confirmPassword.description')}
             </div>
 
             <form onSubmit={submit}>
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Şifrə" />
+                    <InputLabel htmlFor="password" value={t('confirmPassword.passwordLabel')} />
 
                     <TextInput
                         id="password"
@@ -47,7 +48,7 @@ export default function ConfirmPassword() {
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Təsdiq Et
+                        {t('confirmPassword.confirmButton')}
                     </PrimaryButton>
                 </div>
             </form>

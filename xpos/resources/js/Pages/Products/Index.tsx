@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Head, router, usePage, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Product, Category } from '@/types';
 import ProductsNavigation from '@/Components/ProductsNavigation';
@@ -56,6 +57,7 @@ interface Props {
 }
 
 export default function Index({ products, categories, warehouses, filters, selectedWarehouse, flash }: Props) {
+    const { t } = useTranslation(['products', 'common']);
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
     const [search, setSearch] = useState(filters.search || '');
@@ -139,18 +141,18 @@ export default function Index({ products, categories, warehouses, filters, selec
 
     const deleteProduct = (product: Product) => {
         // Enhanced confirmation message with business rule warning
-        const confirmMessage = `${product.name} məhsulunu silmək istədiyinizə əminsiniz?\n\nQeyd: Stok hərəkəti olan məhsullar silinə bilməz. Əgər məhsul istifadə edilmişsə, yalnız deaktiv edə bilərsiniz.`;
-        
+        const confirmMessage = t('products:messages.confirmDelete', { name: product.name });
+
         if (confirm(confirmMessage)) {
             router.delete(`/products/${product.id}`, {
                 onError: (errors) => {
                     // Handle specific error cases
                     if (errors.error) {
-                        alert(`Silmə xətası: ${errors.error}`);
+                        alert(`${t('products:messages.deleteError')}: ${errors.error}`);
                     } else if (errors.product) {
-                        alert(`Silmə xətası: ${errors.product}`);
+                        alert(`${t('products:messages.deleteError')}: ${errors.product}`);
                     } else {
-                        alert('Məhsul silinərkən xəta baş verdi.');
+                        alert(t('products:messages.deleteError'));
                     }
                 },
                 onSuccess: () => {
@@ -161,15 +163,15 @@ export default function Index({ products, categories, warehouses, filters, selec
     };
 
     const toggleProductStatus = (product: Product) => {
-        const action = product.is_active ? 'deaktiv' : 'aktiv';
-        const confirmMessage = `${product.name} məhsulunu ${action} etmək istədiyinizə əminsiniz?`;
-        
+        const action = product.is_active ? t('products:status.deactivate') : t('products:status.activate');
+        const confirmMessage = t('products:messages.confirmStatusChange', { name: product.name, action });
+
         if (confirm(confirmMessage)) {
             router.patch(`/products/${product.id}`, {
                 is_active: !product.is_active
             }, {
                 onError: (errors) => {
-                    alert('Status dəyişdirilərkən xəta baş verdi.');
+                    alert(t('products:messages.statusChangeError'));
                 },
                 preserveScroll: true
             });
@@ -180,11 +182,11 @@ export default function Index({ products, categories, warehouses, filters, selec
         {
             key: 'category_id',
             type: 'dropdown' as const,
-            label: 'Kateqoriya',
+            label: t('products:fields.category'),
             value: selectedCategory,
             onChange: setSelectedCategory,
             options: [
-                { value: '', label: 'Bütün kateqoriyalar' },
+                { value: '', label: t('products:filters.allCategories') },
                 ...categories.map(cat => ({
                     value: cat.id.toString(),
                     label: cat.name
@@ -194,39 +196,39 @@ export default function Index({ products, categories, warehouses, filters, selec
         {
             key: 'warehouse_id',
             type: 'dropdown' as const,
-            label: 'Anbar Filtri',
+            label: t('products:filters.warehouseFilter'),
             value: selectedWarehouseFilter,
             onChange: setSelectedWarehouseFilter,
             options: [
-                { value: '', label: 'Bütün anbarlar' },
+                { value: '', label: t('products:filters.allWarehouses') },
                 ...warehouses.map(warehouse => ({
                     value: warehouse.id.toString(),
-                    label: `${warehouse.name} ${warehouse.type === 'main' ? '(Əsas)' : ''}`
+                    label: `${warehouse.name} ${warehouse.type === 'main' ? t('products:filters.main') : ''}`
                 }))
             ]
         },
         {
             key: 'type',
             type: 'dropdown' as const,
-            label: 'Növ',
+            label: t('products:fields.type'),
             value: selectedType,
             onChange: setSelectedType,
             options: [
-                { value: '', label: 'Bütün növlər' },
-                { value: 'product', label: 'Məhsul' },
-                { value: 'service', label: 'Xidmət' },
+                { value: '', label: t('products:filters.allTypes') },
+                { value: 'product', label: t('products:types.product') },
+                { value: 'service', label: t('products:types.service') },
             ]
         },
         {
             key: 'status',
             type: 'dropdown' as const,
-            label: 'Status',
+            label: t('common:labels.status'),
             value: selectedStatus,
             onChange: setSelectedStatus,
             options: [
-                { value: '', label: 'Bütün statuslar' },
-                { value: 'active', label: 'Aktiv' },
-                { value: 'inactive', label: 'Qeyri-aktiv' },
+                { value: '', label: t('products:filters.allStatuses') },
+                { value: 'active', label: t('products:status.active') },
+                { value: 'inactive', label: t('products:status.inactive') },
             ]
         }
     ];
@@ -238,7 +240,7 @@ export default function Index({ products, categories, warehouses, filters, selec
             if (col.key === 'stock_info') {
                 return {
                     ...col,  // This preserves ALL original properties including mobileLabel, hideOnMobile
-                    label: getCurrentWarehouseName() ? `Stok (${getCurrentWarehouseName()})` : 'Stok məlumatları',
+                    label: getCurrentWarehouseName() ? `${t('products:fields.stock')} (${getCurrentWarehouseName()})` : t('products:fields.stockInfo'),
                     render: (product: Product) => {
                         const stockInfo = getProductStock(product);
                         const isLowStock = stockInfo.details.some(s => s.min_level && s.quantity <= s.min_level);
@@ -267,7 +269,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                                             </div>
                                         ) : (
                                             <div className="text-xs text-gray-500">
-                                                {stockInfo.details.length} anbar
+                                                {stockInfo.details.length} {t('products:messages.warehousesCount')}
                                             </div>
                                         )}
                                         {/* View Details Button */}
@@ -280,13 +282,13 @@ export default function Index({ products, categories, warehouses, filters, selec
                                                 className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline"
                                             >
                                                 <MagnifyingGlassIcon className="w-3 h-3 mr-0.5" />
-                                                Təfərrüat
+                                                {t('products:actions.viewDetails')}
                                             </button>
                                         )}
                                     </>
                                 )}
                                 {isLowStock && (
-                                    <div className="text-xs text-red-500">Az stok!</div>
+                                    <div className="text-xs text-red-500">{t('products:messages.lowStock')}</div>
                                 )}
                             </div>
                         );
@@ -298,11 +300,11 @@ export default function Index({ products, categories, warehouses, filters, selec
                     render: (product: Product) => (
                         <div className="text-sm text-right">
                             <div className="text-gray-900">
-                                Satış: {product.sale_price ? `${product.sale_price.toLocaleString('az-AZ')} ₼` : '-'}
+                                {t('products:fields.salePrice')}: {product.sale_price ? `${product.sale_price.toLocaleString('az-AZ')} ₼` : '-'}
                             </div>
                             {!['sales_staff', 'warehouse_manager'].includes(currentUser.role) && (
                                 <div className="text-gray-500">
-                                    Alış: {product.purchase_price ? `${product.purchase_price.toLocaleString('az-AZ')} ₼` : '-'}
+                                    {t('products:fields.purchasePrice')}: {product.purchase_price ? `${product.purchase_price.toLocaleString('az-AZ')} ₼` : '-'}
                                 </div>
                             )}
                         </div>
@@ -315,13 +317,13 @@ export default function Index({ products, categories, warehouses, filters, selec
 
     const tableActions = [
         {
-            label: 'Bax',
+            label: t('products:actions.view'),
             href: (product: Product) => `/products/${product.id}`,
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'view' as const
         },
         {
-            label: 'Stok Təfərrüatı',
+            label: t('products:actions.stockDetails'),
             icon: <HomeModernIcon className="w-4 h-4" />,
             variant: 'secondary' as const,
             onClick: (product: Product) => setStockModalProduct(product)
@@ -329,19 +331,19 @@ export default function Index({ products, categories, warehouses, filters, selec
         // Only show edit/delete actions for non-salesmen
         ...(currentUser.role !== 'sales_staff' ? [
             {
-                label: 'Düzəlt',
+                label: t('products:actions.edit'),
                 href: (product: Product) => `/products/${product.id}/edit`,
                 icon: <PencilIcon className="w-4 h-4" />,
                 variant: 'edit' as const
             },
             {
-                label: 'Status Dəyiş',
+                label: t('products:actions.changeStatus'),
                 icon: <TagIcon className="w-4 h-4" />,
                 variant: 'secondary' as const,
                 onClick: toggleProductStatus
             },
             {
-                label: 'Sil',
+                label: t('products:actions.delete'),
                 icon: <TrashIcon className="w-4 h-4" />,
                 variant: 'delete' as const,
                 onClick: deleteProduct
@@ -351,7 +353,7 @@ export default function Index({ products, categories, warehouses, filters, selec
 
     return (
         <AuthenticatedLayout>
-            <Head title="Məhsul Kataloqu" />
+            <Head title={t('products:productCatalog')} />
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
                 <ProductsNavigation
                     currentRoute="products"
@@ -392,7 +394,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                         <div className="flex items-center">
                             <HomeModernIcon className="w-5 h-5 text-blue-500 mr-2" />
                             <span className="text-sm text-blue-700">
-                                {selectedWarehouseFilter ? 'Anbar filtri aktiv: ' : 'Seçilmiş anbar: '}
+                                {selectedWarehouseFilter ? t('products:filters.warehouseFilterActive') : t('products:filters.selectedWarehouse')}
                                 <strong>{getCurrentWarehouseName()}</strong>
                             </span>
                         </div>
@@ -405,14 +407,14 @@ export default function Index({ products, categories, warehouses, filters, selec
                     actions={tableActions}
                     searchValue={search}
                     onSearchChange={setSearch}
-                    searchPlaceholder="Ad, SKU və ya barkod ilə axtarış..."
+                    searchPlaceholder={t('products:searchPlaceholder')}
                     filters={tableFilters}
                     onSearch={handleSearch}
                     onReset={handleReset}
                     emptyState={{
                         icon: <CubeIcon className="w-12 h-12" />,
-                        title: 'Heç bir məhsul tapılmadı',
-                        description: 'Başlamaq üçün yeni məhsul əlavə edin.'
+                        title: t('products:emptyState.title'),
+                        description: t('products:emptyState.description')
                     }}
                     fullWidth={true}
 

@@ -6,6 +6,7 @@ import { tableConfig } from '@/Components/TableConfigurations';
 import { User } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { UserIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     users: {
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function Index({ users, filters }: Props) {
+    const { t } = useTranslation('users');
     const { auth } = usePage().props as any;
     const [searchValue, setSearchValue] = useState(filters.search || '');
     const [roleFilter, setRoleFilter] = useState(filters.role || '');
@@ -80,18 +82,18 @@ export default function Index({ users, filters }: Props) {
 
     const handleDeleteAction = (user: User) => {
         if ((user as any).is_system_user) {
-            alert('Sistem istifadəçilərini silə bilməzsiniz!');
+            alert(t('messages.cannotDeleteSystem'));
             return;
         }
         if (user.role === 'account_owner') {
-            alert('Hesab sahibini silmək mümkün deyil!');
+            alert(t('messages.cannotDeleteOwner'));
             return;
         }
         if (user.id === auth.user.id) {
-            alert('Özünüzü silə bilməzsiniz!');
+            alert(t('messages.cannotDeleteSelf'));
             return;
         }
-        if (confirm(`"${user.name}" istifadəçisini silmək istədiyinizə əminsiniz?`)) {
+        if (confirm(t('messages.confirmDelete', { name: user.name }))) {
             router.delete(route('users.destroy', user.id));
         }
     };
@@ -148,7 +150,7 @@ export default function Index({ users, filters }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="İstifadəçi İdarəetməsi" />
+            <Head title={t('title')} />
 
             <div className="w-full">
                 <SharedDataTable
@@ -158,7 +160,7 @@ export default function Index({ users, filters }: Props) {
 
                     searchValue={searchValue}
                     onSearchChange={setSearchValue}
-                    searchPlaceholder={tableConfig.users.searchPlaceholder}
+                    searchPlaceholder={t('searchPlaceholder')}
                     filters={filtersWithHandlers}
 
                     onSort={handleSort}
@@ -170,16 +172,16 @@ export default function Index({ users, filters }: Props) {
                     onSearch={handleSearch}
                     onReset={handleReset}
 
-                    title="İstifadəçi İdarəetməsi"
-                    subtitle="Sistemdəki bütün istifadəçiləri idarə edin"
+                    title={t('title')}
+                    subtitle={t('subtitle')}
                     createButton={{
-                        label: 'Yeni İstifadəçi',
+                        label: t('create'),
                         href: route('users.create')
                     }}
 
                     emptyState={{
                         icon: <UserIcon className="w-12 h-12" />,
-                        title: tableConfig.users.emptyStateTitle,
+                        title: t('noUsers'),
                         description: tableConfig.users.emptyStateDescription,
                         action: (
                             <a
@@ -187,7 +189,7 @@ export default function Index({ users, filters }: Props) {
                                 className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                             >
                                 <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                                {tableConfig.users.createButtonText}
+                                {t('firstUser')}
                             </a>
                         )
                     }}

@@ -1,0 +1,133 @@
+{
+  "title": "İstifadəçi İdarəetməsi",
+  "subtitle": "Sistemdəki bütün istifadəçiləri idarə edin",
+  "create": "Yeni İstifadəçi",
+  "createButton": "Yeni İstifadəçi Yarat",
+  "edit": "İstifadəçini Düzəliş Et",
+  "delete": "Sil",
+  "view": "Görüntülə",
+  "noUsers": "Hələ heç bir istifadəçi yaradılmayıb",
+  "firstUser": "İlk İstifadəçini Yarat",
+  "searchPlaceholder": "İstifadəçi axtar...",
+
+  "form": {
+    "personalInfo": "Şəxsi məlumatlar",
+    "accountSettings": "Hesab ayarları",
+    "employeeInfo": "İşçi məlumatları",
+    "loginInfo": "Giriş məlumatları",
+    "passwordChange": "Şifrə dəyişikliyi (məcburi deyil)",
+
+    "name": "Ad və Soyad",
+    "namePlaceholder": "Əli Məmmədov",
+    "email": "Email",
+    "emailPlaceholder": "ali@company.com",
+    "phone": "Telefon",
+    "phonePlaceholder": "+994 XX XXX XX XX",
+
+    "role": "Sistem Rolu",
+    "rolePlaceholder": "Rol seçin...",
+    "roleHint": "İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir",
+    "status": "Status",
+    "active": "Aktiv",
+    "inactive": "Qeyri-aktiv",
+    "branch": "Filial",
+    "branchPlaceholder": "Filial seçin...",
+    "branchRequired": "Satış işçisi rolunu seçərsəniz, filial təyin etmək məcburidir",
+
+    "position": "Vəzifə (İş yeri)",
+    "positionPlaceholder": "Məsələn: Baş Mexanik, Satış Meneceri",
+    "positionHint": "İşçinin konkret vəzifəsi (məsələn: Baş Kassir, Anbar İşçisi)",
+    "hireDate": "İşə başlama tarixi",
+    "hourlyRate": "Saatlıq əmək haqqı (AZN)",
+    "hourlyRatePlaceholder": "15.00",
+    "notes": "Qeydlər",
+    "notesPlaceholder": "Əlavə qeydlər və ya məlumatlar",
+
+    "password": "Şifrə",
+    "passwordPlaceholder": "Minimum 8 simvol",
+    "passwordConfirm": "Şifrə təkrarı",
+    "passwordConfirmPlaceholder": "Şifrəni təkrarlayın",
+    "passwordNew": "Yeni şifrə",
+    "passwordNewPlaceholder": "Boş buraxın dəyişdirmək istəmirsinizsə",
+    "passwordRepeat": "Şifrə təkrarı",
+    "passwordRepeatPlaceholder": "Yeni şifrəni təkrarlayın",
+
+    "accountOwnerNote": "Hesab sahibinin rolunu dəyişdirmək mümkün deyil",
+    "accountOwnerWarning": "⚠️ Hesab sahibinin rolunu dəyişdirmək mümkün deyil"
+  },
+
+  "help": {
+    "title": "Məlumat",
+    "roleInfo": "Sistem Rolu: İstifadəçinin sistemdə giriş səlahiyyətlərini müəyyən edir (məsələn: Admin, Kassir)",
+    "positionInfo": "Vəzifə: İşçinin konkret iş yerindəki vəzifəsi (məsələn: Baş Mexanik, Satış Meneceri)",
+    "passwordInfo": "Şifrə minimum 8 simvoldan ibarət olmalıdır",
+    "branchInfo": "Satış işçisi rolunu seçərsəniz, filial təyin etmək məcburidir",
+    "inactiveInfo": "Qeyri-aktiv istifadəçilər sistema giriş edə bilməzlər",
+    "emailInfo": "Email ünvanı unikal olmalıdır",
+    "passwordChangeInfo": "Şifrə sahəsini boş buraxsanız, mövcud şifrə dəyişməyəcək"
+  },
+
+  "actions": {
+    "create": "İstifadəçi yarat",
+    "creating": "Yaradılır...",
+    "save": "Dəyişiklikləri yadda saxla",
+    "saving": "Yadda saxlanır...",
+    "cancel": "Ləğv et"
+  },
+
+  "messages": {
+    "cannotDeleteSystem": "Sistem istifadəçilərini silə bilməzsiniz!",
+    "cannotDeleteOwner": "Hesab sahibini silmək mümkün deyil!",
+    "cannotDeleteSelf": "Özünüzü silə bilməzsiniz!",
+    "confirmDelete": "\"{{name}}\" istifadəçisini silmək istədiyinizə əminsiniz?",
+    "deleteSuccess": "İstifadəçi uğurla silindi",
+    "createSuccess": "İstifadəçi uğurla yaradıldı",
+    "updateSuccess": "İstifadəçi uğurla yeniləndi"
+  },
+
+  "filters": {
+    "all": "Hamısı",
+    "role": "Rol",
+    "status": "Status"
+  },
+
+  "table": {
+    "name": "Ad",
+    "email": "Email",
+    "phone": "Telefon",
+    "role": "Rol",
+    "status": "Status",
+    "branch": "Filial",
+    "position": "Vəzifə",
+    "actions": "Əməliyyatlar"
+  },
+
+  "roles": {
+    "account_owner": "Hesab Sahibi",
+    "branch_manager": "Filial Meneceri",
+    "cashier": "Kassir",
+    "sales_staff": "Satış İşçisi",
+    "warehouse_manager": "Anbar Müdiri",
+    "accountant": "Mühasib",
+    "tailor": "Dərzi"
+  },
+
+  "show": {
+    "title": "İstifadəçi Məlumatları",
+    "userId": "ID",
+    "back": "Geri",
+    "edit": "Düzəliş et",
+    "contactInfo": "Əlaqə məlumatları",
+    "email": "Email",
+    "phone": "Telefon",
+    "employeeInfo": "İşçi məlumatları",
+    "position": "Vəzifə",
+    "hireDate": "İşə başlama tarixi",
+    "hourlyRate": "Saatlıq əmək haqqı",
+    "notes": "Qeydlər",
+    "systemInfo": "Sistem məlumatları",
+    "lastLogin": "Son giriş",
+    "createdAt": "Yaradılma tarixi",
+    "accountOwnerDisplay": "Hesab Sahibi (account_owner)"
+  }
+}

@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ResetPassword({
     token,
@@ -13,6 +14,7 @@ export default function ResetPassword({
     token: string;
     email: string;
 }) {
+    const { t } = useTranslation('auth');
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
@@ -30,11 +32,11 @@ export default function ResetPassword({
 
     return (
         <GuestLayout>
-            <Head title="Şifrəni Sıfırla" />
+            <Head title={t('resetPassword.pageTitle')} />
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="E-poçt" />
+                    <InputLabel htmlFor="email" value={t('resetPassword.emailLabel')} />
 
                     <TextInput
                         id="email"
@@ -50,7 +52,7 @@ export default function ResetPassword({
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Şifrə" />
+                    <InputLabel htmlFor="password" value={t('resetPassword.passwordLabel')} />
 
                     <TextInput
                         id="password"
@@ -69,7 +71,7 @@ export default function ResetPassword({
                 <div className="mt-4">
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Şifrəni Təsdiq Et"
+                        value={t('resetPassword.confirmPasswordLabel')}
                     />
 
                     <TextInput
@@ -91,7 +93,7 @@ export default function ResetPassword({
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Şifrəni Sıfırla
+                        {t('resetPassword.resetPasswordButton')}
                     </PrimaryButton>
                 </div>
             </form>

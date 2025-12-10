@@ -1,0 +1,80 @@
+{
+  "title": "İnteqrasiyalar",
+  "subtitle": "Üçüncü tərəf inteqrasiyalarını və əlaqələri idarə edin",
+  "smsTitle": "SMS İnteqrasiyası",
+  "smsSubtitle": "SMS bildirişlərini və mesajlaşmanı konfiqurasiya edin",
+  "telegramTitle": "Telegram İnteqrasiyası",
+  "telegramSubtitle": "Bildirişlər üçün Telegram botunu qoşun",
+
+  "sms": {
+    "title": "SMS Parametrləri",
+    "provider": "SMS Provayderi",
+    "selectProvider": "Provayderı seçin...",
+    "apiKey": "API Açarı",
+    "apiSecret": "API Sirri",
+    "senderName": "Göndərən Adı",
+    "testMode": "Test Rejimi",
+    "enabled": "SMS Aktivdir",
+
+    "notifications": "SMS Bildirişləri",
+    "orderConfirmation": "Sifariş Təsdiqi",
+    "paymentReceived": "Ödəniş Alındı",
+    "rentalReminder": "Kirayə Xatırlatması",
+    "serviceReady": "Xidmət Hazırdır",
+    "lowStock": "Aşağı Stok Xəbərdarlığı",
+
+    "sendSms": "SMS Göndər",
+    "sendTestSms": "Test SMS Göndər",
+    "recipient": "Alıcı",
+    "message": "Mesaj",
+    "sending": "Göndərilir...",
+    "sendSuccess": "SMS uğurla göndərildi",
+    "sendError": "SMS göndərilərkən xəta",
+
+    "logs": {
+      "title": "SMS Qeydləri",
+      "recipient": "Alıcı",
+      "message": "Mesaj",
+      "status": "Status",
+      "sentAt": "Göndərilmə",
+      "cost": "Xərc",
+      "noLogs": "SMS qeydi yoxdur"
+    }
+  },
+
+  "telegram": {
+    "title": "Telegram Parametrləri",
+    "botToken": "Bot Tokeni",
+    "chatId": "Çat ID",
+    "enabled": "Telegram Aktivdir",
+    "testConnection": "Əlaqəni Yoxla",
+    "connectionSuccess": "Əlaqə uğurlu",
+    "connectionError": "Əlaqə uğursuz",
+
+    "notifications": "Telegram Bildirişləri",
+    "newOrder": "Yeni Sifariş",
+    "lowStock": "Aşağı Stok",
+    "dailyReport": "Günlük Hesabat"
+  },
+
+  "status": {
+    "connected": "Qoşulub",
+    "disconnected": "Kəsilib",
+    "error": "Xəta"
+  },
+
+  "actions": {
+    "save": "Parametrləri Yadda Saxla",
+    "saving": "Yadda Saxlanır...",
+    "test": "Əlaqəni Yoxla",
+    "disconnect": "Kəs",
+    "connect": "Qoşul"
+  },
+
+  "messages": {
+    "saveSuccess": "Parametrlər uğurla yadda saxlanıldı",
+    "saveError": "Parametrləri yadda saxlayarkən xəta",
+    "testSuccess": "Test uğurlu",
+    "testError": "Test uğursuz"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "title": "Hesabatlar",
+  "description": "İşinizin performansını analiz edin və qərar vermə üçün məlumatlar əldə edin",
+  "salesReport": "Satış hesabatı",
+  "purchaseReport": "Alış hesabatı",
+  "inventoryReport": "İnventar hesabatı",
+  "profitLoss": "Mənfəət və zərər",
+  "customerReport": "Müştəri hesabatı",
+  "productReport": "Məhsul hesabatı",
+  "newReport": "Yeni Hesabat Yarat",
+  "createReport": "Hesabat Yarat",
+  "creating": "Yaradılır...",
+  "recentReports": "Son Hesabatlar",
+  "reportType": "Hesabat Növü",
+  "selectReportType": "Seçin...",
+  "selectAndCreate": "Yuxarıda seçin və yaradın",
+  "noReports": "Hesabat yoxdur",
+  "noReportsDescription": "İlk hesabatınızı yaratmaq üçün yuxarıdakı formu istifadə edin.",
+  "stats": {
+    "totalReports": "Ümumi Hesabatlar",
+    "thisMonth": "Bu Ay",
+    "mostUsed": "Ən Çox İstifadə",
+    "lastGenerated": "Son Yaradılma"
+  },
+  "types": {
+    "endOfDay": "Günlük Qapanış Hesabatı",
+    "sales": "Satış hesabatı",
+    "inventory": "Anbar hesabatı",
+    "financial": "Maliyyə hesabatı",
+    "customer": "Müştəri hesabatı",
+    "service": "Servis Hesabatı",
+    "rental": "Kirayə Hesabatı",
+    "cashDrawer": "Kassa Hesabatı"
+  },
+  "view": {
+    "title": "Hesabat",
+    "print": "Çap Et",
+    "downloadCsv": "CSV Yüklə",
+    "noData": "Məlumat yoxdur",
+    "noDataDescription": "Bu hesabat növü üçün məlumat tapılmadı.",
+    "detailedData": "Təfərrüatlı Məlumatlar"
+  },
+  "summary": {
+    "salesCount": "Satış Sayı",
+    "totalRevenue": "Ümumi Gəlir",
+    "averageTransaction": "Orta Çek",
+    "soldProducts": "Satılan Məhsul",
+    "totalSales": "Cəmi Satışlar",
+    "totalIncome": "Cəmi Gəlir",
+    "averageSale": "Ortalama Satış",
+    "topCustomer": "Ən Çox Alış-veriş Edən",
+    "totalProducts": "Cəmi Məhsullar",
+    "stockValue": "Stok Dəyəri",
+    "lowStock": "Az Stok",
+    "outOfStock": "Tükənmiş",
+    "totalExpenses": "Cəmi Xərclər",
+    "netProfit": "Xalis Mənfəət",
+    "profitMargin": "Mənfəət Marjası",
+    "totalCustomers": "Cəmi Müştərilər",
+    "activeCustomers": "Aktiv Müştərilər",
+    "averageValue": "Ortalama Dəyər",
+    "topShopping": "Ən Çox Alış-veriş",
+    "totalServices": "Cəmi Servislər",
+    "completed": "Tamamlanmış",
+    "pending": "Gözləyən",
+    "totalRentals": "Cəmi Kirayələr",
+    "activeRentals": "Aktiv Kirayələr",
+    "rentalRevenue": "Cəmi Gəlir",
+    "overdue": "Gecikmiş",
+    "cashSales": "Nağd Satış",
+    "cashExpenses": "Nağd Xərclər",
+    "netCash": "Xalis Nağd",
+    "transactionCount": "Əməliyyat Sayı"
+  },
+  "sections": {
+    "paymentMethods": "Ödəmə Üsulları",
+    "hourlySales": "Saatlıq Satışlar",
+    "employeeSalesData": "İşçi Satış Məlumatları",
+    "topProducts": "Çox Satılan Məhsullar",
+    "dailyCashReport": "Günlük Kassa Hesabatı"
+  },
+  "paymentMethods": {
+    "cash": "Nağd",
+    "card": "Kart",
+    "transfer": "Köçürmə"
+  },
+  "table": {
+    "hour": "Saat",
+    "salesCount": "Satış Sayı",
+    "revenue": "Gəlir",
+    "employeeName": "İşçi Adı",
+    "transactions": "Əməliyyat",
+    "soldProducts": "Satılan Məhsul",
+    "productName": "Məhsul Adı",
+    "sku": "SKU",
+    "quantity": "Miqdar",
+    "date": "Tarix",
+    "cashSales": "Nağd Satış",
+    "cashExpenses": "Nağd Xərc",
+    "netCash": "Xalis Nağd",
+    "operations": "Əməliyyat"
+  },
+  "messages": {
+    "selectTypeAndRange": "Hesabat növü və tarix aralığını seçin",
+    "reportCreated": "Hesabat uğurla yaradıldı",
+    "reportError": "Hesabat yaradılarkən xəta baş verdi"
+  },
+  "fields": {
+    "reportType": "Hesabat növü",
+    "dateRange": "Tarix aralığı",
+    "startDate": "Başlanğıc tarixi",
+    "endDate": "Son tarix",
+    "period": "Dövr",
+    "branch": "Filial",
+    "category": "Kateqoriya"
+  },
+  "periods": {
+    "today": "Bu gün",
+    "yesterday": "Dünən",
+    "thisWeek": "Bu həftə",
+    "lastWeek": "Keçən həftə",
+    "thisMonth": "Bu ay",
+    "lastMonth": "Keçən ay",
+    "thisYear": "Bu il",
+    "custom": "Özəl aralıq"
+  },
+  "metrics": {
+    "totalSales": "Ümumi satışlar",
+    "totalRevenue": "Ümumi gəlir",
+    "totalProfit": "Ümumi mənfəət",
+    "totalOrders": "Ümumi sifarişlər",
+    "averageOrder": "Orta sifariş"
+  },
+  "actions": {
+    "generateReport": "Hesabat yarat",
+    "exportPDF": "PDF-ə ixrac et",
+    "exportExcel": "Excel-ə ixrac et"
+  }
+}

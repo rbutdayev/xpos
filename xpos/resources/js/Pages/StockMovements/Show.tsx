@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ArrowLeftIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 
 interface StockMovement {
@@ -32,11 +33,13 @@ interface Props {
 }
 
 export default function Show({ movement }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
+
     const formatCurrency = (amount?: number) => {
         if (!amount) return '-';
-        return new Intl.NumberFormat('az-AZ', { 
-            style: 'currency', 
-            currency: 'AZN' 
+        return new Intl.NumberFormat('az-AZ', {
+            style: 'currency',
+            currency: 'AZN'
         }).format(amount);
     };
 
@@ -52,11 +55,11 @@ export default function Show({ movement }: Props) {
 
     const getMovementTypeInfo = (type: string) => {
         const types = {
-            daxil_olma: { name: 'Daxil olma', color: 'text-green-700 bg-green-50' },
-            xaric_olma: { name: 'Xaric olma', color: 'text-red-700 bg-red-50' },
-            transfer: { name: 'Transfer', color: 'text-blue-700 bg-blue-50' },
-            qaytarma: { name: 'Qaytarma', color: 'text-yellow-700 bg-yellow-50' },
-            itki_zerer: { name: 'İtki/Zərər', color: 'text-gray-700 bg-gray-50' },
+            daxil_olma: { name: t('incoming'), color: 'text-green-700 bg-green-50' },
+            xaric_olma: { name: t('outgoing'), color: 'text-red-700 bg-red-50' },
+            transfer: { name: t('transfer'), color: 'text-blue-700 bg-blue-50' },
+            qaytarma: { name: t('return'), color: 'text-yellow-700 bg-yellow-50' },
+            itki_zerer: { name: t('lossOrDamage'), color: 'text-gray-700 bg-gray-50' },
         };
         return types[type as keyof typeof types] || { name: type, color: 'text-gray-700 bg-gray-50' };
     };
@@ -65,7 +68,7 @@ export default function Show({ movement }: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Stok Hərəkəti #${movement.movement_id}`} />
+            <Head title={`${t('stockMovement')} #${movement.movement_id}`} />
 
             <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -80,9 +83,9 @@ export default function Show({ movement }: Props) {
                                 </Link>
                                 <div>
                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                        Stok Hərəkəti #{movement.movement_id}
+                                        {t('stockMovement')} #{movement.movement_id}
                                     </h2>
-                                    <p className="text-gray-600">Stok hərəkəti təfərrüatları</p>
+                                    <p className="text-gray-600">{t('movementDetails')}</p>
                                 </div>
                             </div>
                             <div className="flex space-x-2">
@@ -91,7 +94,7 @@ export default function Show({ movement }: Props) {
                                     className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                                 >
                                     <PrinterIcon className="w-4 h-4 mr-2" />
-                                    Çap et
+                                    {t('print')}
                                 </button>
                             </div>
                         </div>
@@ -102,13 +105,13 @@ export default function Show({ movement }: Props) {
                                 {/* Movement Information */}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                        Hərəkət məlumatları
+                                        {t('movementInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         {movement.qaime_number && (
                                             <div>
                                                 <dt className="text-sm font-medium text-gray-500">
-                                                    Qaime №
+                                                    {t('invoiceNumber')}
                                                 </dt>
                                                 <dd className="text-sm">
                                                     <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">
@@ -119,7 +122,7 @@ export default function Show({ movement }: Props) {
                                         )}
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
-                                                Hərəkət ID
+                                                {t('movementID')}
                                             </dt>
                                             <dd className="text-sm text-gray-900 font-mono">
                                                 #{movement.movement_id}
@@ -127,7 +130,7 @@ export default function Show({ movement }: Props) {
                                         </div>
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
-                                                Yaradılma tarixi
+                                                {t('createdDate')}
                                             </dt>
                                             <dd className="text-sm text-gray-900">
                                                 {formatDate(movement.created_at)}
@@ -135,7 +138,7 @@ export default function Show({ movement }: Props) {
                                         </div>
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
-                                                Hərəkət növü
+                                                {t('stockMovements.movementType')}
                                             </dt>
                                             <dd className="text-sm">
                                                 <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${movementTypeInfo.color}`}>
@@ -145,7 +148,7 @@ export default function Show({ movement }: Props) {
                                         </div>
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
-                                                İcraçı
+                                                {t('stockMovements.employee')}
                                             </dt>
                                             <dd className="text-sm text-gray-900">
                                                 {movement.employee?.name || '-'}
@@ -157,12 +160,12 @@ export default function Show({ movement }: Props) {
                                 {/* Product Information */}
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-blue-900 mb-4">
-                                        Məhsul məlumatları
+                                        {t('productInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-blue-700">
-                                                Məhsul adı
+                                                {t('productName')}
                                             </dt>
                                             <dd className="text-sm text-blue-900 font-medium">
                                                 {movement.product.name}
@@ -185,12 +188,12 @@ export default function Show({ movement }: Props) {
                                 {/* Warehouse Information */}
                                 <div className="bg-purple-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-purple-900 mb-4">
-                                        Anbar məlumatları
+                                        {t('warehouseInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-purple-700">
-                                                Anbar adı
+                                                {t('warehouseName')}
                                             </dt>
                                             <dd className="text-sm text-purple-900 font-medium">
                                                 {movement.warehouse.name}
@@ -202,12 +205,12 @@ export default function Show({ movement }: Props) {
                                 {/* Quantity & Cost Information */}
                                 <div className="bg-yellow-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-yellow-900 mb-4">
-                                        Miqdar və dəyər məlumatları
+                                        {t('quantityAndCostInfo')}
                                     </h3>
                                     <dl className="space-y-3">
                                         <div>
                                             <dt className="text-sm font-medium text-yellow-700">
-                                                Miqdar
+                                                {t('quantity')}
                                             </dt>
                                             <dd className="text-lg text-yellow-900 font-bold">
                                                 {movement.quantity}
@@ -216,7 +219,7 @@ export default function Show({ movement }: Props) {
                                         {movement.unit_cost && (
                                             <div>
                                                 <dt className="text-sm font-medium text-yellow-700">
-                                                    Vahid dəyəri
+                                                    {t('stockMovements.unitCost')}
                                                 </dt>
                                                 <dd className="text-sm text-yellow-900 font-medium">
                                                     {formatCurrency(movement.unit_cost)}
@@ -226,7 +229,7 @@ export default function Show({ movement }: Props) {
                                         {movement.unit_cost && (
                                             <div>
                                                 <dt className="text-sm font-medium text-yellow-700">
-                                                    Ümumi dəyər
+                                                    {t('totalCost')}
                                                 </dt>
                                                 <dd className="text-lg text-yellow-900 font-bold">
                                                     {formatCurrency(movement.unit_cost * movement.quantity)}
@@ -240,7 +243,7 @@ export default function Show({ movement }: Props) {
                                 {movement.notes && (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                            Qeydlər
+                                            {t('notes')}
                                         </h3>
                                         <p className="text-sm text-gray-700 whitespace-pre-wrap">
                                             {movement.notes}
@@ -256,11 +259,11 @@ export default function Show({ movement }: Props) {
                                 href={route('stock-movements.index')}
                                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
                             >
-                                Siyahıya qayıt
+                                {t('backToList')}
                             </Link>
-                            
+
                             <div className="text-xs text-gray-500">
-                                Son yeniləmə: {formatDate(movement.updated_at)}
+                                {t('lastUpdated')}: {formatDate(movement.updated_at)}
                             </div>
                         </div>
                     </div>

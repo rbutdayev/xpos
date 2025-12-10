@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SearchableProductSelect from '@/Components/SearchableProductSelect';
+import { useTranslation } from 'react-i18next';
 
 
 interface Product {
@@ -40,6 +41,7 @@ interface StockMovementFormData {
 }
 
 export default function Create({ products: initialProducts, warehouses, movementTypes }: Props) {
+    const { t } = useTranslation(['inventory', 'common']);
     const [products, setProducts] = useState<Product[]>(initialProducts);
     const [loadingProducts, setLoadingProducts] = useState(false);
 
@@ -83,7 +85,7 @@ export default function Create({ products: initialProducts, warehouses, movement
 
     return (
         <AuthenticatedLayout>
-            <Head title="Stok Hərəkəti Yarat" />
+            <Head title={t('createStockMovement')} />
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -98,9 +100,9 @@ export default function Create({ products: initialProducts, warehouses, movement
                                 </Link>
                                 <div>
                                     <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
-                                        Stok Hərəkəti Yarat
+                                        {t('createStockMovement')}
                                     </h2>
-                                    <p className="text-sm sm:text-base text-gray-600">Yeni stok hərəkəti məlumatları</p>
+                                    <p className="text-sm sm:text-base text-gray-600">{t('newMovementDetails')}</p>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +111,7 @@ export default function Create({ products: initialProducts, warehouses, movement
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Warehouse Selection */}
                                 <div>
-                                    <InputLabel htmlFor="warehouse_id" value="Anbar" />
+                                    <InputLabel htmlFor="warehouse_id" value={t('stockMovements.warehouse')} />
                                     <select
                                         id="warehouse_id"
                                         value={data.warehouse_id}
@@ -117,7 +119,7 @@ export default function Create({ products: initialProducts, warehouses, movement
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         required
                                     >
-                                        <option value="">Anbar seçin</option>
+                                        <option value="">{t('selectWarehouse')}</option>
                                         {warehouses.map(warehouse => (
                                             <option key={warehouse.id} value={warehouse.id}>
                                                 {warehouse.name}
@@ -129,21 +131,21 @@ export default function Create({ products: initialProducts, warehouses, movement
 
                                 {/* Product Selection */}
                                 <div>
-                                    <InputLabel htmlFor="product_id" value="Məhsul" />
+                                    <InputLabel htmlFor="product_id" value={t('product')} />
                                     {loadingProducts ? (
                                         <div className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 px-3 py-2 text-gray-500">
-                                            Məhsullar yüklənir...
+                                            {t('loadingProducts')}
                                         </div>
                                     ) : !data.warehouse_id ? (
                                         <div className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 px-3 py-2 text-gray-500">
-                                            Əvvəl anbar seçin
+                                            {t('selectWarehouseFirst')}
                                         </div>
                                     ) : (
                                         <SearchableProductSelect
                                             products={products}
                                             value={data.product_id}
                                             onChange={(value) => setData('product_id', value.toString())}
-                                            placeholder="Məhsul seçin"
+                                            placeholder={t('selectProduct')}
                                             error={errors.product_id}
                                             required
                                             showBarcode={true}
@@ -157,7 +159,7 @@ export default function Create({ products: initialProducts, warehouses, movement
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Movement Type */}
                                 <div>
-                                    <InputLabel htmlFor="movement_type" value="Hərəkət növü" />
+                                    <InputLabel htmlFor="movement_type" value={t('stockMovements.movementType')} />
                                     <select
                                         id="movement_type"
                                         value={data.movement_type}
@@ -165,7 +167,7 @@ export default function Create({ products: initialProducts, warehouses, movement
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         required
                                     >
-                                        <option value="">Hərəkət növü seçin</option>
+                                        <option value="">{t('selectMovementType')}</option>
                                         {Object.entries(movementTypes).map(([key, value]) => (
                                             <option key={key} value={key}>
                                                 {value}
@@ -177,7 +179,7 @@ export default function Create({ products: initialProducts, warehouses, movement
 
                                 {/* Quantity */}
                                 <div>
-                                    <InputLabel htmlFor="quantity" value="Miqdar" />
+                                    <InputLabel htmlFor="quantity" value={t('quantity')} />
                                     <TextInput
                                         id="quantity"
                                         type="number"
@@ -195,7 +197,7 @@ export default function Create({ products: initialProducts, warehouses, movement
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Unit Cost */}
                                 <div>
-                                    <InputLabel htmlFor="unit_cost" value="Vahid dəyəri (İxtiyari)" />
+                                    <InputLabel htmlFor="unit_cost" value={`${t('stockMovements.unitCost')} (${t('optional')})`} />
                                     <TextInput
                                         id="unit_cost"
                                         type="number"
@@ -213,14 +215,14 @@ export default function Create({ products: initialProducts, warehouses, movement
 
                             {/* Notes */}
                             <div>
-                                <InputLabel htmlFor="notes" value="Qeydlər (İxtiyari)" />
+                                <InputLabel htmlFor="notes" value={`${t('notes')} (${t('optional')})`} />
                                 <textarea
                                     id="notes"
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    placeholder="Əlavə məlumat"
+                                    placeholder={t('additionalInfo')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>
@@ -230,10 +232,10 @@ export default function Create({ products: initialProducts, warehouses, movement
                                     href={route('stock-movements.index')}
                                     className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-center"
                                 >
-                                    Ləğv et
+                                    {t('cancel')}
                                 </Link>
                                 <PrimaryButton className="w-full sm:w-auto" disabled={processing}>
-                                    {processing ? 'Emal edilir...' : 'Hərəkət yarat'}
+                                    {processing ? t('processing') : t('createMovement')}
                                 </PrimaryButton>
                             </div>
                         </form>

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Rental;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class AddPaymentRequest extends FormRequest
 {
@@ -21,22 +23,19 @@ class AddPaymentRequest extends FormRequest
     {
         return [
             'amount' => 'required|numeric|min:0.01',
-            'method' => 'required|in:cash,card,transfer',
+            'method' => ['required', new Enum(PaymentMethod::class)],
             'notes' => 'nullable|string|max:500',
         ];
     }
 
     /**
-     * Get custom messages for validator errors.
+     * Get custom attribute names for validator errors.
      */
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'amount.required' => 'Ödəniş məbləği tələb olunur.',
-            'amount.numeric' => 'Ödəniş məbləği rəqəm olmalıdır.',
-            'amount.min' => 'Ödəniş məbləği minimum 0.01 AZN olmalıdır.',
-            'method.required' => 'Ödəniş üsulu seçilməlidir.',
-            'method.in' => 'Yanlış ödəniş üsulu seçildi.',
+            'amount' => __('validation.attributes.amount'),
+            'method' => __('validation.attributes.method'),
         ];
     }
 }

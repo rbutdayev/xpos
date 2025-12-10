@@ -21,6 +21,7 @@ import { CompactKPICard } from '@/Components/Dashboard/KPICard';
 import { QuickActionButton } from '@/Components/Dashboard/QuickActionButton';
 import { SectionGroup } from '@/Components/Dashboard/SectionGroup';
 import { formatChartDate } from '@/utils/dateFormatters';
+import { useTranslation } from 'react-i18next';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -170,12 +171,13 @@ export default function AccountOwnerDashboard({
     payment_alert,
 }: Props) {
     const [showPaymentAlert, setShowPaymentAlert] = useState(!!payment_alert);
+    const { t } = useTranslation('dashboard');
 
     // Sales trend chart
     const salesChartData = {
         labels: charts.sales_trend.map(d => formatChartDate(d.date)),
         datasets: [{
-            label: 'Gəlir',
+            label: t('services.revenue'),
             data: charts.sales_trend.map(d => d.revenue),
             borderColor: 'rgb(59, 130, 246)',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -207,20 +209,20 @@ export default function AccountOwnerDashboard({
                             <div className="bg-red-100 rounded-full p-3 inline-block mb-4">
                                 <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Ödəniş Gecikib</h3>
-                            <p className="text-gray-700 mb-4">Aylıq ödənişiniz gecikib.</p>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">{t('paymentAlert.title')}</h3>
+                            <p className="text-gray-700 mb-4">{t('paymentAlert.description')}</p>
                             <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-                                <p className="text-sm text-gray-600">Məbləğ:</p>
+                                <p className="text-sm text-gray-600">{t('paymentAlert.amount')}</p>
                                 <p className="text-2xl font-bold text-red-600">{payment_alert.amount} ₼</p>
-                                <p className="text-sm text-gray-600 mt-2">Son tarix:</p>
+                                <p className="text-sm text-gray-600 mt-2">{t('paymentAlert.dueDate')}</p>
                                 <p className="text-lg font-semibold">{payment_alert.due_date}</p>
-                                <p className="text-sm text-red-600 mt-1">{payment_alert.days_overdue} gün gecikib</p>
+                                <p className="text-sm text-red-600 mt-1">{payment_alert.days_overdue} {t('paymentAlert.daysOverdue')}</p>
                             </div>
                             <button
                                 onClick={() => setShowPaymentAlert(false)}
                                 className="w-full bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700"
                             >
-                                Başa Düşdüm
+                                {t('paymentAlert.understood')}
                             </button>
                         </div>
                     </div>
@@ -233,9 +235,9 @@ export default function AccountOwnerDashboard({
                     <div className="flex items-center">
                         <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-3" />
                         <p className="text-sm font-medium text-yellow-800">
-                            <span className="font-bold">{online_orders.pending}</span> gözləyən online sifariş.{' '}
+                            <span className="font-bold">{online_orders.pending}</span> {t('onlineOrders.pendingOrders')}.{' '}
                             <Link href="/online-orders" className="underline hover:text-yellow-900">
-                                Baxın
+                                {t('onlineOrders.viewOrders')}
                             </Link>
                         </p>
                     </div>
@@ -247,118 +249,118 @@ export default function AccountOwnerDashboard({
                 <QuickActionButton
                     href={route('pos.index')}
                     icon={<ShoppingCartIcon />}
-                    title="Yeni Satış"
+                    title={t('quickActions.newSale')}
                     variant="primary"
                 />
                 {account.modules.services_enabled && (
                     <QuickActionButton
                         href={route('pos.index', { mode: 'service' })}
                         icon={<WrenchScrewdriverIcon />}
-                        title="Yeni Servis"
+                        title={t('quickActions.newService')}
                         variant="success"
                     />
                 )}
                 <QuickActionButton
                     href="/customers/create"
                     icon={<UserIcon />}
-                    title="Yeni Müştəri"
+                    title={t('quickActions.newCustomer')}
                     variant="primary"
                 />
                 <QuickActionButton
                     href="/products/create"
                     icon={<CubeIcon />}
-                    title="Yeni Məhsul"
+                    title={t('quickActions.newProduct')}
                     variant="primary"
                 />
                 <QuickActionButton
                     href="/goods-receipts/create"
                     icon={<TruckIcon />}
-                    title="Mal Qəbulu"
+                    title={t('quickActions.goodsReceipt')}
                     variant="success"
                 />
             </div>
 
             {/* Financial KPIs */}
-            <SectionGroup title="Maliyyə İcmalı" icon={<BanknotesIcon />} variant="highlight">
+            <SectionGroup title={t('sections.financialSummary')} icon={<BanknotesIcon />} variant="highlight">
                 <CompactKPICard
-                    title="Bu Ay Gəlir"
+                    title={t('financial.thisMonthRevenue')}
                     value={formatCurrency(financial.revenue.value)}
                     icon={<BanknotesIcon />}
                     variant="success"
                     trend={{ value: Math.abs(financial.revenue.growth), isPositive: financial.revenue.growth >= 0 }}
                 />
                 <CompactKPICard
-                    title="Bu Ay Xərclər"
+                    title={t('financial.thisMonthExpenses')}
                     value={formatCurrency(financial.expenses.value)}
                     icon={<DocumentTextIcon />}
                     variant="warning"
                     trend={{ value: Math.abs(financial.expenses.growth), isPositive: financial.expenses.growth < 0 }}
                 />
                 <CompactKPICard
-                    title="Mənfəət"
+                    title={t('financial.profit')}
                     value={formatCurrency(financial.profit.value)}
                     icon={<ArrowTrendingUpIcon />}
                     variant="success"
-                    subtitle={`${financial.profit.margin}% margin`}
+                    subtitle={`${financial.profit.margin}% ${t('financial.margin')}`}
                 />
                 <CompactKPICard
-                    title="Gözləyən Ödəniş"
+                    title={t('financial.pendingPayment')}
                     value={formatCurrency(financial.pending_payments.value)}
                     icon={<ClockIcon />}
                     variant="warning"
-                    subtitle={`${financial.pending_payments.count} müştəri`}
+                    subtitle={`${financial.pending_payments.count} ${t('financial.customer')}`}
                 />
             </SectionGroup>
 
             {/* Operational Metrics */}
-            <SectionGroup title="Əməliyyat Göstəriciləri" icon={<ChartBarIcon />}>
+            <SectionGroup title={t('sections.operationalMetrics')} icon={<ChartBarIcon />}>
                 <CompactKPICard
-                    title="Aktiv Müştərilər"
+                    title={t('operational.activeCustomers')}
                     value={operational.active_customers}
                     icon={<UserIcon />}
                     variant="primary"
-                    subtitle={`+${operational.new_customers} bu ay`}
+                    subtitle={`+${operational.new_customers} ${t('operational.newThisMonth')}`}
                 />
                 <CompactKPICard
-                    title="Stokda Məhsul"
+                    title={t('operational.productsInStock')}
                     value={operational.products_in_stock}
                     icon={<CubeIcon />}
                     variant="primary"
-                    subtitle={`${operational.products_count} ümumi`}
+                    subtitle={`${operational.products_count} ${t('operational.total')}`}
                 />
                 <CompactKPICard
-                    title="Stok Dəyəri"
+                    title={t('operational.stockValue')}
                     value={formatCurrency(operational.stock_value.cost)}
                     icon={<BanknotesIcon />}
                     variant="primary"
-                    subtitle="Maya dəyəri"
+                    subtitle={t('operational.costValue')}
                 />
             </SectionGroup>
 
             {/* Services (if enabled) */}
             {account.modules.services_enabled && services && (
-                <SectionGroup title="Servis Statistikası" icon={<WrenchScrewdriverIcon />}>
+                <SectionGroup title={t('sections.serviceStatistics')} icon={<WrenchScrewdriverIcon />}>
                     <CompactKPICard
-                        title="Gözləyən"
+                        title={t('services.pending')}
                         value={services.pending}
                         icon={<ClockIcon />}
                         variant="warning"
                     />
                     <CompactKPICard
-                        title="İcrada"
+                        title={t('services.inProgress')}
                         value={services.in_progress}
                         icon={<WrenchScrewdriverIcon />}
                         variant="primary"
                     />
                     <CompactKPICard
-                        title="Tamamlanan"
+                        title={t('services.completed')}
                         value={services.completed_this_month}
                         icon={<ArrowTrendingUpIcon />}
                         variant="success"
                         trend={{ value: Math.abs(services.completed_growth), isPositive: services.completed_growth >= 0 }}
                     />
                     <CompactKPICard
-                        title="Gəlir"
+                        title={t('services.revenue')}
                         value={formatCurrency(services.revenue)}
                         icon={<BanknotesIcon />}
                         variant="success"
@@ -369,27 +371,27 @@ export default function AccountOwnerDashboard({
 
             {/* Rentals (if enabled) */}
             {account.modules.rentals_enabled && rentals && (
-                <SectionGroup title="İcarə Statistikası" icon={<HomeModernIcon />}>
+                <SectionGroup title={t('sections.rentalStatistics')} icon={<HomeModernIcon />}>
                     <CompactKPICard
-                        title="Aktiv İcarələr"
+                        title={t('rentals.activeRentals')}
                         value={rentals.active}
                         icon={<CubeIcon />}
                         variant="primary"
                     />
                     <CompactKPICard
-                        title="Bu Ay Gəlir"
+                        title={t('rentals.thisMonthRevenue')}
                         value={formatCurrency(rentals.monthly_revenue)}
                         icon={<CurrencyDollarIcon />}
                         variant="success"
                     />
                     <CompactKPICard
-                        title="Gözlənilən Qaytarmalar"
+                        title={t('rentals.pendingReturns')}
                         value={rentals.pending_returns}
                         icon={<ClockIcon />}
                         variant="warning"
                     />
                     <CompactKPICard
-                        title="Gecikmiş"
+                        title={t('rentals.overdue')}
                         value={rentals.overdue}
                         icon={<ExclamationTriangleIcon />}
                         variant="danger"
@@ -405,7 +407,7 @@ export default function AccountOwnerDashboard({
                             <div className="flex items-center">
                                 <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-2" />
                                 <div>
-                                    <p className="text-xs font-medium text-yellow-800">Az Stok</p>
+                                    <p className="text-xs font-medium text-yellow-800">{t('alerts.lowStock')}</p>
                                     <p className="text-xl font-bold text-yellow-900">{alerts.low_stock}</p>
                                 </div>
                             </div>
@@ -416,7 +418,7 @@ export default function AccountOwnerDashboard({
                             <div className="flex items-center">
                                 <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
                                 <div>
-                                    <p className="text-xs font-medium text-red-800">Tükənmiş</p>
+                                    <p className="text-xs font-medium text-red-800">{t('alerts.outOfStock')}</p>
                                     <p className="text-xl font-bold text-red-900">{alerts.out_of_stock}</p>
                                 </div>
                             </div>
@@ -427,7 +429,7 @@ export default function AccountOwnerDashboard({
                             <div className="flex items-center">
                                 <ExclamationTriangleIcon className="h-5 w-5 text-purple-600 mr-2" />
                                 <div>
-                                    <p className="text-xs font-medium text-purple-800">Mənfi Stok</p>
+                                    <p className="text-xs font-medium text-purple-800">{t('alerts.negativeStock')}</p>
                                     <p className="text-xl font-bold text-purple-900">{alerts.negative_stock}</p>
                                 </div>
                             </div>
@@ -439,7 +441,7 @@ export default function AccountOwnerDashboard({
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-4">
-                    <h3 className="text-lg font-semibold mb-4">Satış Statistikası</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('charts.salesStatistics')}</h3>
                     <div className="h-64">
                         <Line
                             data={salesChartData}
@@ -454,7 +456,7 @@ export default function AccountOwnerDashboard({
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-4">
-                    <h3 className="text-lg font-semibold mb-4">Ödəniş Üsulları</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('charts.paymentMethods')}</h3>
                     <div className="h-64 flex items-center justify-center">
                         <Doughnut
                             data={paymentMethodsData}
@@ -473,14 +475,14 @@ export default function AccountOwnerDashboard({
                 {/* Top Products */}
                 <div className="bg-white rounded-lg shadow-sm p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Ən Çox Satılan</h3>
+                        <h3 className="text-lg font-semibold">{t('tables.topSellingProducts')}</h3>
                         <Link href="/products" className="text-sm text-blue-600 hover:text-blue-700">
-                            Hamısını gör
+                            {t('charts.viewAll')}
                         </Link>
                     </div>
                     <div className="space-y-3">
                         {charts.top_products.length === 0 ? (
-                            <p className="text-gray-500 text-center py-8">Məlumat yoxdur</p>
+                            <p className="text-gray-500 text-center py-8">{t('charts.noData')}</p>
                         ) : (
                             charts.top_products.map((product, index) => (
                                 <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -503,14 +505,14 @@ export default function AccountOwnerDashboard({
                 {/* Low Stock */}
                 <div className="bg-white rounded-lg shadow-sm p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Az Stoklu Məhsullar</h3>
+                        <h3 className="text-lg font-semibold">{t('tables.lowStockProducts')}</h3>
                         <Link href="/alerts" className="text-sm text-blue-600 hover:text-blue-700">
-                            Hamısını gör
+                            {t('charts.viewAll')}
                         </Link>
                     </div>
                     <div className="space-y-3">
                         {tables.low_stock_products.length === 0 ? (
-                            <p className="text-gray-500 text-center py-8">Hamısı yaxşıdır</p>
+                            <p className="text-gray-500 text-center py-8">{t('tables.allGood')}</p>
                         ) : (
                             tables.low_stock_products.map(product => (
                                 <div key={product.id} className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -518,14 +520,14 @@ export default function AccountOwnerDashboard({
                                         <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600" />
                                         <div>
                                             <p className="font-medium text-sm">{product.name}</p>
-                                            <p className="text-xs text-gray-500">{product.warehouse || 'Bütün anbarlar'}</p>
+                                            <p className="text-xs text-gray-500">{product.warehouse || t('tables.allWarehouses')}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-semibold text-yellow-700">
                                             {formatNumber(product.current, 2)} {product.unit}
                                         </p>
-                                        <p className="text-xs text-gray-500">Min: {formatNumber(product.min, 2)}</p>
+                                        <p className="text-xs text-gray-500">{t('tables.min')}: {formatNumber(product.min, 2)}</p>
                                     </div>
                                 </div>
                             ))
@@ -537,25 +539,25 @@ export default function AccountOwnerDashboard({
             {/* Recent Sales */}
             <div className="bg-white rounded-lg shadow-sm p-4">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Son Satışlar</h3>
+                    <h3 className="text-lg font-semibold">{t('tables.recentSales')}</h3>
                     <Link href="/sales" className="text-sm text-blue-600 hover:text-blue-700">
-                        Hamısını gör
+                        {t('charts.viewAll')}
                     </Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Müştəri</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Tarix</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Məbləğ</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('tables.customer')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">{t('tables.date')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('tables.amount')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('tables.status')}</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {tables.recent_sales.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-4 text-center text-gray-500">Satış yoxdur</td>
+                                    <td colSpan={4} className="px-4 py-4 text-center text-gray-500">{t('tables.noSales')}</td>
                                 </tr>
                             ) : (
                                 tables.recent_sales.map(sale => (
@@ -581,22 +583,22 @@ export default function AccountOwnerDashboard({
             </div>
 
             {/* Credit Statistics */}
-            <SectionGroup title="Borc Statistikaları" icon={<DocumentTextIcon />}>
+            <SectionGroup title={t('sections.creditStatistics')} icon={<DocumentTextIcon />}>
                 <CompactKPICard
-                    title="Ümumi Borc"
+                    title={t('credits.totalOutstanding')}
                     value={formatCurrency(credits.total_outstanding)}
                     icon={<BanknotesIcon />}
                     variant="warning"
-                    subtitle={`${credits.active_credit_customers} müştəri`}
+                    subtitle={`${credits.active_credit_customers} ${t('financial.customer')}`}
                 />
                 <CompactKPICard
-                    title="Bu Ay Verilən"
+                    title={t('credits.givenThisMonth')}
                     value={formatCurrency(credits.credits_given_this_month)}
                     icon={<ArrowTrendingDownIcon />}
                     variant="danger"
                 />
                 <CompactKPICard
-                    title="Bu Ay Ödənilən"
+                    title={t('credits.paidThisMonth')}
                     value={formatCurrency(credits.payments_received_this_month)}
                     icon={<ArrowTrendingUpIcon />}
                     variant="success"

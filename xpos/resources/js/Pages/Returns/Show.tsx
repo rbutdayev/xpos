@@ -8,6 +8,8 @@ import {
     ClockIcon,
     XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useTranslations } from '@/Hooks/useTranslations';
+import { useTranslation } from 'react-i18next';
 
 interface SaleReturn {
     return_id: number;
@@ -72,21 +74,24 @@ interface ShowReturnsProps extends PageProps {
 }
 
 export default function Show({ auth, return: returnData }: ShowReturnsProps) {
+    const { t } = useTranslation(['inventory', 'common']);
+    const { translatePaymentMethod } = useTranslations();
+
     const getStatusBadge = (status: string) => {
         const configs = {
             completed: {
                 color: 'bg-green-100 text-green-800',
-                text: 'Tamamlandı',
+                text: t('returns.statuses.completed'),
                 icon: CheckCircleIcon,
             },
             pending: {
                 color: 'bg-yellow-100 text-yellow-800',
-                text: 'Gözləyir',
+                text: t('returns.statuses.pending'),
                 icon: ClockIcon,
             },
             cancelled: {
                 color: 'bg-red-100 text-red-800',
-                text: 'Ləğv edilib',
+                text: t('returns.statuses.cancelled'),
                 icon: XCircleIcon,
             },
         };
@@ -102,18 +107,8 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
         );
     };
 
-    const getPaymentMethodDisplay = (method: string) => {
-        const methods: Record<string, string> = {
-            nağd: 'Nağd',
-            kart: 'Kart',
-            köçürmə: 'Köçürmə',
-            kredit: 'Kredit',
-        };
-        return methods[method] || method;
-    };
-
     const handleCancel = () => {
-        if (confirm('Bu qaytarmanı ləğv etmək istədiyinizdən əminsiniz?')) {
+        if (confirm(t('confirmCancel'))) {
             router.post(route('returns.cancel', returnData.return_id));
         }
     };
@@ -124,24 +119,24 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={`Qaytarma #${returnData.return_number}`} />
+            <Head title={`${t('returns.returnNumber')}${returnData.return_number}`} />
 
             <div className="py-6">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                     {/* Header Info */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <h3 className="text-lg font-semibold mb-4">Müştəri Məlumatları</h3>
+                            <h3 className="text-lg font-semibold mb-4">{t('customerInfo')}</h3>
                             <div className="space-y-2">
                                 <div>
-                                    <div className="text-sm text-gray-600">Ad</div>
+                                    <div className="text-sm text-gray-600">{t('name')}</div>
                                     <div className="font-medium">
-                                        {returnData.customer?.name || 'Anonim'}
+                                        {returnData.customer?.name || t('anonymous')}
                                     </div>
                                 </div>
                                 {returnData.customer?.phone && (
                                     <div>
-                                        <div className="text-sm text-gray-600">Telefon</div>
+                                        <div className="text-sm text-gray-600">{t('phone')}</div>
                                         <div className="font-medium">{returnData.customer.phone}</div>
                                     </div>
                                 )}
@@ -149,37 +144,37 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
                         </div>
 
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <h3 className="text-lg font-semibold mb-4">Qaytarma Məlumatları</h3>
+                            <h3 className="text-lg font-semibold mb-4">{t('returnInfo')}</h3>
                             <div className="space-y-2">
                                 <div>
-                                    <div className="text-sm text-gray-600">Tarix</div>
+                                    <div className="text-sm text-gray-600">{t('date')}</div>
                                     <div className="font-medium">
                                         {new Date(returnData.return_date).toLocaleString('az-AZ')}
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-600">Filial</div>
+                                    <div className="text-sm text-gray-600">{t('branch')}</div>
                                     <div className="font-medium">{returnData.branch?.name || '-'}</div>
                                 </div>
                                 <div>
-                                    <div className="text-sm text-gray-600">İstifadəçi</div>
+                                    <div className="text-sm text-gray-600">{t('returns.processedBy')}</div>
                                     <div className="font-medium">{returnData.user?.name || '-'}</div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <h3 className="text-lg font-semibold mb-4">Fiskal Məlumat</h3>
+                            <h3 className="text-lg font-semibold mb-4">{t('fiscalInfo')}</h3>
                             <div className="space-y-2">
                                 {returnData.fiscal_number ? (
                                     <>
                                         <div>
-                                            <div className="text-sm text-gray-600">Fiskal Nömrə</div>
+                                            <div className="text-sm text-gray-600">{t('returns.fiscalNumber')}</div>
                                             <div className="font-medium">{returnData.fiscal_number}</div>
                                         </div>
                                         {returnData.sale.fiscal_number && (
                                             <div>
-                                                <div className="text-sm text-gray-600">Orijinal Fiskal Nömrə</div>
+                                                <div className="text-sm text-gray-600">{t('originalFiscalNumber')}</div>
                                                 <div className="font-medium">
                                                     {returnData.sale.fiscal_number}
                                                 </div>
@@ -187,7 +182,7 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
                                         )}
                                     </>
                                 ) : (
-                                    <div className="text-sm text-gray-600">Fiskal qəbz çap edilməyib</div>
+                                    <div className="text-sm text-gray-600">{t('noFiscalReceipt')}</div>
                                 )}
                             </div>
                         </div>
@@ -196,16 +191,16 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
                     {/* Return Reason */}
                     {(returnData.reason || returnData.notes) && (
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <h3 className="text-lg font-semibold mb-4">Səbəb və Qeydlər</h3>
+                            <h3 className="text-lg font-semibold mb-4">{t('returns.reason')} {t('and')} {t('returns.notes')}</h3>
                             {returnData.reason && (
                                 <div className="mb-3">
-                                    <div className="text-sm text-gray-600 mb-1">Qaytarma səbəbi:</div>
+                                    <div className="text-sm text-gray-600 mb-1">{t('returns.reason')}:</div>
                                     <div className="text-gray-800">{returnData.reason}</div>
                                 </div>
                             )}
                             {returnData.notes && (
                                 <div>
-                                    <div className="text-sm text-gray-600 mb-1">Qeydlər:</div>
+                                    <div className="text-sm text-gray-600 mb-1">{t('returns.notes')}:</div>
                                     <div className="text-gray-800">{returnData.notes}</div>
                                 </div>
                             )}
@@ -214,25 +209,25 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
 
                     {/* Returned Items */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-4">Qaytarılan Məhsullar</h3>
+                        <h3 className="text-lg font-semibold mb-4">{t('returns.items')}</h3>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Məhsul
+                                            {t('product')}
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Qaytarılan / Alınmış
+                                            {t('returned')} / {t('purchased')}
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Qiymət
+                                            {t('price')}
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Cəmi
+                                            {t('total')}
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Səbəb
+                                            {t('returns.reason')}
                                         </th>
                                     </tr>
                                 </thead>
@@ -246,12 +241,12 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="font-medium text-red-600">
-                                                    {item.quantity} {item.product.unit || 'ədəd'}
+                                                    {item.quantity} {item.product.unit || t('unit')}
                                                 </div>
                                                 {item.saleItem && (
                                                     <div className="text-xs text-gray-500">
                                                         / {item.saleItem.quantity}{' '}
-                                                        {item.product.unit || 'ədəd'}
+                                                        {item.product.unit || t('unit')}
                                                     </div>
                                                 )}
                                             </td>
@@ -273,7 +268,7 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
 
                     {/* Refunds */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-4">Geri Ödənişlər</h3>
+                        <h3 className="text-lg font-semibold mb-4">{t('refunds')}</h3>
                         <div className="space-y-3">
                             {returnData.refunds.map((refund) => (
                                 <div
@@ -282,7 +277,7 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
                                 >
                                     <div>
                                         <div className="font-medium">
-                                            {getPaymentMethodDisplay(refund.method)}
+                                            {translatePaymentMethod(refund.method)}
                                         </div>
                                         {refund.notes && (
                                             <div className="text-sm text-gray-600">{refund.notes}</div>
@@ -296,18 +291,18 @@ export default function Show({ auth, return: returnData }: ShowReturnsProps) {
 
                     {/* Totals */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-4">Yekun</h3>
+                        <h3 className="text-lg font-semibold mb-4">{t('summary.title')}</h3>
                         <div className="space-y-2">
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Ara cəm:</span>
+                                <span className="text-gray-600">{t('returns.subTotal')}:</span>
                                 <span className="font-medium">{returnData.subtotal} ₼</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-gray-600">ƏDV:</span>
+                                <span className="text-gray-600">{t('returns.taxAmount')}:</span>
                                 <span className="font-medium">{returnData.tax_amount} ₼</span>
                             </div>
                             <div className="flex justify-between text-xl font-bold border-t pt-2">
-                                <span>ÜMUMİ QAYTARILAN:</span>
+                                <span>{t('totalReturned')}:</span>
                                 <span className="text-red-600">{returnData.total} ₼</span>
                             </div>
                         </div>

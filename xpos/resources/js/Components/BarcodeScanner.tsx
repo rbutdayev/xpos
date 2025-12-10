@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { XMarkIcon, CameraIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface BarcodeScannerProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface BarcodeScannerProps {
 }
 
 export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScannerProps) {
+  const { t } = useTranslation();
   const scannerRef = useRef<HTMLDivElement>(null);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
         const cameraId = backCamera ? backCamera.id : devices[0]?.id;
 
         if (!cameraId) {
-          setError('Kamera tapılmadı');
+          setError(t('barcodeScanner.noCameraFound'));
           return;
         }
 
@@ -112,7 +114,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
       } catch (err) {
         console.error('Scanner error:', err);
         if (mounted) {
-          setError('Kameraya giriş alınmadı. Brauzer icazəsi verildiyini yoxlayın.');
+          setError(t('barcodeScanner.cameraAccessDenied'));
         }
       }
     };
@@ -154,7 +156,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
             <div className="flex items-center gap-2">
               <CameraIcon className="h-6 w-6 text-gray-700" />
               <h3 className="text-lg font-medium text-gray-900">
-                Barkod Skan Et
+                {t('barcodeScanner.title')}
               </h3>
             </div>
             <button
@@ -171,7 +173,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
               <div className="rounded-md bg-red-50 p-4">
                 <p className="text-sm text-red-800">{error}</p>
                 <p className="mt-2 text-xs text-red-600">
-                  Brauzer ayarlarından kameraya giriş icazəsi verin və səhifəni yeniləyin.
+                  {t('barcodeScanner.grantPermission')}
                 </p>
               </div>
             ) : (
@@ -184,10 +186,10 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
                 {scanning && (
                   <div className="mt-4 text-center">
                     <p className="text-sm text-gray-600">
-                      Barkodu kameranın qarşısına tutun
+                      {t('barcodeScanner.holdBarcode')}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                      Barkod avtomatik oxunacaq
+                      {t('barcodeScanner.autoRead')}
                     </p>
                   </div>
                 )}
@@ -201,7 +203,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
               onClick={onClose}
               className="w-full rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              Bağla
+              {t('actions.close')}
             </button>
           </div>
         </div>

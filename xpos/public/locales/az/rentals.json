@@ -1,0 +1,223 @@
+{
+  "title": "Kirayələr",
+  "subtitle": "Məhsul kirayəsini idarə edin və qaytarmaları izləyin",
+  "create": "Yeni Kirayə",
+  "createButton": "Yeni Kirayə Yarat",
+  "edit": "Kirayəni Düzəliş Et",
+  "delete": "Sil",
+  "view": "Görüntülə",
+  "return": "Qaytarma",
+  "noRentals": "Kirayə tapılmadı",
+  "firstRental": "İlk Kirayəni Yarat",
+  "searchPlaceholder": "Kirayə axtar...",
+
+  "status": {
+    "active": "Aktiv",
+    "returned": "Qaytarılıb",
+    "overdue": "Gecikmiş",
+    "cancelled": "Ləğv edilib",
+    "pending": "Gözləyir"
+  },
+
+  "paymentStatus": {
+    "paid": "Ödənilib",
+    "partial": "Qismən Ödənilib",
+    "unpaid": "Ödənilməyib",
+    "refund": "Geri Qaytarılmalı"
+  },
+
+  "collateralType": {
+    "none": "Yoxdur",
+    "cash": "Nağd",
+    "document": "Sənəd",
+    "item": "Əşya"
+  },
+
+  "form": {
+    "basicInfo": "Əsas Məlumatlar",
+    "customerInfo": "Müştəri Məlumatları",
+    "rentalPeriod": "Kirayə Müddəti",
+    "products": "Məhsullar",
+    "pricing": "Qiymətləndirmə",
+    "collateral": "Girov",
+    "notes": "Qeydlər",
+
+    "customer": "Müştəri",
+    "selectCustomer": "Müştəri seçin...",
+    "branch": "Filial",
+    "selectBranch": "Filial seçin...",
+
+    "startDate": "Başlama Tarixi",
+    "endDate": "Bitmə Tarixi",
+    "expectedDuration": "Gözlənilən Müddət",
+    "days": "gün",
+
+    "product": "Məhsul",
+    "selectProduct": "Məhsul seçin...",
+    "quantity": "Miqdar",
+    "rentalPrice": "Kirayə Qiyməti",
+    "depositPerItem": "Hər Vahid üçün Depozit",
+    "addProduct": "Məhsul Əlavə Et",
+    "removeProduct": "Sil",
+
+    "totalRentalPrice": "Ümumi Kirayə Qiyməti",
+    "totalDeposit": "Ümumi Depozit",
+    "totalCost": "Ümumi Məbləğ",
+
+    "collateralType": "Girov Növü",
+    "selectCollateralType": "Növ seçin...",
+    "collateralAmount": "Girov Məbləği",
+    "documentType": "Sənəd Növü",
+    "documentNumber": "Sənəd Nömrəsi",
+    "collateralPhoto": "Girov Şəkli",
+    "uploadPhoto": "Şəkil Yüklə",
+    "collateralNotes": "Girov Qeydləri",
+
+    "rentalNotes": "Kirayə Qeydləri",
+    "internalNotes": "Daxili Qeydlər"
+  },
+
+  "return": {
+    "title": "Kirayə Qaytarma",
+    "subtitle": "Qaytarmanı emal edin və yekun ödənişləri hesablayın",
+    "rentalInfo": "Kirayə Məlumatı",
+    "returnDate": "Qaytarma Tarixi",
+    "actualReturnDate": "Faktiki Qaytarma Tarixi",
+    "daysRented": "Kirayə Günləri",
+    "daysOverdue": "Gecikmiş Günlər",
+    "itemCondition": "Məhsul Vəziyyəti",
+    "checkCondition": "Vəziyyəti Yoxla",
+    "conditionChecklist": "Vəziyyət Siyahısı",
+    "charges": "Ödənişlər",
+    "lateFee": "Gecikdirmə Haqqı",
+    "damageFee": "Zədə Haqqı",
+    "totalCharges": "Ümumi Ödənişlər",
+    "depositRefund": "Depozit Geri Qaytarma",
+    "finalAmount": "Yekun Məbləğ",
+    "processingReturn": "Qaytarma Emal Edilir...",
+    "processReturn": "Qaytarmanı Emal Et",
+    "returnSuccess": "Kirayə uğurla qaytarıldı",
+    "returnError": "Qaytarma zamanı xəta",
+    "itemsReturned": "Qaytarılan Məhsullar",
+    "returnCondition": "Qaytarma Vəziyyəti",
+    "good": "Yaxşı",
+    "fair": "Orta",
+    "poor": "Pis",
+    "damaged": "Zədəli"
+  },
+
+  "show": {
+    "title": "Kirayə Təfərrüatları",
+    "rentalNumber": "Kirayə #",
+    "back": "Kirayələrə Qayıt",
+    "edit": "Düzəliş Et",
+    "processReturn": "Qaytarmanı Emal Et",
+    "print": "Çap Et",
+    "sendSMS": "SMS Göndər",
+    "cancel": "Kirayəni Ləğv Et",
+
+    "customerInfo": "Müştəri Məlumatları",
+    "name": "Ad",
+    "phone": "Telefon",
+    "email": "Email",
+
+    "rentalInfo": "Kirayə Məlumatları",
+    "branch": "Filial",
+    "startDate": "Başlama Tarixi",
+    "endDate": "Bitmə Tarixi",
+    "actualReturnDate": "Faktiki Qaytarma Tarixi",
+    "duration": "Müddət",
+    "status": "Status",
+    "paymentStatus": "Ödəniş Statusu",
+
+    "items": "Kirayə Məhsulları",
+    "product": "Məhsul",
+    "quantity": "Miqdar",
+    "rentalPrice": "Kirayə Qiyməti",
+    "deposit": "Depozit",
+    "condition": "Vəziyyət",
+
+    "financialInfo": "Maliyyə Məlumatları",
+    "rentalPrice": "Kirayə Qiyməti",
+    "depositAmount": "Depozit Məbləği",
+    "lateFee": "Gecikdirmə Haqqı",
+    "damageFee": "Zədə Haqqı",
+    "totalCost": "Ümumi Məbləğ",
+    "paidAmount": "Ödənilmiş Məbləğ",
+    "creditAmount": "Kredit Məbləği",
+    "remainingBalance": "Qalıq Balans",
+
+    "collateralInfo": "Girov Məlumatları",
+    "type": "Növ",
+    "amount": "Məbləğ",
+    "documentType": "Sənəd Növü",
+    "documentNumber": "Sənəd Nömrəsi",
+    "photo": "Şəkil",
+    "viewPhoto": "Şəklə Bax",
+    "notes": "Qeydlər",
+    "returned": "Qaytarılıb",
+    "notReturned": "Qaytarılmayıb",
+    "returnedAt": "Qaytarılma Tarixi",
+
+    "payments": "Ödəniş Tarixçəsi",
+    "paymentMethod": "Ödəniş Üsulu",
+    "amount": "Məbləğ",
+    "date": "Tarix",
+    "noPayments": "Ödəniş qeyd edilməyib",
+
+    "systemInfo": "Sistem Məlumatları",
+    "createdAt": "Yaradılıb",
+    "updatedAt": "Yenilənib",
+    "createdBy": "Yaradan",
+
+    "overdueAlert": "Bu kirayə {{days}} gün gecikib!",
+    "dueTodayAlert": "Bu kirayə bu gün bitir!",
+    "hasAgreement": "Müqavilə İmzalanıb",
+    "noAgreement": "Müqavilə Yoxdur"
+  },
+
+  "actions": {
+    "create": "Kirayə Yarat",
+    "creating": "Yaradılır...",
+    "save": "Dəyişiklikləri Yadda Saxla",
+    "saving": "Yadda Saxlanır...",
+    "cancel": "Ləğv Et",
+    "addPayment": "Ödəniş Əlavə Et",
+    "viewDetails": "Təfərrüatları Gör"
+  },
+
+  "messages": {
+    "createSuccess": "Kirayə uğurla yaradıldı",
+    "updateSuccess": "Kirayə uğurla yeniləndi",
+    "deleteSuccess": "Kirayə uğurla silindi",
+    "returnSuccess": "Kirayə uğurla qaytarıldı",
+    "confirmDelete": "Bu kirayəni silmək istədiyinizə əminsiniz?",
+    "confirmCancel": "Bu kirayəni ləğv etmək istədiyinizə əminsiniz?",
+    "selectCustomer": "Zəhmət olmasa müştəri seçin",
+    "selectProducts": "Zəhmət olmasa ən azı bir məhsul əlavə edin",
+    "invalidDates": "Bitmə tarixi başlama tarixindən sonra olmalıdır"
+  },
+
+  "filters": {
+    "all": "Hamısı",
+    "status": "Status",
+    "paymentStatus": "Ödəniş Statusu",
+    "branch": "Filial",
+    "overdue": "Yalnız Gecikmiş"
+  },
+
+  "table": {
+    "rentalNumber": "Kirayə #",
+    "customer": "Müştəri",
+    "branch": "Filial",
+    "startDate": "Başlama",
+    "endDate": "Bitmə",
+    "items": "Məhsullar",
+    "totalCost": "Ümumi",
+    "paidAmount": "Ödənilib",
+    "balance": "Balans",
+    "status": "Status",
+    "paymentStatus": "Ödəniş",
+    "actions": "Əməliyyatlar"
+  }
+}
