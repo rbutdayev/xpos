@@ -129,10 +129,7 @@ jobs:
           kubectl rollout status deployment/xpos-web -n xpos-dev
           kubectl rollout status deployment/xpos-worker -n xpos-dev
           kubectl get pods -n xpos-dev
-
-      - name: Apply Ingress
-        run: |
-          kubectl apply -f ./iac/ingress-dev.yaml
+          kubectl get ingress -n xpos-dev
 
   deploy-prod:
     name: Deploy to Production
@@ -207,10 +204,7 @@ jobs:
           kubectl rollout status deployment/xpos-web -n xpos-prod --timeout=10m
           kubectl rollout status deployment/xpos-worker -n xpos-prod --timeout=10m
           kubectl get pods -n xpos-prod
-
-      - name: Apply Ingress
-        run: |
-          kubectl apply -f ./iac/ingress-prod.yaml
+          kubectl get ingress -n xpos-prod
 
       - name: Run Health Checks
         run: |
