@@ -11,12 +11,13 @@ config:
     level: debug
 
 # GitHub Container Registry credentials
+# NOTE: DO NOT commit the password here! Pass it via --set on deploy
 imagePullSecret:
   create: true
   name: ghcr-secret
   registry: ghcr.io
-  username: "rbutdayev"  # Replace with your GitHub username
-  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
+  username: "rbutdayev"
+  password: ""  # Set via: --set imagePullSecret.password=TOKEN
 
 # Override image tag to use develop branch
 image:

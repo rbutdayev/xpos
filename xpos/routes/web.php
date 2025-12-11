@@ -55,6 +55,31 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
+// Health check endpoint for Kubernetes probes
+Route::get('/health', function () {
+    try {
+        // Check database connection
+        DB::connection()->getPdo();
+
+        // Check Redis connection
+        Cache::connection()->ping();
+
+        return response()->json([
+            'status' => 'healthy',
+            'database' => 'connected',
+            'redis' => 'connected',
+            'timestamp' => now()->toIso8601String()
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'unhealthy',
+            'error' => $e->getMessage()
+        ], 503);
+    }
+});
 
 // Awareness landing page - separate URL for local testing
 Route::get('/awareness', function () {
