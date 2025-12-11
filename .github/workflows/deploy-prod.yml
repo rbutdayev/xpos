@@ -59,7 +59,14 @@ jobs:
         run: |
           kubectl create namespace xpos-prod --dry-run=client -o yaml | kubectl apply -f -
 
-      # Secrets are managed in values-prod.yaml, not in GitHub
+      - name: Create Image Pull Secret
+        run: |
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --namespace xpos-prod \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Backup current deployment
         run: |
@@ -74,6 +81,7 @@ jobs:
             --set image.tag=${{ steps.version.outputs.version }} \
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
+            --set imagePullSecret.create=false \
             --wait \
             --timeout 15m \
             --atomic \
