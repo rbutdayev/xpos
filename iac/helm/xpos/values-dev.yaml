@@ -21,6 +21,7 @@ imagePullSecret:
 # Override image tag to use develop branch
 image:
   tag: "develop"
+  pullPolicy: Always  # Always pull latest image in dev (no cache)
 
 # Credentials stored in Kubernetes (hardcoded for dev)
 secrets:

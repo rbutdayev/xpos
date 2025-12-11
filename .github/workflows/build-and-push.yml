@@ -110,7 +110,7 @@ jobs:
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
             --wait \
-            --timeout 10m
+            --timeout 3m
 
       - name: Run Migrations
         run: |
@@ -127,16 +127,6 @@ jobs:
       - name: Apply Ingress
         run: |
           kubectl apply -f ./iac/ingress-dev.yaml
-
-      - name: Notify Slack
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Deployment to DEV: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   deploy-prod:
     name: Deploy to Production
@@ -190,7 +180,7 @@ jobs:
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
             --wait \
-            --timeout 15m \
+            --timeout 4m \
             --atomic \
             --cleanup-on-fail
 
@@ -226,16 +216,6 @@ jobs:
           release_name: Release ${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
-
-      - name: Notify Slack
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Deployment to PRODUCTION ${{ steps.version.outputs.version }}: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   # test:
   #   name: Run Tests
