@@ -40,7 +40,7 @@ mysql:
   enabled: false  # Use managed MySQL/RDS in production
 
 persistence:
-  size: 100Gi
+  enabled: false  # Files uploaded to Blackblaze S3, not local filesystem
 
 ingress:
   annotations:

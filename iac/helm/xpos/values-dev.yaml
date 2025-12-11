@@ -12,7 +12,7 @@ config:
 
 # Credentials stored in Kubernetes (hardcoded for dev)
 secrets:
-  appKey: "base64:base64:lX6mAF07Lf2jj5VRtF/A5IFigj3hQctCcdPIWDBWAtU="  # Generate with: php artisan key:generate --show
+  appKey: "base64:lX6mAF07Lf2jj5VRtF/A5IFigj3hQctCcdPIWDBWAtU="  # Fixed: removed duplicate base64:
   databasePassword: "root"
   redisPassword: ""
 
@@ -32,7 +32,7 @@ redis:
       size: 1Gi
 
 persistence:
-  size: 5Gi
+  enabled: false  # Files uploaded to Blackblaze S3, not local filesystem
 
 ingress:
   hosts:
