@@ -121,11 +121,8 @@ jobs:
             --wait \
             --timeout 3m
 
-      - name: Run Migrations
-        run: |
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=web -n xpos-dev --timeout=300s
-          POD=$(kubectl get pod -n xpos-dev -l app.kubernetes.io/component=web -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec $POD -n xpos-dev -- php artisan migrate --force
+      # Migrations removed - run manually when needed:
+      # kubectl exec -n xpos-dev deployment/xpos-web -- php artisan migrate --force
 
       - name: Verify Deployment
         run: |
@@ -202,11 +199,8 @@ jobs:
             --atomic \
             --cleanup-on-fail
 
-      - name: Run Migrations
-        run: |
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=web -n xpos-prod --timeout=300s
-          POD=$(kubectl get pod -n xpos-prod -l app.kubernetes.io/component=web -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec $POD -n xpos-prod -- php artisan migrate --force
+      # Migrations removed - run manually when needed:
+      # kubectl exec -n xpos-prod deployment/xpos-web -- php artisan migrate --force
 
       - name: Verify Deployment
         run: |
