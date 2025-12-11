@@ -10,3 +10,9 @@ keywords:
   - laravel
 maintainers:
   - name: XPOS Team
+
+dependencies:
+  - name: redis
+    version: "24.0.7"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

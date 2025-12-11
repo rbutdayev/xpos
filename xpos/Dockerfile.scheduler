@@ -43,8 +43,8 @@ COPY . .
 FROM php:8.3-cli-alpine
 WORKDIR /var/www
 
-# Runtime dependencies + cron
-RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype dcron
+# Runtime dependencies (no cron needed)
+RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype
 
 # Copy PHP extensions
 COPY --from=php-builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
@@ -56,8 +56,5 @@ COPY --from=php-builder /var/www /var/www
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache || true
 
-# Setup cron for Laravel scheduler
-RUN echo "* * * * * cd /var/www && php artisan schedule:run >> /dev/stdout 2>&1" | crontab -u www-data -
-
-# Run crond in foreground
-CMD ["crond", "-f", "-l", "2"]
+# Use Laravel's schedule:work instead of cron (better for containers)
+CMD ["php", "artisan", "schedule:work"]

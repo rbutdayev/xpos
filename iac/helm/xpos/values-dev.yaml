@@ -16,7 +16,7 @@ imagePullSecret:
   name: ghcr-secret
   registry: ghcr.io
   username: "rbutdayev"  # Replace with your GitHub username
-  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
+  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
 
 # Override image tag to use develop branch
 image:
