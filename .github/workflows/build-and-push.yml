@@ -121,9 +121,7 @@ jobs:
             --wait \
             --timeout 3m
 
-      # Migrations removed - run manually when needed:
-      # kubectl exec -n xpos-dev deployment/xpos-web -- php artisan migrate --force
-
+      
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/xpos-web -n xpos-dev
@@ -195,9 +193,6 @@ jobs:
             --timeout 4m \
             --atomic \
             --cleanup-on-fail
-
-      # Migrations removed - run manually when needed:
-      # kubectl exec -n xpos-prod deployment/xpos-web -- php artisan migrate --force
 
       - name: Verify Deployment
         run: |
@@ -300,5 +295,4 @@ jobs:
   #         REDIS_HOST: 127.0.0.1
   #         REDIS_PORT: 6379
   #       run: |
-  #         php artisan migrate --force
   #         php artisan test
