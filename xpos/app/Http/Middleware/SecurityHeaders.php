@@ -33,13 +33,15 @@ class SecurityHeaders
 
         // Content Security Policy
         // Note: Adjust these based on your actual requirements
+        $isDev = config('app.env') === 'development';
+
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline/eval needed for Inertia/React
-            "style-src 'self' 'unsafe-inline'",                 // unsafe-inline needed for inline styles
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'" . ($isDev ? " https://dev.xpos.az https://app.xpos.az" : ""),
+            "style-src 'self' 'unsafe-inline'" . ($isDev ? " https://dev.xpos.az https://app.xpos.az" : ""),
             "img-src 'self' data: https: blob:",                // Allow images from various sources
-            "font-src 'self' data:",                           // Allow fonts
-            "connect-src 'self'",                              // API connections
+            "font-src 'self' data:" . ($isDev ? " https://dev.xpos.az https://app.xpos.az" : ""),
+            "connect-src 'self'" . ($isDev ? " https://dev.xpos.az https://app.xpos.az ws: wss:" : ""),
             "frame-ancestors 'self'",                          // Prevent embedding in iframes
             "base-uri 'self'",                                 // Prevent base tag injection
             "form-action 'self'",                              // Restrict form submissions

@@ -173,7 +173,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
   hosts:
     - host: xpos.yourdomain.com
@@ -181,10 +181,10 @@ ingress:
         - path: /
           pathType: Prefix
 
-  tls: []
-  # - secretName: xpos-tls
-  #   hosts:
-  #     - xpos.yourdomain.com
+  tls:
+    - secretName: xpos-tls
+      hosts:
+        - xpos.yourdomain.com
 
 # Persistent storage
 persistence:

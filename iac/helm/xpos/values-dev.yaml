@@ -49,8 +49,14 @@ persistence:
   enabled: false  # Files uploaded to Blackblaze S3, not local filesystem
 
 ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: dev.xpos.az
       paths:
         - path: /
           pathType: Prefix
+  tls:
+    - secretName: xpos-dev-tls
+      hosts:
+        - dev.xpos.az
