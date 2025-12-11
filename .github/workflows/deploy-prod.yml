@@ -157,11 +157,11 @@ jobs:
           kubectl rollout status deployment/xpos-web -n xpos-prod
           kubectl rollout status deployment/xpos-worker -n xpos-prod
 
-      - name: Notify Slack
-        uses: 8398a7/action-slack@v3
-        with:
-          status: 'warning'
-          text: 'Production deployment failed and was rolled back'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      # - name: Notify Slack
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: 'warning'
+      #     text: 'Production deployment failed and was rolled back'
+      #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
