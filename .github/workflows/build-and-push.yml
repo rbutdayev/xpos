@@ -89,7 +89,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'latest'
+          version: 'v3.13.3'
 
       - name: Configure Kubernetes
         run: |
@@ -160,7 +160,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'latest'
+          version: 'v3.13.3'
 
       - name: Configure Kubernetes
         run: |
