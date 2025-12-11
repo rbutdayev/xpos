@@ -46,9 +46,17 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
+    // Map database enum values (starter, professional, enterprise) to Azerbaijani display names
+    const dbPlanToDisplay: Record<string, string> = {
+        'starter': 'Başlanğıc',
+        'professional': 'Professional',
+        'enterprise': 'Korporativ',
+    };
+
     const { data, setData, post, processing, errors, reset } = useForm({
         user_email: '',
         user_password: '',
+        subscription_plan: 'başlanğıc',
         monthly_payment_amount: '',
         payment_start_date: '',
     });
@@ -94,6 +102,7 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
         if (confirm(`${account.company_name} hesabını ${action} istədiyinizdən əminsiniz?`)) {
             router.patch(route('superadmin.accounts.toggle-status', account.id), {}, {
                 preserveScroll: true,
+                preserveState: false, // Force full page data reload to update account status
             });
         }
     };
@@ -361,6 +370,21 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                         {errors.user_password && <span className="text-red-500 text-xs">{errors.user_password}</span>}
                                     </div>
 
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Abunəlik Planı *</label>
+                                        <select
+                                            value={data.subscription_plan}
+                                            onChange={(e) => setData('subscription_plan', e.target.value)}
+                                            className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full"
+                                            required
+                                        >
+                                            <option value="başlanğıc">{plans.başlanğıc}</option>
+                                            <option value="professional">{plans.professional}</option>
+                                            <option value="enterprise">{plans.enterprise}</option>
+                                        </select>
+                                        {errors.subscription_plan && <span className="text-red-500 text-xs">{errors.subscription_plan}</span>}
+                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Aylıq Ödəniş Məbləği (AZN)</label>
@@ -456,13 +480,13 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                    account.subscription_plan === 'enterprise' 
+                                                    account.subscription_plan === 'enterprise'
                                                         ? 'bg-purple-100 text-purple-800'
                                                         : account.subscription_plan === 'professional'
                                                         ? 'bg-blue-100 text-blue-800'
                                                         : 'bg-gray-100 text-gray-800'
                                                 }`}>
-                                                    {plans[account.subscription_plan as keyof typeof plans]}
+                                                    {dbPlanToDisplay[account.subscription_plan] || account.subscription_plan}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
