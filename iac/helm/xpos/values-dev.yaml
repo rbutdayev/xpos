@@ -10,6 +10,18 @@ config:
   log:
     level: debug
 
+# GitHub Container Registry credentials
+imagePullSecret:
+  create: true
+  name: ghcr-secret
+  registry: ghcr.io
+  username: "rbutdayev"  # Replace with your GitHub username
+  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
+
+# Override image tag to use develop branch
+image:
+  tag: "develop"
+
 # Credentials stored in Kubernetes (hardcoded for dev)
 secrets:
   appKey: "base64:lX6mAF07Lf2jj5VRtF/A5IFigj3hQctCcdPIWDBWAtU="  # Fixed: removed duplicate base64:

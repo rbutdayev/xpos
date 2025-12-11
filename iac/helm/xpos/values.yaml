@@ -3,8 +3,17 @@
 
 # Global settings
 global:
-  imagePullSecrets: []
+  imagePullSecrets:
+    - name: ghcr-secret
   storageClass: ""
+
+# Image Pull Secret for GitHub Container Registry
+imagePullSecret:
+  create: true
+  name: ghcr-secret
+  registry: ghcr.io
+  username: "rbutdayev"  # Replace with your GitHub username
+  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
 
 # Image settings
 image:
