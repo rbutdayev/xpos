@@ -11,7 +11,17 @@ const CompanyBasicInfo = lazy(() => import('./Components/Steps/CompanyBasicInfo'
 const ContactInformation = lazy(() => import('./Components/Steps/ContactInformation'));
 const SystemPreferences = lazy(() => import('./Components/Steps/SystemPreferences'));
 
-export default function SetupWizard() {
+type Props = {
+  currencies: Array<{
+    code: string;
+    name: string;
+    symbol: string;
+    decimal_places: number;
+    symbol_position: string;
+  }>;
+};
+
+export default function SetupWizard({ currencies }: Props) {
   const steps = useMemo(
     () => [
       { key: 'company', label: 'Şirkət' },
@@ -32,6 +42,8 @@ export default function SetupWizard() {
     email: '',
     website: '',
     description: '',
+    currency_code: 'AZN',
+    default_language: 'az',
     branch_name: '',
     branch_address: '',
     branch_phone: '',
@@ -84,6 +96,7 @@ export default function SetupWizard() {
               setData={setData}
               errors={errors as any}
               onValidationChange={currentStep === 0 ? setHasValidationErrors : undefined}
+              currencies={currentStep === 0 ? currencies : undefined}
             />
           </Suspense>
 

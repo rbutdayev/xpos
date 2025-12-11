@@ -6,6 +6,8 @@ export type SetupWizardData = {
   email: string;
   website: string;
   description: string;
+  currency_code?: string;
+  default_language?: string;
   branch_name: string;
   branch_address: string;
   branch_phone: string;

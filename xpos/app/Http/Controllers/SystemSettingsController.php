@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -58,7 +59,7 @@ class SystemSettingsController extends Controller
             'company_email' => 'nullable|email|max:255',
             'company_website' => 'nullable|url|max:255',
             'tax_number' => 'nullable|string|max:255',
-            'default_language' => 'required|string|in:az,en,tr',
+            'default_language' => 'required|string|in:az,en',
             
             // Receipt Settings
             'receipt_header_text' => 'nullable|string|max:255',
@@ -67,8 +68,7 @@ class SystemSettingsController extends Controller
             'default_width_chars' => 'required|integer|min:20|max:100',
             
             // Regional Settings
-            'currency_code' => 'required|string|size:3',
-            'currency_symbol' => 'required|string|max:5',
+            'currency_code' => 'required|string|size:3|exists:currencies,code',
             'date_format' => 'required|string|max:255',
             'time_format' => 'required|string|max:255',
             'timezone' => 'required|string|max:255',
@@ -94,8 +94,11 @@ class SystemSettingsController extends Controller
                 return redirect()->back()->with('error', 'Şirkət məlumatları tapılmadı.');
             }
 
+            // Get currency details
+            $currency = Currency::find($validated['currency_code']);
+
             // Update company information
-            $company->update([
+            $updateData = [
                 'name' => $validated['company_name'],
                 'address' => $validated['company_address'],
                 'phone' => $validated['company_phone'],
@@ -108,7 +111,17 @@ class SystemSettingsController extends Controller
                     'end' => $validated['business_hours_end'] ?? null,
                     'days' => $validated['business_days'] ?? [],
                 ],
-            ]);
+            ];
+
+            // Add currency fields if valid currency found
+            if ($currency) {
+                $updateData['currency_code'] = $currency->code;
+                $updateData['currency_symbol'] = $currency->symbol;
+                $updateData['currency_decimal_places'] = $currency->decimal_places;
+                $updateData['currency_symbol_position'] = $currency->symbol_position;
+            }
+
+            $company->update($updateData);
 
             return redirect()->back()->with('success', 'Sistem ayarları uğurla yeniləndi.');
         } catch (\Exception $e) {

@@ -127,6 +127,7 @@ class CompanyController extends Controller
             'email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
+            'default_language' => 'nullable|string|in:az,en',
             'currency_code' => 'nullable|string|size:3|exists:currencies,code',
 
             // Branch data
@@ -152,6 +153,14 @@ class CompanyController extends Controller
                 $currency = Currency::find('USD');
             }
 
+            // Smart language detection based on currency
+            $defaultLanguage = $request->default_language;
+
+            if (!$defaultLanguage) {
+                // Map currency to language (only AZN -> az, everything else -> en)
+                $defaultLanguage = ($currency->code === 'AZN') ? 'az' : 'en';
+            }
+
             // Create the single company for this account
             $account->companies()->create([
                 'name' => $request->company_name,
@@ -161,7 +170,7 @@ class CompanyController extends Controller
                 'email' => $request->email,
                 'website' => $request->website,
                 'description' => $request->description,
-                'default_language' => 'az',
+                'default_language' => $defaultLanguage,
                 'currency_code' => $currency->code,
                 'currency_symbol' => $currency->symbol,
                 'currency_decimal_places' => $currency->decimal_places,
@@ -194,6 +203,11 @@ class CompanyController extends Controller
                 'can_modify_stock' => true,
                 'can_receive_stock' => true,
                 'can_issue_stock' => true,
+            ]);
+
+            // Update user's language preference to match company default
+            Auth::user()->update([
+                'language' => $defaultLanguage,
             ]);
         });
 
@@ -258,7 +272,7 @@ class CompanyController extends Controller
             'email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
-            'default_language' => 'required|in:az,en,tr',
+            'default_language' => 'required|in:az,en',
             'currency_code' => 'nullable|string|size:3|exists:currencies,code',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ]);

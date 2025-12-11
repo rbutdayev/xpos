@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Account;
 use App\Models\Company;
+use App\Models\Currency;
 use Illuminate\Console\Command;
 
 class MigrateAccountDataToCompanies extends Command
@@ -56,6 +57,16 @@ class MigrateAccountDataToCompanies extends Command
 
         $created = 0;
         foreach ($accounts as $account) {
+            // Determine currency based on language
+            $language = $account->language ?? 'az';
+            $currencyCode = ($language === 'az') ? 'AZN' : 'USD';
+
+            // Get currency details
+            $currency = Currency::find($currencyCode);
+            if (!$currency) {
+                $currency = Currency::find('USD');
+            }
+
             Company::create([
                 'account_id' => $account->id,
                 'name' => $account->company_name,
@@ -63,7 +74,11 @@ class MigrateAccountDataToCompanies extends Command
                 'tax_number' => $account->tax_number,
                 'phone' => $account->phone,
                 'email' => $account->email,
-                'default_language' => $account->language ?? 'az',
+                'default_language' => $language,
+                'currency_code' => $currency->code,
+                'currency_symbol' => $currency->symbol,
+                'currency_decimal_places' => $currency->decimal_places,
+                'currency_symbol_position' => $currency->symbol_position,
                 'is_active' => true,
             ]);
 

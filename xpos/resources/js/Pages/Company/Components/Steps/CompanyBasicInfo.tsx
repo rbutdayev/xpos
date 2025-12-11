@@ -11,9 +11,16 @@ type Props = {
   setData: (key: keyof SetupWizardData, value: any) => void;
   errors: Record<string, string>;
   onValidationChange?: (hasErrors: boolean) => void;
+  currencies?: Array<{
+    code: string;
+    name: string;
+    symbol: string;
+    decimal_places: number;
+    symbol_position: string;
+  }>;
 };
 
-export default function CompanyBasicInfo({ data, setData, errors, onValidationChange }: Props) {
+export default function CompanyBasicInfo({ data, setData, errors, onValidationChange, currencies = [] }: Props) {
   const [nameValidation, setNameValidation] = useState<{ checking: boolean; error: string | null }>({
     checking: false,
     error: null,
@@ -186,6 +193,45 @@ export default function CompanyBasicInfo({ data, setData, errors, onValidationCh
           <InputLabel htmlFor="description" value="Təsvir" />
           <TextInput id="description" value={data.description} onChange={(e) => setData('description', e.target.value)} className="mt-1 w-full" />
           <InputError message={errors.description} className="mt-1" />
+        </div>
+
+        {/* Currency Selection */}
+        <div>
+          <InputLabel htmlFor="currency_code" value="Valyuta *" />
+          <select
+            id="currency_code"
+            value={data.currency_code || 'AZN'}
+            onChange={(e) => setData('currency_code', e.target.value)}
+            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+          >
+            {currencies.map((currency) => (
+              <option key={currency.code} value={currency.code}>
+                {currency.code} - {currency.name} ({currency.symbol})
+              </option>
+            ))}
+          </select>
+          <InputError message={errors.currency_code} className="mt-1" />
+          <p className="mt-1 text-xs text-gray-500">
+            Sistemdə istifadə olunacaq əsas valyuta
+          </p>
+        </div>
+
+        {/* Language Selection */}
+        <div>
+          <InputLabel htmlFor="default_language" value="Dil" />
+          <select
+            id="default_language"
+            value={data.default_language || 'az'}
+            onChange={(e) => setData('default_language', e.target.value)}
+            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+          >
+            <option value="az">Azərbaycanca</option>
+            <option value="en">English</option>
+          </select>
+          <InputError message={errors.default_language} className="mt-1" />
+          <p className="mt-1 text-xs text-gray-500">
+            Sistemin interfeys dili (istəyə bağlı)
+          </p>
         </div>
       </div>
     </WizardStep>
