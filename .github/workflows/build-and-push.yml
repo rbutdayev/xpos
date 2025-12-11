@@ -112,12 +112,6 @@ jobs:
             --wait \
             --timeout 3m
 
-      - name: Run Migrations
-        run: |
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=web -n xpos-dev --timeout=300s
-          POD=$(kubectl get pod -n xpos-dev -l app.kubernetes.io/component=web -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec $POD -n xpos-dev -- php artisan migrate --force
-
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/xpos-web -n xpos-dev
@@ -183,12 +177,6 @@ jobs:
             --timeout 4m \
             --atomic \
             --cleanup-on-fail
-
-      - name: Run Migrations
-        run: |
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=web -n xpos-prod --timeout=300s
-          POD=$(kubectl get pod -n xpos-prod -l app.kubernetes.io/component=web -o jsonpath="{.items[0].metadata.name}")
-          kubectl exec $POD -n xpos-prod -- php artisan migrate --force
 
       - name: Verify Deployment
         run: |
@@ -294,5 +282,4 @@ jobs:
   #         REDIS_HOST: 127.0.0.1
   #         REDIS_PORT: 6379
   #       run: |
-  #         php artisan migrate --force
   #         php artisan test
