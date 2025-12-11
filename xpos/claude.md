@@ -20,3 +20,6 @@ Gate::authorize('access-account-data', $model); // Verify model belongs to user'
 ```
 
 Do NOT use RoleBasedAccess middleware - it exists for reference only. Gates are the single source of truth. 
+
+
+System is multilang structure!

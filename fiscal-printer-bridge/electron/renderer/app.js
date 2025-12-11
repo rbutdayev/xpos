@@ -147,7 +147,7 @@ async function showSettings() {
     config = await window.electronAPI.getConfig();
 
     // Populate form
-    document.getElementById('apiUrlInput').value = config.apiUrl || 'https://xpos.az';
+    document.getElementById('apiUrlInput').value = config.apiUrl || 'https://app.xpos.az';
     document.getElementById('tokenInput').value = config.token || '';
     document.getElementById('logLevelInput').value = config.logLevel || 'info';
 

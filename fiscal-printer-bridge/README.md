@@ -50,7 +50,7 @@ nano config.json
 **config.json:**
 ```json
 {
-  "apiUrl": "https://xpos.az",
+  "apiUrl": "https://app.xpos.az",
   "token": "xpos_your_token_here",
   "printerIp": "192.168.0.45",
   "printerPort": 5544,
@@ -83,7 +83,7 @@ You should see:
 ║                                                          ║
 ╚══════════════════════════════════════════════════════════╝
 
-API URL: https://xpos.az
+API URL: https://app.xpos.az
 Printer: 192.168.0.45:5544
 Token: xpos_abc123...
 
@@ -103,7 +103,7 @@ Token: xpos_abc123...
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `apiUrl` | `https://xpos.az` | Your XPOS server URL |
+| `apiUrl` | `https://app.xpos.az` | Your XPOS server URL |
 | `token` | **required** | Bridge authentication token from admin panel |
 | `printerIp` | `192.168.0.45` | Fiscal printer IP address |
 | `printerPort` | `5544` | Fiscal printer port |

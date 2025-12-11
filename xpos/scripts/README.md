@@ -26,7 +26,7 @@ chmod +x scripts/setup-server.sh
 
 **Example:**
 ```bash
-./scripts/setup-server.sh 20.218.170.234 xpos.az
+./scripts/setup-server.sh 20.218.170.234 app.xpos.az
 ```
 
 **Prerequisites:**
@@ -60,7 +60,7 @@ chmod +x scripts/deploy-app.sh
 
 **Example:**
 ```bash
-./scripts/deploy-app.sh 20.218.170.234 xpos.az
+./scripts/deploy-app.sh 20.218.170.234 app.xpos.az
 ```
 
 **Prerequisites:**
@@ -73,7 +73,7 @@ chmod +x scripts/deploy-app.sh
 ### Step 1: Initial Server Setup
 Run this **once** for a new server:
 ```bash
-./scripts/setup-server.sh 20.218.170.234 xpos.az
+./scripts/setup-server.sh 20.218.170.234 app.xpos.az
 ```
 
 **What to expect:**
@@ -85,7 +85,7 @@ Run this **once** for a new server:
 ### Step 2: Deploy Application
 Run this for initial deployment and subsequent updates:
 ```bash
-./scripts/deploy-app.sh 20.218.170.234 xpos.az
+./scripts/deploy-app.sh 20.218.170.234 app.xpos.az
 ```
 
 **What to expect:**
@@ -181,7 +181,7 @@ sudo systemctl status php8.3-fpm
 
 For subsequent deployments (code updates):
 ```bash
-./scripts/deploy-app.sh 20.218.170.234 xpos.az
+./scripts/deploy-app.sh 20.218.170.234 app.xpos.az
 ```
 
 The script will:

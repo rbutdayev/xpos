@@ -3,7 +3,7 @@
 ## Prerequisites
 
 1. Create a token in admin panel:
-   - Login to https://xpos.az
+   - Login to https://app.xpos.az
    - Go to: Parametrlər → Bridge Tokenlər
    - Create token: "Test Terminal"
    - Copy the token
@@ -18,7 +18,7 @@
 ## 1. Test Registration
 
 ```bash
-curl -X POST https://xpos.az/api/bridge/register \
+curl -X POST https://app.xpos.az/api/bridge/register \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -55,7 +55,7 @@ HTTP Status: 401
 ## 2. Test Polling (Get Jobs)
 
 ```bash
-curl -X GET https://xpos.az/api/bridge/poll \
+curl -X GET https://app.xpos.az/api/bridge/poll \
   -H "Authorization: Bearer $TOKEN" \
   -H "Accept: application/json"
 ```
@@ -100,7 +100,7 @@ curl -X GET https://xpos.az/api/bridge/poll \
 ## 3. Test Heartbeat
 
 ```bash
-curl -X POST https://xpos.az/api/bridge/heartbeat \
+curl -X POST https://app.xpos.az/api/bridge/heartbeat \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -126,7 +126,7 @@ curl -X POST https://xpos.az/api/bridge/heartbeat \
 First, get a job ID from polling, then:
 
 ```bash
-curl -X POST https://xpos.az/api/bridge/job/1/complete \
+curl -X POST https://app.xpos.az/api/bridge/job/1/complete \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -151,7 +151,7 @@ curl -X POST https://xpos.az/api/bridge/job/1/complete \
 ## 5. Test Fail Job
 
 ```bash
-curl -X POST https://xpos.az/api/bridge/job/1/fail \
+curl -X POST https://app.xpos.az/api/bridge/job/1/fail \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -178,7 +178,7 @@ Save this as `test_bridge_api.sh`:
 #!/bin/bash
 
 # Configuration
-API_URL="https://xpos.az"
+API_URL="https://app.xpos.az"
 TOKEN="$1"
 
 if [ -z "$TOKEN" ]; then
@@ -279,7 +279,7 @@ After testing, verify in admin panel:
 
 ### Enable Verbose Output:
 ```bash
-curl -v -X POST https://xpos.az/api/bridge/register \
+curl -v -X POST https://app.xpos.az/api/bridge/register \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"version":"2.0.0"}'
@@ -287,7 +287,7 @@ curl -v -X POST https://xpos.az/api/bridge/register \
 
 ### Check Response Headers:
 ```bash
-curl -i -X GET https://xpos.az/api/bridge/poll \
+curl -i -X GET https://app.xpos.az/api/bridge/poll \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -299,7 +299,7 @@ cd fiscal-printer-bridge
 TOKEN=$(cat config.json | grep token | cut -d'"' -f4)
 
 # Test registration
-curl -X POST https://xpos.az/api/bridge/register \
+curl -X POST https://app.xpos.az/api/bridge/register \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"version":"2.0.0"}'
@@ -314,7 +314,7 @@ Full workflow test:
 ```bash
 #!/bin/bash
 TOKEN="your_token_here"
-API="https://xpos.az"
+API="https://app.xpos.az"
 
 # 1. Register
 echo "Registering bridge..."
@@ -372,15 +372,15 @@ fi
 
 **Test registration:**
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d '{"version":"2.0"}' https://xpos.az/api/bridge/register
+curl -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d '{"version":"2.0"}' https://app.xpos.az/api/bridge/register
 ```
 
 **Test polling:**
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" https://xpos.az/api/bridge/poll
+curl -H "Authorization: Bearer YOUR_TOKEN" https://app.xpos.az/api/bridge/poll
 ```
 
 **Test heartbeat:**
 ```bash
-curl -X POST -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d '{"version":"2.0"}' https://xpos.az/api/bridge/heartbeat
+curl -X POST -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d '{"version":"2.0"}' https://app.xpos.az/api/bridge/heartbeat
 ```

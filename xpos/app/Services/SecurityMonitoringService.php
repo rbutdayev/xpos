@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class SecurityMonitoringService
 {
@@ -185,26 +186,35 @@ class SecurityMonitoringService
             ];
         }
 
-        try {
-            $response = Http::timeout(5)->get("http://ip-api.com/json/{$ip}");
-            
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                if ($data['status'] === 'success') {
-                    return [
-                        'country' => $data['country'] ?? 'Unknown',
-                        'city' => $data['city'] ?? 'Unknown',
-                        'lat' => $data['lat'] ?? 0,
-                        'lon' => $data['lon'] ?? 0
-                    ];
+        // Check cache first (cache for 7 days)
+        $cacheKey = "geolocation:{$ip}";
+
+        return Cache::remember($cacheKey, now()->addDays(7), function () use ($ip) {
+            try {
+                $response = Http::timeout(5)->get("http://ip-api.com/json/{$ip}");
+
+                if ($response->successful()) {
+                    $data = $response->json();
+
+                    if ($data['status'] === 'success') {
+                        return [
+                            'country' => $data['country'] ?? 'Unknown',
+                            'city' => $data['city'] ?? 'Unknown',
+                            'lat' => $data['lat'] ?? 0,
+                            'lon' => $data['lon'] ?? 0
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Only log once per IP (not on every retry)
+                if (!Cache::has("geolocation_error:{$ip}")) {
+                    Log::warning("Failed to get geolocation for IP {$ip}: " . $e->getMessage());
+                    Cache::put("geolocation_error:{$ip}", true, now()->addHour());
                 }
             }
-        } catch (\Exception $e) {
-            Log::warning("Failed to get geolocation for IP {$ip}: " . $e->getMessage());
-        }
 
-        return null;
+            return null;
+        });
     }
 
     public function getDeviceType(?string $userAgent): string

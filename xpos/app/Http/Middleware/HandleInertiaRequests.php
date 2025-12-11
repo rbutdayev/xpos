@@ -74,12 +74,14 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
                 'auto_print' => $request->session()->get('auto_print'),
                 'print_sale_id' => $request->session()->get('print_sale_id'),
                 'sale_completed' => $request->session()->get('sale_completed'),
                 'sale_id' => $request->session()->get('sale_id'),
                 'sale_number' => $request->session()->get('sale_number'),
             ],
+            'import_errors' => $request->session()->get('import_errors'),
         ];
     }
 

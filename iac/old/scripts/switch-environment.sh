@@ -78,11 +78,11 @@ switch_to_prod() {
 
     log_info "Switched to PRODUCTION environment"
     log_warn "Active domains:"
-    log_warn "  - xpos.az → localhost:8002"
+    log_warn "  - app.xpos.az → localhost:8002"
     log_warn "  - eservis.az → localhost:8003"
     log_warn ""
     log_warn "Don't forget to obtain SSL certificates:"
-    log_warn "  sudo certbot --nginx -d xpos.az -d www.xpos.az"
+    log_warn "  sudo certbot --nginx -d app.xpos.az"
     log_warn "  sudo certbot --nginx -d eservis.az -d www.eservis.az"
 }
 
@@ -102,7 +102,7 @@ case "${1:-}" in
         echo ""
         echo "Commands:"
         echo "  dev     - Switch to development environment (dev.xpos.az, dev.eservis.az)"
-        echo "  prod    - Switch to production environment (xpos.az, eservis.az)"
+        echo "  prod    - Switch to production environment (app.xpos.az, eservis.az)"
         echo "  status  - Show current active environment"
         exit 1
         ;;

@@ -1,0 +1,7 @@
+{
+  "apiUrl": "https://app.xpos.az",
+  "token": "YOUR_BRIDGE_TOKEN_HERE",
+  "pollInterval": 2000,
+  "heartbeatInterval": 30000,
+  "logLevel": "info"
+}

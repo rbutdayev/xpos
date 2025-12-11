@@ -89,7 +89,7 @@ All configuration is done through the UI. Settings are stored in:
 **Default Configuration:**
 ```json
 {
-  "apiUrl": "https://xpos.az",
+  "apiUrl": "https://app.xpos.az",
   "token": "your_token_here",
   "pollInterval": 2000,
   "heartbeatInterval": 30000,

@@ -124,5 +124,34 @@
     "purchasePrice": "Alış Qiyməti *",
     "unit": "Ölçü vahidi *",
     "select": "Seçin"
+  },
+  "import": {
+    "errorDetails": "İmport Xətaları",
+    "row": "Sətir",
+    "noProductsImported": "Heç bir məhsul import edilmədi",
+    "someErrors": "Bəzi sətirlər xəta ilə atlandı",
+    "downloadTemplate": "Şablon yüklə",
+    "importProducts": "Məhsul import et",
+    "progress": {
+      "title": "Məhsul İmport Vəziyyəti",
+      "loading": "Yüklənir...",
+      "pending": "Növbədə...",
+      "processing": "İmport edilir...",
+      "completed": "Tamamlandı!",
+      "failed": "Xəta baş verdi",
+      "progress": "Progress",
+      "rowsProcessed": "sətr",
+      "successful": "Uğurlu",
+      "errors": "Xətalı",
+      "remaining": "Qalıb",
+      "errorsList": "Xətalar ({{count}}):",
+      "moreErrors": "... və daha {{count}} xəta",
+      "close": "Bağla",
+      "continueInBackground": "Arxa planda davam et",
+      "importStarted": "Import başladı. Progress pəncərəsində izləyə bilərsiniz.",
+      "importInProgress": "İmport hələ davam edir. Pəncərəni bağlamaq istəyirsiniz? İmport arxa planda davam edəcək.",
+      "statusLoadFailed": "İmport statusu yüklənə bilmədi.",
+      "startFailed": "İmport başlatma uğursuz oldu"
+    }
   }
 }

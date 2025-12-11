@@ -11,10 +11,8 @@ const os = require('os');
 const configPath = process.env.BRIDGE_CONFIG_PATH || path.join(__dirname, 'config.json');
 
 let config = {
-    apiUrl: 'https://xpos.az',
+    apiUrl: 'https://app.xpos.az',
     token: '',
-    printerIp: '192.168.0.45',
-    printerPort: 5544,
     pollInterval: 2000,
     heartbeatInterval: 30000,
     logLevel: 'info'
@@ -741,7 +739,6 @@ async function main() {
     console.log('╚══════════════════════════════════════════════════════════╝');
     console.log('');
     console.log(`API URL: ${config.apiUrl}`);
-    console.log(`Printer: ${config.printerIp}:${config.printerPort}`);
     console.log(`Token: ${config.token.substring(0, 15)}...`);
     console.log('');
 

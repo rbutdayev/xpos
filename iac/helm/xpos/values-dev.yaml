@@ -1,0 +1,42 @@
+# Development environment overrides
+config:
+  appEnv: "development"
+  appDebug: true
+  appUrl: "https://dev.xpos.az"
+  database:
+    host: "mysql.db.svc"
+    database: xpos_dev
+    username: root
+  log:
+    level: debug
+
+# Credentials stored in Kubernetes (hardcoded for dev)
+secrets:
+  appKey: "base64:base64:lX6mAF07Lf2jj5VRtF/A5IFigj3hQctCcdPIWDBWAtU="  # Generate with: php artisan key:generate --show
+  databasePassword: "root"
+  redisPassword: ""
+
+web:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+
+worker:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+
+redis:
+  master:
+    persistence:
+      size: 1Gi
+
+persistence:
+  size: 5Gi
+
+ingress:
+  hosts:
+    - host: dev.xpos.az
+      paths:
+        - path: /
+          pathType: Prefix

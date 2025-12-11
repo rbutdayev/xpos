@@ -124,5 +124,34 @@
     "purchasePrice": "Purchase Price *",
     "unit": "Unit *",
     "select": "Select"
+  },
+  "import": {
+    "errorDetails": "Import Errors",
+    "row": "Row",
+    "noProductsImported": "No products were imported",
+    "someErrors": "Some rows were skipped with errors",
+    "downloadTemplate": "Download template",
+    "importProducts": "Import products",
+    "progress": {
+      "title": "Product Import Status",
+      "loading": "Loading...",
+      "pending": "Queued...",
+      "processing": "Importing...",
+      "completed": "Completed!",
+      "failed": "Error occurred",
+      "progress": "Progress",
+      "rowsProcessed": "rows",
+      "successful": "Successful",
+      "errors": "Errors",
+      "remaining": "Remaining",
+      "errorsList": "Errors ({{count}}):",
+      "moreErrors": "... and {{count}} more errors",
+      "close": "Close",
+      "continueInBackground": "Continue in background",
+      "importStarted": "Import started. You can track progress in the progress window.",
+      "importInProgress": "Import is still in progress. Close the window? Import will continue in the background.",
+      "statusLoadFailed": "Failed to load import status.",
+      "startFailed": "Failed to start import"
+    }
   }
 }

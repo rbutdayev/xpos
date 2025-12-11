@@ -53,8 +53,20 @@ class EnsureAccountAccess
             ]);
         }
 
-        // Update last login time
-        $user->update(['last_login_at' => now()]);
+        // Update last login time (throttled to once per 15 minutes to reduce database writes)
+        $lastLoginAt = $user->last_login_at;
+        $shouldUpdate = !$lastLoginAt || $lastLoginAt->diffInMinutes(now()) >= 15;
+
+        if ($shouldUpdate) {
+            try {
+                $user->update(['last_login_at' => now()]);
+            } catch (\Exception $e) {
+                // Log the error but don't fail the request if update fails
+                \Log::warning('Failed to update last_login_at for user: ' . $e->getMessage(), [
+                    'user_id' => $user->id,
+                ]);
+            }
+        }
 
         return $next($request);
     }

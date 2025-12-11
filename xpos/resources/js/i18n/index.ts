@@ -63,17 +63,4 @@ i18n
     partialBundledLanguages: true,
   });
 
-// Log language changes for debugging
-i18n.on('languageChanged', (lng) => {
-  console.log('[i18n] Language changed to:', lng);
-});
-
-i18n.on('loaded', (loaded) => {
-  console.log('[i18n] Translations loaded:', loaded);
-});
-
-i18n.on('failedLoading', (lng, ns, msg) => {
-  console.error('[i18n] Failed to load translations:', { lng, ns, msg });
-});
-
 export default i18n;

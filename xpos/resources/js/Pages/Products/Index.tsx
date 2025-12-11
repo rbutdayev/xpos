@@ -24,6 +24,7 @@ import { productTableConfig } from '@/Components/TableConfigurations';
 import { formatQuantityWithUnit } from '@/utils/formatters';
 import StockDetailsModal from '@/Components/StockDetailsModal';
 import ProductImportModal from '@/Components/ProductImportModal';
+import ImportProgressModal from '@/Components/ImportProgressModal';
 
 interface Props {
     products: {
@@ -53,10 +54,16 @@ interface Props {
     flash?: {
         success?: string;
         error?: string;
+        warning?: string;
     };
+    import_errors?: Array<{
+        row: number | string;
+        message: string;
+        data?: any;
+    }>;
 }
 
-export default function Index({ products, categories, warehouses, filters, selectedWarehouse, flash }: Props) {
+export default function Index({ products, categories, warehouses, filters, selectedWarehouse, flash, import_errors }: Props) {
     const { t } = useTranslation(['products', 'common']);
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
@@ -67,6 +74,13 @@ export default function Index({ products, categories, warehouses, filters, selec
     const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState(filters.warehouse_id || '');
     const [stockModalProduct, setStockModalProduct] = useState<Product | null>(null);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showProgressModal, setShowProgressModal] = useState(false);
+    const [currentImportJobId, setCurrentImportJobId] = useState<number | null>(null);
+
+    const handleImportStarted = (importJobId: number) => {
+        setCurrentImportJobId(importJobId);
+        setShowProgressModal(true);
+    };
 
     // Get accessible warehouse IDs based on user role
     const getAccessibleWarehouses = () => {
@@ -388,6 +402,49 @@ export default function Index({ products, categories, warehouses, filters, selec
                     </div>
                 )}
 
+                {flash?.warning && (
+                    <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-yellow-800">{flash.warning}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Import Error Details */}
+                {import_errors && import_errors.length > 0 && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mt-0.5" />
+                            </div>
+                            <div className="ml-3 flex-1">
+                                <h3 className="text-sm font-medium text-red-800 mb-2">
+                                    İmport Xətaları
+                                </h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    <ul className="list-disc pl-5 space-y-1 max-h-60 overflow-y-auto">
+                                        {import_errors.map((error, index) => (
+                                            <li key={index}>
+                                                {error.row !== 'N/A' && (
+                                                    <span className="font-medium">
+                                                        Sətir {error.row}:
+                                                    </span>
+                                                )}{' '}
+                                                {error.message}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Warehouse Context Display */}
                 {(selectedWarehouse || selectedWarehouseFilter) && (
                     <div className="mb-4 bg-blue-50 border border-blue-200 rounded-md p-3">
@@ -438,6 +495,14 @@ export default function Index({ products, categories, warehouses, filters, selec
                 <ProductImportModal
                     isOpen={showImportModal}
                     onClose={() => setShowImportModal(false)}
+                    onImportStarted={handleImportStarted}
+                />
+
+                {/* Import Progress Modal */}
+                <ImportProgressModal
+                    isOpen={showProgressModal}
+                    onClose={() => setShowProgressModal(false)}
+                    importJobId={currentImportJobId}
                 />
             </div>
         </AuthenticatedLayout>

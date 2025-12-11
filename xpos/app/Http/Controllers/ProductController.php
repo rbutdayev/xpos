@@ -6,17 +6,21 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Warehouse;
 use App\Models\Branch;
+use App\Models\ImportJob;
 use App\Services\BarcodeService;
 use App\Services\DocumentUploadService;
 use App\Services\ProductPhotoService;
 use App\Imports\ProductsImport;
 use App\Exports\ProductsTemplateExport;
+use App\Jobs\ProcessProductImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\HeadingRowImport;
 
 class ProductController extends Controller
 {
@@ -1024,14 +1028,29 @@ class ProductController extends Controller
 
         Gate::authorize('manage-products');
 
-        return Excel::download(
-            new ProductsTemplateExport(),
-            'products_import_template_' . date('Y-m-d') . '.xlsx'
-        );
+        // Increase memory and execution time for Excel generation
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '120');
+
+        try {
+            return Excel::download(
+                new ProductsTemplateExport(),
+                'products_import_template_' . date('Y-m-d') . '.xlsx'
+            );
+        } catch (\Exception $e) {
+            \Log::error('Template download error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Şablon yükləməsi zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.',
+            ]);
+        }
     }
 
     /**
-     * Import products from Excel file
+     * Import products from Excel file (queued for background processing)
      */
     public function import(Request $request)
     {
@@ -1043,51 +1062,79 @@ class ProductController extends Controller
         Gate::authorize('manage-products');
 
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:20480', // 20MB max
         ]);
 
         try {
-            $import = new ProductsImport(Auth::user()->account_id);
-            Excel::import($import, $request->file('file'));
+            $file = $request->file('file');
+            $fileName = $file->getClientOriginalName();
 
-            $summary = $import->getSummary();
+            // Store file temporarily
+            $filePath = $file->store('imports', 'local');
 
-            if ($summary['errors'] > 0) {
-                return back()->with([
-                    'success' => "{$summary['success']} məhsul uğurla import edildi.",
-                    'warning' => "{$summary['errors']} sətr xəta ilə atlandı.",
-                    'import_errors' => $summary['error_details'],
-                ]);
+            // Count total rows in the file (for progress tracking)
+            $headings = (new HeadingRowImport)->toArray($filePath, 'local');
+            $totalRows = 0;
+            if (!empty($headings) && !empty($headings[0])) {
+                $totalRows = count($headings[0]) - 1; // -1 for header row
             }
 
-            return redirect()->route('products.index')
-                ->with('success', "{$summary['success']} məhsul uğurla import edildi.");
+            // Create import job record
+            $importJob = ImportJob::create([
+                'account_id' => Auth::user()->account_id,
+                'user_id' => Auth::id(),
+                'type' => 'products',
+                'status' => 'pending',
+                'file_name' => $fileName,
+                'file_path' => $filePath,
+                'total_rows' => $totalRows,
+            ]);
 
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            $failures = $e->failures();
-            $errors = [];
+            // Dispatch the job to queue
+            ProcessProductImport::dispatch($importJob);
 
-            foreach ($failures as $failure) {
-                $errors[] = [
-                    'row' => $failure->row(),
-                    'attribute' => $failure->attribute(),
-                    'errors' => $failure->errors(),
-                ];
-            }
-
-            return back()->withErrors([
-                'file' => 'Import faylında xəta var.',
-            ])->with('import_errors', $errors);
+            return response()->json([
+                'success' => true,
+                'import_job_id' => $importJob->id,
+                'message' => __('products.import.progress.importStarted'),
+            ]);
 
         } catch (\Exception $e) {
-            \Log::error('Product import error: ' . $e->getMessage(), [
+            \Log::error('Product import dispatch error: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
                 'exception' => $e->getTraceAsString()
             ]);
 
-            return back()->withErrors([
-                'file' => 'Import zamanı xəta baş verdi: ' . $e->getMessage(),
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => __('products.import.progress.startFailed') . ': ' . $e->getMessage(),
+            ], 500);
         }
+    }
+
+    /**
+     * Get import job status for progress tracking
+     */
+    public function importStatus($importJobId)
+    {
+        Gate::authorize('access-account-data');
+
+        $importJob = ImportJob::where('id', $importJobId)
+            ->where('account_id', Auth::user()->account_id)
+            ->firstOrFail();
+
+        return response()->json([
+            'id' => $importJob->id,
+            'status' => $importJob->status,
+            'file_name' => $importJob->file_name,
+            'total_rows' => $importJob->total_rows,
+            'processed_rows' => $importJob->processed_rows,
+            'successful_rows' => $importJob->successful_rows,
+            'failed_rows' => $importJob->failed_rows,
+            'progress_percentage' => $importJob->progress_percentage,
+            'errors' => $importJob->errors ?? [],
+            'started_at' => $importJob->started_at?->toISOString(),
+            'completed_at' => $importJob->completed_at?->toISOString(),
+        ]);
     }
 }

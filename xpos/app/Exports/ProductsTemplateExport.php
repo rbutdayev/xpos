@@ -16,19 +16,21 @@ class ProductsTemplateExport implements FromArray, WithHeadings, WithStyles, Wit
      */
     public function array(): array
     {
-        // Return 2 example rows to help users understand the format
+        // Return sample rows to help users understand the format
+        // Note: Required fields are name, purchase_price, sale_price
         return [
+            // Sample data row 1
             [
-                'Sample Product 1',           // name *
+                'Sample Product 1',           // name (REQUIRED)
                 'SKU-001',                    // sku
                 '1234567890123',             // barcode
                 'Code-128',                   // barcode_type (EAN-13, UPC-A, Code-128, QR-Code)
-                'Electronics',                // category_name
-                'This is a sample product description',  // description
-                '100.00',                     // purchase_price *
-                '150.00',                     // sale_price *
+                'Electronics',                // category_name (auto-created if not exists)
+                'This is a sample product description', // description
+                100.00,                       // purchase_price (REQUIRED)
+                150.00,                       // sale_price (REQUIRED)
                 'pcs',                        // unit
-                '0.5',                        // weight
+                0.5,                          // weight
                 '10x10x10',                   // dimensions
                 'SampleBrand',                // brand
                 'Model-X',                    // model
@@ -38,25 +40,26 @@ class ProductsTemplateExport implements FromArray, WithHeadings, WithStyles, Wit
                 'TRUE',                       // is_active (TRUE or FALSE)
                 'FALSE',                      // allow_negative_stock (TRUE or FALSE)
             ],
+            // Sample data row 2
             [
-                'Sample Product 2',           // name *
-                'SKU-002',                    // sku
-                '9876543210987',             // barcode
-                'EAN-13',                     // barcode_type
-                'Clothing',                   // category_name
-                'Blue cotton T-shirt',        // description
-                '25.00',                      // purchase_price *
-                '50.00',                      // sale_price *
-                'pcs',                        // unit
-                '0.2',                        // weight
-                '30x40x2',                    // dimensions
-                'FashionBrand',               // brand
-                'Classic-T',                  // model
-                '12pcs',                      // packaging_size
-                'pcs',                        // base_unit
-                '12',                         // packaging_quantity
-                'TRUE',                       // is_active
-                'FALSE',                      // allow_negative_stock
+                'Sample Product 2',
+                'SKU-002',
+                '9876543210987',
+                'EAN-13',
+                'Clothing',
+                'Blue cotton T-shirt',
+                25.00,
+                50.00,
+                'pcs',
+                0.2,
+                '30x40x2',
+                'FashionBrand',
+                'Classic-T',
+                '12pcs',
+                'pcs',
+                12,
+                'TRUE',
+                'FALSE',
             ],
         ];
     }
@@ -67,14 +70,14 @@ class ProductsTemplateExport implements FromArray, WithHeadings, WithStyles, Wit
     public function headings(): array
     {
         return [
-            'name *',
+            'name',
             'sku',
             'barcode',
             'barcode_type',
             'category_name',
             'description',
-            'purchase_price *',
-            'sale_price *',
+            'purchase_price',
+            'sale_price',
             'unit',
             'weight',
             'dimensions',

@@ -1,0 +1,232 @@
+# Default values for xpos
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imagePullSecrets: []
+  storageClass: ""
+
+# Image settings
+image:
+  registry: ghcr.io
+  repository: rbutdayev/xpos
+  pullPolicy: IfNotPresent
+  tag: ""  # Overrides the image tag (default is chart appVersion)
+
+# Web application
+web:
+  replicaCount: 2
+
+  image:
+    name: web
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Queue workers
+worker:
+  replicaCount: 2
+
+  image:
+    name: worker
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  # Queue worker command args
+  args:
+    connection: redis
+    sleep: 3
+    tries: 3
+    maxTime: 3600
+
+# Scheduler (cron)
+scheduler:
+  enabled: true
+
+  image:
+    name: scheduler
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Redis
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false  # Set to true in production
+    password: ""
+
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+# MySQL (if you want to deploy MySQL in k8s)
+mysql:
+  enabled: false  # Set to true if deploying MySQL in cluster
+  auth:
+    rootPassword: ""
+    database: xpos
+    username: xpos
+    password: ""
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+
+# Application configuration
+config:
+  appName: "XPOS"
+  appEnv: "production"
+  appDebug: false
+  appUrl: "https://xpos.yourdomain.com"
+
+  # Database
+  database:
+    connection: mysql
+    host: "mysql-host"  # External MySQL or service name
+    port: 3306
+    database: xpos
+    username: xpos
+    # Password should be in secrets
+
+  # Redis config
+  cache:
+    driver: redis
+  queue:
+    connection: redis
+  session:
+    driver: redis
+
+  # Logging
+  log:
+    channel: stderr
+    level: info
+
+# Secrets (reference existing secrets or create new ones)
+secrets:
+  # If existingSecret is set, it will use that instead of creating new one
+  existingSecret: ""
+
+  # These are used only if existingSecret is not set
+  appKey: ""  # Laravel APP_KEY
+  databasePassword: ""
+  redisPassword: ""
+
+# Ingress
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+  hosts:
+    - host: xpos.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls: []
+  # - secretName: xpos-tls
+  #   hosts:
+  #     - xpos.yourdomain.com
+
+# Persistent storage
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteMany  # Requires NFS or similar
+  size: 20Gi
+  annotations: {}
+
+# Health checks
+healthCheck:
+  enabled: true
+  path: /health
+  liveness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Container security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

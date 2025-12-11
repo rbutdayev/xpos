@@ -44,31 +44,6 @@ export default function Create({ categories, warehouses }: Props) {
               submitUrl={route('products.store')}
               cancelUrl={'/products'}
               method="post"
-              onSubmitTransform={(form: ProductFormState) => {
-                if (form.type === 'product') {
-                  const transformed: any = {
-                    ...form,
-                    initial_stock: Object.entries(form.initial_stock || {})
-                      .filter(([, qty]) => qty && qty !== '0')
-                      .map(([warehouseId, quantity]) => ({
-                        warehouse_id: parseInt(warehouseId, 10),
-                        quantity: parseFloat(String(quantity)),
-                        min_level: parseFloat(String((form.min_levels || {})[warehouseId] || '0')),
-                      })),
-                  };
-                  const { min_levels, ...submission } = transformed;
-                  return submission;
-                }
-                return {
-                  name: form.name,
-                  category_id: form.category_id,
-                  parent_product_id: form.parent_product_id,
-                  type: form.type,
-                  description: form.description,
-                  sale_price: form.sale_price,
-                  unit: form.unit,
-                };
-              }}
             />
           </div>
         </div>

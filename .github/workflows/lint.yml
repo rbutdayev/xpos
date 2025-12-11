@@ -1,0 +1,75 @@
+name: Lint Code
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  php-lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./xpos
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, mysql
+          coverage: none
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run PHP CS Fixer (dry-run)
+        run: |
+          composer require --dev friendsofphp/php-cs-fixer
+          vendor/bin/php-cs-fixer fix --dry-run --diff
+
+  helm-lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Lint Helm Chart
+        run: |
+          helm lint ./iac/helm/xpos
+          helm lint ./iac/helm/xpos --values ./iac/helm/xpos/values-dev.yaml
+          helm lint ./iac/helm/xpos --values ./iac/helm/xpos/values-prod.yaml
+
+      - name: Template Helm Chart
+        run: |
+          helm template xpos ./iac/helm/xpos --values ./iac/helm/xpos/values-dev.yaml > /dev/null
+          helm template xpos ./iac/helm/xpos --values ./iac/helm/xpos/values-prod.yaml > /dev/null
+
+  docker-lint:
+    name: Docker Lint
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        dockerfile: [Dockerfile.web, Dockerfile.worker, Dockerfile.scheduler]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: xpos/${{ matrix.dockerfile }}

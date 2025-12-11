@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "xpos.fullname" . }}-config
+  labels:
+    {{- include "xpos.labels" . | nindent 4 }}
+data:
+  APP_NAME: {{ .Values.config.appName | quote }}
+  APP_ENV: {{ .Values.config.appEnv | quote }}
+  APP_DEBUG: {{ .Values.config.appDebug | quote }}
+  APP_URL: {{ .Values.config.appUrl | quote }}
+  LOG_CHANNEL: {{ .Values.config.log.channel | quote }}
+  LOG_LEVEL: {{ .Values.config.log.level | quote }}
+
+  DB_CONNECTION: {{ .Values.config.database.connection | quote }}
+  DB_HOST: {{ .Values.config.database.host | quote }}
+  DB_PORT: {{ .Values.config.database.port | quote }}
+  DB_DATABASE: {{ .Values.config.database.database | quote }}
+  DB_USERNAME: {{ .Values.config.database.username | quote }}
+
+  CACHE_DRIVER: {{ .Values.config.cache.driver | quote }}
+  QUEUE_CONNECTION: {{ .Values.config.queue.connection | quote }}
+  SESSION_DRIVER: {{ .Values.config.session.driver | quote }}
+
+  {{- if .Values.redis.enabled }}
+  REDIS_HOST: {{ include "xpos.fullname" . }}-redis-master
+  REDIS_PORT: "6379"
+  {{- else if .Values.redis.externalRedis }}
+  REDIS_HOST: {{ .Values.redis.externalRedis.host | quote }}
+  REDIS_PORT: {{ .Values.redis.externalRedis.port | quote }}
+  {{- end }}

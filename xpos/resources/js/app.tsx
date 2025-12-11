@@ -72,7 +72,7 @@ window.addEventListener('focus', () => {
 // Inertia overrides axios default headers, so we must explicitly add it
 router.on('before', (event) => {
     const token = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    const locale = localStorage.getItem('i18nextLng') || 'en';
+    const locale = localStorage.getItem('i18nextLng') || 'az';
 
     // Set in axios defaults (for non-Inertia requests)
     if (token && window.axios) {
@@ -123,25 +123,17 @@ createInertiaApp({
         }
 
         // Initialize language preference
-        // Priority: User DB preference > localStorage > Browser language > Default (en)
+        // Priority: User DB preference > localStorage > Browser language > Default (az)
         const user = (props.initialPage.props as any)?.auth?.user;
         const userLanguage = user?.language;
         const storedLanguage = localStorage.getItem('i18nextLng');
 
-        console.log('[App] Language initialization:', {
-            userLanguage,
-            storedLanguage,
-            willSync: userLanguage && userLanguage !== storedLanguage
-        });
-
         // Sync language preference: If user has a DB preference different from localStorage, update localStorage
         if (userLanguage && userLanguage !== storedLanguage) {
-            console.log('[App] Syncing language from DB to localStorage:', userLanguage);
             localStorage.setItem('i18nextLng', userLanguage);
 
             // Dynamically import i18n to avoid circular dependency
             import('./i18n').then((i18nModule) => {
-                console.log('[App] Changing i18n language to:', userLanguage);
                 i18nModule.default.changeLanguage(userLanguage);
             });
         }

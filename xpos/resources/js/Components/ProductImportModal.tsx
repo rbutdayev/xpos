@@ -1,21 +1,31 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
-import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 interface ProductImportModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onImportStarted: (importJobId: number) => void;
 }
 
-export default function ProductImportModal({ isOpen, onClose }: ProductImportModalProps) {
+export default function ProductImportModal({ isOpen, onClose, onImportStarted }: ProductImportModalProps) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
+            const file = e.target.files[0];
+            const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+
+            if (file.size > maxSize) {
+                alert('Fayl həcmi çox böyükdür. Maksimum 20MB ola bilər.');
+                e.target.value = ''; // Reset the input
+                return;
+            }
+
+            setSelectedFile(file);
         }
     };
 
@@ -36,6 +46,14 @@ export default function ProductImportModal({ isOpen, onClose }: ProductImportMod
 
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             const file = e.dataTransfer.files[0];
+            const maxSize = 20 * 1024 * 1024; // 20MB in bytes
+
+            // Check file size
+            if (file.size > maxSize) {
+                alert('Fayl həcmi çox böyükdür. Maksimum 20MB ola bilər.');
+                return;
+            }
+
             // Check if file is Excel or CSV
             const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/csv'];
             if (validTypes.includes(file.type) || file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
@@ -50,7 +68,7 @@ export default function ProductImportModal({ isOpen, onClose }: ProductImportMod
         window.location.href = '/products/import/template';
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!selectedFile) {
@@ -63,18 +81,28 @@ export default function ProductImportModal({ isOpen, onClose }: ProductImportMod
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        router.post('/products/import', formData, {
-            onSuccess: () => {
+        try {
+            const response = await axios.post('/products/import', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (response.data.success) {
                 setSelectedFile(null);
                 setUploading(false);
                 onClose();
-            },
-            onError: (errors) => {
+                // Open progress modal
+                onImportStarted(response.data.import_job_id);
+            } else {
+                alert(response.data.message || 'Import başlatma zamanı xəta baş verdi.');
                 setUploading(false);
-                console.error('Import errors:', errors);
-            },
-            preserveScroll: true,
-        });
+            }
+        } catch (error: any) {
+            console.error('Import error:', error);
+            alert(error.response?.data?.message || 'Import başlatma zamanı xəta baş verdi.');
+            setUploading(false);
+        }
     };
 
     const resetModal = () => {
@@ -212,7 +240,7 @@ export default function ProductImportModal({ isOpen, onClose }: ProductImportMod
                                                             <p className="pl-1">və ya buraya sürüşdür</p>
                                                         </div>
                                                         <p className="text-xs text-gray-500">
-                                                            XLSX, XLS və ya CSV formatında (maks 10MB)
+                                                            XLSX, XLS və ya CSV formatında (maks 20MB)
                                                         </p>
                                                     </>
                                                 )}

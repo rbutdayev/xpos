@@ -61,9 +61,9 @@ Route::get('/awareness', function () {
     return Inertia::render('Awareness');
 })->name('awareness');
 
-// 301 Permanent Redirect to main website - SEO optimized
+// Redirect to login page
 Route::get('/', function () {
-    return redirect('https://onyx.az/az/xpos', 301);
+    return redirect()->route('login');
 });
 
 // Super Admin Routes (Before Main Dashboard)
@@ -303,6 +303,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/products/discounts', [ProductController::class, 'discounts'])->name('products.discounts');
     Route::get('/products/import/template', [ProductController::class, 'downloadTemplate'])->name('products.import.template');
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+    Route::get('/products/import/status/{importJobId}', [ProductController::class, 'importStatus'])->name('products.import.status');
     Route::resource('products', ProductController::class);
 
     // Product Variants

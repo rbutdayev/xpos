@@ -1,4 +1,4 @@
-const CACHE_NAME = 'onyx-xpos-v4';
+const CACHE_NAME = 'onyx-xpos-v5';
 // Only cache essential static pages - no external redirects
 const urlsToCache = [
   '/login',

@@ -27,10 +27,8 @@ function initializeConfig() {
     // Create config in user data directory if it doesn't exist
     if (!fs.existsSync(configPath)) {
         const defaultConfig = {
-            apiUrl: 'https://xpos.az',
+            apiUrl: 'https://app.xpos.az',
             token: '',
-            printerIp: '192.168.0.45',
-            printerPort: 5544,
             pollInterval: 2000,
             heartbeatInterval: 30000,
             logLevel: 'info'
