@@ -103,10 +103,11 @@ jobs:
 
       - name: Create Image Pull Secret
         run: |
+          kubectl delete secret ghcr-secret --namespace xpos-dev --ignore-not-found=true
           kubectl create secret docker-registry ghcr-secret \
             --docker-server=ghcr.io \
             --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GITHUB_TOKEN }} \  
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
             --namespace xpos-dev
 
       - name: Deploy with Helm
@@ -172,10 +173,11 @@ jobs:
 
       - name: Create Image Pull Secret
         run: |
+          kubectl delete secret ghcr-secret --namespace xpos-prod --ignore-not-found=true
           kubectl create secret docker-registry ghcr-secret \
             --docker-server=ghcr.io \
             --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GITHUB_TOKEN }} \ 
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
             --namespace xpos-prod
 
       - name: Create namespace if not exists
