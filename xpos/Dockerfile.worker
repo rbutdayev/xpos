@@ -45,7 +45,8 @@ FROM php:8.3-cli-alpine
 WORKDIR /var/www
 
 # Runtime dependencies (CLI version, no nginx/supervisor needed)
-RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype
+RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype \
+    icu-libs icu-data-full oniguruma
 
 # Copy PHP extensions
 COPY --from=php-builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/

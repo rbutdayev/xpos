@@ -40,7 +40,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.TOKEN_GITHUB }}
 
       - name: Extract metadata
         id: meta
@@ -89,7 +89,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'latest'
+          version: 'v3.13.3'
 
       - name: Configure Kubernetes
         run: |
@@ -100,6 +100,15 @@ jobs:
       - name: Create namespace if not exists
         run: |
           kubectl create namespace xpos-dev --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create Image Pull Secret
+        run: |
+          kubectl delete secret ghcr-secret --namespace xpos-dev --ignore-not-found=true
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.TOKEN_GITHUB }} \
+            --namespace xpos-dev
 
       - name: Deploy with Helm
         run: |
@@ -117,10 +126,7 @@ jobs:
           kubectl rollout status deployment/xpos-web -n xpos-dev
           kubectl rollout status deployment/xpos-worker -n xpos-dev
           kubectl get pods -n xpos-dev
-
-      - name: Apply Ingress
-        run: |
-          kubectl apply -f ./iac/ingress-dev.yaml
+          kubectl get ingress -n xpos-dev
 
   deploy-prod:
     name: Deploy to Production
@@ -148,13 +154,22 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'latest'
+          version: 'v3.13.3'
 
       - name: Configure Kubernetes
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
           kubectl cluster-info
+
+      - name: Create Image Pull Secret
+        run: |
+          kubectl delete secret ghcr-secret --namespace xpos-prod --ignore-not-found=true
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.TOKEN_GITHUB }} \
+            --namespace xpos-prod
 
       - name: Create namespace if not exists
         run: |
@@ -183,10 +198,7 @@ jobs:
           kubectl rollout status deployment/xpos-web -n xpos-prod --timeout=10m
           kubectl rollout status deployment/xpos-worker -n xpos-prod --timeout=10m
           kubectl get pods -n xpos-prod
-
-      - name: Apply Ingress
-        run: |
-          kubectl apply -f ./iac/ingress-prod.yaml
+          kubectl get ingress -n xpos-prod
 
       - name: Run Health Checks
         run: |
@@ -198,7 +210,7 @@ jobs:
       - name: Create Release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
           tag_name: ${{ steps.version.outputs.version }}
           release_name: Release ${{ steps.version.outputs.version }}
@@ -212,7 +224,8 @@ jobs:
   #   defaults:
   #     run:
   #       working-directory: ./xpos
-  #
+
+  
   #   services:
   #     redis:
   #       image: redis:7-alpine

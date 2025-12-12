@@ -55,6 +55,7 @@ WORKDIR /var/www
 
 # Runtime deps + Nginx + Supervisor (still needed for php-fpm + nginx in same container)
 RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype \
+    icu-libs icu-data-full oniguruma \
     nginx supervisor
 
 # Copy PHP extensions

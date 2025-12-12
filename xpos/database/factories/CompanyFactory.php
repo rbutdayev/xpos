@@ -16,6 +16,17 @@ class CompanyFactory extends Factory
      */
     public function definition(): array
     {
+        $languages = ['az', 'en'];
+        $defaultLanguage = fake()->randomElement($languages);
+
+        // Map language to currency
+        $currencyMap = [
+            'az' => ['code' => 'AZN', 'symbol' => '₼', 'position' => 'after'],
+            'en' => ['code' => 'USD', 'symbol' => '$', 'position' => 'before'],
+        ];
+
+        $currency = $currencyMap[$defaultLanguage];
+
         return [
             'account_id' => \App\Models\Account::factory(),
             'name' => fake()->company(),
@@ -23,7 +34,12 @@ class CompanyFactory extends Factory
             'tax_number' => fake()->numerify('##########'),
             'phone' => fake()->phoneNumber(),
             'email' => fake()->companyEmail(),
-            'default_language' => 'az',
+            'default_language' => $defaultLanguage,
+            'currency_code' => $currency['code'],
+            'currency_symbol' => $currency['symbol'],
+            'currency_decimal_places' => 2,
+            'currency_symbol_position' => $currency['position'],
+            'is_active' => true,
         ];
     }
 }

@@ -85,14 +85,22 @@ class SuperAdminController extends Controller
 
         $search = $validated['search'] ?? null;
         $plan = $validated['plan'] ?? null;
-        
+
+        // Map Azerbaijani plan names to database enum values for filtering
+        $planMapping = [
+            'başlanğıc' => 'starter',
+            'professional' => 'professional',
+            'enterprise' => 'enterprise',
+        ];
+        $dbPlan = $plan ? ($planMapping[$plan] ?? null) : null;
+
         $accounts = Account::query()
             ->when($search, function ($query, $search) {
                 $query->where('company_name', 'like', '%' . $search . '%')
                       ->orWhere('email', 'like', '%' . $search . '%');
             })
-            ->when($plan, function ($query, $plan) {
-                $query->where('subscription_plan', $plan);
+            ->when($dbPlan, function ($query, $dbPlan) {
+                $query->where('subscription_plan', $dbPlan);
             })
             ->withCount('users')
             ->orderBy('created_at', 'desc')
@@ -104,7 +112,7 @@ class SuperAdminController extends Controller
             'plan' => $plan,
             'plans' => [
                 'başlanğıc' => 'Başlanğıc',
-                'professional' => 'Professional', 
+                'professional' => 'Professional',
                 'enterprise' => 'Korporativ'
             ],
         ]);
@@ -137,12 +145,14 @@ class SuperAdminController extends Controller
     public function toggleAccountStatus(Account $account)
     {
         $newStatus = !$account->is_active;
-        
-        $account->update(['is_active' => $newStatus]);
 
-        return redirect()->back()->with('success', 
-            $newStatus 
-                ? 'Hesab aktivləşdirildi.' 
+        // Direct assignment is needed because is_active is in the $guarded array
+        $account->is_active = $newStatus;
+        $account->save();
+
+        return redirect()->back()->with('success',
+            $newStatus
+                ? 'Hesab aktivləşdirildi.'
                 : 'Hesab dayandırıldı.'
         );
     }
@@ -219,6 +229,7 @@ class SuperAdminController extends Controller
             $validated = $request->validate([
                 'user_email' => 'required|email|unique:users,email',
                 'user_password' => 'required|string|min:8',
+                'subscription_plan' => 'required|in:başlanğıc,professional,enterprise',
                 'monthly_payment_amount' => 'nullable|numeric|min:0',
                 'payment_start_date' => 'nullable|date',
             ]);
@@ -232,6 +243,14 @@ class SuperAdminController extends Controller
 
         try {
             DB::transaction(function () use ($validated) {
+                // Map Azerbaijani plan names to database enum values
+                $planMapping = [
+                    'başlanğıc' => 'starter',
+                    'professional' => 'professional',
+                    'enterprise' => 'enterprise',
+                ];
+                $dbPlan = $planMapping[$validated['subscription_plan']] ?? 'starter';
+
                 // Generate a temporary company name from email
                 // User will set the actual company name during setup wizard
                 $emailUsername = explode('@', $validated['user_email'])[0];
@@ -243,11 +262,7 @@ class SuperAdminController extends Controller
                     'email' => $validated['user_email'], // Use account owner's email
                     'phone' => null,
                     'address' => null,
-                    'subscription_plan' => 'başlanğıc', // Default plan
-                    'is_active' => true,
                     'language' => 'az',
-                    'monthly_payment_amount' => $validated['monthly_payment_amount'] ?? null,
-                    'payment_start_date' => $validated['payment_start_date'] ?? null,
                     'settings' => [
                         'timezone' => 'Asia/Baku',
                         'currency' => 'AZN',
@@ -260,31 +275,52 @@ class SuperAdminController extends Controller
                     throw new \Exception('Account creation failed - no ID returned');
                 }
 
+                // Set guarded fields directly (subscription_plan, is_active, payment fields)
+                $account->subscription_plan = $dbPlan;
+                $account->is_active = true;
+                $account->monthly_payment_amount = $validated['monthly_payment_amount'] ?? null;
+                $account->payment_start_date = $validated['payment_start_date'] ?? null;
+                $account->save();
+
                 // Create initial user as account owner (no branch_id - will be set during setup wizard)
                 // Company, Branch, and Warehouse will be created during the setup wizard
                 $user = User::create([
-                    'account_id' => $account->id,
                     'name' => ucfirst($emailUsername), // Use email username as initial name
                     'email' => $validated['user_email'],
                     'password' => bcrypt($validated['user_password']),
-                    'role' => 'account_owner',
-                    'status' => 'active',
                     'position' => 'Administrator',
                     'hire_date' => now(),
                     'branch_id' => null, // Will be set during setup wizard
-                    'permissions' => [
-                        'manage_users' => true,
-                        'manage_products' => true,
-                        'manage_sales' => true,
-                        'manage_inventory' => true,
-                        'manage_reports' => true,
-                        'manage_settings' => true,
-                    ],
                 ]);
 
                 if (!$user || !$user->id) {
                     throw new \Exception('User creation failed - no ID returned');
                 }
+
+                // Set guarded fields directly (account_id, role, status, permissions)
+                $user->account_id = $account->id;
+                $user->role = 'account_owner';
+                $user->status = 'active';
+                $user->permissions = [
+                    'manage_users' => true,
+                    'manage_products' => true,
+                    'manage_sales' => true,
+                    'manage_inventory' => true,
+                    'manage_reports' => true,
+                    'manage_settings' => true,
+                ];
+                $user->save();
+
+                // Create active subscription
+                \App\Models\Subscription::create([
+                    'account_id' => $account->id,
+                    'plan_type' => $dbPlan,
+                    'price' => $validated['monthly_payment_amount'] ?? 0,
+                    'status' => 'active',
+                    'starts_at' => now()->toDateString(),
+                    'expires_at' => now()->addYear()->toDateString(), // 1 year subscription
+                    'billing_cycle' => 'monthly',
+                ]);
 
                 \Log::info('Account and user created successfully - user will complete setup wizard', [
                     'account_id' => $account->id,
@@ -322,7 +358,19 @@ class SuperAdminController extends Controller
             'payment_start_date' => 'nullable|date',
         ]);
 
-        $account->update($validated);
+        // Update fillable fields
+        $account->update([
+            'company_name' => $validated['company_name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+        ]);
+
+        // Update guarded fields directly
+        $account->is_active = $validated['is_active'];
+        $account->monthly_payment_amount = $validated['monthly_payment_amount'];
+        $account->payment_start_date = $validated['payment_start_date'];
+        $account->save();
 
         return redirect()->back()->with('success', 'Hesab məlumatları yeniləndi.');
     }
@@ -468,10 +516,11 @@ class SuperAdminController extends Controller
             // 17. Delete subscriptions
             \DB::table('subscriptions')->where('account_id', $accountId)->delete();
 
-            // 18. Delete users (after all dependencies) - but NEVER delete super_admin users
+            // 18. Delete ALL users belonging to this account (after all dependencies)
+            // Note: We delete all users including super_admin IF they belong to this account
+            // System-wide super_admins should not have account_id set to regular accounts
             \DB::table('users')
                 ->where('account_id', $accountId)
-                ->where('role', '!=', 'super_admin')
                 ->delete();
 
             // 19. Finally, delete the account

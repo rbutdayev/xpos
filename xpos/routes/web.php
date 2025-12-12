@@ -56,7 +56,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 
 // Health check endpoint for Kubernetes probes
 Route::get('/health', function () {
@@ -65,7 +65,7 @@ Route::get('/health', function () {
         DB::connection()->getPdo();
 
         // Check Redis connection
-        Cache::connection()->ping();
+        Redis::connection()->ping();
 
         return response()->json([
             'status' => 'healthy',

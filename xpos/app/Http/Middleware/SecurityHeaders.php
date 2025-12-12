@@ -37,11 +37,11 @@ class SecurityHeaders
 
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'" . ($isDev ? " https://dev.xpos.az https://app.xpos.az" : ""),
-            "style-src 'self' 'unsafe-inline'" . ($isDev ? " https://dev.xpos.az https://app.xpos.az" : ""),
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'" . ($isDev ? " http://dev.xpos.az https://dev.xpos.az https://app.xpos.az" : ""),
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net" . ($isDev ? " http://dev.xpos.az https://dev.xpos.az https://app.xpos.az" : ""),
             "img-src 'self' data: https: blob:",                // Allow images from various sources
-            "font-src 'self' data:" . ($isDev ? " https://dev.xpos.az https://app.xpos.az" : ""),
-            "connect-src 'self'" . ($isDev ? " https://dev.xpos.az https://app.xpos.az ws: wss:" : ""),
+            "font-src 'self' data: https://fonts.bunny.net" . ($isDev ? " http://dev.xpos.az https://dev.xpos.az https://app.xpos.az" : ""),
+            "connect-src 'self'" . ($isDev ? " http://dev.xpos.az https://dev.xpos.az https://app.xpos.az ws: wss:" : ""),
             "frame-ancestors 'self'",                          // Prevent embedding in iframes
             "base-uri 'self'",                                 // Prevent base tag injection
             "form-action 'self'",                              // Restrict form submissions

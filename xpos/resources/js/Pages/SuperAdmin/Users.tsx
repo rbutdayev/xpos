@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -44,7 +44,9 @@ export default function SuperAdminUsers({ users, search }: Props) {
             return;
         }
         if (confirm(`${user.name} istifadəçisini silmək istədiyinizdən əminsiniz?`)) {
-            useForm().delete(route('superadmin.users.destroy', user.id));
+            router.delete(route('superadmin.users.destroy', user.id), {
+                preserveScroll: true,
+            });
         }
     };
 
@@ -55,7 +57,10 @@ export default function SuperAdminUsers({ users, search }: Props) {
         }
         const action = user.status === 'active' ? 'deaktivləşdirmək' : 'aktivləşdirmək';
         if (confirm(`${user.name} istifadəçisini ${action} istədiyinizdən əminsiniz?`)) {
-            useForm().patch(route('superadmin.users.toggle-status', user.id));
+            router.patch(route('superadmin.users.toggle-status', user.id), {}, {
+                preserveScroll: true,
+                preserveState: false,
+            });
         }
     };
 

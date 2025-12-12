@@ -11,13 +11,10 @@ config:
     level: debug
 
 # GitHub Container Registry credentials
-# NOTE: DO NOT commit the password here! Pass it via --set on deploy
+# Secret created automatically by GitHub Actions using GITHUB_TOKEN
 imagePullSecret:
-  create: true
+  create: false  # Created by workflow, not Helm
   name: ghcr-secret
-  registry: ghcr.io
-  username: "rbutdayev"
-  password: ""  # Set via: --set imagePullSecret.password=TOKEN
 
 # Override image tag to use develop branch
 image:

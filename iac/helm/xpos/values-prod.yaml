@@ -12,12 +12,10 @@ config:
     level: warning
 
 # GitHub Container Registry credentials
+# Secret created automatically by GitHub Actions using GITHUB_TOKEN
 imagePullSecret:
-  create: true
+  create: false  # Created by workflow, not Helm
   name: ghcr-secret
-  registry: ghcr.io
-  username: "rbutdayev"  # Replace with your GitHub username
-  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
 
 # Credentials stored in Kubernetes (from .env.production)
 secrets:
