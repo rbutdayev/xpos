@@ -131,14 +131,37 @@ function CartSection({ cart, updateCartItem, removeFromCart, changeItemUnit }: P
             </div>
           </div>
 
-          <div className="mt-2">
-            <TextInput
-              type="text"
-              value={item.notes || ''}
-              onChange={(e) => updateCartItem(item.id, 'notes', e.target.value)}
-              className="w-full text-sm"
-              placeholder={t('cartSection.notesPlaceholder')}
-            />
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-gray-600 mb-1 block">{t('cartSection.discount')}:</label>
+              <TextInput
+                type="number"
+                step="0.01"
+                value={item.discount_amount || ''}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
+                  updateCartItem(item.id, 'discount_amount', value);
+                }}
+                onBlur={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
+                  const roundedValue = Math.round(value * 100) / 100;
+                  updateCartItem(item.id, 'discount_amount', roundedValue);
+                }}
+                className="w-full text-sm"
+                min="0"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600 mb-1 block">{t('cartSection.notes')}:</label>
+              <TextInput
+                type="text"
+                value={item.notes || ''}
+                onChange={(e) => updateCartItem(item.id, 'notes', e.target.value)}
+                className="w-full text-sm"
+                placeholder={t('cartSection.notesPlaceholder')}
+              />
+            </div>
           </div>
         </div>
       ))}

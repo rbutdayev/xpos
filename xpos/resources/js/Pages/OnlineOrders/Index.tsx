@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useState, FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     MagnifyingGlassIcon,
     FunnelIcon,
@@ -25,6 +26,8 @@ interface Sale {
     notes: string | null;
     created_at: string;
     items: SaleItem[];
+    source?: 'shop' | 'wolt' | 'yango' | 'bolt';
+    platform_order_id?: string | null;
 }
 
 interface SaleItem {
@@ -55,11 +58,22 @@ interface PaginatedSales {
     total: number;
 }
 
+interface FiscalConfig {
+    id: number;
+    provider: string;
+    name: string;
+    shift_open: boolean;
+    shift_opened_at: string | null;
+    last_z_report_at: string | null;
+    credit_contract_number?: string;
+}
+
 interface Props {
     orders: PaginatedSales;
     filters: {
         search?: string;
         status?: string;
+        source?: string;
         date_from?: string;
         date_to?: string;
     };
@@ -68,23 +82,29 @@ interface Props {
         completed?: number;
         cancelled?: number;
     };
+    fiscalPrinterEnabled?: boolean;
+    fiscalConfig?: FiscalConfig | null;
 }
 
-export default function Index({ orders, filters, statusCounts }: Props) {
+export default function Index({ orders, filters, statusCounts, fiscalPrinterEnabled = false, fiscalConfig }: Props) {
+    const { t } = useTranslation() as { t: (key: string) => string };
     const [search, setSearch] = useState(filters.search || '');
     const [selectedStatus, setSelectedStatus] = useState<string>(filters.status || '');
+    const [selectedSource, setSelectedSource] = useState<string>(filters.source || '');
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
     const [statusModalOrder, setStatusModalOrder] = useState<Sale | null>(null);
     const [newStatus, setNewStatus] = useState<string>('');
     const [statusNotes, setStatusNotes] = useState('');
+    const [useFiscalPrinter, setUseFiscalPrinter] = useState(true);
 
     const handleSearch = (e: FormEvent) => {
         e.preventDefault();
         router.get('/online-orders', {
             search,
             status: selectedStatus,
+            source: selectedSource,
             date_from: dateFrom,
             date_to: dateTo,
         }, {
@@ -96,6 +116,20 @@ export default function Index({ orders, filters, statusCounts }: Props) {
         router.get('/online-orders', {
             search,
             status: status === selectedStatus ? '' : status,
+            source: selectedSource,
+            date_from: dateFrom,
+            date_to: dateTo,
+        }, {
+            preserveState: true,
+        });
+    };
+
+    const handleSourceFilter = (source: string) => {
+        setSelectedSource(source);
+        router.get('/online-orders', {
+            search,
+            status: selectedStatus,
+            source: source,
             date_from: dateFrom,
             date_to: dateTo,
         }, {
@@ -109,11 +143,13 @@ export default function Index({ orders, filters, statusCounts }: Props) {
         router.patch(`/online-orders/${statusModalOrder.sale_id}/status`, {
             status: newStatus,
             notes: statusNotes,
+            use_fiscal_printer: useFiscalPrinter,
         }, {
             onSuccess: () => {
                 setStatusModalOrder(null);
                 setNewStatus('');
                 setStatusNotes('');
+                setUseFiscalPrinter(true);
             },
         });
     };
@@ -131,6 +167,38 @@ export default function Index({ orders, filters, statusCounts }: Props) {
         return (
             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${badge.color}`}>
                 <Icon className="w-4 h-4" />
+                {badge.label}
+            </span>
+        );
+    };
+
+    const getSourceBadge = (source?: string) => {
+        if (!source) return null;
+
+        const badges = {
+            shop: {
+                color: 'bg-green-100 text-green-800 border-green-200',
+                label: t('orders.source.shop')
+            },
+            wolt: {
+                color: 'bg-purple-100 text-purple-800 border-purple-200',
+                label: t('orders.source.wolt')
+            },
+            yango: {
+                color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                label: t('orders.source.yango')
+            },
+            bolt: {
+                color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                label: t('orders.source.bolt')
+            },
+        };
+
+        const badge = badges[source as keyof typeof badges];
+        if (!badge) return null;
+
+        return (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badge.color}`}>
                 {badge.label}
             </span>
         );
@@ -188,7 +256,7 @@ export default function Index({ orders, filters, statusCounts }: Props) {
                     {/* Search and Filters */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
                         <form onSubmit={handleSearch} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <div className="md:col-span-2">
                                     <div className="relative">
                                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -200,6 +268,19 @@ export default function Index({ orders, filters, statusCounts }: Props) {
                                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                         />
                                     </div>
+                                </div>
+                                <div>
+                                    <select
+                                        value={selectedSource}
+                                        onChange={(e) => handleSourceFilter(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    >
+                                        <option value="">{t('orders.source.all')}</option>
+                                        <option value="shop">{t('orders.source.shop')}</option>
+                                        <option value="wolt">{t('orders.source.wolt')}</option>
+                                        <option value="yango">{t('orders.source.yango')}</option>
+                                        <option value="bolt">{t('orders.source.bolt')}</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <input
@@ -225,13 +306,14 @@ export default function Index({ orders, filters, statusCounts }: Props) {
                                 >
                                     Axtar
                                 </button>
-                                {(search || dateFrom || dateTo || selectedStatus) && (
+                                {(search || dateFrom || dateTo || selectedStatus || selectedSource) && (
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setSearch('');
                                             setDateFrom('');
                                             setDateTo('');
+                                            setSelectedSource('');
                                             router.get('/online-orders');
                                         }}
                                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
@@ -263,7 +345,13 @@ export default function Index({ orders, filters, statusCounts }: Props) {
                                                         Sifariş #{order.sale_number}
                                                     </h3>
                                                     {getStatusBadge(order.status)}
+                                                    {getSourceBadge(order.source)}
                                                 </div>
+                                                {order.platform_order_id && (
+                                                    <div className="mb-2 text-xs text-gray-500">
+                                                        <span className="font-semibold">{t('orders.source.platformOrderId')}:</span> {order.platform_order_id}
+                                                    </div>
+                                                )}
                                                 <div className="space-y-1 text-sm text-gray-600">
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-medium">{order.customer_name}</span>
@@ -433,6 +521,28 @@ export default function Index({ orders, filters, statusCounts }: Props) {
                                 placeholder="Status dəyişikliyi haqqında qeyd..."
                             />
                         </div>
+
+                        {/* Fiscal Printer Option - Show only when changing to 'completed' */}
+                        {fiscalPrinterEnabled && newStatus === 'completed' && (
+                            <div className="mb-4">
+                                <div className="flex items-center">
+                                    <input
+                                        id="use_fiscal_printer_modal"
+                                        type="checkbox"
+                                        checked={useFiscalPrinter}
+                                        onChange={(e) => setUseFiscalPrinter(e.target.checked)}
+                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    />
+                                    <label htmlFor="use_fiscal_printer_modal" className="ml-2 text-sm text-gray-700">
+                                        Fiskal çap
+                                    </label>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1 ml-6">
+                                    Sifariş tamamlandıqda fiskal printer vasitəsilə çek çap ediləcək
+                                </p>
+                            </div>
+                        )}
+
                         <div className="flex gap-2">
                             <button
                                 onClick={handleStatusUpdate}
@@ -445,6 +555,7 @@ export default function Index({ orders, filters, statusCounts }: Props) {
                                     setStatusModalOrder(null);
                                     setNewStatus('');
                                     setStatusNotes('');
+                                    setUseFiscalPrinter(true);
                                 }}
                                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                             >

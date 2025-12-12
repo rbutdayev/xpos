@@ -42,4 +42,6 @@ return [
     'disabled' => 'Qeyri-aktiv',
     'required' => 'Məcburi',
     'optional' => 'İstəyə bağlı',
+    'unknown' => 'Naməlum',
+    'online_shop' => 'Online Mağaza',
 ];

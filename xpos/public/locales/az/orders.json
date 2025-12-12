@@ -62,5 +62,15 @@
     "total": "Cəmi",
     "status": "Status",
     "actions": "Əməliyyatlar"
+  },
+
+  "source": {
+    "label": "Mənbə",
+    "all": "Hamısı",
+    "shop": "Mağazanız",
+    "wolt": "Wolt",
+    "yango": "Yango",
+    "bolt": "Bolt Food",
+    "platformOrderId": "Platform Sifariş ID"
   }
 }

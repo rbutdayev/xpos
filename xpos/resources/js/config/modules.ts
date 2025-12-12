@@ -12,6 +12,7 @@ import {
     ShoppingBagIcon,
     GiftIcon,
     ReceiptPercentIcon,
+    ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -23,7 +24,7 @@ export interface ModuleConfig {
     nameAz: string; // Azerbaijani translation
     description: string;
     icon: React.ComponentType<{ className?: string }>;
-    flagKey: 'services_module_enabled' | 'rent_module_enabled' | 'shop_enabled' | 'loyalty_module_enabled' | 'discounts_module_enabled';
+    flagKey?: 'services_module_enabled' | 'rent_module_enabled' | 'shop_enabled' | 'loyalty_module_enabled' | 'discounts_module_enabled'; // Optional for modules like SMS
     routes: string[];
     permissions: string[];
     requiredRoles: string[];
@@ -72,6 +73,23 @@ export const MODULES: Record<string, ModuleConfig> = {
         category: 'sales',
     },
 
+    sms: {
+        id: 'sms',
+        name: 'SMS Integration',
+        nameAz: 'SMS İnteqrasiyası',
+        description: 'Müştərilərə SMS bildirişləri göndərmə',
+        icon: ChatBubbleLeftRightIcon,
+        // No flagKey - SMS is checked via hasSmsConfigured() method on Account
+        routes: [
+            '/integrations/sms',
+            '/sms/logs',
+            '/sms/send'
+        ],
+        permissions: ['manage-integrations'],
+        requiredRoles: ['admin', 'account_owner'],
+        category: 'customer',
+    },
+
     shop: {
         id: 'shop',
         name: 'Online Shop',
@@ -81,11 +99,12 @@ export const MODULES: Record<string, ModuleConfig> = {
         flagKey: 'shop_enabled',
         routes: [
             '/online-orders',
-            '/shop/settings'
+            '/shop-settings'
         ],
         permissions: ['manage-shop'],
-        requiredRoles: ['admin', 'account_owner'],
-        dependencies: ['sms'], // Requires SMS to be configured for notifications
+        requiredRoles: ['admin', 'account_owner', 'sales_staff', 'branch_manager', 'accountant'],
+        // SMS is required for e-commerce customer notifications
+        dependencies: ['sms'],
         category: 'sales',
     },
 

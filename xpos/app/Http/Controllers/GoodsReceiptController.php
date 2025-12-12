@@ -936,7 +936,7 @@ class GoodsReceiptController extends Controller
                     'amount' => $goodsReceipt->total_cost,
                     'description' => "Dərhal ödəniş - Mal qəbulu: {$goodsReceipt->receipt_number}",
                     'expense_date' => now()->format('Y-m-d'),
-                    'payment_method' => 'nağd', // Default to cash for instant payment
+                    'payment_method' => 'cash', // Default to cash for instant payment
                     'user_id' => Auth::id(),
                     'supplier_id' => $goodsReceipt->supplier_id,
                     'goods_receipt_id' => $goodsReceipt->id,
@@ -950,7 +950,7 @@ class GoodsReceiptController extends Controller
                     'amount' => $goodsReceipt->total_cost,
                     'description' => "Dərhal ödəniş - Mal qəbulu: {$goodsReceipt->receipt_number}",
                     'payment_date' => now()->format('Y-m-d'),
-                    'payment_method' => 'nağd',
+                    'payment_method' => 'cash',
                     'invoice_number' => $goodsReceipt->receipt_number,
                     'user_id' => Auth::id(),
                     'notes' => "Avtomatik yaradıldı - Xerc: {$expense->reference_number}",

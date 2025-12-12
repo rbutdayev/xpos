@@ -996,6 +996,10 @@ export type PageProps<
     servicesEnabled?: boolean;
     rentEnabled?: boolean;
     discountsEnabled?: boolean;
+    woltEnabled?: boolean;
+    yangoEnabled?: boolean;
+    boltEnabled?: boolean;
+    smsConfigured?: boolean;
     locale?: string;
     translations?: {
         payment_methods?: Record<string, string>;

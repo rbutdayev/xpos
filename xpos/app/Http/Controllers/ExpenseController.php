@@ -35,7 +35,7 @@ class ExpenseController extends Controller
             'search' => 'nullable|string|max:255',
             'category_id' => 'nullable|integer|exists:expense_categories,category_id',
             'branch_id' => 'nullable|integer|exists:branches,id',
-            'payment_method' => 'nullable|string|in:nağd,kart,köçürmə',
+            'payment_method' => 'nullable|string|in:cash,card,bank_transfer',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
@@ -232,7 +232,7 @@ class ExpenseController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
             'expense_date' => 'required|date',
-            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'payment_method' => 'required|in:cash,card,bank_transfer',
             'notes' => 'nullable|string|max:1000',
             'receipt_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'supplier_id' => 'nullable|exists:suppliers,id',
@@ -338,7 +338,7 @@ class ExpenseController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
             'expense_date' => 'required|date',
-            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'payment_method' => 'required|in:cash,card,bank_transfer',
             'notes' => 'nullable|string|max:1000',
             'receipt_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
@@ -513,7 +513,7 @@ class ExpenseController extends Controller
             'payment_amount' => 'required|numeric|min:0.01',
             'category_id' => 'required|exists:expense_categories,category_id',
             'branch_id' => 'required|exists:branches,id',
-            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'payment_method' => 'required|in:cash,card,bank_transfer',
             'notes' => 'nullable|string|max:1000',
         ]);
 

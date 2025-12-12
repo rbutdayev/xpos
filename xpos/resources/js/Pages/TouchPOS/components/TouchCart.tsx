@@ -134,17 +134,36 @@ export default function TouchCart({
                 </div>
               )}
 
-              {/* Price Edit */}
-              <div className="mt-3">
-                <label className="block text-xs text-gray-600 mb-1">Vahid qiyməti:</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={item.unit_price}
-                  onChange={(e) => updateCartItem(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
-                  className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  min="0"
-                />
+              {/* Price and Discount Edit */}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Vahid qiyməti:</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={item.unit_price}
+                    onChange={(e) => updateCartItem(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
+                    className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Endirim:</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={item.discount_amount || ''}
+                    onChange={(e) => updateCartItem(item.id, 'discount_amount', parseFloat(e.target.value) || 0)}
+                    onBlur={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      const roundedValue = Math.round(value * 100) / 100;
+                      updateCartItem(item.id, 'discount_amount', roundedValue);
+                    }}
+                    className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    min="0"
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
 
               {/* Notes */}
