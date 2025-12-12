@@ -62,5 +62,15 @@
     "total": "Total",
     "status": "Status",
     "actions": "Actions"
+  },
+
+  "source": {
+    "label": "Source",
+    "all": "All",
+    "shop": "Your Shop",
+    "wolt": "Wolt",
+    "yango": "Yango",
+    "bolt": "Bolt Food",
+    "platformOrderId": "Platform Order ID"
   }
 }

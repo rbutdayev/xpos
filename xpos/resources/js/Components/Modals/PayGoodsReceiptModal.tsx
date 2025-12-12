@@ -38,7 +38,7 @@ export default function PayGoodsReceiptModal({
         payment_amount: remainingAmount,
         category_id: '',
         branch_id: defaultBranchId,
-        payment_method: 'nağd',
+        payment_method: 'cash',
         notes: ''
     });
 
@@ -50,7 +50,7 @@ export default function PayGoodsReceiptModal({
                 payment_amount: remainingAmount,
                 category_id: '',
                 branch_id: branches.length > 0 ? String(branches[0].id) : '',
-                payment_method: 'nağd',
+                payment_method: 'cash',
                 notes: ''
             });
             setErrors({});

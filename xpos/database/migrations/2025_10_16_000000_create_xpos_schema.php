@@ -141,7 +141,7 @@ return new class extends Migration
             $table->enum('role', [
                 'account_owner', 'admin', 'branch_manager', 'warehouse_manager',
                 'sales_staff', 'cashier', 'accountant', 'tailor', 'support_user', 'super_admin'
-            ])->default('sales_staff');
+            ])->nullable();
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->string('phone')->nullable();
             $table->string('position')->nullable();

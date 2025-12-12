@@ -30,6 +30,22 @@ class Account extends Model
         'notification_settings',
         'auto_print_receipt',
         'fiscal_printer_enabled',
+        // Delivery platform integrations
+        'wolt_enabled',
+        'wolt_api_key',
+        'wolt_restaurant_id',
+        'wolt_warehouse_id',
+        'wolt_branch_id',
+        'yango_enabled',
+        'yango_api_key',
+        'yango_restaurant_id',
+        'yango_warehouse_id',
+        'yango_branch_id',
+        'bolt_enabled',
+        'bolt_api_key',
+        'bolt_restaurant_id',
+        'bolt_warehouse_id',
+        'bolt_branch_id',
     ];
 
     /**
@@ -68,6 +84,13 @@ class Account extends Model
         'rent_module_enabled' => 'boolean',
         'discounts_module_enabled' => 'boolean',
         'gift_cards_module_enabled' => 'boolean',
+        // Delivery platform integrations
+        'wolt_enabled' => 'boolean',
+        'wolt_api_key' => 'encrypted',
+        'yango_enabled' => 'boolean',
+        'yango_api_key' => 'encrypted',
+        'bolt_enabled' => 'boolean',
+        'bolt_api_key' => 'encrypted',
     ];
 
     public function users(): HasMany
@@ -108,6 +131,37 @@ class Account extends Model
     public function shopWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Warehouse::class, 'shop_warehouse_id');
+    }
+
+    // Delivery platform warehouse and branch relationships
+    public function woltWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'wolt_warehouse_id');
+    }
+
+    public function woltBranch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'wolt_branch_id');
+    }
+
+    public function yangoWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'yango_warehouse_id');
+    }
+
+    public function yangoBranch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'yango_branch_id');
+    }
+
+    public function boltWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'bolt_warehouse_id');
+    }
+
+    public function boltBranch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'bolt_branch_id');
     }
 
     public function products(): HasMany
@@ -209,6 +263,27 @@ class Account extends Model
     public function isGiftCardsModuleEnabled(): bool
     {
         return $this->gift_cards_module_enabled ?? false;
+    }
+
+    // Delivery platform helper methods
+    public function isWoltEnabled(): bool
+    {
+        return $this->wolt_enabled ?? false;
+    }
+
+    public function isYangoEnabled(): bool
+    {
+        return $this->yango_enabled ?? false;
+    }
+
+    public function isBoltEnabled(): bool
+    {
+        return $this->bolt_enabled ?? false;
+    }
+
+    public function hasAnyPlatformEnabled(): bool
+    {
+        return $this->isWoltEnabled() || $this->isYangoEnabled() || $this->isBoltEnabled();
     }
 
     public function hasSmsConfigured(): bool

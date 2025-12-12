@@ -24,7 +24,7 @@ class SupplierPaymentController extends Controller
         $validated = $request->validate([
             'search' => 'nullable|string|max:255',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
-            'payment_method' => 'nullable|string|in:nağd,kart,köçürmə',
+            'payment_method' => 'nullable|string|in:cash,card,bank_transfer',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
@@ -126,7 +126,7 @@ class SupplierPaymentController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
             'payment_date' => 'required|date',
-            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'payment_method' => 'required|in:cash,card,bank_transfer',
             'invoice_number' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000',
             'goods_receipt_id' => 'nullable|exists:goods_receipts,id',
@@ -290,7 +290,7 @@ class SupplierPaymentController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:500',
             'payment_date' => 'required|date',
-            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'payment_method' => 'required|in:cash,card,bank_transfer',
             'invoice_number' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000',
         ]);

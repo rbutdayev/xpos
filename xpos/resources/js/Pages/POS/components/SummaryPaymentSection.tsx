@@ -278,9 +278,9 @@ function SummaryPaymentSection({
                 <div className="mt-2 grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'nağd' }))}
+                    onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'cash' }))}
                     className={`flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
-                      formData.payment_method === 'nağd'
+                      formData.payment_method === 'cash'
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                         : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                     }`}
@@ -289,13 +289,13 @@ function SummaryPaymentSection({
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span className="font-medium">{translatePaymentMethod('nağd')}</span>
+                    <span className="font-medium">{translatePaymentMethod('cash')}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'kart' }))}
+                    onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'card' }))}
                     className={`flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
-                      formData.payment_method === 'kart'
+                      formData.payment_method === 'card'
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                         : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                     }`}
@@ -304,15 +304,15 @@ function SummaryPaymentSection({
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
-                    <span className="font-medium">{translatePaymentMethod('kart')}</span>
+                    <span className="font-medium">{translatePaymentMethod('card')}</span>
                   </button>
                   {/* Bank Kredit - Only show if fiscal config has credit contract number */}
                   {fiscalConfig?.credit_contract_number && (
                     <button
                       type="button"
-                      onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'bank_kredit' }))}
+                      onClick={() => setFormData((prev: any) => ({ ...prev, payment_method: 'bank_credit' }))}
                       className={`flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
-                        formData.payment_method === 'bank_kredit'
+                        formData.payment_method === 'bank_credit'
                           ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}

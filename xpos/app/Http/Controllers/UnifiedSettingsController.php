@@ -299,7 +299,7 @@ class UnifiedSettingsController extends Controller
         }
 
         $request->validate([
-            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards',
+            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards,wolt,yango,bolt',
         ]);
 
         $account = $request->user()->account;
@@ -313,6 +313,9 @@ class UnifiedSettingsController extends Controller
             'shop' => 'shop_enabled',
             'discounts' => 'discounts_module_enabled',
             'gift_cards' => 'gift_cards_module_enabled',
+            'wolt' => 'wolt_enabled',
+            'yango' => 'yango_enabled',
+            'bolt' => 'bolt_enabled',
         ];
 
         // Define module dependencies
@@ -323,6 +326,9 @@ class UnifiedSettingsController extends Controller
             'shop' => ['sms'], // Shop requires SMS to be configured
             'discounts' => [],
             'gift_cards' => [],
+            'wolt' => [], // Delivery platforms don't require SMS
+            'yango' => [],
+            'bolt' => [],
         ];
 
         $fieldName = $moduleFields[$module];
@@ -352,9 +358,12 @@ class UnifiedSettingsController extends Controller
             'shop' => 'Online Mağaza',
             'discounts' => 'Endirimlər',
             'gift_cards' => 'Hədiyyə Kartları',
+            'wolt' => 'Wolt',
+            'yango' => 'Yango',
+            'bolt' => 'Bolt Food',
         ];
 
-        $moduleName = $moduleNames[$module];
+        $moduleName = $moduleNames[$module] ?? $module;
 
         return redirect()->back()->with('success',
             $account->$fieldName

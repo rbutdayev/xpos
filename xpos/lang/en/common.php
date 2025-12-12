@@ -42,4 +42,6 @@ return [
     'disabled' => 'Disabled',
     'required' => 'Required',
     'optional' => 'Optional',
+    'unknown' => 'Unknown',
+    'online_shop' => 'Online Shop',
 ];

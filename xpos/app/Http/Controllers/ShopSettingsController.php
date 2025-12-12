@@ -51,10 +51,18 @@ class ShopSettingsController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        // Get platform statuses
+        $platformStatuses = [
+            'wolt_enabled' => $account->wolt_enabled ?? false,
+            'yango_enabled' => $account->yango_enabled ?? false,
+            'bolt_enabled' => $account->bolt_enabled ?? false,
+        ];
+
         return Inertia::render('Shop/Settings', [
             'shop_settings' => $shopSettings,
             'warehouses' => $warehouses,
             'sms_configured' => $smsConfigured,
+            'platform_statuses' => $platformStatuses,
         ]);
     }
 
@@ -92,9 +100,20 @@ class ShopSettingsController extends Controller
         ]);
 
         $account = $request->user()->account;
+        $accountId = $request->user()->account_id;
 
-        // If enabling shop, require both slug and warehouse
+        // If enabling shop, require SMS configuration first
         if ($request->shop_enabled) {
+            $smsConfigured = SmsCredential::where('account_id', $accountId)
+                ->where('is_active', true)
+                ->exists();
+
+            if (!$smsConfigured) {
+                return back()->withErrors([
+                    'shop_enabled' => __('errors.shop_requires_sms')
+                ]);
+            }
+
             if (!$account->shop_slug && !$request->shop_slug) {
                 return back()->withErrors([
                     'shop_slug' => 'Mağaza URL tələb olunur'

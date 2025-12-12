@@ -226,6 +226,12 @@ export default function Show({ auth, sale }: SalesShowProps) {
 
                     {/* Sale Header */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <div className="flex justify-between items-start mb-6">
+                            <h2 className="text-xl font-semibold text-gray-900">{t('show.saleInfo')}</h2>
+                            <PrimaryButton onClick={() => setShowPrintModal(true)}>
+                                {t('actions.printReceipt')}
+                            </PrimaryButton>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div>
                                 <h3 className="text-sm font-medium text-gray-500">{t('fields.saleNumber')}</h3>

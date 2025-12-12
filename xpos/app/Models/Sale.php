@@ -41,6 +41,12 @@ class Sale extends Model
         'customer_name',
         'customer_phone',
         'delivery_notes',
+        // Delivery platform fields
+        'source',
+        'platform_order_id',
+        'platform_order_data',
+        'delivery_fee',
+        'platform_commission',
     ];
 
     protected function casts(): array
@@ -57,6 +63,10 @@ class Sale extends Model
             'sale_date' => 'datetime',
             'credit_due_date' => 'date',
             'is_online_order' => 'boolean',
+            // Delivery platform casts
+            'platform_order_data' => 'array',
+            'delivery_fee' => 'decimal:2',
+            'platform_commission' => 'decimal:2',
         ];
     }
 
@@ -136,6 +146,55 @@ class Sale extends Model
     }
 
     /**
+     * Scope: Filter by source
+     */
+    public function scopeBySource(Builder $query, string $source): Builder
+    {
+        return $query->where('source', $source);
+    }
+
+    /**
+     * Scope: Filter Wolt orders
+     */
+    public function scopeWoltOrders(Builder $query): Builder
+    {
+        return $query->where('source', 'wolt');
+    }
+
+    /**
+     * Scope: Filter Yango orders
+     */
+    public function scopeYangoOrders(Builder $query): Builder
+    {
+        return $query->where('source', 'yango');
+    }
+
+    /**
+     * Scope: Filter Bolt orders
+     */
+    public function scopeBoltOrders(Builder $query): Builder
+    {
+        return $query->where('source', 'bolt');
+    }
+
+    /**
+     * Scope: Filter shop (e-commerce) orders
+     */
+    public function scopeShopOrders(Builder $query): Builder
+    {
+        return $query->where('source', 'shop');
+    }
+
+    /**
+     * Scope: Filter all platform orders (wolt, yango, bolt)
+     * Excludes shop orders
+     */
+    public function scopePlatformOrders(Builder $query): Builder
+    {
+        return $query->whereIn('source', ['wolt', 'yango', 'bolt']);
+    }
+
+    /**
      * Scope to only include sales that should be counted in reports/lists
      * - All regular POS sales (regardless of status)
      * - Only COMPLETED online orders
@@ -174,6 +233,42 @@ class Sale extends Model
     public function isOnlineOrder(): bool
     {
         return $this->is_online_order;
+    }
+
+    /**
+     * Check if this is a platform order (from delivery platforms)
+     */
+    public function isPlatformOrder(): bool
+    {
+        return in_array($this->source, ['wolt', 'yango', 'bolt']);
+    }
+
+    /**
+     * Get badge color for the order source (for UI display)
+     */
+    public function getSourceBadgeColor(): string
+    {
+        return match($this->source) {
+            'shop' => 'green',
+            'wolt' => 'purple',
+            'yango' => 'yellow',
+            'bolt' => 'emerald',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * Get translated label for the order source
+     */
+    public function getSourceLabel(): string
+    {
+        return match($this->source) {
+            'shop' => __('common.online_shop'),
+            'wolt' => 'Wolt',
+            'yango' => 'Yango',
+            'bolt' => 'Bolt Food',
+            default => __('common.unknown'),
+        };
     }
 
     public function getTotalPaidAttribute(): float

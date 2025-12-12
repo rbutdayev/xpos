@@ -38,3 +38,15 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/company/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'show'])->name('company.currency.show');
     Route::put('/company/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'update'])->name('company.currency.update');
 });
+
+// Delivery Platform Webhooks (no middleware - public endpoints with platform-specific authentication)
+Route::prefix('webhooks')->name('webhooks.')->group(function () {
+    // Wolt webhooks
+    Route::post('/wolt/orders', [\App\Http\Controllers\Api\WoltWebhookController::class, 'handleOrder'])->name('wolt.orders');
+
+    // Yango webhooks
+    Route::post('/yango/orders', [\App\Http\Controllers\Api\YangoWebhookController::class, 'handleOrder'])->name('yango.orders');
+
+    // Bolt Food webhooks
+    Route::post('/bolt/orders', [\App\Http\Controllers\Api\BoltWebhookController::class, 'handleOrder'])->name('bolt.orders');
+});

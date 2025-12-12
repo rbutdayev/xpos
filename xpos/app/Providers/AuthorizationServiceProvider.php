@@ -71,6 +71,13 @@ class AuthorizationServiceProvider extends ServiceProvider
             ]);
         });
 
+        // Online Orders Management
+        Gate::define('manage-online-orders', function (User $user) {
+            return $user->isActive() && in_array($user->role, [
+                'account_owner', 'admin', 'sales_staff', 'branch_manager', 'accountant'
+            ]);
+        });
+
         // Financial Reports
         Gate::define('view-financial-reports', function (User $user) {
             return $user->isActive() && in_array($user->role, [

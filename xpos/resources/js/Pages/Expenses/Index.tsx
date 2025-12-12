@@ -208,14 +208,14 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                 // For paid expenses (regular or paid supplier credits), show payment method
                 return (
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        expense.payment_method === 'nağd'
+                        expense.payment_method === 'cash'
                             ? 'bg-green-100 text-green-800'
-                            : expense.payment_method === 'kart'
+                            : expense.payment_method === 'card'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-purple-100 text-purple-800'
                     }`}>
-                        {expense.payment_method === 'nağd' ? t('paymentMethods.cash') :
-                         expense.payment_method === 'kart' ? t('paymentMethods.card') : t('paymentMethods.transfer')}
+                        {expense.payment_method === 'cash' ? t('paymentMethods.cash') :
+                         expense.payment_method === 'card' ? t('paymentMethods.card') : t('paymentMethods.transfer')}
                     </span>
                 );
             },

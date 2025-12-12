@@ -168,7 +168,7 @@ class POSController extends Controller
             'discount_amount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'payment_status' => 'required|in:paid,credit,partial',
-            'payment_method' => 'nullable|in:nağd,kart,köçürmə,bank_kredit',
+            'payment_method' => 'nullable|in:cash,card,bank_transfer,bank_credit',
             'paid_amount' => 'nullable|numeric|min:0',
             'credit_amount' => 'nullable|numeric|min:0',
             'credit_due_date' => 'nullable|date|after:today',
@@ -323,8 +323,8 @@ class POSController extends Controller
 
                                         // Prepare payment data from the sale
                                         $paymentData = [
-                                            'cash_amount' => $validated['payment_method'] === 'nağd' ? $giftCard->denomination : 0,
-                                            'card_amount' => ($validated['payment_method'] === 'kart' || $validated['payment_method'] === 'köçürmə') ? $giftCard->denomination : 0,
+                                            'cash_amount' => $validated['payment_method'] === 'cash' ? $giftCard->denomination : 0,
+                                            'card_amount' => ($validated['payment_method'] === 'card' || $validated['payment_method'] === 'bank_transfer') ? $giftCard->denomination : 0,
                                             'client_name' => $validated['customer_id'] ? Customer::find($validated['customer_id'])?->name : null,
                                         ];
 
@@ -498,7 +498,7 @@ class POSController extends Controller
                 }
 
                 // Create payment records for remaining amount (after gift card deduction)
-                $paymentMethod = $validated['payment_method'] ?? 'nağd';
+                $paymentMethod = $validated['payment_method'] ?? 'cash';
                 $remainingAmount = $total - $giftCardAmount; // Amount left to pay after gift card
 
                 if ($validated['payment_status'] === 'paid' && $remainingAmount > 0) {
@@ -1085,7 +1085,7 @@ class POSController extends Controller
         $validated = $request->validate([
             'card_number' => 'required|string',
             'customer_id' => 'nullable|exists:customers,id',
-            'payment_method' => 'required|in:nağd,kart,köçürmə',
+            'payment_method' => 'required|in:cash,card,bank_transfer',
             'employee_id' => 'nullable|exists:users,id',
             'branch_id' => 'nullable|exists:branches,id',
             'gift_card_expiry_months' => 'nullable|integer|min:1|max:60',
@@ -1176,8 +1176,8 @@ class POSController extends Controller
                     $fiscalService = app(FiscalPrinterService::class);
 
                     $paymentData = [
-                        'cash_amount' => $validated['payment_method'] === 'nağd' ? $card->denomination : 0,
-                        'card_amount' => ($validated['payment_method'] === 'kart' || $validated['payment_method'] === 'köçürmə') ? $card->denomination : 0,
+                        'cash_amount' => $validated['payment_method'] === 'cash' ? $card->denomination : 0,
+                        'card_amount' => ($validated['payment_method'] === 'card' || $validated['payment_method'] === 'bank_transfer') ? $card->denomination : 0,
                         'client_name' => $validated['customer_id'] ? Customer::find($validated['customer_id'])?->name : null,
                     ];
 

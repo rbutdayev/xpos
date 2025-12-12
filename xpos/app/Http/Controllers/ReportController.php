@@ -1146,7 +1146,7 @@ class ReportController extends Controller
         // Get cash expenses for the period
         $cashExpenses = Expense::where('account_id', $account->id)
             ->whereBetween('expense_date', [$dateFrom, $dateTo])
-            ->where('payment_method', 'nağd')
+            ->where('payment_method', 'cash')
             ->get();
 
         // Calculate totals

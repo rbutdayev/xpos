@@ -21,6 +21,10 @@ interface ModuleFlags {
     servicesEnabled?: boolean;
     rentEnabled?: boolean;
     discountsEnabled?: boolean;
+    smsConfigured?: boolean;
+    woltEnabled?: boolean;
+    yangoEnabled?: boolean;
+    boltEnabled?: boolean;
 }
 
 /**
@@ -54,6 +58,11 @@ interface UseModuleAccessReturn {
     getAllModules: () => Record<string, ModuleConfig>;
 
     /**
+     * Check if any online ordering is enabled (shop OR delivery platforms)
+     */
+    hasAnyOnlineOrdering: () => boolean;
+
+    /**
      * Module flags from backend
      */
     flags: ModuleFlags;
@@ -73,6 +82,10 @@ export function useModuleAccess(): UseModuleAccessReturn {
         servicesEnabled: page.props.servicesEnabled as boolean | undefined,
         rentEnabled: page.props.rentEnabled as boolean | undefined,
         discountsEnabled: page.props.discountsEnabled as boolean | undefined,
+        smsConfigured: page.props.smsConfigured as boolean | undefined,
+        woltEnabled: page.props.woltEnabled as boolean | undefined,
+        yangoEnabled: page.props.yangoEnabled as boolean | undefined,
+        boltEnabled: page.props.boltEnabled as boolean | undefined,
     };
 
     /**
@@ -82,6 +95,16 @@ export function useModuleAccess(): UseModuleAccessReturn {
         const module = getModule(moduleId);
         if (!module) {
             console.warn(`Module "${moduleId}" not found in registry`);
+            return false;
+        }
+
+        // Special case for SMS module - check if SMS credentials exist
+        if (moduleId === 'sms') {
+            return flags.smsConfigured === true;
+        }
+
+        // Modules without flagKey cannot be checked
+        if (!module.flagKey) {
             return false;
         }
 
@@ -154,12 +177,30 @@ export function useModuleAccess(): UseModuleAccessReturn {
         return MODULES;
     };
 
+    /**
+     * Check if any online ordering is enabled (shop OR delivery platforms)
+     * This is used for showing the "Online Orders" menu in the sidebar
+     */
+    const hasAnyOnlineOrdering = (): boolean => {
+        // Check if e-commerce shop is enabled with SMS
+        const shopAccessible = canAccessModule('shop');
+
+        // Check if any delivery platform is enabled
+        const anyPlatformEnabled = !!(flags.woltEnabled || flags.yangoEnabled || flags.boltEnabled);
+
+        // User must have proper role to see online orders
+        const hasProperRole = ['admin', 'account_owner', 'sales_staff', 'branch_manager', 'accountant'].includes(user.role);
+
+        return (shopAccessible || anyPlatformEnabled) && hasProperRole;
+    };
+
     return {
         isModuleEnabled,
         canAccessModule,
         getEnabledModules,
         getModulesByCategory,
         getAllModules,
+        hasAnyOnlineOrdering,
         flags,
     };
 }

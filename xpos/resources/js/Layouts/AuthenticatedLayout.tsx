@@ -70,7 +70,7 @@ export default function Authenticated({
     const selectedWarehouse = usePage().props.selectedWarehouse as number | null;
 
     // Use centralized module access hook
-    const { canAccessModule } = useModuleAccess();
+    const { canAccessModule, hasAnyOnlineOrdering } = useModuleAccess();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         // Load sidebar state from localStorage, default to false (expanded)
@@ -136,6 +136,11 @@ export default function Authenticated({
             currentRoute?.includes('rental-inventory') ||
             currentRoute?.includes('rental-categories'))) {
             openMenus.push(t('navigation.rental_management'));
+        }
+
+        if (hasAnyOnlineOrdering() && (currentRoute?.includes('online-orders') ||
+            currentRoute?.includes('shop-settings'))) {
+            openMenus.push(t('navigation.online_shop'));
         }
 
         if (currentRoute?.includes('expenses') ||
@@ -318,6 +323,24 @@ export default function Authenticated({
                             current: route().current('rental-categories.*')
                         }
                     ]
+                }] : []),
+                ...(hasAnyOnlineOrdering() ? [{
+                    name: t('navigation.online_shop'),
+                    icon: ShoppingBagIcon,
+                    children: [
+                        {
+                            name: t('navigation.online_orders_list'),
+                            href: '/online-orders',
+                            icon: ShoppingBagIcon,
+                            current: route().current('online-orders.*')
+                        },
+                        {
+                            name: t('navigation.shop_settings'),
+                            href: '/shop-settings',
+                            icon: Cog6ToothIcon,
+                            current: route().current('shop-settings.index')
+                        }
+                    ]
                 }] : [])
             ];
         }
@@ -349,6 +372,18 @@ export default function Authenticated({
                         }
                     ]
                 },
+                ...(hasAnyOnlineOrdering() ? [{
+                    name: t('navigation.online_shop'),
+                    icon: ShoppingBagIcon,
+                    children: [
+                        {
+                            name: t('navigation.online_orders_list'),
+                            href: '/online-orders',
+                            icon: ShoppingBagIcon,
+                            current: route().current('online-orders.*')
+                        }
+                    ]
+                }] : []),
                 {
                     name: t('navigation.finance_and_reports'),
                     icon: CurrencyDollarIcon,
@@ -514,6 +549,18 @@ export default function Authenticated({
         if (user.role === 'branch_manager') {
             return [
                 ...baseNavigation,
+                ...(hasAnyOnlineOrdering() ? [{
+                    name: t('navigation.online_shop'),
+                    icon: ShoppingBagIcon,
+                    children: [
+                        {
+                            name: t('navigation.online_orders_list'),
+                            href: '/online-orders',
+                            icon: ShoppingBagIcon,
+                            current: route().current('online-orders.*')
+                        }
+                    ]
+                }] : []),
                 {
                     name: t('navigation.finance_and_reports'),
                     icon: CurrencyDollarIcon,
@@ -691,6 +738,24 @@ export default function Authenticated({
                     href: '/rental-categories',
                     icon: TagIcon,
                     current: route().current('rental-categories.*')
+                }
+            ]
+        }] : []),
+        ...(hasAnyOnlineOrdering() ? [{
+            name: t('navigation.online_shop'),
+            icon: ShoppingBagIcon,
+            children: [
+                {
+                    name: t('navigation.online_orders_list'),
+                    href: '/online-orders',
+                    icon: ShoppingBagIcon,
+                    current: route().current('online-orders.*')
+                },
+                {
+                    name: t('navigation.shop_settings'),
+                    href: '/shop-settings',
+                    icon: Cog6ToothIcon,
+                    current: route().current('shop-settings.index')
                 }
             ]
         }] : []),

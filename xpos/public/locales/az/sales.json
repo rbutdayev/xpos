@@ -220,6 +220,8 @@
     "price": "Qiymət",
     "pricePlaceholder": "Qiymət",
     "baseQuantity": "Bazis",
+    "discount": "Endirim",
+    "notes": "Qeydlər",
     "notesPlaceholder": "Qeydlər (ixtiyari)"
   },
   "loyaltySection": {

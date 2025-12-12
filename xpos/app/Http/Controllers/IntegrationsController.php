@@ -61,10 +61,15 @@ class IntegrationsController extends Controller
         // Check Gift Cards module
         $giftCardsModuleEnabled = $account->gift_cards_module_enabled ?? false;
 
+        // Check Delivery Platforms
+        $woltEnabled = $account->wolt_enabled ?? false;
+        $yangoEnabled = $account->yango_enabled ?? false;
+        $boltEnabled = $account->bolt_enabled ?? false;
+
         // Check module dependencies
         $moduleDependencies = [
             'shop' => ['sms'],
-            // Add more dependencies as needed
+            // Delivery platforms don't have dependencies
         ];
 
         $dependencyStatus = [];
@@ -85,6 +90,9 @@ class IntegrationsController extends Controller
             'rentModuleEnabled' => $rentModuleEnabled,
             'discountsModuleEnabled' => $discountsModuleEnabled,
             'giftCardsModuleEnabled' => $giftCardsModuleEnabled,
+            'woltEnabled' => $woltEnabled,
+            'yangoEnabled' => $yangoEnabled,
+            'boltEnabled' => $boltEnabled,
             'dependencyStatus' => $dependencyStatus,
         ]);
     }

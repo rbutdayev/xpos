@@ -220,6 +220,8 @@
     "price": "Price",
     "pricePlaceholder": "Price",
     "baseQuantity": "Base",
+    "discount": "Discount",
+    "notes": "Notes",
     "notesPlaceholder": "Notes (optional)"
   },
   "loyaltySection": {

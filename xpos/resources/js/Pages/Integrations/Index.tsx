@@ -12,6 +12,7 @@ import {
     ShoppingBagIcon,
     WrenchScrewdriverIcon,
     ClockIcon,
+    TruckIcon,
 } from '@heroicons/react/24/outline';
 
 interface Integration {
@@ -19,7 +20,7 @@ interface Integration {
     name: string;
     description: string;
     icon: React.ComponentType<{ className?: string }>;
-    category: 'communication' | 'fiscal' | 'loyalty' | 'payment' | 'business' | 'other';
+    category: 'communication' | 'fiscal' | 'loyalty' | 'payment' | 'business' | 'delivery' | 'other';
     status: 'active' | 'inactive' | 'not_configured';
     route: string;
     color: string;
@@ -46,6 +47,9 @@ interface IntegrationsProps extends PageProps {
     rentModuleEnabled: boolean;
     discountsModuleEnabled: boolean;
     giftCardsModuleEnabled: boolean;
+    woltEnabled?: boolean;
+    yangoEnabled?: boolean;
+    boltEnabled?: boolean;
     dependencyStatus: Record<string, DependencyStatus>;
 }
 
@@ -63,6 +67,9 @@ export default function Index({
     rentModuleEnabled,
     discountsModuleEnabled,
     giftCardsModuleEnabled,
+    woltEnabled = false,
+    yangoEnabled = false,
+    boltEnabled = false,
     dependencyStatus = {}
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
@@ -100,6 +107,57 @@ export default function Index({
                 'Online sifarişlər',
                 'Ödəniş inteqrasiyası'
             ]
+        },
+        {
+            id: 'wolt',
+            name: 'Wolt Food Delivery',
+            description: 'Wolt platformasından sifarişləri avtomatik qəbul edin',
+            icon: TruckIcon,
+            category: 'delivery',
+            status: woltEnabled ? 'active' : 'inactive',
+            route: '/integrations/wolt',
+            color: 'violet',
+            features: [
+                'Avtomatik sifariş qəbulu',
+                'Status sinxronizasiyası',
+                'Anbar seçimi',
+                'Filial təyini'
+            ],
+            isSimpleToggle: true
+        },
+        {
+            id: 'yango',
+            name: 'Yango Food Delivery',
+            description: 'Yango platformasından sifarişləri avtomatik qəbul edin',
+            icon: TruckIcon,
+            category: 'delivery',
+            status: yangoEnabled ? 'active' : 'inactive',
+            route: '/integrations/yango',
+            color: 'yellow',
+            features: [
+                'Avtomatik sifariş qəbulu',
+                'Status sinxronizasiyası',
+                'Anbar seçimi',
+                'Filial təyini'
+            ],
+            isSimpleToggle: true
+        },
+        {
+            id: 'bolt',
+            name: 'Bolt Food Delivery',
+            description: 'Bolt Food platformasından sifarişləri avtomatik qəbul edin',
+            icon: TruckIcon,
+            category: 'delivery',
+            status: boltEnabled ? 'active' : 'inactive',
+            route: '/integrations/bolt',
+            color: 'green',
+            features: [
+                'Avtomatik sifariş qəbulu',
+                'Status sinxronizasiyası',
+                'Anbar seçimi',
+                'Filial təyini'
+            ],
+            isSimpleToggle: true
         },
         {
             id: 'sms',
@@ -239,6 +297,7 @@ export default function Index({
     const categories = [
         { id: 'all', name: 'Hamısı', count: integrations.length },
         { id: 'business', name: 'Biznes Modulları', count: integrations.filter(i => i.category === 'business').length },
+        { id: 'delivery', name: 'Çatdırılma Platformaları', count: integrations.filter(i => i.category === 'delivery').length },
         { id: 'communication', name: 'Əlaqə', count: integrations.filter(i => i.category === 'communication').length },
         { id: 'fiscal', name: 'Fiskal', count: integrations.filter(i => i.category === 'fiscal').length },
         { id: 'loyalty', name: 'Loyallıq', count: integrations.filter(i => i.category === 'loyalty').length },
@@ -280,10 +339,13 @@ export default function Index({
             blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', button: 'bg-blue-600' },
             sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', button: 'bg-sky-600' },
             emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', button: 'bg-emerald-600' },
+            green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-600', button: 'bg-green-600' },
             purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', button: 'bg-purple-600' },
+            violet: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-600', button: 'bg-violet-600' },
             indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600', button: 'bg-indigo-600' },
             teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', button: 'bg-teal-600' },
             amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', button: 'bg-amber-600' },
+            yellow: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-600', button: 'bg-yellow-600' },
             pink: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-600', button: 'bg-pink-600' },
         };
         return classes[color]?.[type] || classes.blue[type];
@@ -426,7 +488,7 @@ export default function Index({
 
                                         {/* Action Button */}
                                         <div className="mt-auto pt-4 sm:pt-6">
-                                            {['services', 'rent', 'discounts', 'gift_cards', 'shop'].includes(integration.id) ? (
+                                            {['services', 'rent', 'discounts', 'gift_cards', 'shop', 'wolt', 'yango', 'bolt'].includes(integration.id) ? (
                                                 // Toggle switch for business modules
                                                 <button
                                                     onClick={() => handleToggleModule(integration.id, integration.status === 'active')}
