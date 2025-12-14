@@ -17,12 +17,13 @@ interface Employee { employee_id: number; name: string; }
 
 interface Props {
     receipt: GoodsReceipt;
+    batchReceipts?: GoodsReceipt[];
     suppliers: Supplier[];
     warehouses: Warehouse[];
     employees: Employee[];
 }
 
-export default function Edit({ receipt, suppliers, warehouses, employees }: Props) {
+export default function Edit({ receipt, batchReceipts, suppliers, warehouses, employees }: Props) {
     const { t } = useTranslation(['inventory', 'common']);
 
     return (
@@ -36,7 +37,13 @@ export default function Edit({ receipt, suppliers, warehouses, employees }: Prop
                                 {t('goodsReceipts.editTitle')}
                             </h1>
                             <p className="text-sm text-gray-600 mt-1">
-                                {t('goodsReceipts.receiptNumber')}: {receipt.receipt_number}
+                                {receipt.status === 'draft' ? (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Qaralama
+                                    </span>
+                                ) : (
+                                    <>{t('goodsReceipts.receiptNumber')}: {receipt.receipt_number}</>
+                                )}
                             </p>
                         </div>
                         <div className="flex space-x-3">
@@ -60,6 +67,7 @@ export default function Edit({ receipt, suppliers, warehouses, employees }: Prop
                             warehouses={warehouses}
                             employees={employees}
                             receipt={receipt}
+                            batchReceipts={batchReceipts}
                             isEditing={true}
                         />
                     </div>

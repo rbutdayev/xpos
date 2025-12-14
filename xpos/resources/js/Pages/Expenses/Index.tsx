@@ -7,6 +7,7 @@ import ExpensesNavigation from '@/Components/ExpensesNavigation';
 import CreateExpenseModal from '@/Components/Modals/CreateExpenseModal';
 import PaySupplierCreditModal from '@/Components/Modals/PaySupplierCreditModal';
 import CreateSupplierPaymentModal from '@/Components/Modals/CreateSupplierPaymentModal';
+import PayGoodsReceiptModal from '@/Components/Modals/PayGoodsReceiptModal';
 import { GoodsReceipt } from '@/types';
 import {
     CurrencyDollarIcon,
@@ -30,8 +31,11 @@ interface Expense {
     reference_number: string;
     payment_method: string;
     status?: string;
-    type?: 'supplier_credit';
+    payment_status?: string;
+    type?: 'supplier_credit' | 'goods_receipt';
     supplier_credit_id?: number;
+    goods_receipt_id?: number;
+    goods_receipt_data?: GoodsReceipt;
     receipt_file_path: string | null;
     category: {
         category_id: number;
@@ -123,7 +127,9 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     const [showCreateExpenseModal, setShowCreateExpenseModal] = useState(false);
     const [showPaySupplierCreditModal, setShowPaySupplierCreditModal] = useState(false);
     const [showSupplierPaymentModal, setShowSupplierPaymentModal] = useState(false);
+    const [showPayGoodsReceiptModal, setShowPayGoodsReceiptModal] = useState(false);
     const [selectedSupplierCredit, setSelectedSupplierCredit] = useState<SupplierCredit | null>(null);
+    const [selectedGoodsReceipt, setSelectedGoodsReceipt] = useState<GoodsReceipt | null>(null);
 
     // Define columns for the table
     const columns: Column[] = [
@@ -313,7 +319,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             href: (expense: Expense) => `/expenses/${expense.expense_id}`,
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'primary',
-            condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide view for credits
+            condition: (expense: Expense) => expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' // Hide view for credits and goods receipts
         },
         {
             label: t('actions.pay'),
@@ -323,18 +329,25 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             condition: (expense: Expense) => expense.type === 'supplier_credit' && expense.status !== 'paid'
         },
         {
+            label: t('actions.pay'),
+            onClick: (expense: Expense) => handlePayGoodsReceipt(expense),
+            icon: <CurrencyDollarIcon className="w-4 h-4" />,
+            variant: 'primary',
+            condition: (expense: Expense) => expense.type === 'goods_receipt' && expense.payment_status !== 'paid'
+        },
+        {
             label: t('actions.edit', { ns: 'common' }),
             href: (expense: Expense) => `/expenses/${expense.expense_id}/edit`,
             icon: <PencilIcon className="w-4 h-4" />,
             variant: 'secondary',
-            condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide edit for credits
+            condition: (expense: Expense) => expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' // Hide edit for credits and goods receipts
         },
         {
             label: t('actions.delete', { ns: 'common' }),
             onClick: (expense: Expense) => handleDelete(expense),
             icon: <TrashIcon className="w-4 h-4" />,
             variant: 'danger',
-            condition: (expense: Expense) => expense.type !== 'supplier_credit' // Hide delete for credits
+            condition: (expense: Expense) => expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' // Hide delete for credits and goods receipts
         }
     ];
 
@@ -381,6 +394,13 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                 supplier: expense.supplier
             });
             setShowPaySupplierCreditModal(true);
+        }
+    };
+
+    const handlePayGoodsReceipt = (expense: Expense) => {
+        if (expense.goods_receipt_data) {
+            setSelectedGoodsReceipt(expense.goods_receipt_data);
+            setShowPayGoodsReceiptModal(true);
         }
     };
 
@@ -475,6 +495,17 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                 branches={branches}
                 categories={categories}
             />
+
+            {selectedGoodsReceipt && (
+                <PayGoodsReceiptModal
+                    show={showPayGoodsReceiptModal}
+                    onClose={() => setShowPayGoodsReceiptModal(false)}
+                    goodsReceipt={selectedGoodsReceipt}
+                    categories={categories}
+                    branches={branches}
+                    paymentMethods={paymentMethods}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

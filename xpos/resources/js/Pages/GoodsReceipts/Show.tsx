@@ -52,13 +52,15 @@ export default function Show({ receipt }: Props) {
                                 </div>
                             </div>
                             <div className="flex space-x-2">
-                                <button
-                                    onClick={() => window.print()}
-                                    className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                                <a
+                                    href={route('goods-receipts.print', receipt.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                                 >
                                     <PrinterIcon className="w-4 h-4 mr-2" />
                                     {t('goodsReceipts.printReceipt')}
-                                </button>
+                                </a>
                             </div>
                         </div>
 
@@ -79,6 +81,26 @@ export default function Show({ receipt }: Props) {
                                                 {receipt.receipt_number}
                                             </dd>
                                         </div>
+                                        {receipt.batch_id && (
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">
+                                                    Partiya ID
+                                                </dt>
+                                                <dd className="text-sm text-blue-600 font-mono">
+                                                    {receipt.batch_id}
+                                                </dd>
+                                            </div>
+                                        )}
+                                        {receipt.invoice_number && (
+                                            <div>
+                                                <dt className="text-sm font-medium text-gray-500">
+                                                    Faktura Nömrəsi
+                                                </dt>
+                                                <dd className="text-sm text-green-600 font-medium">
+                                                    📄 {receipt.invoice_number}
+                                                </dd>
+                                            </div>
+                                        )}
                                         <div>
                                             <dt className="text-sm font-medium text-gray-500">
                                                 {t('goodsReceipts.createdDate')}
@@ -228,12 +250,42 @@ export default function Show({ receipt }: Props) {
                                                 </dd>
                                             </div>
                                         )}
-                                        {receipt.total_cost && (
+                                        {receipt.additional_data?.subtotal_before_discount && (
                                             <div>
                                                 <dt className="text-sm font-medium text-yellow-700">
-                                                    {t('goodsReceipts.totalCost')}
+                                                    Ara Cəm
                                                 </dt>
-                                                <dd className="text-lg text-yellow-900 font-bold">
+                                                <dd className="text-sm text-yellow-900 font-medium">
+                                                    {formatCurrency(receipt.additional_data.subtotal_before_discount)}
+                                                </dd>
+                                            </div>
+                                        )}
+                                        {receipt.additional_data?.discount_percent > 0 && (
+                                            <>
+                                                <div>
+                                                    <dt className="text-sm font-medium text-yellow-700">
+                                                        Endirim
+                                                    </dt>
+                                                    <dd className="text-sm text-yellow-900">
+                                                        {receipt.additional_data?.discount_percent}%
+                                                    </dd>
+                                                </div>
+                                                <div>
+                                                    <dt className="text-sm font-medium text-yellow-700">
+                                                        Endirim Məbləği
+                                                    </dt>
+                                                    <dd className="text-sm text-red-600 font-medium">
+                                                        -{formatCurrency(receipt.additional_data?.discount_amount)}
+                                                    </dd>
+                                                </div>
+                                            </>
+                                        )}
+                                        {receipt.total_cost && (
+                                            <div className="pt-2 border-t border-yellow-200">
+                                                <dt className="text-sm font-medium text-yellow-700">
+                                                    Yekun Məbləğ {receipt.additional_data?.discount_percent > 0 && '(Endirimdən sonra)'}
+                                                </dt>
+                                                <dd className="text-xl text-yellow-900 font-bold">
                                                     {formatCurrency(receipt.total_cost)}
                                                 </dd>
                                             </div>

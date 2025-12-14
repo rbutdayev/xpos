@@ -73,6 +73,14 @@ class ProductVariant extends Model
     }
 
     /**
+     * Alias for stock() - for consistency with Product model
+     */
+    public function productStocks(): HasMany
+    {
+        return $this->stock();
+    }
+
+    /**
      * Get sale items for this variant
      */
     public function saleItems(): HasMany

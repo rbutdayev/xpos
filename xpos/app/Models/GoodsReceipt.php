@@ -22,6 +22,8 @@ class GoodsReceipt extends Model
         'supplier_id',
         'employee_id',
         'receipt_number',
+        'batch_id',          // Groups products received in one transaction
+        'invoice_number',    // Supplier's invoice number (optional)
         'quantity',
         'unit',
         'unit_cost',
@@ -33,6 +35,7 @@ class GoodsReceipt extends Model
         'payment_method',
         'due_date',
         'supplier_credit_id',
+        'status',            // Draft or completed status
     ];
 
     protected function casts(): array
@@ -102,6 +105,26 @@ class GoodsReceipt extends Model
         return $query->whereBetween('created_at', [$startDate, $endDate]);
     }
 
+    public function scopeByBatch(Builder $query, $batchId): Builder
+    {
+        return $query->where('batch_id', $batchId);
+    }
+
+    public function scopeByInvoice(Builder $query, $invoiceNumber): Builder
+    {
+        return $query->where('invoice_number', $invoiceNumber);
+    }
+
+    public function scopeDrafts(Builder $query): Builder
+    {
+        return $query->where('status', 'draft');
+    }
+
+    public function scopeCompleted(Builder $query): Builder
+    {
+        return $query->where('status', 'completed');
+    }
+
     public function generateReceiptNumber(): string
     {
         $prefix = 'MQ-' . date('Y') . '-';
@@ -120,6 +143,53 @@ class GoodsReceipt extends Model
         return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
+    public static function generateBatchId($accountId): string
+    {
+        $prefix = 'BATCH-' . date('Y') . '-';
+        $lastBatch = static::where('account_id', $accountId)
+            ->where('batch_id', 'like', "{$prefix}%")
+            ->orderByDesc('batch_id')
+            ->first();
+
+        if ($lastBatch) {
+            $lastNumber = (int) str_replace($prefix, '', $lastBatch->batch_id);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get all receipts in the same batch
+     */
+    public function batchReceipts()
+    {
+        if (!$this->batch_id) {
+            return collect([$this]);
+        }
+
+        return static::where('batch_id', $this->batch_id)
+            ->where('account_id', $this->account_id)
+            ->with(['product', 'variant'])
+            ->get();
+    }
+
+    /**
+     * Get batch total cost
+     */
+    public function getBatchTotalCost(): float
+    {
+        if (!$this->batch_id) {
+            return (float) $this->total_cost;
+        }
+
+        return (float) static::where('batch_id', $this->batch_id)
+            ->where('account_id', $this->account_id)
+            ->sum('total_cost');
+    }
+
     public function hasDocument(): bool
     {
         return !empty($this->document_path);
@@ -131,6 +201,22 @@ class GoodsReceipt extends Model
     public function isUnpaid(): bool
     {
         return $this->payment_status === 'unpaid';
+    }
+
+    /**
+     * Check if the goods receipt is a draft
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    /**
+     * Check if the goods receipt is completed
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed';
     }
 
     /**
@@ -199,20 +285,14 @@ class GoodsReceipt extends Model
         parent::boot();
 
         static::creating(function ($goodsReceipt) {
-            if (empty($goodsReceipt->receipt_number)) {
+            // Only generate receipt_number for completed receipts, not drafts
+            if (empty($goodsReceipt->receipt_number) && $goodsReceipt->status === 'completed') {
                 $goodsReceipt->receipt_number = $goodsReceipt->generateReceiptNumber();
             }
 
-            if ($goodsReceipt->unit_cost && $goodsReceipt->quantity) {
-                $goodsReceipt->total_cost = $goodsReceipt->unit_cost * $goodsReceipt->quantity;
-            }
+            // Don't auto-calculate total_cost here - it's set in the controller with discount applied
         });
 
-
-        static::updating(function ($goodsReceipt) {
-            if ($goodsReceipt->unit_cost && $goodsReceipt->quantity) {
-                $goodsReceipt->total_cost = $goodsReceipt->unit_cost * $goodsReceipt->quantity;
-            }
-        });
+        // Removed updating event - total_cost is now managed in controller with discount logic
     }
 }

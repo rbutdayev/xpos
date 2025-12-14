@@ -1132,6 +1132,32 @@ export default function Create({ customers, branches, templates, categories = []
                                                             setActiveItemIndex(index);
                                                             handleInventorySearchChange(e.target.value, index);
                                                         }}
+                                                        onPaste={(e) => {
+                                                            // When barcode is pasted, auto-select if single result
+                                                            const pastedText = e.clipboardData.getData('text');
+                                                            if (pastedText.trim() && formData.branch_id) {
+                                                                setActiveItemIndex(index);
+                                                                // Small delay to let the search results load
+                                                                setTimeout(() => {
+                                                                    if (inventorySearchResults.length === 1) {
+                                                                        handleInventorySelect(index, inventorySearchResults[0]);
+                                                                        setInventorySearchQuery('');
+                                                                        setInventorySearchResults([]);
+                                                                    }
+                                                                }, 500);
+                                                            }
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            // Auto-select on Enter if single result
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                if (inventorySearchResults.length === 1) {
+                                                                    handleInventorySelect(index, inventorySearchResults[0]);
+                                                                    setInventorySearchQuery('');
+                                                                    setInventorySearchResults([]);
+                                                                }
+                                                            }
+                                                        }}
                                                         onFocus={() => setActiveItemIndex(index)}
                                                         onBlur={() => {
                                                             // Delay to allow clicking on results

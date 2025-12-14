@@ -2230,9 +2230,21 @@ export const goodsReceiptsTableConfig = {
             key: 'receipt_number',
             label: 'Qəbul №',
             sortable: true,
-            width: '140px',
+            width: '160px',
             render: (r: GoodsReceipt) => (
-                <div className="text-sm font-medium text-gray-900 font-mono">{r.receipt_number}</div>
+                <div className="space-y-1">
+                    <div className="text-sm font-medium text-gray-900 font-mono">{r.receipt_number}</div>
+                    {r.batch_id && (
+                        <div className="text-xs text-blue-600 font-mono truncate" title={`Batch: ${r.batch_id}`}>
+                            {r.batch_id}
+                        </div>
+                    )}
+                    {r.invoice_number && (
+                        <div className="text-xs text-green-600 truncate" title={`Invoice: ${r.invoice_number}`}>
+                            📄 {r.invoice_number}
+                        </div>
+                    )}
+                </div>
             )
         },
         {
@@ -2288,26 +2300,20 @@ export const goodsReceiptsTableConfig = {
             )
         },
         {
-            key: 'unit_cost',
-            label: 'Vahid Qiyməti',
-            width: '130px',
-            align: 'right',
-            render: (r: GoodsReceipt) => (
-                <div className="text-sm text-gray-900">
-                    {r.unit_cost ? `${parseFloat(String(r.unit_cost)).toFixed(2)} AZN` : '-'}
-                </div>
-            )
-        },
-        {
             key: 'total_cost',
             label: 'Cəmi',
             width: '130px',
             align: 'right',
-            render: (r: GoodsReceipt) => (
-                <div className="text-sm font-semibold text-gray-900">
-                    {r.total_cost ? `${parseFloat(String(r.total_cost)).toFixed(2)} AZN` : '-'}
-                </div>
-            )
+            render: (r: GoodsReceipt) => {
+                // total_cost now stores the final amount (after discount if any)
+                const totalCost = r.total_cost ? parseFloat(String(r.total_cost)) : 0;
+
+                return (
+                    <div className="text-sm font-semibold text-gray-900">
+                        {totalCost ? `${totalCost.toFixed(2)} AZN` : '-'}
+                    </div>
+                );
+            }
         },
         {
             key: 'payment_status',
@@ -2331,28 +2337,6 @@ export const goodsReceiptsTableConfig = {
                 };
                 
                 return getPaymentStatusBadge(r.payment_status || 'unpaid');
-            }
-        },
-        {
-            key: 'payment_method',
-            label: 'Ödəmə Metodu',
-            width: '120px',
-            align: 'center',
-            render: (r: GoodsReceipt) => {
-                const getPaymentMethodText = (method: string) => {
-                    // For goods receipts: instant = Cash, credit = Credit
-                    if (method === 'instant') {
-                        return translatePaymentMethod('cash');
-                    }
-                    // Return 'Borc' for credit (TODO: add to translation system)
-                    return method === 'credit' ? (localStorage.getItem('i18nextLng') === 'en' ? 'Credit' : 'Borc') : method;
-                };
-
-                return (
-                    <div className="text-sm text-gray-900">
-                        {r.payment_method ? getPaymentMethodText(r.payment_method) : '-'}
-                    </div>
-                );
             }
         },
         {
@@ -2393,10 +2377,6 @@ export const goodsReceiptsTableConfig = {
         {
             ...commonActions.view(),
             href: (r: GoodsReceipt) => route('goods-receipts.show', r.id)
-        },
-        {
-            ...commonActions.edit(),
-            href: (r: GoodsReceipt) => route('goods-receipts.edit', r.id)
         },
         {
             label: 'Ödə',

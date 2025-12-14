@@ -115,8 +115,62 @@ class ExpenseController extends Controller
             ];
         });
 
-        // Merge expenses and supplier credits
-        $allExpenses = $expenses->concat($supplierCreditsAsExpenses)
+        // Get unpaid goods receipts to show in expenses list
+        $unpaidGoodsReceiptsQuery = GoodsReceipt::with(['supplier', 'product', 'supplierCredit'])
+            ->where('account_id', auth()->user()->account_id)
+            ->whereIn('payment_status', ['unpaid', 'partial']);
+
+        // Apply same filters to goods receipts
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $unpaidGoodsReceiptsQuery->where(function ($q) use ($searchTerm) {
+                $q->where('receipt_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('invoice_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('supplier', function ($subQ) use ($searchTerm) {
+                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
+                  })
+                  ->orWhereHas('product', function ($subQ) use ($searchTerm) {
+                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
+                  });
+            });
+        }
+
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $unpaidGoodsReceiptsQuery->whereBetween('created_at', [$request->date_from, $request->date_to]);
+        }
+
+        $unpaidGoodsReceiptsForList = $unpaidGoodsReceiptsQuery->latest('created_at')->get();
+
+        // Transform goods receipts to match expense structure for display
+        $goodsReceiptsAsExpenses = $unpaidGoodsReceiptsForList->map(function ($receipt) {
+            $remainingAmount = $receipt->supplierCredit
+                ? $receipt->supplierCredit->remaining_amount
+                : $receipt->total_cost;
+
+            return (object) [
+                'expense_id' => null,
+                'reference_number' => $receipt->receipt_number,
+                'description' => 'Mal Qəbulu - ' . ($receipt->product ? $receipt->product->name : 'Məhsul'),
+                'amount' => $receipt->total_cost,
+                'remaining_amount' => $remainingAmount,
+                'expense_date' => $receipt->created_at,
+                'due_date' => $receipt->due_date,
+                'payment_method' => 'borc', // Unpaid
+                'payment_status' => $receipt->payment_status,
+                'status' => $receipt->payment_status === 'paid' ? 'paid' : 'pending',
+                'type' => 'goods_receipt', // Mark as goods receipt
+                'supplier' => $receipt->supplier,
+                'supplier_id' => $receipt->supplier_id,
+                'goods_receipt_id' => $receipt->id,
+                'goods_receipt_data' => $receipt, // Keep full data for payment modal
+                'created_at' => $receipt->created_at,
+            ];
+        });
+
+        // Merge expenses, supplier credits, and goods receipts
+        $allExpenses = $expenses
+            ->concat($supplierCreditsAsExpenses)
+            ->concat($goodsReceiptsAsExpenses)
             ->sortByDesc('expense_date')
             ->values();
 
@@ -508,14 +562,47 @@ class ExpenseController extends Controller
     {
         Gate::authorize('manage-expenses');
 
-        $request->validate([
-            'goods_receipt_id' => 'required|exists:goods_receipts,id',
-            'payment_amount' => 'required|numeric|min:0.01',
-            'category_id' => 'required|exists:expense_categories,category_id',
-            'branch_id' => 'required|exists:branches,id',
-            'payment_method' => 'required|in:cash,card,bank_transfer',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        // Check if this is a batch payment
+        $isBatchPayment = $request->has('batch_item_ids') && is_array($request->batch_item_ids);
+
+        if ($isBatchPayment) {
+            $request->validate([
+                'batch_item_ids' => 'required|array',
+                'batch_item_ids.*' => 'exists:goods_receipts,id',
+                'payment_amount' => 'required|numeric|min:0.01',
+                'category_id' => 'required|exists:expense_categories,category_id',
+                'branch_id' => 'required|exists:branches,id',
+                'payment_method' => 'required|in:cash,card,bank_transfer',
+                'notes' => 'nullable|string|max:1000',
+            ]);
+
+            // Get all goods receipts in the batch
+            $goodsReceipts = GoodsReceipt::with(['supplier', 'product', 'supplierCredit'])
+                ->where('account_id', auth()->user()->account_id)
+                ->whereIn('id', $request->batch_item_ids)
+                ->get();
+
+            if ($goodsReceipts->isEmpty()) {
+                return back()->withErrors(['message' => 'Mal qəbulları tapılmadı']);
+            }
+
+            // All items should have the same supplier
+            $supplierIds = $goodsReceipts->pluck('supplier_id')->unique();
+            if ($supplierIds->count() > 1) {
+                return back()->withErrors(['message' => 'Bütün mal qəbulları eyni təchizatçıya aid olmalıdır']);
+            }
+
+            return $this->processBatchPayment($request, $goodsReceipts);
+        } else {
+            $request->validate([
+                'goods_receipt_id' => 'required|exists:goods_receipts,id',
+                'payment_amount' => 'required|numeric|min:0.01',
+                'category_id' => 'required|exists:expense_categories,category_id',
+                'branch_id' => 'required|exists:branches,id',
+                'payment_method' => 'required|in:cash,card,bank_transfer',
+                'notes' => 'nullable|string|max:1000',
+            ]);
+        }
 
         $goodsReceipt = GoodsReceipt::with(['supplier', 'product', 'supplierCredit'])
             ->where('account_id', auth()->user()->account_id)
@@ -546,6 +633,7 @@ class ExpenseController extends Controller
 
             // Create expense record for the payment
             $expense = Expense::create([
+                'account_id' => auth()->user()->account_id,
                 'category_id' => $request->category_id,
                 'branch_id' => $request->branch_id,
                 'amount' => $paymentAmount,
@@ -602,6 +690,116 @@ class ExpenseController extends Controller
             \Log::error('Error processing goods receipt payment: ' . $e->getMessage());
             return back()->withErrors([
                 'message' => 'Ödəniş zamanı xəta baş verdi: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Process payment for multiple goods receipts in a batch
+     */
+    private function processBatchPayment(Request $request, $goodsReceipts)
+    {
+        $paymentAmount = (float) $request->payment_amount;
+        $totalRemainingAmount = 0;
+        $firstReceipt = $goodsReceipts->first();
+
+        // Calculate total remaining amount for all items
+        foreach ($goodsReceipts as $receipt) {
+            if ($receipt->supplierCredit) {
+                $totalRemainingAmount += (float) $receipt->supplierCredit->remaining_amount;
+            }
+        }
+
+        // Validate payment amount doesn't exceed total remaining amount
+        if ($paymentAmount > $totalRemainingAmount) {
+            return back()->withErrors([
+                'payment_amount' => "Ödəniş məbləği ümumi qalıq borcdan çox ola bilməz. Qalıq: {$totalRemainingAmount} AZN"
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Create a single expense for the batch
+            $batchId = $request->batch_id ?? $firstReceipt->batch_id;
+            $receiptNumbers = $goodsReceipts->pluck('receipt_number')->join(', ');
+
+            $expense = Expense::create([
+                'account_id' => auth()->user()->account_id,
+                'category_id' => $request->category_id,
+                'branch_id' => $request->branch_id,
+                'amount' => $paymentAmount,
+                'description' => "Partiya ödəməsi - {$batchId} ({$goodsReceipts->count()} məhsul)",
+                'expense_date' => now()->format('Y-m-d'),
+                'payment_method' => $request->payment_method,
+                'user_id' => Auth::id(),
+                'supplier_id' => $firstReceipt->supplier_id,
+                'notes' => $request->notes ? $request->notes . " (Qəbul nömrələri: {$receiptNumbers})" : "Qəbul nömrələri: {$receiptNumbers}",
+            ]);
+
+            // Create a single supplier payment for the batch
+            $supplierPayment = \App\Models\SupplierPayment::create([
+                'account_id' => auth()->user()->account_id,
+                'supplier_id' => $firstReceipt->supplier_id,
+                'amount' => $paymentAmount,
+                'description' => "Partiya ödəməsi - {$batchId} ({$goodsReceipts->count()} məhsul)",
+                'payment_date' => now()->format('Y-m-d'),
+                'payment_method' => $request->payment_method,
+                'invoice_number' => $batchId,
+                'user_id' => Auth::id(),
+                'notes' => "Xerc: {$expense->reference_number}",
+            ]);
+
+            // Distribute payment across all receipts proportionally
+            $remainingPayment = $paymentAmount;
+
+            foreach ($goodsReceipts as $index => $receipt) {
+                if (!$receipt->supplierCredit) {
+                    continue;
+                }
+
+                $creditRemaining = (float) $receipt->supplierCredit->remaining_amount;
+
+                // For the last item, use all remaining payment to avoid rounding issues
+                if ($index === $goodsReceipts->count() - 1) {
+                    $itemPayment = $remainingPayment;
+                } else {
+                    // Distribute proportionally
+                    $itemPayment = min($creditRemaining, ($creditRemaining / $totalRemainingAmount) * $paymentAmount);
+                    $itemPayment = round($itemPayment, 2);
+                }
+
+                if ($itemPayment > 0) {
+                    // Update supplier credit with the payment
+                    $receipt->supplierCredit->addPayment(
+                        $itemPayment,
+                        "Xerc ödəməsi (Partiya): {$expense->reference_number}"
+                    );
+
+                    // Update goods receipt payment status
+                    if ($receipt->supplierCredit->remaining_amount == 0) {
+                        $receipt->update(['payment_status' => 'paid']);
+                    } else {
+                        $receipt->update(['payment_status' => 'partial']);
+                    }
+
+                    $remainingPayment -= $itemPayment;
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success', "Partiya ödənişi uğurla tamamlandı. Ödənildi: {$paymentAmount} AZN");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error processing batch payment: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'batch_id' => $request->batch_id ?? null,
+                'batch_item_ids' => $request->batch_item_ids ?? null,
+            ]);
+            return back()->withErrors([
+                'message' => 'Ödəniş zamanı xəta baş verdi: ' . $e->getMessage() . ' (Sətir: ' . $e->getLine() . ')'
             ]);
         }
     }

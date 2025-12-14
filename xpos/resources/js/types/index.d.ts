@@ -302,9 +302,12 @@ export interface GoodsReceipt {
     account_id: number;
     warehouse_id: number;
     product_id: number;
+    variant_id?: number;
     supplier_id: number;
     employee_id?: number;
     receipt_number: string;
+    batch_id?: string;
+    invoice_number?: string;
     quantity: number;
     unit: string;
     unit_cost: number;
@@ -316,11 +319,13 @@ export interface GoodsReceipt {
     payment_method: 'instant' | 'credit';
     due_date?: string;
     supplier_credit_id?: number;
+    status: 'draft' | 'completed';
     created_at?: string;
     updated_at?: string;
     // Relations
     warehouse?: Warehouse;
     product?: Product;
+    variant?: ProductVariant;
     supplier?: Supplier;
     employee?: Employee;
     supplier_credit?: SupplierCredit;
@@ -845,10 +850,11 @@ export interface ProductReturn {
     refund_amount?: number;
     refund_date?: string;
     supplier_response?: string;
-    created_at?: string;
+    created_at: string;
     updated_at?: string;
     supplier?: Supplier;
     product?: Product;
+    variant?: ProductVariant;
     warehouse?: Warehouse;
     requestedBy?: User;
     approvedBy?: User;

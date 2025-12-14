@@ -17,30 +17,40 @@ interface Supplier { id: number; name: string; payment_terms_days?: number; paym
 interface Warehouse { id: number; name: string; }
 interface Employee { employee_id: number; name: string; }
 
-interface Props { 
-    suppliers: Supplier[]; 
-    warehouses: Warehouse[]; 
+interface Props {
+    suppliers: Supplier[];
+    warehouses: Warehouse[];
     employees?: Employee[];
-    receipt?: GoodsReceipt; 
-    isEditing?: boolean; 
+    receipt?: GoodsReceipt;
+    batchReceipts?: GoodsReceipt[];
+    isEditing?: boolean;
 }
 
-export default function GoodsReceiptForm({ suppliers, warehouses, employees, receipt, isEditing = false }: Props) {
+export default function GoodsReceiptForm({ suppliers, warehouses, employees, receipt, batchReceipts, isEditing = false }: Props) {
     const { t } = useTranslation(['inventory', 'common']);
     const { translatePaymentMethod } = useTranslations();
     const {
-        form, submit, addProduct, removeProduct, updateProduct, handleFileChange,
+        form, submit, submitAsDraft, submitAsCompleted, addProduct, removeProduct, updateProduct, handleFileChange,
         selectedSupplier, calculatedDueDate, handleSupplierChange, handlePaymentMethodChange,
         handleCustomTermsToggle, handleCustomTermsChange
-    } = useGoodsReceiptForm(receipt, isEditing);
+    } = useGoodsReceiptForm(receipt, batchReceipts, isEditing);
 
     const { query, setQuery, results, loading, error } = useProductSearch();
 
     const handleProductSelect = (product: Product) => {
-        // Check if product is already added
-        const existingProduct = form.data.products.find(p => p.product_id === product.id.toString());
-        if (existingProduct) {
-            alert(t('goodsReceipts.productAlreadyAdded'));
+        // Ensure products is an array
+        if (!Array.isArray(form.data.products)) {
+            console.error('form.data.products is not an array:', form.data.products);
+            return;
+        }
+
+        // Check if product is already added - if so, increment quantity
+        const existingIndex = form.data.products.findIndex(p => p.product_id === product.id.toString());
+        if (existingIndex >= 0) {
+            // Auto-increment quantity instead of showing alert
+            const currentQty = parseFloat(form.data.products[existingIndex].quantity) || 0;
+            updateProduct(existingIndex, 'quantity', (currentQty + 1).toString());
+            setQuery(''); // Clear search after selection
             return;
         }
 
@@ -50,7 +60,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
 
     return (
         <div className="overflow-hidden">
-            <form onSubmit={submit} className="space-y-6">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             {/* Warehouse */}
             <div className="bg-gray-50 rounded-lg p-4">
                 <InputLabel htmlFor="warehouse_id" value={`${t('goodsReceipts.selectWarehouse')} *`} />
@@ -75,6 +85,24 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                     required={true}
                 />
             </div>
+
+            {/* Supplier Invoice Number - Optional */}
+            {!isEditing && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                    <InputLabel htmlFor="invoice_number" value="Faktura Nömrəsi" />
+                    <TextInput
+                        id="invoice_number"
+                        type="text"
+                        value={form.data.invoice_number || ''}
+                        onChange={(e) => (form.setData as any)('invoice_number', e.target.value)}
+                        className="mt-2 block w-full"
+                        placeholder="Təchizatçının faktura nömrəsini daxil edin (ixtiyari)"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                        Təchizatçıdan aldığınız faktura nömrəsini daxil edin. Bu, bütün məhsulları bir partiyada qruplaşdırmağa kömək edəcək.
+                    </p>
+                </div>
+            )}
 
             {/* Product Search */}
             <div className="bg-blue-50 rounded-lg p-4">
@@ -184,7 +212,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
             )}
 
             {/* Selected Products List */}
-            {form.data.products.length > 0 && (
+            {Array.isArray(form.data.products) && form.data.products.length > 0 && (
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                         <h3 className="text-lg font-medium text-gray-900">{t('goodsReceipts.addedProducts')} ({form.data.products.length})</h3>
@@ -206,7 +234,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                                     <div>
                                         <InputLabel value={`${t('quantity')} *`} />
                                         <TextInput
@@ -255,6 +283,19 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                         />
                                     </div>
                                     <div>
+                                        <InputLabel value="Endirim %" />
+                                        <TextInput
+                                            value={productItem.discount_percent || '0'}
+                                            onChange={(e) => updateProduct(index, 'discount_percent', e.target.value)}
+                                            className="mt-1 w-full"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max="100"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div>
                                         <InputLabel value={t('salePrice')} />
                                         <TextInput
                                             value={productItem.sale_price || ''}
@@ -274,6 +315,33 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                             readOnly
                                         />
                                     </div>
+                                </div>
+                                {/* Show calculated total for this product */}
+                                <div className="mt-2 text-sm text-gray-600 flex justify-between items-center bg-gray-50 p-2 rounded">
+                                    <span>Ara cəm: {(() => {
+                                        const qty = parseFloat(productItem.quantity) || 0;
+                                        const cost = parseFloat(productItem.unit_cost) || 0;
+                                        return (qty * cost).toFixed(2);
+                                    })()} AZN</span>
+                                    {parseFloat(productItem.discount_percent || '0') > 0 && (
+                                        <>
+                                            <span className="text-red-600">Endirim: -{(() => {
+                                                const qty = parseFloat(productItem.quantity) || 0;
+                                                const cost = parseFloat(productItem.unit_cost) || 0;
+                                                const discount = parseFloat(productItem.discount_percent) || 0;
+                                                const subtotal = qty * cost;
+                                                return ((subtotal * discount) / 100).toFixed(2);
+                                            })()} AZN ({productItem.discount_percent}%)</span>
+                                            <span className="font-bold text-green-700">Yekun: {(() => {
+                                                const qty = parseFloat(productItem.quantity) || 0;
+                                                const cost = parseFloat(productItem.unit_cost) || 0;
+                                                const discount = parseFloat(productItem.discount_percent) || 0;
+                                                const subtotal = qty * cost;
+                                                const discountAmount = (subtotal * discount) / 100;
+                                                return (subtotal - discountAmount).toFixed(2);
+                                            })()} AZN</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -312,12 +380,37 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                         <span>{t('goodsReceipts.noProductsAdded')}</span>
                     )}
                 </div>
-                <PrimaryButton
-                    disabled={form.processing || form.data.products.length === 0}
-                    className="w-full sm:w-auto"
-                >
-                    {form.processing ? t('processing') : t('goodsReceipts.save')}
-                </PrimaryButton>
+                {!isEditing || (isEditing && receipt?.status === 'draft') ? (
+                    <>
+                        {/* Save as Draft Button - Black */}
+                        <button
+                            type="button"
+                            onClick={submitAsDraft}
+                            disabled={form.processing || form.data.products.length === 0}
+                            className="w-full sm:w-auto px-4 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {form.processing ? t('processing') : 'Qaralama olaraq saxla'}
+                        </button>
+                        {/* Complete Receipt Button - Blue */}
+                        <button
+                            type="button"
+                            onClick={submitAsCompleted}
+                            disabled={form.processing || form.data.products.length === 0}
+                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {form.processing ? t('processing') : 'Mal qəbulunu tamamla'}
+                        </button>
+                    </>
+                ) : (
+                    <PrimaryButton
+                        type="button"
+                        onClick={submit}
+                        disabled={form.processing || form.data.products.length === 0}
+                        className="w-full sm:w-auto"
+                    >
+                        {form.processing ? t('processing') : t('goodsReceipts.save')}
+                    </PrimaryButton>
+                )}
             </div>
             </form>
         </div>

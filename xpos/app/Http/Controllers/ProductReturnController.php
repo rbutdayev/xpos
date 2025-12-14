@@ -47,6 +47,89 @@ class ProductReturnController extends Controller
         ]);
     }
 
+    public function show(ProductReturn $return)
+    {
+        Gate::authorize('view', $return);
+
+        // Verify return belongs to current account
+        if ($return->account_id !== auth()->user()->account_id) {
+            abort(403);
+        }
+
+        $return->load(['supplier', 'product', 'variant', 'warehouse', 'requestedBy', 'approvedBy']);
+
+        return Inertia::render('ProductReturns/Show', [
+            'productReturn' => $return,
+        ]);
+    }
+
+    public function destroy(ProductReturn $return)
+    {
+        Gate::authorize('delete', $return);
+
+        // Verify return belongs to current account
+        if ($return->account_id !== auth()->user()->account_id) {
+            abort(403);
+        }
+
+        // Only allow deletion if status is completed and we need to reverse the stock
+        // Or implement your business logic here
+        if ($return->status === 'tamamlanib') {
+            DB::transaction(function () use ($return) {
+                // Reverse the stock deduction - add the quantity back
+                $productStock = ProductStock::where('product_id', $return->product_id)
+                    ->where('variant_id', $return->variant_id)
+                    ->where('warehouse_id', $return->warehouse_id)
+                    ->where('account_id', $return->account_id)
+                    ->first();
+
+                if ($productStock) {
+                    $quantityBefore = $productStock->quantity;
+                    $productStock->increment('quantity', $return->quantity);
+
+                    // Create stock history record for reversal
+                    StockHistory::create([
+                        'product_id' => $return->product_id,
+                        'warehouse_id' => $return->warehouse_id,
+                        'quantity_before' => $quantityBefore,
+                        'quantity_change' => $return->quantity,
+                        'quantity_after' => $quantityBefore + $return->quantity,
+                        'type' => 'duzelis_artim',
+                        'reference_type' => 'product_return_reversal',
+                        'reference_id' => $return->return_id,
+                        'user_id' => auth()->user()->id,
+                        'notes' => "İadənin ləğvi: {$return->reason}",
+                        'occurred_at' => now(),
+                    ]);
+                }
+
+                // Create reversal stock movement
+                StockMovement::create([
+                    'account_id' => $return->account_id,
+                    'warehouse_id' => $return->warehouse_id,
+                    'product_id' => $return->product_id,
+                    'variant_id' => $return->variant_id,
+                    'movement_type' => 'duzelis_artim', // Adjustment increase - reversing the return
+                    'quantity' => $return->quantity,
+                    'unit_cost' => $return->unit_cost,
+                    'reference_type' => 'product_return_reversal',
+                    'reference_id' => $return->return_id,
+                    'employee_id' => auth()->user()->id,
+                    'notes' => "İadənin ləğvi: {$return->reason}",
+                ]);
+
+                // Delete the return
+                $return->delete();
+            });
+        } else {
+            // If not completed, just delete without reversing stock
+            $return->delete();
+        }
+
+        return redirect()->route('product-returns.index')
+            ->with('success', 'İadə silindi və stok bərpa edildi.');
+    }
+
     public function getProductsBySupplier(Request $request)
     {
         $request->validate([
@@ -55,27 +138,33 @@ class ProductReturnController extends Controller
         ]);
 
         // Get products that were bought from this supplier and have stock
+        // We use goodsReceipts to find products that have been received from this supplier
         $products = \App\Models\Product::byAccount(auth()->user()->account_id)
             ->products() // Only actual products, not services
             ->whereHas('goodsReceipts', function($query) use ($request) {
-                $query->where('supplier_id', $request->supplier_id);
+                $query->where('supplier_id', $request->supplier_id)
+                      ->where('account_id', auth()->user()->account_id);
             })
             ->whereHas('productStocks', function($query) use ($request) {
                 $query->where('warehouse_id', $request->warehouse_id)
+                      ->where('account_id', auth()->user()->account_id)
                       ->where('quantity', '>', 0);
             })
             ->with([
                 'productStocks' => function($query) use ($request) {
                     $query->where('warehouse_id', $request->warehouse_id)
+                          ->where('account_id', auth()->user()->account_id)
                           ->where('quantity', '>', 0);
                 },
                 'variants' => function($query) use ($request) {
                     $query->whereHas('productStocks', function($q) use ($request) {
                         $q->where('warehouse_id', $request->warehouse_id)
+                          ->where('account_id', auth()->user()->account_id)
                           ->where('quantity', '>', 0);
                     })
                     ->with(['productStocks' => function($q) use ($request) {
-                        $q->where('warehouse_id', $request->warehouse_id);
+                        $q->where('warehouse_id', $request->warehouse_id)
+                          ->where('account_id', auth()->user()->account_id);
                     }]);
                 }
             ])
@@ -100,8 +189,10 @@ class ProductReturnController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'barcode' => $product->barcode,
-                    'unit_price' => $product->unit_price,
-                    'packaging_price' => $product->getPackagingPrice(),
+                    'unit_price' => $product->purchase_price, // Use purchase price for returns
+                    'packaging_price' => ($product->purchase_price && $product->packaging_quantity)
+                        ? $product->purchase_price * $product->packaging_quantity
+                        : null,
                     'packaging_size' => $product->packaging_size,
                     'base_unit' => $product->base_unit,
                     'packaging_quantity' => $product->packaging_quantity,
@@ -126,6 +217,7 @@ class ProductReturnController extends Controller
             'unit_cost' => 'required|numeric|min:0',
             'return_date' => 'required|date',
             'reason' => 'required|string|max:1000',
+            'selling_unit' => 'nullable|string', // Accept but don't use - for frontend compatibility
         ]);
 
         // Validate variant belongs to product and account
@@ -155,20 +247,28 @@ class ProductReturnController extends Controller
                 ->withInput();
         }
 
-        $productReturn = ProductReturn::create([
-            'account_id' => auth()->user()->account_id,
-            'supplier_id' => $request->supplier_id,
-            'product_id' => $request->product_id,
-            'variant_id' => $request->variant_id,
-            'warehouse_id' => $request->warehouse_id,
-            'quantity' => $request->quantity,
-            'unit_cost' => $request->unit_cost,
-            'total_cost' => $request->quantity * $request->unit_cost,
-            'reason' => $request->reason,
-            'status' => 'gozlemede',
-            'return_date' => $request->return_date,
-            'requested_by' => auth()->user()->id,
-        ]);
+        // Use transaction to ensure both return and stock deduction happen together
+        DB::transaction(function () use ($request, &$productReturn) {
+            // Create the product return with completed status
+            $productReturn = ProductReturn::create([
+                'account_id' => auth()->user()->account_id,
+                'supplier_id' => $request->supplier_id,
+                'product_id' => $request->product_id,
+                'variant_id' => $request->variant_id,
+                'warehouse_id' => $request->warehouse_id,
+                'quantity' => $request->quantity,
+                'unit_cost' => $request->unit_cost,
+                'total_cost' => $request->quantity * $request->unit_cost,
+                'reason' => $request->reason,
+                'status' => 'tamamlanib', // Automatically completed
+                'return_date' => $request->return_date,
+                'requested_by' => auth()->user()->id,
+                'approved_by' => auth()->user()->id, // Auto-approved by creator
+            ]);
+
+            // Immediately deduct stock
+            $this->deductStock($productReturn);
+        });
 
         return redirect()->route('product-returns.index')
             ->with('success', __('app.return_processed'));
@@ -244,6 +344,23 @@ class ProductReturnController extends Controller
         return redirect()->back()->with('success', __('app.return_completed'));
     }
 
+    public function print(ProductReturn $return)
+    {
+        Gate::authorize('view', $return);
+
+        // Verify return belongs to current account
+        if ($return->account_id !== auth()->user()->account_id) {
+            abort(403);
+        }
+
+        $return->load(['supplier', 'product', 'variant', 'warehouse', 'requestedBy', 'approvedBy', 'account']);
+
+        return view('product-returns.print', [
+            'return' => $return,
+            'account' => $return->account,
+        ]);
+    }
+
     /**
      * Deduct stock from warehouse when items are sent back to supplier
      */
@@ -263,7 +380,6 @@ class ProductReturnController extends Controller
             // Create stock history record
             StockHistory::create([
                 'product_id' => $return->product_id,
-                'variant_id' => $return->variant_id,
                 'warehouse_id' => $return->warehouse_id,
                 'quantity_before' => $quantityBefore,
                 'quantity_change' => -$return->quantity,
@@ -283,7 +399,7 @@ class ProductReturnController extends Controller
             'warehouse_id' => $return->warehouse_id,
             'product_id' => $return->product_id,
             'variant_id' => $return->variant_id,
-            'movement_type' => 'çıxış',
+            'movement_type' => 'qaytarma',
             'quantity' => $return->quantity,
             'unit_cost' => $return->unit_cost,
             'reference_type' => 'product_return',

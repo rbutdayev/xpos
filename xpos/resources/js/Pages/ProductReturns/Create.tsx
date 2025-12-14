@@ -57,13 +57,19 @@ export default function Create({ suppliers, warehouses }: Props) {
                     warehouse_id: data.warehouse_id,
                 }),
             });
-            
+
             if (response.ok) {
                 const productsData = await response.json();
+                console.log('Fetched products:', productsData);
                 setProducts(productsData);
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to fetch products:', response.status, errorText);
+                setProducts([]);
             }
         } catch (error) {
             console.error('Error fetching products:', error);
+            setProducts([]);
         } finally {
             setLoadingProducts(false);
         }

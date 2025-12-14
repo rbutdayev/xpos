@@ -11,6 +11,7 @@ export interface ProductItem {
     unit: string;
     receiving_unit: string;
     unit_cost: string;
+    discount_percent: string;
     sale_price?: string;
     product?: any;
 }
@@ -18,6 +19,7 @@ export interface ProductItem {
 export interface GoodsReceiptFormData {
     warehouse_id: string;
     supplier_id: string;
+    invoice_number?: string;
     products: ProductItem[];
     notes: string;
     document: File | null;
@@ -51,27 +53,46 @@ interface Product {
     sale_price?: number;
 }
 
-export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = false) {
+export default function useGoodsReceiptForm(receipt?: GoodsReceipt, batchReceipts?: GoodsReceipt[], isEditing = false) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
     const [calculatedDueDate, setCalculatedDueDate] = useState<string | null>(null);
 
-    const form = useForm({
-        warehouse_id: receipt?.warehouse_id?.toString() || '',
-        supplier_id: receipt?.supplier_id?.toString() || '',
-        products: receipt ? [{
+    // If batchReceipts is provided, use all receipts in the batch to populate products
+    const initialProducts = batchReceipts && batchReceipts.length > 0
+        ? batchReceipts.map(r => ({
+            product_id: r.product_id?.toString() || '',
+            quantity: r.quantity?.toString() || '',
+            base_quantity: r.quantity?.toString() || '',
+            unit: r.unit || '',
+            receiving_unit: r.unit || '',
+            unit_cost: r.unit_cost?.toString() || '',
+            discount_percent: r.additional_data?.discount_percent?.toString() || '0',
+            sale_price: r.product?.sale_price?.toString() || '',
+            product: r.product,
+            variant_id: r.variant_id?.toString() || undefined,
+        }))
+        : receipt ? [{
             product_id: receipt.product_id?.toString() || '',
             quantity: receipt.quantity?.toString() || '',
             base_quantity: receipt.quantity?.toString() || '',
             unit: receipt.unit || '',
             receiving_unit: receipt.unit || '',
             unit_cost: receipt.unit_cost?.toString() || '',
+            discount_percent: receipt.additional_data?.discount_percent?.toString() || '0',
+            sale_price: receipt.product?.sale_price?.toString() || '',
             product: receipt.product,
-        }] : [] as ProductItem[],
+        }] : [] as ProductItem[];
+
+    const form = useForm({
+        warehouse_id: receipt?.warehouse_id?.toString() || '',
+        supplier_id: receipt?.supplier_id?.toString() || '',
+        invoice_number: receipt?.invoice_number || '',
+        products: initialProducts,
         notes: receipt?.notes || '',
         document: null as File | null,
-        payment_method: (receipt?.payment_method as 'instant' | 'credit') || 'credit',
-        payment_status: (receipt?.payment_status as 'paid' | 'unpaid') || 'unpaid',
+        payment_method: (receipt?.payment_method as 'instant' | 'credit') || 'instant',
+        payment_status: (receipt?.payment_status as 'paid' | 'unpaid') || 'paid',
         custom_payment_terms: 0,
         use_custom_terms: false,
         // Additional fields for editing
@@ -134,8 +155,7 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
         }
     };
 
-    const submit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const submitWithStatus = (status: 'draft' | 'completed') => {
         if (!form.data.warehouse_id) {
             toast.error('Anbar seçin');
             return;
@@ -144,7 +164,7 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
             toast.error('Təchizatçı seçin');
             return;
         }
-        if (form.data.products.length === 0) {
+        if (!Array.isArray(form.data.products) || form.data.products.length === 0) {
             toast.error('Ən azı bir məhsul əlavə edin');
             return;
         }
@@ -197,19 +217,32 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
             });
         } else {
             console.log('Submitting form data:', form.data);
+
+            // Set status before posting
+            form.transform((data) => ({
+                ...data,
+                status: status
+            }));
+
             form.post(route('goods-receipts.store'), {
                 onSuccess: () => {
-                    toast.success('Mal qəbulu uğurla yaradıldı');
-                    // Notify other pages to refresh inventory views
-                    form.data.products.forEach(product => {
-                        notifyUpdate({
-                            type: 'goods_receipt_created',
-                            warehouse_id: form.data.warehouse_id,
-                            product_id: product.product_id,
+                    const successMessage = status === 'draft'
+                        ? 'Mal qəbulu qaralama olaraq saxlanıldı'
+                        : 'Mal qəbulu uğurla yaradıldı';
+                    toast.success(successMessage);
+
+                    // Only notify inventory updates for completed receipts
+                    if (status === 'completed' && Array.isArray(form.data.products)) {
+                        form.data.products.forEach(product => {
+                            notifyUpdate({
+                                type: 'goods_receipt_created',
+                                warehouse_id: form.data.warehouse_id,
+                                product_id: product.product_id,
+                            });
                         });
-                    });
+                    }
                 },
-                onError: (errors) => {
+                onError: (errors: any) => {
                     console.error('Validation errors:', errors);
                     // Show all errors as separate toasts
                     Object.entries(errors).forEach(([field, messages]) => {
@@ -224,7 +257,48 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
         }
     };
 
+    const submitAsDraft = (e: React.FormEvent) => {
+        e.preventDefault();
+        submitWithStatus('draft');
+    };
+
+    const submitAsCompleted = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // If editing a draft, use the complete endpoint
+        if (isEditing && receipt && receipt.status === 'draft') {
+            form.post(route('goods-receipts.complete', receipt.id), {
+                onSuccess: () => {
+                    toast.success('Mal qəbulu uğurla tamamlandı');
+                    if (Array.isArray(form.data.products)) {
+                        form.data.products.forEach(product => {
+                            notifyUpdate({
+                                type: 'goods_receipt_created',
+                                warehouse_id: form.data.warehouse_id,
+                                product_id: product.product_id,
+                            });
+                        });
+                    }
+                },
+                onError: (errors: any) => {
+                    console.error('Validation errors:', errors);
+                    Object.entries(errors).forEach(([field, messages]) => {
+                        const errorMessage = Array.isArray(messages) ? messages[0] : messages;
+                        toast.error(`${field}: ${errorMessage}`, { duration: 5000 });
+                    });
+                }
+            });
+        } else {
+            submitWithStatus('completed');
+        }
+    };
+
     const addProduct = (product: Product) => {
+        if (!Array.isArray(form.data.products)) {
+            console.error('form.data.products is not an array, initializing as empty array');
+            (form.setData as any)('products', []);
+        }
+
         let receivingUnit = product?.base_unit || product?.unit || 'ədəd';
         let initialBaseQuantity = '1';
         if (product?.packaging_quantity) {
@@ -238,20 +312,30 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
             base_quantity: initialBaseQuantity,
             unit: product?.base_unit || product?.unit || '',
             receiving_unit: receivingUnit,
-            unit_cost: '',
-            sale_price: '',
+            unit_cost: product?.purchase_price?.toString() || '',
+            discount_percent: '0',
+            sale_price: product?.sale_price?.toString() || '',
             product: product,
         };
 
-        (form.setData as any)('products', [...form.data.products, newProduct]);
+        const currentProducts = Array.isArray(form.data.products) ? form.data.products : [];
+        (form.setData as any)('products', [...currentProducts, newProduct]);
     };
 
     const removeProduct = (index: number) => {
+        if (!Array.isArray(form.data.products)) {
+            console.error('form.data.products is not an array');
+            return;
+        }
         const newProducts = form.data.products.filter((_, i) => i !== index);
         (form.setData as any)('products', newProducts);
     };
 
     const updateProduct = (index: number, field: keyof ProductItem, value: string) => {
+        if (!Array.isArray(form.data.products)) {
+            console.error('form.data.products is not an array');
+            return;
+        }
         const newProducts = [...form.data.products];
         newProducts[index] = { ...newProducts[index], [field]: value };
         
@@ -307,7 +391,9 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = 
 
     return {
         form,
-        submit,
+        submit: submitAsCompleted, // Default submit is completed for backward compatibility
+        submitAsDraft,
+        submitAsCompleted,
         selectedProduct,
         setSelectedProduct,
         selectedSupplier,

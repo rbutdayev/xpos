@@ -102,28 +102,9 @@ export default function Index({ returns }: Props) {
             variant: 'view' as const
         },
         {
-            label: 'İadəni təsdiq et',
-            onClick: (productReturn: ProductReturn) => {
-                router.patch(route('product-returns.approve', productReturn.return_id), {
-                    approved_by: 1 // This should be current user's employee_id
-                });
-            },
-            variant: 'primary' as const,
-            show: (productReturn: ProductReturn) => productReturn.status === 'gozlemede'
-        },
-        {
-            label: 'İadəni göndər',
-            onClick: (productReturn: ProductReturn) => {
-                router.patch(route('product-returns.send', productReturn.return_id));
-            },
-            variant: 'secondary' as const,
-            show: (productReturn: ProductReturn) => productReturn.status === 'tesdiq_edilib'
-        },
-        {
             label: 'Sil',
             onClick: handleDelete,
-            variant: 'delete' as const,
-            show: (productReturn: ProductReturn) => productReturn.status === 'gozlemede'
+            variant: 'delete' as const
         }
     ];
 

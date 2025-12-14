@@ -56,6 +56,8 @@ export interface Action {
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'view' | 'edit' | 'delete';
 }
 
+export type ActionsConfig = Action[] | ((item: any) => Action[]);
+
 export interface BulkAction {
     label: string;
     onClick: (selectedIds: (string | number)[]) => void;
@@ -79,7 +81,7 @@ interface SharedDataTableProps {
     
     // Configuration
     columns: Column[];
-    actions?: Action[];
+    actions?: ActionsConfig;
     bulkActions?: BulkAction[];
     
     // Search & Filter
@@ -154,7 +156,7 @@ interface SharedDataTableProps {
 export default function SharedDataTable({
     data,
     columns,
-    actions = [],
+    actions,
     bulkActions = [],
 
     searchValue = '',
@@ -567,7 +569,7 @@ export default function SharedDataTable({
                                         ))}
 
                                         {/* Actions Column */}
-                                        {actions.length > 0 && !(isMobile && effectiveHideMobileActions) && (
+                                        {actions && (Array.isArray(actions) ? actions.length > 0 : true) && !(isMobile && effectiveHideMobileActions) && (
                                             <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                                                 {t('dataTable.operations')}
                                             </th>
@@ -631,10 +633,12 @@ export default function SharedDataTable({
                                                     ))}
 
                                                     {/* Actions */}
-                                                     {actions.length > 0 && !(isMobile && effectiveHideMobileActions) && (
+                                                     {(() => {
+                                                        const itemActions = typeof actions === 'function' ? actions(item) : actions;
+                                                        return Array.isArray(itemActions) && itemActions.length > 0 && !(isMobile && effectiveHideMobileActions) && (
                                                         <td className="px-3 py-3 whitespace-nowrap text-center text-sm font-medium w-32">
                                                             <div className="flex justify-center items-center gap-2">
-                                                                {actions.map((action, actionIndex) => {
+                                                                {itemActions.map((action, actionIndex) => {
                                                                     if (action.condition && !action.condition(item)) {
                                                                         return null;
                                                                     }
@@ -685,13 +689,14 @@ export default function SharedDataTable({
                                                                 })}
                                                             </div>
                                                         </td>
-                                                    )}
+                                                        );
+                                                    })()}
                                                 </tr>
                                                 
                                                 {/* Expanded Content */}
                                                 {expandable && isExpanded && expandedContent && !isMobile && (
                                                     <tr>
-                                                         <td colSpan={visibleColumns.length + (selectable && !isMobile ? 1 : 0) + (expandable && !isMobile ? 1 : 0) + (actions.length > 0 && !(isMobile && effectiveHideMobileActions) ? 1 : 0)} className="px-8 py-7 bg-gray-50">
+                                                         <td colSpan={visibleColumns.length + (selectable && !isMobile ? 1 : 0) + (expandable && !isMobile ? 1 : 0) + (actions && (Array.isArray(actions) ? actions.length > 0 : true) && !(isMobile && effectiveHideMobileActions) ? 1 : 0)} className="px-8 py-7 bg-gray-50">
                                                             {expandedContent(item)}
                                                         </td>
                                                     </tr>
@@ -771,10 +776,12 @@ export default function SharedDataTable({
                         </div>
 
                         {/* Modal Actions */}
-                        {actions.length > 0 && (
+                        {(() => {
+                            const modalActions = typeof actions === 'function' ? actions(mobileDetailItem) : actions;
+                            return Array.isArray(modalActions) && modalActions.length > 0 && (
                             <div className="mt-6 pt-4 border-t border-gray-200">
                                 <div className="flex flex-col gap-2">
-                                    {actions.map((action, actionIndex) => {
+                                    {modalActions.map((action, actionIndex) => {
                                         if (action.condition && !action.condition(mobileDetailItem)) {
                                             return null;
                                         }
@@ -830,7 +837,8 @@ export default function SharedDataTable({
                                     })}
                                 </div>
                             </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Close Button */}
                         <div className="mt-6">
