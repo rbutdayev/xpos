@@ -2234,11 +2234,6 @@ export const goodsReceiptsTableConfig = {
             render: (r: GoodsReceipt) => (
                 <div className="space-y-1">
                     <div className="text-sm font-medium text-gray-900 font-mono">{r.receipt_number}</div>
-                    {r.batch_id && (
-                        <div className="text-xs text-blue-600 font-mono truncate" title={`Batch: ${r.batch_id}`}>
-                            {r.batch_id}
-                        </div>
-                    )}
                     {r.invoice_number && (
                         <div className="text-xs text-green-600 truncate" title={`Invoice: ${r.invoice_number}`}>
                             📄 {r.invoice_number}
@@ -2248,24 +2243,47 @@ export const goodsReceiptsTableConfig = {
             )
         },
         {
-            key: 'product',
-            label: 'Məhsul',
+            key: 'items',
+            label: 'Məhsullar',
             width: '280px',
-            render: (r: GoodsReceipt) => (
-                <div className="flex items-center min-w-0">
-                    <CubeIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900 truncate" title={r.product?.name}>
-                            {r.product?.name || 'Məhsul silinib'}
-                        </div>
-                        {r.product?.sku && (
-                            <div className="text-xs text-gray-500 truncate" title={`SKU: ${r.product.sku}`}>
-                                SKU: {r.product.sku}
+            render: (r: GoodsReceipt) => {
+                const itemCount = r.items?.length || 0;
+                if (itemCount === 0) {
+                    // Fallback for legacy single-product receipts
+                    return (
+                        <div className="flex items-center min-w-0">
+                            <CubeIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium text-gray-900 truncate" title={r.product?.name}>
+                                    {r.product?.name || 'Məhsul silinib'}
+                                </div>
+                                {r.product?.sku && (
+                                    <div className="text-xs text-gray-500 truncate" title={`SKU: ${r.product.sku}`}>
+                                        SKU: {r.product.sku}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    );
+                }
+
+                // Show first product + count of others
+                const firstItem = r.items?.[0];
+                return (
+                    <div className="flex items-center min-w-0">
+                        <CubeIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-gray-900 truncate" title={firstItem?.product?.name}>
+                                {firstItem?.product?.name}
+                                {itemCount > 1 && <span className="ml-1 text-xs text-gray-500">+{itemCount - 1} daha</span>}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                                {itemCount} məhsul
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )
+                );
+            }
         },
         {
             key: 'supplier',
@@ -2288,16 +2306,18 @@ export const goodsReceiptsTableConfig = {
             )
         },
         {
-            key: 'quantity',
-            label: 'Miqdar',
-            sortable: true,
+            key: 'items_count',
+            label: 'Məhsul sayı',
             width: '120px',
-            align: 'right',
-            render: (r: GoodsReceipt) => (
-                <div className="text-sm font-medium text-gray-900">
-                    {parseFloat(String(r.quantity)).toLocaleString('az-AZ')}{r.unit ? ` ${r.unit}` : ''}
-                </div>
-            )
+            align: 'center',
+            render: (r: GoodsReceipt) => {
+                const itemCount = r.items?.length || 1;
+                return (
+                    <div className="text-sm font-medium text-gray-900">
+                        {itemCount} məhsul
+                    </div>
+                );
+            }
         },
         {
             key: 'total_cost',

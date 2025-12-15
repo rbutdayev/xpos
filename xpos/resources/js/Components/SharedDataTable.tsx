@@ -644,10 +644,10 @@ export default function SharedDataTable({
                                                                     }
 
                                                                     if (action.href) {
-                                                                        const href = typeof action.href === 'function' 
-                                                                            ? action.href(item) 
+                                                                        const href = typeof action.href === 'function'
+                                                                            ? action.href(item)
                                                                             : action.href.replace(':id', itemId);
-                                                                        
+
                                                                         return (
                                                                             <Link
                                                                                 key={actionIndex}

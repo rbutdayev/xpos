@@ -73,7 +73,7 @@ class ExpenseController extends Controller
         $expenses = $query->latest('expense_date')->get();
 
         // Get supplier credits (unpaid goods receipts) to show in expenses list
-        $supplierCreditsQuery = \App\Models\SupplierCredit::with(['supplier'])
+        $supplierCreditsQuery = \App\Models\SupplierCredit::with(['supplier', 'goodsReceipt'])
             ->where('account_id', Auth::user()->account_id)
             ->where('status', '!=', 'paid'); // Show pending and partial
 
@@ -111,12 +111,13 @@ class ExpenseController extends Controller
                 'supplier' => $credit->supplier,
                 'supplier_id' => $credit->supplier_id,
                 'supplier_credit_id' => $credit->id,
+                'goods_receipt_id' => $credit->goodsReceipt ? $credit->goodsReceipt->id : null, // Link to goods receipt for view button
                 'created_at' => $credit->created_at,
             ];
         });
 
         // Get unpaid goods receipts to show in expenses list
-        $unpaidGoodsReceiptsQuery = GoodsReceipt::with(['supplier', 'product', 'supplierCredit'])
+        $unpaidGoodsReceiptsQuery = GoodsReceipt::with(['supplier', 'items.product', 'supplierCredit'])
             ->where('account_id', auth()->user()->account_id)
             ->whereIn('payment_status', ['unpaid', 'partial']);
 
@@ -129,7 +130,7 @@ class ExpenseController extends Controller
                   ->orWhereHas('supplier', function ($subQ) use ($searchTerm) {
                       $subQ->where('name', 'like', '%' . $searchTerm . '%');
                   })
-                  ->orWhereHas('product', function ($subQ) use ($searchTerm) {
+                  ->orWhereHas('items.product', function ($subQ) use ($searchTerm) {
                       $subQ->where('name', 'like', '%' . $searchTerm . '%');
                   });
             });
@@ -147,10 +148,19 @@ class ExpenseController extends Controller
                 ? $receipt->supplierCredit->remaining_amount
                 : $receipt->total_cost;
 
+            // Build description from items
+            $itemCount = $receipt->items->count();
+            $description = 'Mal Qəbulu';
+            if ($itemCount === 1 && $receipt->items->first()->product) {
+                $description .= ' - ' . $receipt->items->first()->product->name;
+            } elseif ($itemCount > 1) {
+                $description .= ' - ' . $itemCount . ' məhsul';
+            }
+
             return (object) [
                 'expense_id' => null,
                 'reference_number' => $receipt->receipt_number,
-                'description' => 'Mal Qəbulu - ' . ($receipt->product ? $receipt->product->name : 'Məhsul'),
+                'description' => $description,
                 'amount' => $receipt->total_cost,
                 'remaining_amount' => $remainingAmount,
                 'expense_date' => $receipt->created_at,
@@ -204,7 +214,7 @@ class ExpenseController extends Controller
         // Get unpaid and partially paid goods receipts for the supplier payment modal
         $unpaidGoodsReceipts = GoodsReceipt::where('account_id', auth()->user()->account_id)
             ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->with(['supplier:id,name', 'product:id,name', 'supplierCredit'])
+            ->with(['supplier:id,name', 'items.product:id,name', 'supplierCredit'])
             ->orderBy('due_date')
             ->orderBy('created_at')
             ->get()
@@ -253,7 +263,7 @@ class ExpenseController extends Controller
         // Get unpaid goods receipts with supplier information
         $unpaidGoodsReceipts = GoodsReceipt::where('account_id', auth()->user()->account_id)
             ->where('payment_status', 'unpaid')
-            ->with(['supplier:id,name', 'product:id,name'])
+            ->with(['supplier:id,name', 'items.product:id,name'])
             ->orderBy('due_date')
             ->orderBy('created_at')
             ->get();
@@ -432,17 +442,126 @@ class ExpenseController extends Controller
         Gate::authorize('manage-expenses');
         Gate::authorize('access-account-data', $expense);
 
-        // Prevent deletion of expenses created from instant payment goods receipts
+        // Check if this expense is linked to a goods receipt (instant payment)
+        // Only admin or account_owner can delete these expenses
         if ($expense->goods_receipt_id) {
-            return back()->withErrors([
-                'error' => 'Mal qəbulundan yaradılmış xərcləri silmək mümkün deyil. Mal qəbulunu silin.'
-            ]);
+            // Check user permission - only admin and account_owner can delete
+            if (!Auth::user()->isAdmin() && !Auth::user()->isOwner()) {
+                return back()->withErrors([
+                    'error' => 'Yalnız administrator və ya hesab sahibi mal qəbulu ödəməsi xərclərini silə bilər.'
+                ]);
+            }
+
+            try {
+                DB::beginTransaction();
+
+                $goodsReceipt = GoodsReceipt::find($expense->goods_receipt_id);
+
+                if (!$goodsReceipt) {
+                    DB::rollBack();
+                    return back()->withErrors(['error' => 'Mal qəbulu tapılmadı']);
+                }
+
+                \Log::info("Deleting instant payment expense", [
+                    'expense_id' => $expense->expense_id,
+                    'reference_number' => $expense->reference_number,
+                    'goods_receipt_id' => $goodsReceipt->id,
+                    'amount' => $expense->amount,
+                    'user_id' => Auth::id(),
+                ]);
+
+                // STEP 1: Find and delete linked supplier payment FIRST
+                $supplierPayment = \App\Models\SupplierPayment::where('account_id', Auth::user()->account_id)
+                    ->where('invoice_number', $goodsReceipt->receipt_number)
+                    ->where('amount', $expense->amount)
+                    ->where('description', 'like', '%' . $goodsReceipt->receipt_number . '%')
+                    ->first();
+
+                if ($supplierPayment) {
+                    \Log::info("Deleting linked supplier payment", [
+                        'payment_id' => $supplierPayment->payment_id,
+                        'reference_number' => $supplierPayment->reference_number,
+                        'amount' => $supplierPayment->amount,
+                    ]);
+
+                    // Delete supplier payment (without triggering its deleting hook that would try to delete expense again)
+                    // We'll delete expense manually after
+                    $supplierPayment->withoutEvents(function () use ($supplierPayment) {
+                        $supplierPayment->delete();
+                    });
+                }
+
+                // STEP 2: Update goods receipt status to unpaid
+                $goodsReceipt->update([
+                    'payment_status' => 'unpaid',
+                    'payment_method' => 'credit',
+                ]);
+
+                \Log::info("Updated goods receipt status to unpaid", [
+                    'receipt_id' => $goodsReceipt->id,
+                    'receipt_number' => $goodsReceipt->receipt_number,
+                ]);
+
+                // STEP 3: Create or update supplier credit for this goods receipt
+                if ($goodsReceipt->supplier_credit_id) {
+                    $supplierCredit = SupplierCredit::find($goodsReceipt->supplier_credit_id);
+                    if ($supplierCredit) {
+                        // Restore credit amount
+                        $supplierCredit->remaining_amount = $supplierCredit->amount;
+                        $supplierCredit->status = 'pending';
+                        $supplierCredit->save();
+
+                        \Log::info("Restored supplier credit", [
+                            'credit_id' => $supplierCredit->id,
+                            'remaining_amount' => $supplierCredit->remaining_amount,
+                        ]);
+                    }
+                } else {
+                    // Create new supplier credit
+                    $supplierCredit = $goodsReceipt->createSupplierCredit();
+
+                    \Log::info("Created new supplier credit", [
+                        'credit_id' => $supplierCredit->id,
+                        'amount' => $supplierCredit->amount,
+                    ]);
+                }
+
+                // STEP 4: Delete associated receipt file
+                if ($expense->receipt_file_path && Storage::disk('documents')->exists($expense->receipt_file_path)) {
+                    Storage::disk('documents')->delete($expense->receipt_file_path);
+                }
+
+                // STEP 5: Delete the expense WITHOUT triggering deleting hooks (we already handled everything)
+                $expense->withoutEvents(function () use ($expense) {
+                    $expense->delete();
+                });
+
+                \Log::info("Deleted instant payment expense successfully", [
+                    'expense_id' => $expense->expense_id,
+                    'goods_receipt_id' => $goodsReceipt->id,
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('expenses.index')
+                    ->with('success', 'Xerc silindi və mal qəbulu ödənilməmiş statusuna qaytarıldı');
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Error deleting instant payment expense: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString(),
+                    'expense_id' => $expense->expense_id,
+                ]);
+                return back()->withErrors([
+                    'error' => 'Xerc silinərkən xəta baş verdi: ' . $e->getMessage()
+                ]);
+            }
         }
 
-        // Check if this expense is a vendor/supplier payment
+        // Check if this expense is a vendor/supplier payment (credit payment)
         // Only admin or account_owner can delete vendor payment expenses
         if ($expense->supplier_credit_id && $expense->credit_payment_amount > 0) {
-            if (!Auth::user()->isAdmin()) {
+            if (!Auth::user()->isAdmin() && !Auth::user()->isOwner()) {
                 return redirect()->back()
                     ->with('error', 'Yalnız administrator və ya hesab sahibi təchizatçı ödəməsi xərclərini silə bilər.');
             }
@@ -453,6 +572,7 @@ class ExpenseController extends Controller
             Storage::disk('documents')->delete($expense->receipt_file_path);
         }
 
+        // Delete expense (deleting hook will handle supplier credit reversal)
         $expense->delete();
 
         return redirect()->route('expenses.index')
@@ -577,7 +697,7 @@ class ExpenseController extends Controller
             ]);
 
             // Get all goods receipts in the batch
-            $goodsReceipts = GoodsReceipt::with(['supplier', 'product', 'supplierCredit'])
+            $goodsReceipts = GoodsReceipt::with(['supplier', 'items.product', 'supplierCredit'])
                 ->where('account_id', auth()->user()->account_id)
                 ->whereIn('id', $request->batch_item_ids)
                 ->get();
@@ -604,7 +724,7 @@ class ExpenseController extends Controller
             ]);
         }
 
-        $goodsReceipt = GoodsReceipt::with(['supplier', 'product', 'supplierCredit'])
+        $goodsReceipt = GoodsReceipt::with(['supplier', 'items.product', 'supplierCredit'])
             ->where('account_id', auth()->user()->account_id)
             ->findOrFail($request->goods_receipt_id);
 
@@ -721,15 +841,15 @@ class ExpenseController extends Controller
             DB::beginTransaction();
 
             // Create a single expense for the batch
-            $batchId = $request->batch_id ?? $firstReceipt->batch_id;
             $receiptNumbers = $goodsReceipts->pluck('receipt_number')->join(', ');
+            $itemCount = $goodsReceipts->count();
 
             $expense = Expense::create([
                 'account_id' => auth()->user()->account_id,
                 'category_id' => $request->category_id,
                 'branch_id' => $request->branch_id,
                 'amount' => $paymentAmount,
-                'description' => "Partiya ödəməsi - {$batchId} ({$goodsReceipts->count()} məhsul)",
+                'description' => "Qrup ödəməsi - {$itemCount} mal qəbulu ({$receiptNumbers})",
                 'expense_date' => now()->format('Y-m-d'),
                 'payment_method' => $request->payment_method,
                 'user_id' => Auth::id(),
@@ -742,10 +862,10 @@ class ExpenseController extends Controller
                 'account_id' => auth()->user()->account_id,
                 'supplier_id' => $firstReceipt->supplier_id,
                 'amount' => $paymentAmount,
-                'description' => "Partiya ödəməsi - {$batchId} ({$goodsReceipts->count()} məhsul)",
+                'description' => "Qrup ödəməsi - {$itemCount} mal qəbulu",
                 'payment_date' => now()->format('Y-m-d'),
                 'payment_method' => $request->payment_method,
-                'invoice_number' => $batchId,
+                'invoice_number' => $receiptNumbers,
                 'user_id' => Auth::id(),
                 'notes' => "Xerc: {$expense->reference_number}",
             ]);
@@ -795,7 +915,6 @@ class ExpenseController extends Controller
             DB::rollBack();
             \Log::error('Error processing batch payment: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
-                'batch_id' => $request->batch_id ?? null,
                 'batch_item_ids' => $request->batch_item_ids ?? null,
             ]);
             return back()->withErrors([

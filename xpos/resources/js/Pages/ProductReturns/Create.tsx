@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { useState, useEffect, useRef } from 'react';
+import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Supplier, Warehouse, Employee } from '@/types';
-import MultiUnitPricing from '@/Components/MultiUnitPricing';
+import { Supplier, Warehouse } from '@/types';
+import useProductReturnForm from './Hooks/useProductReturnForm';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import InputLabel from '@/Components/InputLabel';
+import TextInput from '@/Components/TextInput';
 
 interface ProductWithStock {
     id: number;
@@ -24,22 +27,16 @@ interface Props {
 export default function Create({ suppliers, warehouses }: Props) {
     const [products, setProducts] = useState<ProductWithStock[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<ProductWithStock | null>(null);
-    const [selectedUnit, setSelectedUnit] = useState('');
-    
-    const { data, setData, post, processing, errors } = useForm({
-        supplier_id: '',
-        product_id: '',
-        warehouse_id: '',
-        quantity: '',
-        unit_cost: '',
-        return_date: new Date().toISOString().split('T')[0],
-        reason: '',
-        selling_unit: '',
-    });
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredProducts, setFilteredProducts] = useState<ProductWithStock[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [waitingForResults, setWaitingForResults] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    const { form, submit, addItem, removeItem, updateItem } = useProductReturnForm();
 
     const fetchProducts = async () => {
-        if (!data.supplier_id || !data.warehouse_id) {
+        if (!form.data.supplier_id || !form.data.warehouse_id) {
             setProducts([]);
             return;
         }
@@ -53,8 +50,8 @@ export default function Create({ suppliers, warehouses }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    supplier_id: data.supplier_id,
-                    warehouse_id: data.warehouse_id,
+                    supplier_id: form.data.supplier_id,
+                    warehouse_id: form.data.warehouse_id,
                 }),
             });
 
@@ -77,41 +74,51 @@ export default function Create({ suppliers, warehouses }: Props) {
 
     useEffect(() => {
         fetchProducts();
-        // Reset product selection when supplier or warehouse changes
-        setData('product_id', '');
-        setSelectedProduct(null);
-    }, [data.supplier_id, data.warehouse_id]);
+    }, [form.data.supplier_id, form.data.warehouse_id]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        post(route('product-returns.store'));
-    };
-
-    const handleProductChange = (productId: string) => {
-        setData('product_id', productId);
-        const product = products.find(p => p.id.toString() === productId);
-        setSelectedProduct(product || null);
-        
-        if (product) {
-            // Default olaraq base unit seç
-            const defaultUnit = product.base_unit || 'L';
-            setSelectedUnit(defaultUnit);
-            setData('selling_unit', defaultUnit);
-            setData('unit_cost', product.unit_price?.toString() || '0');
+    // Filter products based on search query
+    useEffect(() => {
+        if (searchQuery.length >= 2) {
+            const filtered = products.filter(product =>
+                product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                product.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            setFilteredProducts(filtered);
+            setShowDropdown(true);
         } else {
-            setSelectedUnit('');
-            setData('selling_unit', '');
-            setData('unit_cost', '0');
+            setFilteredProducts([]);
+            setShowDropdown(false);
         }
+    }, [searchQuery, products]);
+
+    // Auto-select when results arrive after Enter or paste (barcode scan)
+    useEffect(() => {
+        if (waitingForResults && !loadingProducts && filteredProducts.length === 1) {
+            handleProductSelect(filteredProducts[0]);
+            setWaitingForResults(false);
+        }
+    }, [waitingForResults, loadingProducts, filteredProducts]);
+
+    const handleProductSelect = (product: ProductWithStock) => {
+        addItem(product);
+        setSearchQuery('');
+        setShowDropdown(false);
+        // Focus back on search input for next scan
+        setTimeout(() => {
+            searchInputRef.current?.focus();
+        }, 100);
     };
 
-    const handlePriceChange = (pricingInfo: any) => {
-        setData('unit_cost', pricingInfo.unitPrice.toString());
+    const calculateItemTotal = (item: any) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitCost = parseFloat(item.unit_cost) || 0;
+        return quantity * unitCost;
     };
 
-    const handleUnitChange = (unit: string) => {
-        setSelectedUnit(unit);
-        setData('selling_unit', unit);
+    const calculateGrandTotal = () => {
+        return form.data.items.reduce((total, item) => {
+            return total + calculateItemTotal(item);
+        }, 0);
     };
 
     return (
@@ -122,16 +129,16 @@ export default function Create({ suppliers, warehouses }: Props) {
                 <div className="md:flex md:items-center md:justify-between mb-6">
                     <div className="flex-1 min-w-0">
                         <h2 className="text-xl sm:text-2xl font-bold leading-7 text-gray-900">
-                            Məhsul İadəsi
+                            Məhsul Qaytarması
                         </h2>
                         <p className="mt-1 text-sm sm:text-base text-gray-500">
-                            Təchizatçıya iadə
+                            Təchizatçıya qaytarma (çoxlu məhsul)
                         </p>
                     </div>
                 </div>
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
+                    <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                             {/* Supplier */}
                             <div>
@@ -140,8 +147,8 @@ export default function Create({ suppliers, warehouses }: Props) {
                                 </label>
                                 <select
                                     id="supplier_id"
-                                    value={data.supplier_id}
-                                    onChange={(e) => setData('supplier_id', e.target.value)}
+                                    value={form.data.supplier_id}
+                                    onChange={(e) => (form.setData as any)('supplier_id', e.target.value)}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     required
                                 >
@@ -152,39 +159,6 @@ export default function Create({ suppliers, warehouses }: Props) {
                                         </option>
                                     ))}
                                 </select>
-                                {errors.supplier_id && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.supplier_id}</p>
-                                )}
-                            </div>
-
-                            {/* Product */}
-                            <div>
-                                <label htmlFor="product_id" className="block text-sm font-medium text-gray-700">
-                                    Məhsul *
-                                </label>
-                                <select
-                                    id="product_id"
-                                    value={data.product_id}
-                                    onChange={(e) => handleProductChange(e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    disabled={loadingProducts || !data.supplier_id || !data.warehouse_id}
-                                    required
-                                >
-                                    <option value="">
-                                        {loadingProducts ? 'Məhsullar yüklənir...' : 
-                                         !data.supplier_id || !data.warehouse_id ? 'Əvvəlcə təchizatçı və anbar seçin' : 
-                                         products.length === 0 ? 'Bu təchizatçıdan məhsul yoxdur' : 
-                                         'Məhsul seçin'}
-                                    </option>
-                                    {products.map((product) => (
-                                        <option key={product.id} value={product.id}>
-                                            {product.name} - {product.barcode} (Anbarda: {product.available_quantity})
-                                        </option>
-                                    ))}
-                                </select>
-                                {errors.product_id && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.product_id}</p>
-                                )}
                             </div>
 
                             {/* Warehouse */}
@@ -194,8 +168,8 @@ export default function Create({ suppliers, warehouses }: Props) {
                                 </label>
                                 <select
                                     id="warehouse_id"
-                                    value={data.warehouse_id}
-                                    onChange={(e) => setData('warehouse_id', e.target.value)}
+                                    value={form.data.warehouse_id}
+                                    onChange={(e) => (form.setData as any)('warehouse_id', e.target.value)}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     required
                                 >
@@ -206,103 +180,227 @@ export default function Create({ suppliers, warehouses }: Props) {
                                         </option>
                                     ))}
                                 </select>
-                                {errors.warehouse_id && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.warehouse_id}</p>
-                                )}
                             </div>
-
-                            {/* Quantity */}
-                            <div>
-                                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-                                    Miqdar *
-                                    {selectedProduct && (
-                                        <span className="text-sm text-gray-500 ml-2">
-                                            (Maksimum miqdar: {selectedProduct.available_quantity})
-                                        </span>
-                                    )}
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.001"
-                                    id="quantity"
-                                    value={data.quantity}
-                                    onChange={(e) => setData('quantity', e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    min="0.001"
-                                    max={selectedProduct?.available_quantity || undefined}
-                                    disabled={!selectedProduct}
-                                    required
-                                />
-                                {errors.quantity && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.quantity}</p>
-                                )}
-                                {selectedProduct && parseFloat(data.quantity) > selectedProduct.available_quantity && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        Miqdar mövcud miqdarı aşır ({selectedProduct.available_quantity})
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Multi-Unit Pricing */}
-                            {selectedProduct && (
-                                <div className="col-span-2">
-                                    <MultiUnitPricing
-                                        product={selectedProduct}
-                                        quantity={parseFloat(data.quantity) || 0}
-                                        selectedUnit={selectedUnit}
-                                        onPriceChange={handlePriceChange}
-                                        onUnitChange={handleUnitChange}
-                                        showUnitSelector={true}
-                                    />
-                                </div>
-                            )}
 
                             {/* Return Date */}
                             <div>
                                 <label htmlFor="return_date" className="block text-sm font-medium text-gray-700">
-                                    İadə tarixi *
+                                    Qaytarma tarixi *
                                 </label>
                                 <input
                                     type="date"
                                     id="return_date"
-                                    value={data.return_date}
-                                    onChange={(e) => setData('return_date', e.target.value)}
+                                    value={form.data.return_date}
+                                    onChange={(e) => (form.setData as any)('return_date', e.target.value)}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                     required
                                 />
-                                {errors.return_date && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.return_date}</p>
-                                )}
                             </div>
-
-
                         </div>
 
+                        {/* Product Search Section */}
+                        {form.data.supplier_id && form.data.warehouse_id && (
+                            <div className="border-t pt-6">
+                                <InputLabel htmlFor="product_search" value="Məhsul *" />
+                                <div className="relative">
+                                    <TextInput
+                                        ref={searchInputRef}
+                                        id="product_search"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onPaste={(e) => {
+                                            // When barcode is pasted/scanned, wait for results to auto-select
+                                            const pastedText = e.clipboardData.getData('text');
+                                            if (pastedText.trim()) {
+                                                setWaitingForResults(true);
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            // Prevent Enter key from submitting the form when scanning barcodes
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+
+                                                // If already have 1 result, select it immediately
+                                                if (filteredProducts.length === 1) {
+                                                    handleProductSelect(filteredProducts[0]);
+                                                } else if (searchQuery.trim()) {
+                                                    // Otherwise wait for results to load
+                                                    setWaitingForResults(true);
+                                                }
+                                            }
+                                        }}
+                                        className="mt-2 block w-full"
+                                        placeholder="Məhsul adı və ya barkod ilə axtar (scan barcode)..."
+                                        disabled={loadingProducts}
+                                    />
+                                    {loadingProducts && (
+                                        <div className="absolute right-3 top-12 text-xs text-gray-400">Axtarılır...</div>
+                                    )}
+
+                                    {/* Search Results */}
+                                    {showDropdown && searchQuery.length >= 2 && filteredProducts.length > 0 && (
+                                        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                                            {filteredProducts.map((product) => (
+                                                <div
+                                                    key={product.id}
+                                                    onClick={() => handleProductSelect(product)}
+                                                    className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <div>
+                                                            <div className="font-medium text-gray-900">{product.name}</div>
+                                                            <div className="text-sm text-gray-500">
+                                                                {product.barcode && `Barkod: ${product.barcode}`}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-sm text-gray-600">
+                                                                Mövcud: {product.available_quantity} {product.base_unit}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* No Results */}
+                                    {searchQuery.length >= 2 && !loadingProducts && filteredProducts.length === 0 && (
+                                        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                            <div className="p-3 text-gray-500 text-sm">
+                                                "{searchQuery}" üzrə heç bir məhsul tapılmadı
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Items List */}
+                        {form.data.items.length > 0 && (
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                    Qaytarılacaq məhsullar ({form.data.items.length})
+                                </h3>
+                                <div className="space-y-4 max-h-96 overflow-y-auto">
+                                    {form.data.items.map((item, index) => (
+                                        <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <h4 className="font-medium text-gray-900">{item.product?.name}</h4>
+                                                    <p className="text-sm text-gray-500">{item.product?.barcode}</p>
+                                                    <p className="text-sm text-gray-600">
+                                                        Mövcud: {item.product?.available_quantity} {item.product?.base_unit}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeItem(index)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    <TrashIcon className="h-5 w-5" />
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                {/* Quantity */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">
+                                                        Miqdar *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.001"
+                                                        value={item.quantity}
+                                                        onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        min="0.001"
+                                                        max={item.product?.available_quantity || undefined}
+                                                        required
+                                                    />
+                                                    {parseFloat(item.quantity) > (item.product?.available_quantity || 0) && (
+                                                        <p className="mt-1 text-sm text-red-600">
+                                                            Miqdar stokdan çoxdur
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Unit */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">
+                                                        Vahid *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={item.unit}
+                                                        onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        required
+                                                    />
+                                                </div>
+
+                                                {/* Unit Cost */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">
+                                                        Vahid qiyməti *
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={item.unit_cost}
+                                                        onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        min="0"
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Item Total */}
+                                            <div className="mt-3 text-right">
+                                                <span className="text-sm text-gray-700">Cəm: </span>
+                                                <span className="text-lg font-semibold text-gray-900">
+                                                    {calculateItemTotal(item).toFixed(2)} ₼
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Grand Total */}
+                                <div className="mt-4 pt-4 border-t">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg font-medium text-gray-900">Ümumi məbləğ:</span>
+                                        <span className="text-2xl font-bold text-gray-900">
+                                            {calculateGrandTotal().toFixed(2)} ₼
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Reason */}
-                        <div>
+                        <div className="border-t pt-6">
                             <label htmlFor="reason" className="block text-sm font-medium text-gray-700">
                                 Qaytarma səbəbi *
                             </label>
                             <textarea
                                 id="reason"
                                 rows={4}
-                                value={data.reason}
-                                onChange={(e) => setData('reason', e.target.value)}
+                                value={form.data.reason}
+                                onChange={(e) => (form.setData as any)('reason', e.target.value)}
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                placeholder="Məhsulun qaytarılma səbəbini qeyd edin..."
+                                placeholder="Məhsulların qaytarılma səbəbini qeyd edin..."
                                 maxLength={1000}
                                 required
                             />
-                            {errors.reason && (
-                                <p className="mt-2 text-sm text-red-600">{errors.reason}</p>
-                            )}
                             <p className="mt-1 text-sm text-gray-500">
-                                {data.reason.length}/1000 simvol
+                                {(form.data.reason || '').length}/1000 simvol
                             </p>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-6 border-t">
                             <button
                                 type="button"
                                 onClick={() => window.history.back()}
@@ -312,10 +410,10 @@ export default function Create({ suppliers, warehouses }: Props) {
                             </button>
                             <button
                                 type="submit"
-                                disabled={processing}
+                                disabled={form.processing || form.data.items.length === 0}
                                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center justify-center disabled:opacity-50"
                             >
-                                {processing ? 'Yadda saxlanır...' : 'Qaytarma yarat'}
+                                {form.processing ? 'Yadda saxlanır...' : 'Qaytarma yarat'}
                             </button>
                         </div>
                     </form>

@@ -168,18 +168,32 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             label: t('labels.amount', { ns: 'common' }),
             sortable: true,
             align: 'right',
-            render: (expense: Expense) => (
-                <div className="text-sm">
-                    <div className="font-medium text-gray-900">
-                        {expense.amount.toLocaleString('az-AZ')} ₼
-                    </div>
-                    {expense.type === 'supplier_credit' && expense.remaining_amount !== undefined && expense.remaining_amount > 0 && (
-                        <div className="text-xs text-orange-600 mt-0.5">
-                            {t('fields.remainingAmount')}: {expense.remaining_amount.toLocaleString('az-AZ')} ₼
+            render: (expense: Expense) => {
+                const remainingAmount = expense.remaining_amount ?? 0;
+                const isPartiallyPaid = (expense.type === 'supplier_credit' || expense.type === 'goods_receipt')
+                    && remainingAmount > 0
+                    && remainingAmount < expense.amount;
+
+                const paidAmount = isPartiallyPaid ? expense.amount - remainingAmount : null;
+
+                return (
+                    <div className="text-sm">
+                        <div className="font-medium text-gray-900">
+                            {expense.amount.toLocaleString('az-AZ')} ₼
                         </div>
-                    )}
-                </div>
-            ),
+                        {isPartiallyPaid && paidAmount !== null && (
+                            <div className="text-xs text-green-600 mt-0.5">
+                                Ödənilib: {paidAmount.toLocaleString('az-AZ')} ₼
+                            </div>
+                        )}
+                        {(expense.type === 'supplier_credit' || expense.type === 'goods_receipt') && remainingAmount > 0 && (
+                            <div className="text-xs text-orange-600 mt-0.5">
+                                {t('fields.remainingAmount')}: {remainingAmount.toLocaleString('az-AZ')} ₼
+                            </div>
+                        )}
+                    </div>
+                );
+            },
             width: '140px'
         },
         {
@@ -204,6 +218,24 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             render: (expense: Expense) => {
                 // For supplier credits that are not paid, show "Ödənilməyib"
                 if (expense.type === 'supplier_credit' && expense.status !== 'paid') {
+                    return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            {t('paymentMethods.unpaid')}
+                        </span>
+                    );
+                }
+
+                // For unpaid goods receipts (credit payment), show "Ödənilməyib"
+                if (expense.type === 'goods_receipt' && expense.payment_status !== 'paid') {
+                    return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            {t('paymentMethods.unpaid')}
+                        </span>
+                    );
+                }
+
+                // For payment method 'borc' (debt/credit), show "Ödənilməyib"
+                if (expense.payment_method === 'borc') {
                     return (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             {t('paymentMethods.unpaid')}
@@ -316,10 +348,26 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     const actions: Action[] = [
         {
             label: t('actions.view', { ns: 'common' }),
-            href: (expense: Expense) => `/expenses/${expense.expense_id}`,
+            href: (expense: Expense) => {
+                // Route to goods receipt page for goods receipts AND supplier credits linked to goods receipts
+                if ((expense.type === 'goods_receipt' || expense.type === 'supplier_credit') && expense.goods_receipt_id) {
+                    return `/goods-receipts/${expense.goods_receipt_id}`;
+                }
+                // Route to expense page for regular expenses
+                if (expense.expense_id) {
+                    return `/expenses/${expense.expense_id}`;
+                }
+                return '#';
+            },
             icon: <EyeIcon className="w-4 h-4" />,
             variant: 'primary',
-            condition: (expense: Expense) => expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' // Hide view for credits and goods receipts
+            condition: (expense: Expense) => {
+                return !!(
+                    (expense.type === 'goods_receipt' && expense.goods_receipt_id) ||
+                    (expense.type === 'supplier_credit' && expense.goods_receipt_id) ||
+                    (expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' && expense.expense_id)
+                );
+            }
         },
         {
             label: t('actions.pay'),
@@ -333,7 +381,9 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             onClick: (expense: Expense) => handlePayGoodsReceipt(expense),
             icon: <CurrencyDollarIcon className="w-4 h-4" />,
             variant: 'primary',
-            condition: (expense: Expense) => expense.type === 'goods_receipt' && expense.payment_status !== 'paid'
+            condition: (expense: Expense) => {
+                return expense.type === 'goods_receipt' && expense.payment_status !== 'paid';
+            }
         },
         {
             label: t('actions.edit', { ns: 'common' }),
@@ -347,7 +397,19 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
             onClick: (expense: Expense) => handleDelete(expense),
             icon: <TrashIcon className="w-4 h-4" />,
             variant: 'danger',
-            condition: (expense: Expense) => expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' // Hide delete for credits and goods receipts
+            condition: (expense: Expense) => {
+                // Hide delete for supplier credits
+                if (expense.type === 'supplier_credit') return false;
+
+                // Hide delete for unpaid/partial goods receipts shown in list (expense_id is null)
+                // These should be deleted from the goods receipts page, not here
+                if (expense.type === 'goods_receipt' && expense.expense_id === null) return false;
+
+                // Allow delete for:
+                // 1. Goods receipt instant payment expenses (expense_id !== null) - permission check in backend
+                // 2. Regular expenses
+                return expense.expense_id !== null;
+            }
         }
     ];
 
@@ -376,7 +438,14 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     };
 
     const handleDelete = (expense: Expense) => {
-        if (confirm(t('messages.confirmDelete'))) {
+        // More specific confirmation message for goods receipt expenses
+        let confirmMessage = t('messages.confirmDelete');
+
+        if (expense.type === 'goods_receipt') {
+            confirmMessage = 'Bu mal qəbulu ödəməsini silmək istədiyinizdən əminsiniz? Mal qəbulu ödənilməmiş statusuna qaytarılacaq.';
+        }
+
+        if (confirm(confirmMessage)) {
             router.delete(`/expenses/${expense.expense_id}`, {
                 preserveScroll: true,
             });
@@ -408,14 +477,13 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         <AuthenticatedLayout>
             <Head title={t('title')} />
 
-            <div className="py-6">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Expense Navigation */}
-                    <ExpensesNavigation
-                        currentRoute={route().current()}
-                        onCreateExpense={() => setShowCreateExpenseModal(true)}
-                        onCreateSupplierPayment={() => setShowSupplierPaymentModal(true)}
-                    />
+            <div className="py-6 px-4 sm:px-6 lg:px-8">
+                {/* Expense Navigation */}
+                <ExpensesNavigation
+                    currentRoute={route().current()}
+                    onCreateExpense={() => setShowCreateExpenseModal(true)}
+                    onCreateSupplierPayment={() => setShowSupplierPaymentModal(true)}
+                />
 
                 <div className="w-full">
                     {/* Flash Messages */}
@@ -464,7 +532,6 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         mobileClickable={true}
                         hideMobileActions={true}
                     />
-                </div>
                 </div>
             </div>
 

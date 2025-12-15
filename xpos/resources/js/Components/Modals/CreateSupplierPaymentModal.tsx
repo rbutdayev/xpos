@@ -145,7 +145,7 @@ export default function CreateSupplierPaymentModal({
     };
 
     return (
-        <Modal show={show} onClose={handleClose} maxWidth="2xl">
+        <Modal show={show} onClose={handleClose} maxWidth="5xl">
             <form onSubmit={handleSubmit} className="p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Yeni Təchizatçı Ödənişi
@@ -257,162 +257,171 @@ export default function CreateSupplierPaymentModal({
                         </div>
                     )}
 
-                    {/* Supplier Selection */}
-                    <div>
-                        <InputLabel htmlFor="supplier_id" value="Təchizatçı *" />
-                        <select
-                            id="supplier_id"
-                            value={formData.supplier_id}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, supplier_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                            required
-                        >
-                            <option value="">Təchizatçı seçin</option>
-                            {suppliers.map((supplier) => (
-                                <option key={supplier.id} value={supplier.id}>
-                                    {supplier.name}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.supplier_id} className="mt-2" />
-                    </div>
+                    {/* Two-column grid layout for form fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Left Column */}
+                        <div className="space-y-4">
+                            {/* Supplier Selection */}
+                            <div>
+                                <InputLabel htmlFor="supplier_id" value="Təchizatçı *" />
+                                <select
+                                    id="supplier_id"
+                                    value={formData.supplier_id}
+                                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, supplier_id: e.target.value })}
+                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    required
+                                >
+                                    <option value="">Təchizatçı seçin</option>
+                                    {suppliers.map((supplier) => (
+                                        <option key={supplier.id} value={supplier.id}>
+                                            {supplier.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.supplier_id} className="mt-2" />
+                            </div>
 
-                    {/* Amount */}
-                    <div>
-                        <InputLabel htmlFor="amount" value="Məbləğ (AZN) *" />
-                        <TextInput
-                            id="amount"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={formData.amount}
-                            onChange={(e) => {
-                                setFormData({
-                                    ...formData,
-                                    amount: e.target.value,
-                                    payment_amount: formData.goods_receipt_id ? e.target.value : formData.payment_amount
-                                });
-                            }}
-                            className="mt-1 block w-full"
-                            placeholder="0.00"
-                            required
-                        />
-                        <InputError message={errors.amount} className="mt-2" />
-                    </div>
+                            {/* Amount */}
+                            <div>
+                                <InputLabel htmlFor="amount" value="Məbləğ (AZN) *" />
+                                <TextInput
+                                    id="amount"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={formData.amount}
+                                    onChange={(e) => {
+                                        setFormData({
+                                            ...formData,
+                                            amount: e.target.value,
+                                            payment_amount: formData.goods_receipt_id ? e.target.value : formData.payment_amount
+                                        });
+                                    }}
+                                    className="mt-1 block w-full"
+                                    placeholder="0.00"
+                                    required
+                                />
+                                <InputError message={errors.amount} className="mt-2" />
+                            </div>
 
-                    {/* Description */}
-                    <div>
-                        <InputLabel htmlFor="description" value="Təsvir *" />
-                        <TextInput
-                            id="description"
-                            type="text"
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="mt-1 block w-full"
-                            placeholder="Ödəniş məqsədi və ya açıqlaması"
-                            required
-                        />
-                        <InputError message={errors.description} className="mt-2" />
-                    </div>
+                            {/* Payment Date */}
+                            <div>
+                                <InputLabel htmlFor="payment_date" value="Ödəniş tarixi *" />
+                                <TextInput
+                                    id="payment_date"
+                                    type="date"
+                                    value={formData.payment_date}
+                                    onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+                                    className="mt-1 block w-full"
+                                    required
+                                />
+                                <InputError message={errors.payment_date} className="mt-2" />
+                            </div>
 
-                    {/* Payment Date */}
-                    <div>
-                        <InputLabel htmlFor="payment_date" value="Ödəniş tarixi *" />
-                        <TextInput
-                            id="payment_date"
-                            type="date"
-                            value={formData.payment_date}
-                            onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-                            className="mt-1 block w-full"
-                            required
-                        />
-                        <InputError message={errors.payment_date} className="mt-2" />
-                    </div>
+                            {/* Payment Method */}
+                            <div>
+                                <InputLabel htmlFor="payment_method" value="Ödəniş üsulu *" />
+                                <select
+                                    id="payment_method"
+                                    value={formData.payment_method}
+                                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, payment_method: e.target.value })}
+                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    required
+                                >
+                                    {Object.entries(paymentMethods).map(([key, value]) => (
+                                        <option key={key} value={key}>
+                                            {value}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.payment_method} className="mt-2" />
+                            </div>
 
-                    {/* Payment Method */}
-                    <div>
-                        <InputLabel htmlFor="payment_method" value="Ödəniş üsulu *" />
-                        <select
-                            id="payment_method"
-                            value={formData.payment_method}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, payment_method: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                            required
-                        >
-                            {Object.entries(paymentMethods).map(([key, value]) => (
-                                <option key={key} value={key}>
-                                    {value}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.payment_method} className="mt-2" />
-                    </div>
+                            {/* Invoice Number */}
+                            <div>
+                                <InputLabel htmlFor="invoice_number" value="İnvoys nömrəsi" />
+                                <TextInput
+                                    id="invoice_number"
+                                    type="text"
+                                    value={formData.invoice_number}
+                                    onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
+                                    className="mt-1 block w-full"
+                                    placeholder="Ödənilən invoys nömrəsi"
+                                />
+                                <InputError message={errors.invoice_number} className="mt-2" />
+                            </div>
+                        </div>
 
-                    {/* Branch Selection */}
-                    <div>
-                        <InputLabel htmlFor="branch_id" value="Filial *" />
-                        <select
-                            id="branch_id"
-                            value={formData.branch_id}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, branch_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                            required
-                        >
-                            <option value="">Filial seçin</option>
-                            {branches.map((branch) => (
-                                <option key={branch.id} value={branch.id}>
-                                    {branch.name}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.branch_id} className="mt-2" />
-                    </div>
+                        {/* Right Column */}
+                        <div className="space-y-4">
+                            {/* Description */}
+                            <div>
+                                <InputLabel htmlFor="description" value="Təsvir *" />
+                                <TextInput
+                                    id="description"
+                                    type="text"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="mt-1 block w-full"
+                                    placeholder="Ödəniş məqsədi və ya açıqlaması"
+                                    required
+                                />
+                                <InputError message={errors.description} className="mt-2" />
+                            </div>
 
-                    {/* Category Selection */}
-                    <div>
-                        <InputLabel htmlFor="category_id" value="Xərc kateqoriyası" />
-                        <select
-                            id="category_id"
-                            value={formData.category_id}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                        >
-                            <option value="">Kateqoriya seçin (istəyə bağlı)</option>
-                            {categories.map((category) => (
-                                <option key={category.category_id} value={category.category_id}>
-                                    {category.name}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.category_id} className="mt-2" />
-                    </div>
+                            {/* Branch Selection */}
+                            <div>
+                                <InputLabel htmlFor="branch_id" value="Filial *" />
+                                <select
+                                    id="branch_id"
+                                    value={formData.branch_id}
+                                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, branch_id: e.target.value })}
+                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    required
+                                >
+                                    <option value="">Filial seçin</option>
+                                    {branches.map((branch) => (
+                                        <option key={branch.id} value={branch.id}>
+                                            {branch.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.branch_id} className="mt-2" />
+                            </div>
 
-                    {/* Invoice Number */}
-                    <div>
-                        <InputLabel htmlFor="invoice_number" value="İnvoys nömrəsi" />
-                        <TextInput
-                            id="invoice_number"
-                            type="text"
-                            value={formData.invoice_number}
-                            onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
-                            className="mt-1 block w-full"
-                            placeholder="Ödənilən invoys nömrəsi"
-                        />
-                        <InputError message={errors.invoice_number} className="mt-2" />
-                    </div>
+                            {/* Category Selection */}
+                            <div>
+                                <InputLabel htmlFor="category_id" value="Xərc kateqoriyası" />
+                                <select
+                                    id="category_id"
+                                    value={formData.category_id}
+                                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
+                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                >
+                                    <option value="">Kateqoriya seçin (istəyə bağlı)</option>
+                                    {categories.map((category) => (
+                                        <option key={category.category_id} value={category.category_id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.category_id} className="mt-2" />
+                            </div>
 
-                    {/* Notes */}
-                    <div>
-                        <InputLabel htmlFor="notes" value="Qeydlər" />
-                        <textarea
-                            id="notes"
-                            value={formData.notes}
-                            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
-                            rows={3}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
-                            placeholder="Əlavə qeydlər (istəyə bağlı)"
-                        />
-                        <InputError message={errors.notes} className="mt-2" />
+                            {/* Notes */}
+                            <div>
+                                <InputLabel htmlFor="notes" value="Qeydlər" />
+                                <textarea
+                                    id="notes"
+                                    value={formData.notes}
+                                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
+                                    rows={5}
+                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    placeholder="Əlavə qeydlər (istəyə bağlı)"
+                                />
+                                <InputError message={errors.notes} className="mt-2" />
+                            </div>
+                        </div>
                     </div>
 
                     {errors.message && (

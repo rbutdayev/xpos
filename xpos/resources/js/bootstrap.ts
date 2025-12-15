@@ -5,7 +5,7 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// Set up CSRF token for axios
+// Set up CSRF token for axios (helper function for visibility change handler)
 const setCSRFToken = () => {
     const token = document.head.querySelector('meta[name="csrf-token"]');
     if (token) {
@@ -15,8 +15,7 @@ const setCSRFToken = () => {
     }
 };
 
-// Set initial token
-setCSRFToken();
+// NOTE: Initial CSRF token is set in app.tsx with proper DOMContentLoaded handling
 
 // Refresh CSRF token when page becomes visible (especially important for multi-tab scenarios)
 // This handles cases where user logs out/in with different account in another tab
@@ -39,11 +38,6 @@ document.addEventListener('visibilitychange', () => {
         // Store when page was hidden
         sessionStorage.setItem('lastVisibleTime', Date.now().toString());
     }
-});
-
-// Refresh CSRF token after Inertia page loads (e.g., after login when session regenerates)
-router.on('finish', () => {
-    setCSRFToken();
 });
 
 // Add axios interceptor to handle 419 errors gracefully

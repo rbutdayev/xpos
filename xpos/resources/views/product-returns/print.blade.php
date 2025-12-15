@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $account->language === 'ru' ? 'Возврат товара поставщику' : 'Təchizatçıya Mal İadəsi' }} - #{{ $return->return_id }}</title>
+    <title>{{ $account->language === 'ru' ? 'Возврат товара поставщику' : 'Təchizatçıya Mal Qaytarılması' }} - #{{ $return->return_id }}</title>
     <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
         @media print {
             body {
                 margin: 0;
-                padding: 10mm;
+                padding: 0;
+                width: 210mm;
+                height: 297mm;
             }
             .no-print {
                 display: none !important;
@@ -289,10 +296,10 @@
     <div class="container">
         <!-- Document Header -->
         <div class="document-header">
-            <h1>{{ $account->language === 'ru' ? 'ВОЗВРАТ ТОВАРА ПОСТАВЩИКУ' : 'TƏCHİZATÇIYA MAL İADƏSİ' }}</h1>
+            <h1>{{ $account->language === 'ru' ? 'ВОЗВРАТ ТОВАРА ПОСТАВЩИКУ' : 'TƏCHİZATÇIYA MAL QAYTARILMASI' }}</h1>
             <div class="document-number">{{ $account->language === 'ru' ? '№' : '№' }} {{ $return->return_id }}</div>
             <div class="document-date">
-                {{ $account->language === 'ru' ? 'Дата возврата:' : 'İadə tarixi:' }}
+                {{ $account->language === 'ru' ? 'Дата возврата:' : 'Qaytarılma tarixi:' }}
                 {{ \Carbon\Carbon::parse($return->return_date)->format('d.m.Y') }}
             </div>
             @php
@@ -314,7 +321,7 @@
         <div class="parties-section">
             <!-- Sender (Company - Returning) -->
             <div class="party">
-                <div class="party-title">{{ $account->language === 'ru' ? 'ВОЗВРАЩАЕТ' : 'İADƏ EDƏN' }}</div>
+                <div class="party-title">{{ $account->language === 'ru' ? 'ВОЗВРАЩАЕТ' : 'QAYTARAN' }}</div>
                 <div class="party-info">
                     <div><span class="label">{{ $account->language === 'ru' ? 'Организация:' : 'Təşkilat:' }}</span> {{ $account->company_name ?? '-' }}</div>
                     @if($account->address)
@@ -394,33 +401,58 @@
                     <th style="width: 5%">№</th>
                     <th style="width: 35%">{{ $account->language === 'ru' ? 'Наименование товара' : 'Məhsulun adı' }}</th>
                     <th style="width: 15%">{{ $account->language === 'ru' ? 'Артикул' : 'SKU' }}</th>
-                    @if($return->variant)
-                    <th style="width: 15%">{{ $account->language === 'ru' ? 'Вариант' : 'Variant' }}</th>
-                    @endif
+                    <th style="width: 10%">{{ $account->language === 'ru' ? 'Ед.' : 'Vahid' }}</th>
                     <th style="width: 10%" class="text-center">{{ $account->language === 'ru' ? 'Кол-во' : 'Miqdar' }}</th>
-                    <th style="width: 10%" class="text-right">{{ $account->language === 'ru' ? 'Цена' : 'Qiymət' }}</th>
-                    <th style="width: 10%" class="text-right">{{ $account->language === 'ru' ? 'Сумма' : 'Məbləğ' }}</th>
+                    <th style="width: 12%" class="text-right">{{ $account->language === 'ru' ? 'Цена' : 'Qiymət' }}</th>
+                    <th style="width: 13%" class="text-right">{{ $account->language === 'ru' ? 'Сумма' : 'Məbləğ' }}</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="text-center">1</td>
-                    <td>{{ $return->product->name ?? '-' }}</td>
-                    <td>{{ $return->product->sku ?? '-' }}</td>
-                    @if($return->variant)
-                    <td>{{ $return->variant->display_name ?? '-' }}</td>
-                    @endif
-                    <td class="text-center">{{ $return->quantity }}</td>
-                    <td class="text-right">{{ number_format($return->unit_cost, 2, '.', ',') }} ₼</td>
-                    <td class="text-right">{{ number_format($return->total_cost, 2, '.', ',') }} ₼</td>
-                </tr>
+                @php
+                    $isMultiItem = $return->items && $return->items->count() > 0;
+                @endphp
+
+                @if($isMultiItem)
+                    @foreach($return->items as $index => $item)
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $item->product->name ?? '-' }}</td>
+                        <td>{{ $item->product->sku ?? '-' }}</td>
+                        <td>{{ $item->unit ?? '-' }}</td>
+                        <td class="text-center">{{ number_format($item->quantity, 3, '.', ',') }}</td>
+                        <td class="text-right">{{ number_format($item->unit_cost, 2, '.', ',') }} ₼</td>
+                        <td class="text-right">{{ number_format($item->total_cost, 2, '.', ',') }} ₼</td>
+                    </tr>
+                    @endforeach
+                @else
+                    {{-- Legacy single-item display --}}
+                    <tr>
+                        <td class="text-center">1</td>
+                        <td>{{ $return->product->name ?? '-' }}</td>
+                        <td>{{ $return->product->sku ?? '-' }}</td>
+                        <td>{{ $return->product->base_unit ?? '-' }}</td>
+                        <td class="text-center">{{ number_format($return->quantity ?? 0, 3, '.', ',') }}</td>
+                        <td class="text-right">{{ number_format($return->unit_cost ?? 0, 2, '.', ',') }} ₼</td>
+                        <td class="text-right">{{ number_format($return->total_cost, 2, '.', ',') }} ₼</td>
+                    </tr>
+                @endif
             </tbody>
+            <tfoot>
+                <tr style="background-color: #f0f0f0; font-weight: bold;">
+                    <td colspan="6" class="text-right" style="padding: 10px;">
+                        {{ $account->language === 'ru' ? 'ИТОГО:' : 'CƏMİ:' }}
+                    </td>
+                    <td class="text-right" style="padding: 10px; font-size: 12pt; color: #d32f2f;">
+                        {{ number_format($return->total_cost, 2, '.', ',') }} ₼
+                    </td>
+                </tr>
+            </tfoot>
         </table>
 
         <!-- Totals Section -->
         <div class="totals-section">
             <div class="total-row">
-                <div class="total-label">{{ $account->language === 'ru' ? 'ИТОГО К ВОЗВРАТУ:' : 'İADƏ EDİLƏCƏK MƏBLƏĞ:' }}</div>
+                <div class="total-label">{{ $account->language === 'ru' ? 'ИТОГО К ВОЗВРАТУ:' : 'QAYTARILACAQ MƏBLƏĞ:' }}</div>
                 <div class="total-value">{{ number_format($return->total_cost, 2, '.', ',') }} ₼</div>
             </div>
             @if($return->refund_amount)
@@ -439,7 +471,7 @@
 
         <!-- Return Reason -->
         <div class="reason-section">
-            <div class="reason-title">{{ $account->language === 'ru' ? 'Причина возврата:' : 'İadə səbəbi:' }}</div>
+            <div class="reason-title">{{ $account->language === 'ru' ? 'Причина возврата:' : 'Qaytarılma səbəbi:' }}</div>
             <div class="reason-text">{{ $return->reason }}</div>
         </div>
 
@@ -454,7 +486,7 @@
         <!-- Signatures Section -->
         <div class="signatures-section">
             <div class="signature">
-                <div class="signature-title">{{ $account->language === 'ru' ? 'Передал (Возвращает):' : 'Təhvil verən (İadə edən):' }}</div>
+                <div class="signature-title">{{ $account->language === 'ru' ? 'Передал (Возвращает):' : 'Təhvil verən (Qaytaran):' }}</div>
                 <div class="signature-line">
                     _________________ / _________________
                     <div style="font-size: 8pt; margin-top: 3px;">

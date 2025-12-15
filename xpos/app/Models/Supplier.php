@@ -124,13 +124,14 @@ class Supplier extends Model
 
     public function getActiveProductsCountAttribute(): int
     {
-        // Count unique products from goods receipts (actual purchases)
+        // Count unique products from goods receipt items (actual purchases)
         // Only count products that still exist in the products table
         return \App\Models\Product::whereIn('id', function($query) {
-            $query->select('product_id')
-                ->from('goods_receipts')
-                ->where('supplier_id', $this->id)
-                ->where('account_id', $this->account_id)
+            $query->select('gri.product_id')
+                ->from('goods_receipt_items as gri')
+                ->join('goods_receipts as gr', 'gri.goods_receipt_id', '=', 'gr.id')
+                ->where('gr.supplier_id', $this->id)
+                ->where('gr.account_id', $this->account_id)
                 ->distinct();
         })->count();
     }

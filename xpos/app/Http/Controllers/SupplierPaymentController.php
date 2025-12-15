@@ -80,7 +80,7 @@ class SupplierPaymentController extends Controller
         // Get unpaid and partially paid goods receipts
         $unpaidGoodsReceipts = \App\Models\GoodsReceipt::where('account_id', auth()->user()->account_id)
             ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->with(['supplier:id,name', 'product:id,name', 'supplierCredit'])
+            ->with(['supplier:id,name', 'items.product:id,name', 'supplierCredit'])
             ->orderBy('due_date')
             ->orderBy('created_at')
             ->get()

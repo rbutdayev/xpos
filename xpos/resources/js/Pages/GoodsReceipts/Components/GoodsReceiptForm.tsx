@@ -11,6 +11,7 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 import { GoodsReceipt } from '@/types';
 import { useTranslations } from '@/Hooks/useTranslations';
 import { useTranslation } from 'react-i18next';
+import InstantPaymentConfirmationModal from '@/Components/Modals/InstantPaymentConfirmationModal';
 
 interface Product { id: number; name: string; sku: string; barcode?: string; unit: string; base_unit?: string; packaging_size?: string; packaging_quantity?: number; unit_price?: number; purchase_price?: number; sale_price?: number; }
 interface Supplier { id: number; name: string; payment_terms_days?: number; payment_terms_text?: string; }
@@ -22,18 +23,18 @@ interface Props {
     warehouses: Warehouse[];
     employees?: Employee[];
     receipt?: GoodsReceipt;
-    batchReceipts?: GoodsReceipt[];
     isEditing?: boolean;
 }
 
-export default function GoodsReceiptForm({ suppliers, warehouses, employees, receipt, batchReceipts, isEditing = false }: Props) {
+export default function GoodsReceiptForm({ suppliers, warehouses, employees, receipt, isEditing = false }: Props) {
     const { t } = useTranslation(['inventory', 'common']);
     const { translatePaymentMethod } = useTranslations();
     const {
         form, submit, submitAsDraft, submitAsCompleted, addProduct, removeProduct, updateProduct, handleFileChange,
         selectedSupplier, calculatedDueDate, handleSupplierChange, handlePaymentMethodChange,
-        handleCustomTermsToggle, handleCustomTermsChange
-    } = useGoodsReceiptForm(receipt, batchReceipts, isEditing);
+        handleCustomTermsToggle, handleCustomTermsChange,
+        showInstantPaymentConfirmation, confirmInstantPaymentAndSubmit, cancelInstantPaymentConfirmation
+    } = useGoodsReceiptForm(receipt, isEditing);
 
     const { query, setQuery, results, loading, error } = useProductSearch();
 
@@ -118,8 +119,8 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                 />
             </div>
 
-            {/* Payment Method Selection - Only show when creating */}
-            {!isEditing && (
+            {/* Payment Method Selection - Show when creating or editing drafts */}
+            {(!isEditing || (isEditing && receipt?.status === 'draft')) && (
                 <div className="bg-yellow-50 rounded-lg p-4">
                     <InputLabel value={`${t('goodsReceipts.paymentMethod')} *`} className="mb-3" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -158,7 +159,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
             )}
 
             {/* Payment Terms Information */}
-            {!isEditing && selectedSupplier && form.data.payment_method === 'credit' && (
+            {(!isEditing || (isEditing && receipt?.status === 'draft')) && selectedSupplier && form.data.payment_method === 'credit' && (
                 <div className="bg-blue-50 rounded-lg p-4">
                     <h4 className="font-medium text-blue-900 mb-3">{t('goodsReceipts.paymentTerms')}</h4>
 
@@ -413,6 +414,14 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                 )}
             </div>
             </form>
+
+            {/* Instant Payment Confirmation Modal */}
+            <InstantPaymentConfirmationModal
+                show={showInstantPaymentConfirmation}
+                onConfirm={confirmInstantPaymentAndSubmit}
+                onCancel={cancelInstantPaymentConfirmation}
+                processing={form.processing}
+            />
         </div>
     );
 }

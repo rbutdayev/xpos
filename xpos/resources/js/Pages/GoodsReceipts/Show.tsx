@@ -33,9 +33,9 @@ export default function Show({ receipt }: Props) {
         <AuthenticatedLayout>
             <Head title={`${t('goodsReceipts.title')} - ${receipt.receipt_number}`} />
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-4 sm:p-6 bg-white border-b border-gray-200">
+            <div className="w-full min-h-screen bg-gray-50 -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                <div className="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div className="p-6 sm:p-8 bg-white border-b border-gray-200">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center">
                                 <Link
@@ -64,8 +64,8 @@ export default function Show({ receipt }: Props) {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                            {/* Left Column */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {/* Column 1: Receipt Info & Products */}
                             <div className="space-y-6">
                                 {/* Receipt Information */}
                                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -81,16 +81,6 @@ export default function Show({ receipt }: Props) {
                                                 {receipt.receipt_number}
                                             </dd>
                                         </div>
-                                        {receipt.batch_id && (
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500">
-                                                    Partiya ID
-                                                </dt>
-                                                <dd className="text-sm text-blue-600 font-mono">
-                                                    {receipt.batch_id}
-                                                </dd>
-                                            </div>
-                                        )}
                                         {receipt.invoice_number && (
                                             <div>
                                                 <dt className="text-sm font-medium text-gray-500">
@@ -121,42 +111,96 @@ export default function Show({ receipt }: Props) {
                                         )}
                                     </dl>
                                 </div>
+                            </div>
 
-                                {/* Product Information */}
+                            {/* Column 2: Products List */}
+                            <div className="space-y-6">
+                                {/* Products List */}
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-blue-900 mb-4">
-                                        {t('goodsReceipts.productInfo')}
+                                        Məhsullar ({receipt.items?.length || 1})
                                     </h3>
-                                    <dl className="space-y-3">
-                                        <div>
-                                            <dt className="text-sm font-medium text-blue-700">
-                                                {t('goodsReceipts.productName')}
-                                            </dt>
-                                            <dd className="text-sm text-blue-900 font-medium">
-                                                {receipt.product?.name}
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-sm font-medium text-blue-700">
-                                                {t('labels.sku', { ns: 'common' })}
-                                            </dt>
-                                            <dd className="text-sm text-blue-900 font-mono">
-                                                {receipt.product?.sku}
-                                            </dd>
-                                        </div>
-                                        {receipt.product?.barcode && (
-                                            <div>
-                                                <dt className="text-sm font-medium text-blue-700">
-                                                    {t('table.barcode')}
-                                                </dt>
-                                                <dd className="text-sm text-blue-900 font-mono">
-                                                    {receipt.product?.barcode}
-                                                </dd>
+                                    <div className="space-y-3">
+                                        {receipt.items && receipt.items.length > 0 ? (
+                                            receipt.items.map((item, index) => (
+                                                <div key={item.id} className="bg-white p-3 rounded border border-blue-200">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex-1">
+                                                            <p className="font-medium text-blue-900">
+                                                                {index + 1}. {item.product?.name}
+                                                            </p>
+                                                            <p className="text-xs text-blue-700 font-mono">
+                                                                SKU: {item.product?.sku}
+                                                            </p>
+                                                            {item.variant && (
+                                                                <p className="text-xs text-blue-600">
+                                                                    Variant: {item.variant.size} {item.variant.color}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-sm font-bold text-blue-900">
+                                                                {item.quantity} {item.unit}
+                                                            </p>
+                                                            <p className="text-xs text-blue-700">
+                                                                {formatCurrency(item.unit_cost)} / {item.unit}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center pt-2 border-t border-blue-100">
+                                                        <span className="text-xs text-blue-700">
+                                                            {item.discount_percent > 0 && (
+                                                                <span className="text-red-600">
+                                                                    Endirim: {item.discount_percent}%
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                        <span className="text-sm font-bold text-blue-900">
+                                                            {formatCurrency(item.total_cost)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            // Fallback for legacy structure (single product)
+                                            <div className="bg-white p-3 rounded border border-blue-200">
+                                                <dl className="space-y-2">
+                                                    <div>
+                                                        <dt className="text-sm font-medium text-blue-700">
+                                                            {t('goodsReceipts.productName')}
+                                                        </dt>
+                                                        <dd className="text-sm text-blue-900 font-medium">
+                                                            {receipt.product?.name}
+                                                        </dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt className="text-sm font-medium text-blue-700">
+                                                            {t('labels.sku', { ns: 'common' })}
+                                                        </dt>
+                                                        <dd className="text-sm text-blue-900 font-mono">
+                                                            {receipt.product?.sku}
+                                                        </dd>
+                                                    </div>
+                                                    {receipt.product?.barcode && (
+                                                        <div>
+                                                            <dt className="text-sm font-medium text-blue-700">
+                                                                {t('table.barcode')}
+                                                            </dt>
+                                                            <dd className="text-sm text-blue-900 font-mono">
+                                                                {receipt.product?.barcode}
+                                                            </dd>
+                                                        </div>
+                                                    )}
+                                                </dl>
                                             </div>
                                         )}
-                                    </dl>
+                                    </div>
                                 </div>
 
+                            </div>
+
+                            {/* Column 3: Supplier, Warehouse & Summary */}
+                            <div className="space-y-6">
                                 {/* Supplier Information */}
                                 {receipt.supplier && (
                                     <div className="bg-green-50 p-4 rounded-lg">
@@ -195,10 +239,6 @@ export default function Show({ receipt }: Props) {
                                         </dl>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* Right Column */}
-                            <div className="space-y-6">
                                 {/* Warehouse Information */}
                                 <div className="bg-purple-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-purple-900 mb-4">
@@ -226,72 +266,169 @@ export default function Show({ receipt }: Props) {
                                     </dl>
                                 </div>
 
-                                {/* Quantity & Cost Information */}
+                                {/* Total Cost Summary */}
                                 <div className="bg-yellow-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-yellow-900 mb-4">
-                                        {t('goodsReceipts.quantityAndCost')}
+                                        Məbləğ Xülasəsi
                                     </h3>
                                     <dl className="space-y-3">
-                                        <div>
-                                            <dt className="text-sm font-medium text-yellow-700">
-                                                {t('goodsReceipts.receivedQuantity')}
-                                            </dt>
-                                            <dd className="text-lg text-yellow-900 font-bold">
-                                                {receipt.quantity}{receipt.unit ? ` ${receipt.unit}` : ''}
-                                            </dd>
-                                        </div>
-                                        {receipt.unit_cost && (
-                                            <div>
-                                                <dt className="text-sm font-medium text-yellow-700">
-                                                    {t('goodsReceipts.unitCost')}
-                                                </dt>
-                                                <dd className="text-sm text-yellow-900 font-medium">
-                                                    {formatCurrency(receipt.unit_cost)}
-                                                </dd>
-                                            </div>
-                                        )}
-                                        {receipt.additional_data?.subtotal_before_discount && (
-                                            <div>
-                                                <dt className="text-sm font-medium text-yellow-700">
-                                                    Ara Cəm
-                                                </dt>
-                                                <dd className="text-sm text-yellow-900 font-medium">
-                                                    {formatCurrency(receipt.additional_data.subtotal_before_discount)}
-                                                </dd>
-                                            </div>
-                                        )}
-                                        {receipt.additional_data?.discount_percent > 0 && (
+                                        {receipt.items && receipt.items.length > 0 && (
                                             <>
                                                 <div>
                                                     <dt className="text-sm font-medium text-yellow-700">
-                                                        Endirim
+                                                        Məhsul sayı
                                                     </dt>
-                                                    <dd className="text-sm text-yellow-900">
-                                                        {receipt.additional_data?.discount_percent}%
+                                                    <dd className="text-lg text-yellow-900 font-bold">
+                                                        {receipt.items.length} məhsul
                                                     </dd>
                                                 </div>
                                                 <div>
                                                     <dt className="text-sm font-medium text-yellow-700">
-                                                        Endirim Məbləği
+                                                        Ara Cəm
                                                     </dt>
-                                                    <dd className="text-sm text-red-600 font-medium">
-                                                        -{formatCurrency(receipt.additional_data?.discount_amount)}
+                                                    <dd className="text-sm text-yellow-900 font-medium">
+                                                        {formatCurrency(
+                                                            receipt.items.reduce((sum, item) =>
+                                                                sum + (item.additional_data?.subtotal_before_discount || item.total_cost), 0
+                                                            )
+                                                        )}
                                                     </dd>
                                                 </div>
+                                                {receipt.items.some(item => item.discount_percent > 0) && (
+                                                    <div>
+                                                        <dt className="text-sm font-medium text-yellow-700">
+                                                            Ümumi Endirim
+                                                        </dt>
+                                                        <dd className="text-sm text-red-600 font-medium">
+                                                            -{formatCurrency(
+                                                                receipt.items.reduce((sum, item) =>
+                                                                    sum + (item.additional_data?.discount_amount || 0), 0
+                                                                )
+                                                            )}
+                                                        </dd>
+                                                    </div>
+                                                )}
                                             </>
                                         )}
                                         {receipt.total_cost && (
                                             <div className="pt-2 border-t border-yellow-200">
                                                 <dt className="text-sm font-medium text-yellow-700">
-                                                    Yekun Məbləğ {receipt.additional_data?.discount_percent > 0 && '(Endirimdən sonra)'}
+                                                    Yekun Məbləğ
                                                 </dt>
                                                 <dd className="text-xl text-yellow-900 font-bold">
                                                     {formatCurrency(receipt.total_cost)}
                                                 </dd>
                                             </div>
                                         )}
+                                        {/* Fallback for legacy single product */}
+                                        {!receipt.items && receipt.quantity && (
+                                            <div>
+                                                <dt className="text-sm font-medium text-yellow-700">
+                                                    {t('goodsReceipts.receivedQuantity')}
+                                                </dt>
+                                                <dd className="text-lg text-yellow-900 font-bold">
+                                                    {receipt.quantity}{receipt.unit ? ` ${receipt.unit}` : ''}
+                                                </dd>
+                                            </div>
+                                        )}
                                     </dl>
                                 </div>
+
+                                {/* Payment Status */}
+                                {receipt.supplier_credit && (
+                                    <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-200">
+                                        <h3 className="text-lg font-medium text-orange-900 mb-4">
+                                            Ödəniş Statusu
+                                        </h3>
+                                        <dl className="space-y-3">
+                                            <div>
+                                                <dt className="text-sm font-medium text-orange-700">
+                                                    Status
+                                                </dt>
+                                                <dd className="text-sm font-medium">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                        receipt.payment_status === 'paid'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : receipt.payment_status === 'partial'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                    }`}>
+                                                        {receipt.payment_status === 'paid' ? '✓ Ödənilib' :
+                                                         receipt.payment_status === 'partial' ? 'Qismən ödənilib' : 'Ödənilməyib'}
+                                                    </span>
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-sm font-medium text-orange-700">
+                                                    Ümumi məbləğ
+                                                </dt>
+                                                <dd className="text-lg text-orange-900 font-bold">
+                                                    {formatCurrency(receipt.supplier_credit.amount)}
+                                                </dd>
+                                            </div>
+                                            {receipt.supplier_credit.remaining_amount > 0 && (
+                                                <div>
+                                                    <dt className="text-sm font-medium text-orange-700">
+                                                        Qalıq borc
+                                                    </dt>
+                                                    <dd className="text-lg text-red-600 font-bold">
+                                                        {formatCurrency(receipt.supplier_credit.remaining_amount)}
+                                                    </dd>
+                                                </div>
+                                            )}
+                                            {receipt.supplier_credit.remaining_amount == 0 && (
+                                                <div className="pt-2 border-t border-orange-200">
+                                                    <p className="text-sm text-green-700 font-medium">
+                                                        ✓ Tam ödənilib
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </dl>
+                                    </div>
+                                )}
+
+                                {/* Payment History */}
+                                {receipt.expenses && receipt.expenses.length > 0 && (
+                                    <div className="bg-green-50 p-4 rounded-lg">
+                                        <h3 className="text-lg font-medium text-green-900 mb-4">
+                                            Ödəniş Tarixçəsi ({receipt.expenses.length})
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {receipt.expenses.map((expense: any, index: number) => (
+                                                <div key={expense.expense_id} className="bg-white p-3 rounded border border-green-200">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium text-green-900">
+                                                                Ödəniş #{index + 1}
+                                                            </p>
+                                                            <p className="text-xs text-green-700 font-mono">
+                                                                {expense.reference_number}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-sm font-bold text-green-900">
+                                                                {formatCurrency(expense.amount)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center pt-2 border-t border-green-100 text-xs">
+                                                        <span className="text-green-700">
+                                                            {new Date(expense.expense_date).toLocaleDateString('az-AZ')}
+                                                        </span>
+                                                        <span className="text-green-600">
+                                                            {expense.user?.name || '-'}
+                                                        </span>
+                                                    </div>
+                                                    {expense.notes && (
+                                                        <p className="text-xs text-green-600 mt-2 italic">
+                                                            {expense.notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Document */}
                                 {receipt.document_path && (

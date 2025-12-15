@@ -66,9 +66,8 @@ export default function Index({ suppliers, filters }: Props) {
         setSelectedSupplier(supplier);
         setShowProducts(true);
         try {
-            const response = await fetch(route('suppliers.products', supplier.id));
-            const products = await response.json();
-            setSupplierProducts(products);
+            const response = await window.axios.get(route('suppliers.products', supplier.id));
+            setSupplierProducts(response.data);
         } catch (error) {
             console.error('Error fetching supplier products:', error);
             setSupplierProducts([]);

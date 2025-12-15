@@ -328,26 +328,30 @@
                     <th style="width: 5%">№</th>
                     <th style="width: 35%">{{ $account->language === 'ru' ? 'Наименование товара' : 'Məhsulun adı' }}</th>
                     <th style="width: 15%">{{ $account->language === 'ru' ? 'Артикул' : 'SKU' }}</th>
-                    @if($receipt->variant)
                     <th style="width: 15%">{{ $account->language === 'ru' ? 'Вариант' : 'Variant' }}</th>
-                    @endif
                     <th style="width: 10%" class="text-center">{{ $account->language === 'ru' ? 'Кол-во' : 'Miqdar' }}</th>
                     <th style="width: 10%" class="text-right">{{ $account->language === 'ru' ? 'Цена' : 'Qiymət' }}</th>
                     <th style="width: 10%" class="text-right">{{ $account->language === 'ru' ? 'Сумма' : 'Məbləğ' }}</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="text-center">1</td>
-                    <td>{{ $receipt->product->name ?? '-' }}</td>
-                    <td>{{ $receipt->product->sku ?? '-' }}</td>
-                    @if($receipt->variant)
-                    <td>{{ $receipt->variant->display_name ?? '-' }}</td>
-                    @endif
-                    <td class="text-center">{{ $receipt->quantity }} {{ $receipt->unit }}</td>
-                    <td class="text-right">{{ number_format($receipt->unit_cost, 2, '.', ',') }} ₼</td>
-                    <td class="text-right">{{ number_format($receipt->total_cost, 2, '.', ',') }} ₼</td>
-                </tr>
+                @if(isset($receipt->items) && count($receipt->items) > 0)
+                    @foreach($receipt->items as $index => $item)
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $item->product->name ?? '-' }}</td>
+                        <td>{{ $item->product->sku ?? '-' }}</td>
+                        <td>{{ $item->variant->display_name ?? '-' }}</td>
+                        <td class="text-center">{{ $item->quantity }} {{ $item->unit }}</td>
+                        <td class="text-right">{{ number_format($item->unit_cost, 2, '.', ',') }} ₼</td>
+                        <td class="text-right">{{ number_format($item->total_cost, 2, '.', ',') }} ₼</td>
+                    </tr>
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="7" class="text-center">{{ $account->language === 'ru' ? 'Нет товаров' : 'Məhsul yoxdur' }}</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
 

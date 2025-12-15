@@ -53,24 +53,26 @@ interface Product {
     sale_price?: number;
 }
 
-export default function useGoodsReceiptForm(receipt?: GoodsReceipt, batchReceipts?: GoodsReceipt[], isEditing = false) {
+export default function useGoodsReceiptForm(receipt?: GoodsReceipt, isEditing = false) {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
     const [calculatedDueDate, setCalculatedDueDate] = useState<string | null>(null);
+    const [showInstantPaymentConfirmation, setShowInstantPaymentConfirmation] = useState(false);
+    const [pendingSubmitAction, setPendingSubmitAction] = useState<'completed' | null>(null);
 
-    // If batchReceipts is provided, use all receipts in the batch to populate products
-    const initialProducts = batchReceipts && batchReceipts.length > 0
-        ? batchReceipts.map(r => ({
-            product_id: r.product_id?.toString() || '',
-            quantity: r.quantity?.toString() || '',
-            base_quantity: r.quantity?.toString() || '',
-            unit: r.unit || '',
-            receiving_unit: r.unit || '',
-            unit_cost: r.unit_cost?.toString() || '',
-            discount_percent: r.additional_data?.discount_percent?.toString() || '0',
-            sale_price: r.product?.sale_price?.toString() || '',
-            product: r.product,
-            variant_id: r.variant_id?.toString() || undefined,
+    // Check if receipt has items (new structure after migration) or use old structure for backward compatibility
+    const initialProducts = receipt?.items && receipt.items.length > 0
+        ? receipt.items.map(item => ({
+            product_id: item.product_id?.toString() || '',
+            quantity: item.quantity?.toString() || '',
+            base_quantity: item.additional_data?.base_quantity?.toString() || item.quantity?.toString() || '',
+            unit: item.unit || '',
+            receiving_unit: item.additional_data?.received_unit || item.unit || '',
+            unit_cost: item.unit_cost?.toString() || '',
+            discount_percent: item.discount_percent?.toString() || '0',
+            sale_price: item.product?.sale_price?.toString() || '',
+            product: item.product,
+            variant_id: item.variant_id?.toString() || undefined,
         }))
         : receipt ? [{
             product_id: receipt.product_id?.toString() || '',
@@ -265,6 +267,13 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, batchReceipt
     const submitAsCompleted = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Check if payment method is instant - show confirmation modal
+        if (form.data.payment_method === 'instant') {
+            setPendingSubmitAction('completed');
+            setShowInstantPaymentConfirmation(true);
+            return;
+        }
+
         // If editing a draft, use the complete endpoint
         if (isEditing && receipt && receipt.status === 'draft') {
             form.post(route('goods-receipts.complete', receipt.id), {
@@ -291,6 +300,43 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, batchReceipt
         } else {
             submitWithStatus('completed');
         }
+    };
+
+    const confirmInstantPaymentAndSubmit = () => {
+        setShowInstantPaymentConfirmation(false);
+
+        // If editing a draft, use the complete endpoint
+        if (isEditing && receipt && receipt.status === 'draft') {
+            form.post(route('goods-receipts.complete', receipt.id), {
+                onSuccess: () => {
+                    toast.success('Mal qəbulu uğurla tamamlandı');
+                    if (Array.isArray(form.data.products)) {
+                        form.data.products.forEach(product => {
+                            notifyUpdate({
+                                type: 'goods_receipt_created',
+                                warehouse_id: form.data.warehouse_id,
+                                product_id: product.product_id,
+                            });
+                        });
+                    }
+                },
+                onError: (errors: any) => {
+                    console.error('Validation errors:', errors);
+                    Object.entries(errors).forEach(([field, messages]) => {
+                        const errorMessage = Array.isArray(messages) ? messages[0] : messages;
+                        toast.error(`${field}: ${errorMessage}`, { duration: 5000 });
+                    });
+                }
+            });
+        } else {
+            submitWithStatus('completed');
+        }
+        setPendingSubmitAction(null);
+    };
+
+    const cancelInstantPaymentConfirmation = () => {
+        setShowInstantPaymentConfirmation(false);
+        setPendingSubmitAction(null);
     };
 
     const addProduct = (product: Product) => {
@@ -406,5 +452,8 @@ export default function useGoodsReceiptForm(receipt?: GoodsReceipt, batchReceipt
         handlePaymentMethodChange,
         handleCustomTermsToggle,
         handleCustomTermsChange,
+        showInstantPaymentConfirmation,
+        confirmInstantPaymentAndSubmit,
+        cancelInstantPaymentConfirmation,
     };
 }

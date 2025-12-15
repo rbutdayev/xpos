@@ -17,20 +17,14 @@ class GoodsReceipt extends Model
     protected $fillable = [
         'account_id',
         'warehouse_id',
-        'product_id',
-        'variant_id',        // Product variant (size/color) - nullable
         'supplier_id',
         'employee_id',
         'receipt_number',
-        'batch_id',          // Groups products received in one transaction
         'invoice_number',    // Supplier's invoice number (optional)
-        'quantity',
-        'unit',
-        'unit_cost',
-        'total_cost',
+        'total_cost',        // Sum of all items' total_cost
         'document_path',
         'notes',
-        'additional_data',
+        'additional_data',   // Receipt-level metadata
         'payment_status',
         'payment_method',
         'due_date',
@@ -41,8 +35,6 @@ class GoodsReceipt extends Model
     protected function casts(): array
     {
         return [
-            'quantity' => 'decimal:3',
-            'unit_cost' => 'decimal:2',
             'total_cost' => 'decimal:2',
             'additional_data' => 'json',
             'due_date' => 'date',
@@ -59,15 +51,9 @@ class GoodsReceipt extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
-    public function product(): BelongsTo
+    public function items()
     {
-        return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'variant_id')
-            ->where('account_id', $this->account_id);
+        return $this->hasMany(GoodsReceiptItem::class);
     }
 
     public function supplier(): BelongsTo
@@ -85,14 +71,14 @@ class GoodsReceipt extends Model
         return $this->belongsTo(SupplierCredit::class);
     }
 
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class, 'goods_receipt_id', 'id');
+    }
+
     public function scopeByWarehouse(Builder $query, $warehouseId): Builder
     {
         return $query->where('warehouse_id', $warehouseId);
-    }
-
-    public function scopeByProduct(Builder $query, $productId): Builder
-    {
-        return $query->where('product_id', $productId);
     }
 
     public function scopeBySupplier(Builder $query, $supplierId): Builder
@@ -103,11 +89,6 @@ class GoodsReceipt extends Model
     public function scopeByDateRange(Builder $query, $startDate, $endDate): Builder
     {
         return $query->whereBetween('created_at', [$startDate, $endDate]);
-    }
-
-    public function scopeByBatch(Builder $query, $batchId): Builder
-    {
-        return $query->where('batch_id', $batchId);
     }
 
     public function scopeByInvoice(Builder $query, $invoiceNumber): Builder
@@ -143,51 +124,20 @@ class GoodsReceipt extends Model
         return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
-    public static function generateBatchId($accountId): string
+    /**
+     * Calculate total cost from all items
+     */
+    public function calculateTotalCost(): float
     {
-        $prefix = 'BATCH-' . date('Y') . '-';
-        $lastBatch = static::where('account_id', $accountId)
-            ->where('batch_id', 'like', "{$prefix}%")
-            ->orderByDesc('batch_id')
-            ->first();
-
-        if ($lastBatch) {
-            $lastNumber = (int) str_replace($prefix, '', $lastBatch->batch_id);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
-
-        return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        return (float) $this->items()->sum('total_cost');
     }
 
     /**
-     * Get all receipts in the same batch
+     * Get item count
      */
-    public function batchReceipts()
+    public function getItemCountAttribute(): int
     {
-        if (!$this->batch_id) {
-            return collect([$this]);
-        }
-
-        return static::where('batch_id', $this->batch_id)
-            ->where('account_id', $this->account_id)
-            ->with(['product', 'variant'])
-            ->get();
-    }
-
-    /**
-     * Get batch total cost
-     */
-    public function getBatchTotalCost(): float
-    {
-        if (!$this->batch_id) {
-            return (float) $this->total_cost;
-        }
-
-        return (float) static::where('batch_id', $this->batch_id)
-            ->where('account_id', $this->account_id)
-            ->sum('total_cost');
+        return $this->items()->count();
     }
 
     public function hasDocument(): bool

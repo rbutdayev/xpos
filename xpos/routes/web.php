@@ -593,7 +593,6 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Goods Receipt Management
     Route::post('/goods-receipts/search-barcode', [GoodsReceiptController::class, 'searchProductByBarcode'])->name('goods-receipts.search-barcode');
     Route::post('/goods-receipts/{goodsReceipt}/complete', [GoodsReceiptController::class, 'complete'])->name('goods-receipts.complete');
-    Route::delete('/goods-receipts/batch/{batch_id}', [GoodsReceiptController::class, 'deleteBatch'])->name('goods-receipts.delete-batch');
     Route::get('/goods-receipts/{goodsReceipt}/view-document', [GoodsReceiptController::class, 'viewDocument'])->name('goods-receipts.view-document');
     Route::get('/goods-receipts/{goodsReceipt}/download-document', [GoodsReceiptController::class, 'downloadDocument'])->name('goods-receipts.download-document');
     Route::get('/goods-receipts/{goodsReceipt}/print', [GoodsReceiptController::class, 'print'])->name('goods-receipts.print');
@@ -609,10 +608,10 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     Route::get('/product-returns/search', [ProductReturnController::class, 'search'])->name('product-returns.search');
     Route::post('/product-returns/products-by-supplier', [ProductReturnController::class, 'getProductsBySupplier'])->name('product-returns.products-by-supplier');
-    Route::get('/product-returns/{return}/print', [ProductReturnController::class, 'print'])->name('product-returns.print');
-    Route::patch('/product-returns/{return}/approve', [ProductReturnController::class, 'approve'])->name('product-returns.approve');
-    Route::patch('/product-returns/{return}/send', [ProductReturnController::class, 'send'])->name('product-returns.send');
-    Route::patch('/product-returns/{return}/complete', [ProductReturnController::class, 'complete'])->name('product-returns.complete');
+    Route::get('/product-returns/{productReturn}/print', [ProductReturnController::class, 'print'])->name('product-returns.print');
+    Route::patch('/product-returns/{productReturn}/approve', [ProductReturnController::class, 'approve'])->name('product-returns.approve');
+    Route::patch('/product-returns/{productReturn}/send', [ProductReturnController::class, 'send'])->name('product-returns.send');
+    Route::patch('/product-returns/{productReturn}/complete', [ProductReturnController::class, 'complete'])->name('product-returns.complete');
     Route::resource('product-returns', ProductReturnController::class);
     
     Route::get('/alerts/search', [MinMaxAlertController::class, 'search'])->name('alerts.search');

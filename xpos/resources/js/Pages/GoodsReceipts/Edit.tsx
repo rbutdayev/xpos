@@ -17,13 +17,12 @@ interface Employee { employee_id: number; name: string; }
 
 interface Props {
     receipt: GoodsReceipt;
-    batchReceipts?: GoodsReceipt[];
     suppliers: Supplier[];
     warehouses: Warehouse[];
     employees: Employee[];
 }
 
-export default function Edit({ receipt, batchReceipts, suppliers, warehouses, employees }: Props) {
+export default function Edit({ receipt, suppliers, warehouses, employees }: Props) {
     const { t } = useTranslation(['inventory', 'common']);
 
     return (
@@ -67,7 +66,6 @@ export default function Edit({ receipt, batchReceipts, suppliers, warehouses, em
                             warehouses={warehouses}
                             employees={employees}
                             receipt={receipt}
-                            batchReceipts={batchReceipts}
                             isEditing={true}
                         />
                     </div>

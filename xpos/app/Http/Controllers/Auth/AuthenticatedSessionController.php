@@ -63,6 +63,15 @@ class AuthenticatedSessionController extends Controller
         // This is required for ALL login requests, not just Inertia
         $response->header('X-Inertia-Location', url($redirectRoute));
 
+        // CRITICAL FIX: Send the fresh CSRF token in response header
+        // This allows frontend to update token immediately without waiting for DOM parsing
+        // Fixes 419 error on first POST after login when switching between users
+        $response->header('X-CSRF-TOKEN', $request->session()->token());
+
+        // CRITICAL: Expose the header so JavaScript can read it
+        // Without this, browsers hide custom headers from JavaScript (CORS policy)
+        $response->header('Access-Control-Expose-Headers', 'X-CSRF-TOKEN');
+
         // Prevent caching to ensure fresh CSRF token is loaded
         $response->header('Cache-Control', 'no-cache, no-store, must-revalidate');
         $response->header('Pragma', 'no-cache');
@@ -97,6 +106,14 @@ class AuthenticatedSessionController extends Controller
         // This prevents 419 errors when user tries to login again
         $response = redirect('/');
         $response->header('X-Inertia-Location', url('/'));
+
+        // CRITICAL FIX: Send the fresh CSRF token after logout
+        // This ensures the next login has the correct token immediately
+        $response->header('X-CSRF-TOKEN', $request->session()->token());
+
+        // CRITICAL: Expose the header so JavaScript can read it
+        $response->header('Access-Control-Expose-Headers', 'X-CSRF-TOKEN');
+
         return $response;
     }
 }
