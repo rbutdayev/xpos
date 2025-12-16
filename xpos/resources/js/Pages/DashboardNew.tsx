@@ -220,6 +220,7 @@ interface DashboardNewProps extends PageProps {
         expenses: { value: number; growth: number };
         profit: { value: number; growth: number; margin: number };
         pending_payments: { value: number; count: number };
+        supplier_debts: { value: number; count: number };
     };
     operational: {
         active_customers: number;
@@ -417,6 +418,13 @@ export default function DashboardNew({
                                     label={t('financial.pendingPayment')}
                                     value={formatCurrency(financial.pending_payments.value)}
                                     subtitle={tAny('new.financial.customerCount', { count: financial.pending_payments.count })}
+                                />
+                                <MainKPICard
+                                    icon={ExclamationTriangleIcon}
+                                    iconBg="bg-gradient-to-br from-red-500 to-red-700"
+                                    label={t('financial.supplierDebts')}
+                                    value={formatCurrency(financial.supplier_debts.value)}
+                                    subtitle={tAny('new.financial.supplierCount', { count: financial.supplier_debts.count })}
                                 />
                             </div>
                         </div>

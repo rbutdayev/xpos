@@ -11,6 +11,7 @@ use App\Models\StockMovement;
 use App\Models\StockHistory;
 use App\Models\ProductStock;
 use App\Services\DocumentUploadService;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +22,14 @@ use Inertia\Inertia;
 class GoodsReceiptController extends Controller
 {
     private DocumentUploadService $documentService;
+    private DashboardService $dashboardService;
 
-    public function __construct(DocumentUploadService $documentService)
+    public function __construct(DocumentUploadService $documentService, DashboardService $dashboardService)
     {
         $this->middleware('auth');
         $this->middleware('account.access');
         $this->documentService = $documentService;
+        $this->dashboardService = $dashboardService;
     }
 
     public function index(Request $request)
@@ -337,6 +340,11 @@ class GoodsReceiptController extends Controller
 
             DB::commit();
 
+            // Clear dashboard cache to reflect new goods receipt (only for completed, not drafts)
+            if (!$isDraft) {
+                $this->dashboardService->clearCache(auth()->user()->account);
+            }
+
             $successMessage = $isDraft
                 ? 'Mal qəbulu qaralama olaraq saxlanıldı'
                 : 'Mal qəbulu uğurla yaradıldı';
@@ -442,6 +450,9 @@ class GoodsReceiptController extends Controller
             $this->processGoodsReceiptPayment($goodsReceipt, $request);
 
             DB::commit();
+
+            // Clear dashboard cache to reflect completed goods receipt
+            $this->dashboardService->clearCache(auth()->user()->account);
 
             return redirect()->route('goods-receipts.index')
                 ->with('success', 'Mal qəbulu uğurla tamamlandı');
@@ -659,6 +670,11 @@ class GoodsReceiptController extends Controller
 
             DB::commit();
 
+            // Clear dashboard cache to reflect updated goods receipt (only for completed, not drafts)
+            if (!$isDraft) {
+                $this->dashboardService->clearCache(auth()->user()->account);
+            }
+
             return redirect()->route('goods-receipts.show', $goodsReceipt)
                 ->with('success', 'Mal qəbulu uğurla yeniləndi');
 
@@ -798,17 +814,7 @@ class GoodsReceiptController extends Controller
         Gate::authorize('delete-account-data');
         Gate::authorize('access-account-data', $goodsReceipt);
 
-        // STRICT VALIDATION: Check if there are any expenses linked to this goods receipt
-        // If expenses exist, user must delete them first
-        $linkedExpenses = \App\Models\Expense::where('goods_receipt_id', $goodsReceipt->id)->get();
-
-        if ($linkedExpenses->isNotEmpty()) {
-            return back()->withErrors([
-                'error' => 'Bu mal qəbuluna bağlı xərclər mövcuddur. Əvvəlcə xərcləri silin, sonra mal qəbulunu silə bilərsiniz.'
-            ]);
-        }
-
-        // STRICT VALIDATION: Block if paid (shouldn't happen if we deleted expense first, but double check)
+        // STRICT VALIDATION: Block if paid
         // Paid receipts have completed financial transactions that should not be reversed
         if ($goodsReceipt->payment_status === 'paid') {
             return back()->withErrors([
@@ -889,33 +895,8 @@ class GoodsReceiptController extends Controller
                     'supplier_payment_id' => $expense->supplier_payment_id,
                 ]);
 
-                // Find and delete associated supplier payment FIRST (before expense)
-                // This prevents the expense deleting hook from triggering on orphaned payment
-                if ($expense->supplier_payment_id) {
-                    $supplierPayment = \App\Models\SupplierPayment::find($expense->supplier_payment_id);
-                    if ($supplierPayment) {
-                        \Log::info("Deleting supplier payment", [
-                            'payment_id' => $supplierPayment->payment_id,
-                            'reference_number' => $supplierPayment->reference_number,
-                            'amount' => $supplierPayment->amount,
-                        ]);
-
-                        // Delete supplier payment (will cascade to expense via its deleting hook)
-                        // NOTE: SupplierPayment's deleting hook will try to delete expense, but we're doing it manually
-                        // So we need to delete expense first to avoid double deletion
-
-                        // Delete expense WITHOUT triggering its hooks for supplier credit reversal
-                        // (since we already handled supplier credit above)
-                        $expense->delete();
-
-                        // Now delete supplier payment
-                        // We need to detach the relationship first to prevent cascade
-                        $supplierPayment->delete();
-                    }
-                } else {
-                    // No supplier payment linked, just delete expense
-                    $expense->delete();
-                }
+                // Delete the expense record
+                $expense->delete();
             }
 
             // STEP 3: Handle STOCK MOVEMENTS
@@ -1014,6 +995,9 @@ class GoodsReceiptController extends Controller
             $goodsReceipt->delete();
 
             DB::commit();
+
+            // Clear dashboard cache to reflect deleted goods receipt
+            $this->dashboardService->clearCache(auth()->user()->account);
 
             \Log::info("Goods receipt deletion completed successfully", [
                 'receipt_id' => $goodsReceipt->id,
@@ -1162,11 +1146,17 @@ class GoodsReceiptController extends Controller
                     ]);
                 }
 
-                // Get the warehouse's branch or use the first available branch
-                $warehouse = \App\Models\Warehouse::find($goodsReceipt->warehouse_id);
-                $branchId = $warehouse->branch_id ?? \App\Models\Branch::byAccount(auth()->user()->account_id)->first()->id;
+                // Get the first branch that has access to this warehouse, or use the first available branch
+                $warehouse = \App\Models\Warehouse::with('branches')->find($goodsReceipt->warehouse_id);
+                $branchId = $warehouse->branches->first()?->id
+                    ?? \App\Models\Branch::byAccount(auth()->user()->account_id)->first()?->id;
 
-                // Create expense record
+                // Validate that we have a branch
+                if (!$branchId) {
+                    throw new \Exception('Filial tapılmadı. Xahiş edirik sistem administratoru ilə əlaqə saxlayın.');
+                }
+
+                // Create expense record for instant payment
                 $expense = \App\Models\Expense::create([
                     'account_id' => auth()->user()->account_id,
                     'category_id' => $expenseCategory->category_id,
@@ -1175,23 +1165,11 @@ class GoodsReceiptController extends Controller
                     'description' => "Dərhal ödəniş - Mal qəbulu: {$goodsReceipt->receipt_number}",
                     'expense_date' => now()->format('Y-m-d'),
                     'payment_method' => 'cash', // Default to cash for instant payment
+                    'invoice_number' => $goodsReceipt->receipt_number,
                     'user_id' => Auth::id(),
                     'supplier_id' => $goodsReceipt->supplier_id,
                     'goods_receipt_id' => $goodsReceipt->id,
                     'notes' => "Avtomatik yaradıldı - Dərhal ödəniş",
-                ]);
-
-                // Create supplier payment record
-                $supplierPayment = \App\Models\SupplierPayment::create([
-                    'account_id' => auth()->user()->account_id,
-                    'supplier_id' => $goodsReceipt->supplier_id,
-                    'amount' => $goodsReceipt->total_cost,
-                    'description' => "Dərhal ödəniş - Mal qəbulu: {$goodsReceipt->receipt_number}",
-                    'payment_date' => now()->format('Y-m-d'),
-                    'payment_method' => 'cash',
-                    'invoice_number' => $goodsReceipt->receipt_number,
-                    'user_id' => Auth::id(),
-                    'notes' => "Avtomatik yaradıldı - Xerc: {$expense->reference_number}",
                 ]);
             }
 

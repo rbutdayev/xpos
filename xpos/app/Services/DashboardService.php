@@ -9,7 +9,6 @@ use App\Models\SaleItem;
 use App\Models\SaleReturn;
 use App\Models\Expense;
 use App\Models\CustomerCredit;
-use App\Models\SupplierPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -66,7 +65,7 @@ class DashboardService
                 ? ($profit / $monthlyRevenue) * 100
                 : 0;
 
-            // Pending payments (customer credit)
+            // Pending payments (customer credit) - Alacaq
             $pendingPayments = CustomerCredit::where('account_id', $account->id)
                 ->where('remaining_amount', '>', 0)
                 ->sum('remaining_amount') ?? 0;
@@ -75,6 +74,16 @@ class DashboardService
                 ->where('remaining_amount', '>', 0)
                 ->distinct()
                 ->count('customer_id');
+
+            // Supplier debts (supplier credit) - Borclar
+            $supplierDebts = \App\Models\SupplierCredit::where('account_id', $account->id)
+                ->where('remaining_amount', '>', 0)
+                ->sum('remaining_amount') ?? 0;
+
+            $supplierDebtsCount = \App\Models\SupplierCredit::where('account_id', $account->id)
+                ->where('remaining_amount', '>', 0)
+                ->distinct()
+                ->count('supplier_id');
 
             return [
                 'revenue' => [
@@ -93,6 +102,10 @@ class DashboardService
                 'pending_payments' => [
                     'value' => round($pendingPayments, 2),
                     'count' => $pendingPaymentsCount,
+                ],
+                'supplier_debts' => [
+                    'value' => round($supplierDebts, 2),
+                    'count' => $supplierDebtsCount,
                 ],
             ];
         });
@@ -143,20 +156,14 @@ class DashboardService
 
     /**
      * Calculate expenses for a given month
+     * Note: Supplier payments are now part of the Expense model
      */
     private function calculateExpenses(Account $account, Carbon $month): float
     {
-        $expenses = Expense::where('account_id', $account->id)
+        return Expense::where('account_id', $account->id)
             ->whereYear('expense_date', $month->year)
             ->whereMonth('expense_date', $month->month)
             ->sum('amount') ?? 0;
-
-        $supplierPayments = SupplierPayment::where('account_id', $account->id)
-            ->whereYear('payment_date', $month->year)
-            ->whereMonth('payment_date', $month->month)
-            ->sum('amount') ?? 0;
-
-        return $expenses + $supplierPayments;
     }
 
     /**
@@ -425,20 +432,64 @@ class DashboardService
 
     /**
      * Clear cache for an account
+     * Uses Redis pattern matching to delete all cached dashboard data
      */
     public function clearCache(Account $account): void
     {
+        // Use Redis pattern matching to find and delete all cache keys for this account
         $patterns = [
             "dashboard:financial:{$account->id}:*",
             "dashboard:operational:{$account->id}:*",
+            "dashboard:operational_warehouse:{$account->id}:*",
             "dashboard:inventory_alerts:{$account->id}:*",
             "dashboard:services:{$account->id}:*",
             "dashboard:rentals:{$account->id}:*",
             "dashboard:credits:{$account->id}:*",
         ];
 
-        foreach ($patterns as $pattern) {
-            Cache::forget($pattern);
+        try {
+            // Get the Redis connection
+            $redis = Cache::getStore()->getRedis();
+
+            foreach ($patterns as $pattern) {
+                // Add Laravel's cache prefix to the pattern
+                $prefixedPattern = config('cache.prefix') . ':' . $pattern;
+
+                // Find all keys matching the pattern
+                $keys = $redis->keys($prefixedPattern);
+
+                // Delete each key
+                if (!empty($keys)) {
+                    foreach ($keys as $key) {
+                        // Remove the Laravel cache prefix before forgetting
+                        $keyWithoutPrefix = str_replace(config('cache.prefix') . ':', '', $key);
+                        Cache::forget($keyWithoutPrefix);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // If Redis pattern matching fails, fall back to clearing specific keys
+            \Log::warning('Dashboard cache clearing with pattern failed, using fallback method: ' . $e->getMessage());
+
+            // Generate keys for the last 24 hours + next hour as fallback
+            $now = Carbon::now();
+            $hours = [];
+            for ($i = -24; $i <= 1; $i++) {
+                $hours[] = $now->copy()->addHours($i)->format('Y-m-d-H');
+            }
+
+            // Clear specific keys without warehouse variations
+            $simplePrefixes = [
+                "dashboard:financial:{$account->id}:",
+                "dashboard:inventory_alerts:{$account->id}:",
+                "dashboard:credits:{$account->id}:",
+            ];
+
+            foreach ($simplePrefixes as $prefix) {
+                foreach ($hours as $hour) {
+                    Cache::forget($prefix . $hour);
+                }
+            }
         }
     }
 }

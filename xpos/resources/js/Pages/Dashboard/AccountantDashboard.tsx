@@ -1,4 +1,4 @@
-import { BanknotesIcon, DocumentTextIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, CubeIcon } from '@heroicons/react/24/outline';
+import { BanknotesIcon, DocumentTextIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, CubeIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Doughnut } from 'react-chartjs-2';
 import { CompactKPICard } from '@/Components/Dashboard/KPICard';
 import { SectionGroup } from '@/Components/Dashboard/SectionGroup';
@@ -22,6 +22,7 @@ interface Props {
         expenses: { value: number; growth: number };
         profit: { value: number; growth: number; margin: number };
         pending_payments: { value: number; count: number };
+        supplier_debts: { value: number; count: number };
     };
     revenue_breakdown: { sales: number; services?: number; rentals?: number };
     expense_breakdown: Array<{ category: string; amount: number }>;
@@ -106,6 +107,13 @@ export default function AccountantDashboard({ financial, revenue_breakdown, expe
                     icon={<DocumentTextIcon />}
                     variant="warning"
                     subtitle={`${financial.pending_payments.count} ${t('financial.customer')}`}
+                />
+                <CompactKPICard
+                    title={t('financial.supplierDebts')}
+                    value={formatCurrency(financial.supplier_debts.value)}
+                    icon={<ExclamationTriangleIcon />}
+                    variant="danger"
+                    subtitle={`${financial.supplier_debts.count} ${t('financial.supplier')}`}
                 />
             </SectionGroup>
 

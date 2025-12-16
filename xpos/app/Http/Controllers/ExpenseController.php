@@ -9,6 +9,7 @@ use App\Models\Supplier;
 use App\Models\SupplierCredit;
 use App\Models\GoodsReceipt;
 use App\Services\DocumentUploadService;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +20,14 @@ use Inertia\Inertia;
 class ExpenseController extends Controller
 {
     private DocumentUploadService $documentService;
+    private DashboardService $dashboardService;
 
-    public function __construct(DocumentUploadService $documentService)
+    public function __construct(DocumentUploadService $documentService, DashboardService $dashboardService)
     {
         $this->middleware('auth');
         $this->middleware('account.access');
         $this->documentService = $documentService;
+        $this->dashboardService = $dashboardService;
     }
 
     public function index(Request $request)
@@ -117,9 +120,11 @@ class ExpenseController extends Controller
         });
 
         // Get unpaid goods receipts to show in expenses list
+        // Only show goods receipts that DON'T have a supplier credit (to avoid duplication)
         $unpaidGoodsReceiptsQuery = GoodsReceipt::with(['supplier', 'items.product', 'supplierCredit'])
             ->where('account_id', auth()->user()->account_id)
-            ->whereIn('payment_status', ['unpaid', 'partial']);
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->whereNull('supplier_credit_id'); // Don't show receipts that already have a supplier credit
 
         // Apply same filters to goods receipts
         if ($request->filled('search')) {
@@ -345,6 +350,9 @@ class ExpenseController extends Controller
             }
         }
 
+        // Clear dashboard cache to reflect new expense
+        $this->dashboardService->clearCache(Auth::user()->account);
+
         return redirect()->route('expenses.index')
                         ->with('success', 'Xerc uğurla yaradıldı');
     }
@@ -433,6 +441,9 @@ class ExpenseController extends Controller
             'notes' => $request->notes,
         ]);
 
+        // Clear dashboard cache to reflect updated expense
+        $this->dashboardService->clearCache(Auth::user()->account);
+
         return redirect()->route('expenses.show', $expense)
                         ->with('success', __('app.updated_successfully'));
     }
@@ -470,28 +481,7 @@ class ExpenseController extends Controller
                     'user_id' => Auth::id(),
                 ]);
 
-                // STEP 1: Find and delete linked supplier payment FIRST
-                $supplierPayment = \App\Models\SupplierPayment::where('account_id', Auth::user()->account_id)
-                    ->where('invoice_number', $goodsReceipt->receipt_number)
-                    ->where('amount', $expense->amount)
-                    ->where('description', 'like', '%' . $goodsReceipt->receipt_number . '%')
-                    ->first();
-
-                if ($supplierPayment) {
-                    \Log::info("Deleting linked supplier payment", [
-                        'payment_id' => $supplierPayment->payment_id,
-                        'reference_number' => $supplierPayment->reference_number,
-                        'amount' => $supplierPayment->amount,
-                    ]);
-
-                    // Delete supplier payment (without triggering its deleting hook that would try to delete expense again)
-                    // We'll delete expense manually after
-                    $supplierPayment->withoutEvents(function () use ($supplierPayment) {
-                        $supplierPayment->delete();
-                    });
-                }
-
-                // STEP 2: Update goods receipt status to unpaid
+                // STEP 1: Update goods receipt status to unpaid
                 $goodsReceipt->update([
                     'payment_status' => 'unpaid',
                     'payment_method' => 'credit',
@@ -543,6 +533,9 @@ class ExpenseController extends Controller
 
                 DB::commit();
 
+                // Clear dashboard cache to reflect deleted expense
+                $this->dashboardService->clearCache(Auth::user()->account);
+
                 return redirect()->route('expenses.index')
                     ->with('success', 'Xerc silindi və mal qəbulu ödənilməmiş statusuna qaytarıldı');
 
@@ -574,6 +567,9 @@ class ExpenseController extends Controller
 
         // Delete expense (deleting hook will handle supplier credit reversal)
         $expense->delete();
+
+        // Clear dashboard cache to reflect deleted expense
+        $this->dashboardService->clearCache(Auth::user()->account);
 
         return redirect()->route('expenses.index')
                         ->with('success', __('app.deleted_successfully'));
@@ -768,19 +764,6 @@ class ExpenseController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // Create supplier payment record for better tracking
-            $supplierPayment = \App\Models\SupplierPayment::create([
-                'account_id' => auth()->user()->account_id,
-                'supplier_id' => $goodsReceipt->supplier_id,
-                'amount' => $paymentAmount,
-                'description' => "Mal qəbulu ödəməsi - {$goodsReceipt->receipt_number}",
-                'payment_date' => now()->format('Y-m-d'),
-                'payment_method' => $request->payment_method,
-                'invoice_number' => $goodsReceipt->receipt_number,
-                'user_id' => Auth::id(),
-                'notes' => "Xerc: {$expense->reference_number}",
-            ]);
-
             // Update supplier credit with the payment
             $supplierCredit = $goodsReceipt->supplierCredit;
             $supplierCredit->addPayment(
@@ -799,7 +782,10 @@ class ExpenseController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 
+            // Clear dashboard cache to reflect goods receipt payment
+            $this->dashboardService->clearCache(auth()->user()->account);
+
+            return back()->with('success',
                 $supplierCredit->remaining_amount == 0
                     ? 'Mal qəbulu tam ödənilib'
                     : "Qismən ödəniş uğurla tamamlandı. Qalıq: {$supplierCredit->remaining_amount} AZN"
@@ -857,19 +843,6 @@ class ExpenseController extends Controller
                 'notes' => $request->notes ? $request->notes . " (Qəbul nömrələri: {$receiptNumbers})" : "Qəbul nömrələri: {$receiptNumbers}",
             ]);
 
-            // Create a single supplier payment for the batch
-            $supplierPayment = \App\Models\SupplierPayment::create([
-                'account_id' => auth()->user()->account_id,
-                'supplier_id' => $firstReceipt->supplier_id,
-                'amount' => $paymentAmount,
-                'description' => "Qrup ödəməsi - {$itemCount} mal qəbulu",
-                'payment_date' => now()->format('Y-m-d'),
-                'payment_method' => $request->payment_method,
-                'invoice_number' => $receiptNumbers,
-                'user_id' => Auth::id(),
-                'notes' => "Xerc: {$expense->reference_number}",
-            ]);
-
             // Distribute payment across all receipts proportionally
             $remainingPayment = $paymentAmount;
 
@@ -908,6 +881,9 @@ class ExpenseController extends Controller
             }
 
             DB::commit();
+
+            // Clear dashboard cache to reflect batch payment
+            $this->dashboardService->clearCache(auth()->user()->account);
 
             return back()->with('success', "Partiya ödənişi uğurla tamamlandı. Ödənildi: {$paymentAmount} AZN");
 

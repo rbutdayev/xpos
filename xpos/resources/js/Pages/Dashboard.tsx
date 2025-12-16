@@ -4,7 +4,6 @@ import { PageProps } from '@/types';
 import { useTranslation } from 'react-i18next';
 
 // Role-specific dashboard components
-import AccountOwnerDashboard from './Dashboard/AccountOwnerDashboard';
 import AccountantDashboard from './Dashboard/AccountantDashboard';
 import WarehouseManagerDashboard from './Dashboard/WarehouseManagerDashboard';
 import SalesStaffDashboard from './Dashboard/SalesStaffDashboard';
@@ -61,7 +60,9 @@ export default function Dashboard(props: DashboardData) {
         switch (user.role) {
             case 'account_owner':
             case 'admin':
-                return <AccountOwnerDashboard {...props as any} />;
+                // Account owner and admin use DashboardNew.tsx (Cuba-style)
+                // This case should never be reached as DashboardController routes them to DashboardNew
+                return null;
 
             case 'accountant':
                 return <AccountantDashboard {...props as any} />;
