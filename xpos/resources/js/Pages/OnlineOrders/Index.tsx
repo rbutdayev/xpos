@@ -210,7 +210,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
             <Head title="Online Sifarişlər" />
 
             <div className="py-6">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {/* Status Tabs */}
                     <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200">

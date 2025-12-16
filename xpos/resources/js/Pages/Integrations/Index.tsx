@@ -381,7 +381,7 @@ export default function Index({
             <Head title="Tətbiqlər və İnteqrasiyalar" />
 
             <div className="py-6 sm:py-12">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {/* Category Filter - Enterprise Style */}
                     <div className="mb-6">
                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">

@@ -123,7 +123,7 @@ export default function CreateSupplierPaymentModal({
         setProcessing(true);
         setErrors({});
 
-        router.post(route('supplier-payments.store'), formData, {
+        router.post(route('expenses.pay-goods-receipt'), formData, {
             preserveState: true,
             onSuccess: () => {
                 onClose();

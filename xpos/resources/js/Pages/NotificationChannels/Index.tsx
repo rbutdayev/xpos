@@ -130,8 +130,7 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
         >
             <Head title="Bildiriş Kanalları" />
 
-            <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     {/* Configuration Status Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         {/* SMS Status */}
@@ -431,7 +430,6 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
                         </div>
                     </form>
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

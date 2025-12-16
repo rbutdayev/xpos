@@ -87,10 +87,9 @@ export default function Index({ stocks, warehouses, filters }: Props) {
                 filters={filtersUI}
                 onSearch={handleSearch}
                 onReset={handleReset}
-            mobileClickable={true}
-
-            hideMobileActions={true}
-
+                fullWidth={true}
+                mobileClickable={true}
+                hideMobileActions={true}
             />
         </AuthenticatedLayout>
     );

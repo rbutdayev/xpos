@@ -22,10 +22,10 @@ class Expense extends Model
         'description',
         'expense_date',
         'reference_number',
+        'invoice_number',
         'payment_method',
         'user_id',
         'supplier_id',
-        'supplier_payment_id',
         'supplier_credit_id',
         'credit_payment_amount',
         'goods_receipt_id',
@@ -77,10 +77,6 @@ class Expense extends Model
         return $this->belongsTo(GoodsReceipt::class);
     }
 
-    public function supplierPayment(): BelongsTo
-    {
-        return $this->belongsTo(SupplierPayment::class, 'supplier_payment_id', 'payment_id');
-    }
 
     public function scopeByBranch(Builder $query, $branchId): Builder
     {

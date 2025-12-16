@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { PageProps } from '@/types';
-import { EyeIcon, PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilIcon, TrashIcon, CheckIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 import { getServiceConfig, getCurrentServiceType, routeParamToServiceType, serviceTypeToRouteParam } from '@/config/serviceTypes';
 
 interface TailorService {
@@ -283,6 +283,20 @@ export default function Index({ services, filters, branches, stats, serviceType 
 
             <div className="py-12">
                 <div className="w-full">
+                    {/* Header with Create Button */}
+                    <div className="mb-6 px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between">
+                            <h1 className="text-2xl font-semibold text-gray-900">{serviceConfig.name}</h1>
+                            <Link
+                                href={route('services.create', { serviceType: routeParam })}
+                                className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            >
+                                <PlusCircleIcon className="w-5 h-5 mr-2" />
+                                Yeni Xidmət
+                            </Link>
+                        </div>
+                    </div>
+
                     {/* Payment Statistics */}
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-6 lg:px-8">
                         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">

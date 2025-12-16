@@ -237,7 +237,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                 </SalesNavigation>
             </div>
             <div className="py-6">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {/* Statistics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
@@ -304,6 +304,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                             onSearch={() => {}}
                             onSearchChange={handleSearchInput}
                             searchPlaceholder={t('returns.searchPlaceholder')}
+                            fullWidth={true}
                         />
                     </div>
                 </div>

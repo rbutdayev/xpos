@@ -63,7 +63,7 @@ export default function Show({ expense }: Props) {
             <Head title={`${t('title')} - ${expense.description}`} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             {/* Header */}

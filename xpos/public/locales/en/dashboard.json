@@ -36,8 +36,11 @@
     "profit": "Profit",
     "margin": "margin",
     "pendingPayment": "Pending Payment",
+    "supplierDebts": "Supplier Debts",
     "customer": "customer",
-    "customers": "customers"
+    "customers": "customers",
+    "supplier": "supplier",
+    "suppliers": "suppliers"
   },
 
   "operational": {
@@ -265,7 +268,8 @@
       "expensesThisMonth": "Expenses This Month",
       "netProfit": "Net Profit",
       "marginLabel": "Margin: {{margin}}%",
-      "customerCount": "{{count}} customers"
+      "customerCount": "{{count}} customers",
+      "supplierCount": "{{count}} suppliers"
     },
     "operational": {
       "subtitle": "Customer and stock statistics",

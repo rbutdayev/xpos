@@ -157,8 +157,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
         <AuthenticatedLayout>
             <Head title="Fiskal Printer Parametrləri" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div className="py-12 px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* Info Banner */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex items-start">
@@ -473,7 +472,6 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                         </div>
                     ) : null}
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

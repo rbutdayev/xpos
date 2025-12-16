@@ -254,7 +254,7 @@ export default function Index({ categories, types }: Props) {
             <Head title={t('categories.title')} />
 
             <div className="py-6">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {/* Expense Navigation */}
                     <ExpensesNavigation currentRoute={route().current()} />
 
@@ -269,15 +269,12 @@ export default function Index({ categories, types }: Props) {
                         searchPlaceholder={t('categories.placeholders.searchCategories')}
                         onSearch={handleSearch}
                         onReset={handleReset}
-                        createButton={{
-                            label: t('categories.addCategory'),
-                            href: '/expense-categories/create'
-                        }}
                         emptyState={{
                             title: t('categories.messages.noCategoriesFound'),
                             description: t('categories.messages.startAddingCategories'),
                             icon: <TagIcon className="w-12 h-12 text-gray-400" />
                         }}
+                        fullWidth={true}
                     />
                     </div>
                 </div>

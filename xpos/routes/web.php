@@ -30,7 +30,6 @@ use App\Http\Controllers\PrinterConfigController;
 use App\Http\Controllers\ReceiptTemplateController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpenseCategoryController;
-use App\Http\Controllers\SupplierPaymentController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\SuperAdminController;
@@ -645,6 +644,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     Route::get('/sales/search', [SaleController::class, 'search'])->name('sales.search');
     Route::resource('sales', SaleController::class)->except(['create']);
+    Route::post('/sales/{id}/restore', [SaleController::class, 'restore'])->name('sales.restore');
     Route::patch('/sales/{sale}/make-credit', [SaleController::class, 'makeCredit'])->name('sales.make-credit');
     Route::patch('/sales/{sale}/pay-credit', [SaleController::class, 'paySaleCredit'])->name('sales.pay-credit');
     Route::get('/sales/{sale}/print-options', [SaleController::class, 'getPrintOptions'])->name('sales.print-options');
@@ -719,11 +719,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/expenses/{expense}/view-receipt', [ExpenseController::class, 'viewReceipt'])->name('expenses.view-receipt');
     Route::get('/expenses/{expense}/download-receipt', [ExpenseController::class, 'downloadReceipt'])->name('expenses.download-receipt');
     Route::resource('expenses', ExpenseController::class);
-    
-    // Supplier Payments
-    Route::get('/supplier-payments/search', [SupplierPaymentController::class, 'search'])->name('supplier-payments.search');
-    Route::resource('supplier-payments', SupplierPaymentController::class);
-    
+
     // Employee Salaries
     Route::get('/employee-salaries/search', [EmployeeSalaryController::class, 'search'])->name('employee-salaries.search');
     Route::patch('/employee-salaries/{employee_salary}/mark-as-paid', [EmployeeSalaryController::class, 'markAsPaid'])->name('employee-salaries.mark-as-paid');

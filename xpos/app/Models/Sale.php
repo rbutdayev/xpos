@@ -8,12 +8,47 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sale extends Model
 {
-    use HasFactory, BelongsToAccount;
+    use HasFactory, BelongsToAccount, SoftDeletes;
 
     protected $primaryKey = 'sale_id';
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'sale_id';
+    }
+
+    /**
+     * Retrieve the model for a bound value.
+     * Include soft deleted models for route model binding.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        \Log::info('Route binding for Sale', [
+            'value' => $value,
+            'field' => $field,
+            'route_key' => $this->getRouteKeyName()
+        ]);
+
+        $sale = $this->withTrashed()->where($field ?? $this->getRouteKeyName(), $value)->first();
+
+        \Log::info('Sale found', [
+            'sale' => $sale ? $sale->sale_id : 'NOT FOUND',
+            'deleted' => $sale ? $sale->trashed() : 'N/A'
+        ]);
+
+        if (!$sale) {
+            \Log::error('Sale not found in route binding', ['value' => $value]);
+        }
+
+        return $sale ?? abort(404);
+    }
 
     protected $fillable = [
         'account_id',
@@ -47,6 +82,7 @@ class Sale extends Model
         'platform_order_data',
         'delivery_fee',
         'platform_commission',
+        'deleted_by',
     ];
 
     protected function casts(): array
@@ -83,6 +119,11 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     public function items(): HasMany

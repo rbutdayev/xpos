@@ -16,7 +16,6 @@ use App\Models\Expense;
 use App\Models\ProductStock;
 use App\Models\Warehouse;
 use App\Models\GeneratedReport;
-use App\Models\SupplierPayment;
 use App\Models\Payment;
 use Carbon\Carbon;
 
@@ -788,15 +787,10 @@ class ReportController extends Controller
 
         $netRevenue = $sales - $returns;
 
-        $expenses = Expense::where('account_id', $account->id)
+        // Note: Supplier payments are now part of the Expense model
+        $totalExpenses = Expense::where('account_id', $account->id)
             ->whereBetween('expense_date', [$dateFrom, $dateTo])
             ->sum('amount');
-
-        $supplierPayments = SupplierPayment::where('account_id', $account->id)
-            ->whereBetween('payment_date', [$dateFrom, $dateTo])
-            ->sum('amount');
-
-        $totalExpenses = $expenses + $supplierPayments;
 
         // Get payment method breakdown for revenue
         $paymentBreakdown = Payment::whereHas('sale', function($q) use ($account, $dateFrom, $dateTo) {
@@ -840,18 +834,12 @@ class ReportController extends Controller
             ->pluck('total_returns', 'date');
 
         // Get all expenses grouped by date (1 query instead of 365+)
+        // Note: This includes supplier payments (now part of Expense model)
         $expensesByDate = Expense::where('account_id', $account->id)
             ->whereBetween('expense_date', [$dateFrom, $dateTo])
             ->selectRaw('DATE(expense_date) as date, SUM(amount) as total_expenses')
             ->groupBy('date')
             ->pluck('total_expenses', 'date');
-
-        // Get all supplier payments grouped by date
-        $supplierPaymentsByDate = SupplierPayment::where('account_id', $account->id)
-            ->whereBetween('payment_date', [$dateFrom, $dateTo])
-            ->selectRaw('DATE(payment_date) as date, SUM(amount) as total_payments')
-            ->groupBy('date')
-            ->pluck('total_payments', 'date');
 
         // Build daily data array
         $dailyData = [];
@@ -862,7 +850,7 @@ class ReportController extends Controller
             $grossRevenue = $salesByDate[$dateKey] ?? 0;
             $returnsAmount = $returnsByDate[$dateKey] ?? 0;
             $netRevenue = $grossRevenue - $returnsAmount;
-            $expenses = ($expensesByDate[$dateKey] ?? 0) + ($supplierPaymentsByDate[$dateKey] ?? 0);
+            $expenses = $expensesByDate[$dateKey] ?? 0;
 
             $dailyData[] = [
                 'date' => $dateKey,

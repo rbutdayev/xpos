@@ -154,7 +154,7 @@ export default function Create({ auth, sale }: CreateReturnsProps) {
             <Head title={`Mal Qaytarma - ${sale.sale_number}`} />
 
             <div className="py-6">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {/* Sale Information */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 p-6">
                         <h3 className="text-lg font-semibold mb-4">Satış Məlumatları</h3>

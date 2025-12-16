@@ -20,7 +20,7 @@ export default function ExpensesNavigation({ currentRoute, onCreateExpense, onCr
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1 mb-6">
             <nav className="flex flex-wrap gap-1">
-                {/* Pay Supplier Button - PRIORITY 1 */}
+                {/* Pay Supplier Button OR Add Category Button */}
                 {onCreateSupplierPayment ? (
                     <button
                         type="button"
@@ -30,15 +30,15 @@ export default function ExpensesNavigation({ currentRoute, onCreateExpense, onCr
                         <CurrencyDollarIcon className="w-5 h-5 text-white" />
                         <span className="font-semibold">Təchizatçıya Ödə</span>
                     </button>
-                ) : (
+                ) : isActive('expense-categories') ? (
                     <Link
-                        href={route('supplier-payments.create')}
+                        href={route('expense-categories.create')}
                         className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                     >
-                        <CurrencyDollarIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">Təchizatçıya Ödə</span>
+                        <PlusCircleIcon className="w-5 h-5 text-white" />
+                        <span className="font-semibold">Kateqoriya əlavə et</span>
                     </Link>
-                )}
+                ) : null}
 
                 {/* New Expense Button */}
                 {onCreateExpense ? (

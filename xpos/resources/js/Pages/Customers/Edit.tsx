@@ -96,8 +96,7 @@ export default function Edit({ customer }: Props) {
         <AuthenticatedLayout>
             <Head title={t('editCustomerTitle', { name: customer.name })} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <form onSubmit={submit} className="p-6 space-y-6">
                             {/* Customer Name */}
@@ -360,7 +359,6 @@ export default function Edit({ customer }: Props) {
                         </div>
                     )}
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

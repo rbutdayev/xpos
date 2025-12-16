@@ -55,7 +55,7 @@ export default function Edit({ category, parentCategories, types }: Props) {
             <Head title={t('categories.editCategory')} />
 
             <div className="py-6">
-                <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">

@@ -56,7 +56,7 @@ export default function Show({ category, types }: Props) {
             <Head title={`${t('categories.categoryInfo')} - ${category.name}`} />
 
             <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             {/* Header */}

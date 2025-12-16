@@ -500,6 +500,7 @@ export default function View({ reportId, reportType, data, dateRange }: Props) {
                                     hideFilters={true}
                                     hidePerPageSelect={true}
                                     className="border-none shadow-none"
+                                    fullWidth={true}
                                     mobileClickable={true}
                                     hideMobileActions={true}
                                 />

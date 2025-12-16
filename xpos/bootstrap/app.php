@@ -81,22 +81,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 return $salary;
             });
 
-            Route::bind('supplier_payment', function ($value) {
-                $payment = \App\Models\SupplierPayment::where('payment_id', $value)->firstOrFail();
-
-                // Security: Verify user has access to this payment's account
-                if (\Illuminate\Support\Facades\Auth::check() &&
-                    !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
-                    if ($payment->account_id !== \Illuminate\Support\Facades\Auth::user()->account_id) {
-                        abort(403, 'Access denied');
-                    }
-                }
-
-                return $payment;
-            });
-
             Route::bind('sale', function ($value) {
-                $sale = \App\Models\Sale::where('sale_id', $value)->firstOrFail();
+                // Include soft-deleted sales (for viewing/restoring deleted sales)
+                $sale = \App\Models\Sale::withTrashed()->where('sale_id', $value)->firstOrFail();
 
                 // Security: Verify user has access to this sale's account
                 if (\Illuminate\Support\Facades\Auth::check() &&

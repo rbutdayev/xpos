@@ -746,7 +746,7 @@ export default function Create({ customers, branches, templates, categories = []
         <AuthenticatedLayout>
             <Head title="Yeni Kirayə" />
 
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="mb-6">
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Yeni Kirayə</h1>
                     <p className="mt-1 text-sm sm:text-base text-gray-600">

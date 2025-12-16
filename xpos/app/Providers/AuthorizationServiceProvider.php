@@ -123,6 +123,11 @@ class AuthorizationServiceProvider extends ServiceProvider
             return $user->isOwner() && $user->account && $user->account->isActive();
         });
 
+        // Delete Sales - Only account owner can delete sales
+        Gate::define('delete-sales', function (User $user) {
+            return $user->isOwner() && $user->account && $user->account->isActive();
+        });
+
         // Subscription management
         Gate::define('manage-subscription', function (User $user) {
             return $user->isOwner();

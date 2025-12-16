@@ -14,6 +14,7 @@ use App\Models\NegativeStockAlert;
 use App\Models\StockMovement;
 use App\Models\ReceiptTemplate;
 use App\Services\ThermalPrintService;
+use App\Services\SaleDeletionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -86,11 +87,33 @@ class SaleController extends Controller
             'has_negative_stock' => 'nullable|boolean',
             'payment_status' => 'nullable|string|in:paid,credit,partial',
             'online' => 'nullable|boolean',
+            'show_deleted' => 'nullable|string',
         ]);
 
-        $query = Sale::with(['customer', 'branch', 'user', 'items.product', 'customerCredit'])
-            ->where('account_id', Auth::user()->account_id)
-            ->countable(); // Only include POS sales + completed online orders
+        // Include deleted sales if requested and user is account owner
+        $showDeleted = $request->input('show_deleted') === 'true' || $request->input('show_deleted') === '1';
+
+        \Log::info('Sales Index Query', [
+            'show_deleted_param' => $request->input('show_deleted'),
+            'show_deleted_bool' => $showDeleted,
+            'user_role' => Auth::user()->role,
+        ]);
+
+        $query = Sale::query();
+        if ($showDeleted && Auth::user()->role === 'account_owner') {
+            \Log::info('Showing ONLY deleted sales');
+            $query = Sale::onlyTrashed();
+        } else {
+            \Log::info('Showing active sales');
+        }
+
+        $query->with(['customer', 'branch', 'user', 'items.product', 'customerCredit', 'deletedBy'])
+            ->where('account_id', Auth::user()->account_id);
+
+        // Only apply countable scope if not showing deleted sales
+        if (!$showDeleted) {
+            $query->countable(); // Only include POS sales + completed online orders
+        }
 
         // Filter by sales_staff's branch if user is sales_staff
         if (Auth::user()->role === 'sales_staff') {
@@ -156,10 +179,11 @@ class SaleController extends Controller
 
         return Inertia::render('Sales/Index', [
             'sales' => $sales,
-            'filters' => $request->only(['search', 'status', 'branch_id', 'date_from', 'date_to', 'has_negative_stock', 'payment_status']),
+            'filters' => $request->only(['search', 'status', 'branch_id', 'date_from', 'date_to', 'has_negative_stock', 'payment_status', 'show_deleted']),
             'branches' => $branches,
             'dailySummary' => $dailySummary,
             'summaryDate' => $summaryDate,
+            'canDeleteSales' => Auth::user()->role === 'account_owner',
         ]);
     }
 
@@ -360,10 +384,11 @@ class SaleController extends Controller
             abort(403);
         }
 
-        $sale->load(['customer', 'branch', 'user', 'items.product', 'payments', 'negativeStockAlerts.product', 'customerCredit']);
+        $sale->load(['customer', 'branch', 'user', 'items.product', 'payments', 'negativeStockAlerts.product', 'customerCredit', 'deletedBy']);
 
         return Inertia::render('Sales/Show', [
             'sale' => $sale,
+            'canDeleteSales' => Auth::user()->role === 'account_owner',
         ]);
     }
 
@@ -376,9 +401,15 @@ class SaleController extends Controller
             abort(403);
         }
 
+        // Don't allow editing deleted sales
+        if ($sale->trashed()) {
+            return redirect()->route('sales.show', $sale->sale_id)
+                ->with('error', 'Silinmiš satış dəyişdirilə bilməz.');
+        }
+
         // Allow editing for payment-related changes, restrict only for refunded sales
         if ($sale->status === 'refunded') {
-            return redirect()->route('sales.show', $sale)
+            return redirect()->route('sales.show', $sale->sale_id)
                 ->with('error', 'Geri qaytarılmış satış dəyişdirilə bilməz.');
         }
 
@@ -397,9 +428,20 @@ class SaleController extends Controller
     {
         Gate::authorize('edit-account-data');
 
+        // Verify sale belongs to current account
+        if ($sale->account_id !== Auth::user()->account_id) {
+            abort(403);
+        }
+
+        // Don't allow editing deleted sales
+        if ($sale->trashed()) {
+            return redirect()->route('sales.show', $sale->sale_id)
+                ->with('error', 'Silinmiš satış dəyişdirilə bilməz.');
+        }
+
         // Allow limited editing for completed sales (mainly for customer assignment and notes)
         if ($sale->status === 'refunded') {
-            return redirect()->route('sales.show', $sale)
+            return redirect()->route('sales.show', $sale->sale_id)
                 ->with('error', 'Geri qaytarılmış satış dəyişdirilə bilməz.');
         }
 
@@ -437,23 +479,79 @@ class SaleController extends Controller
             ]);
         }
 
-        return redirect()->route('sales.show', $sale)
+        return redirect()->route('sales.show', $sale->sale_id)
             ->with('success', 'Satış məlumatları yeniləndi.');
     }
 
-    public function destroy(Sale $sale)
+    public function destroy(Sale $sale, SaleDeletionService $deletionService)
     {
-        Gate::authorize('delete-account-data');
+        // Only account owner can delete sales
+        Gate::authorize('delete-sales');
 
-        if ($sale->status === 'completed') {
-            return redirect()->route('sales.index')
-                ->with('error', 'Tamamlanmış satış silinə bilməz.');
+        // Verify sale belongs to current account
+        if ($sale->account_id !== Auth::user()->account_id) {
+            abort(403);
         }
 
-        $sale->delete();
+        // Prevent deletion of already deleted sales
+        if ($sale->trashed()) {
+            return redirect()->route('sales.index')
+                ->with('error', 'Bu satış artıq silinib.');
+        }
 
-        return redirect()->route('sales.index')
-            ->with('success', 'Satış silindi.');
+        try {
+            // Use the deletion service to properly handle stock restoration and related data
+            $deletionService->deleteSale($sale, Auth::id());
+
+            return redirect()->route('sales.index')
+                ->with('success', 'Satış uğurla silindi. Stoklar bərpa edildi və məbləğ sistemdən çıxarıldı.');
+        } catch (\Exception $e) {
+            \Log::error('Sale deletion failed', [
+                'sale_id' => $sale->sale_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('sales.index')
+                ->with('error', 'Satış silinərkən xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Restore a soft-deleted sale
+     */
+    public function restore($id, \App\Services\SaleRestorationService $restorationService)
+    {
+        // Only account owner can restore sales
+        Gate::authorize('delete-sales');
+
+        // Find the soft-deleted sale
+        $sale = Sale::withTrashed()
+            ->where('sale_id', $id)
+            ->where('account_id', Auth::user()->account_id)
+            ->firstOrFail();
+
+        // Check if sale is actually deleted
+        if (!$sale->trashed()) {
+            return redirect()->route('sales.show', $sale)
+                ->with('error', 'Bu satış silinməyib.');
+        }
+
+        try {
+            $restorationService->restoreSale($sale, Auth::id());
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'Satış uğurla bərpa edildi. Stoklar çıxarıldı və məbləğ sistemə əlavə edildi.');
+        } catch (\Exception $e) {
+            \Log::error('Sale restoration failed', [
+                'sale_id' => $sale->sale_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('sales.index')
+                ->with('error', 'Satış bərpa edilərkən xəta baş verdi: ' . $e->getMessage());
+        }
     }
 
     private function updateProductStock(int $productId, float $quantity, Sale $sale): void

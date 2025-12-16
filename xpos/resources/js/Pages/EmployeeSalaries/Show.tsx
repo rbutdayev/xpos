@@ -65,8 +65,7 @@ export default function Show({ employee_salary }: Props) {
         <AuthenticatedLayout>
             <Head title={`Maaş - ${employee_salary.employee.name} - ${formatMonth(employee_salary.salary_month)}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             {/* Header */}
@@ -221,7 +220,6 @@ export default function Show({ employee_salary }: Props) {
                         </div>
                     </div>
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

@@ -21,7 +21,7 @@ export default function Show({ branch }: Props) {
         <AuthenticatedLayout>
             <Head title={`Filial: ${branch.name}`} />
 
-            <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-start">
                     <div className="flex items-center">

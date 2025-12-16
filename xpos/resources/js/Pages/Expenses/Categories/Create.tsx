@@ -43,7 +43,7 @@ export default function Create({ parentCategories, types }: Props) {
             <Head title={t('categories.createCategory')} />
 
             <div className="py-6">
-                <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-4 sm:p-6">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

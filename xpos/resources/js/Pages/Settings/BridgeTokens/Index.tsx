@@ -136,8 +136,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
         <AuthenticatedLayout>
             <Head title="Bridge Tokenlər" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="mb-6">
@@ -330,7 +329,6 @@ export default function Index({ auth, tokens, downloads }: Props) {
                         </div>
                     </div>
                 </div>
-            </div>
 
             {/* Create Token Modal */}
             {showCreateModal && (

@@ -361,6 +361,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         {
             key: 'amount',
             label: t('labels.amount', { ns: 'common' }),
+            mobileLabel: t('labels.amount', { ns: 'common' }),
             sortable: true,
             align: 'right',
             render: (expense: Expense) => {

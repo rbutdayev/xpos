@@ -166,7 +166,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
         <ProductsNavigation currentRoute="products.bulk-create" />
       </div>
 
-      <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6 lg:px-8">
         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div className="p-6 bg-white border-b border-gray-200">
             <div className="flex items-center justify-between mb-6">

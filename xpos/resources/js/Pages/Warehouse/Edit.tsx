@@ -42,7 +42,7 @@ export default function Edit({ warehouse, branches }: Props) {
         <AuthenticatedLayout>
             <Head title={`Düzəlt: ${warehouse.name}`} />
 
-            <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center mb-2">

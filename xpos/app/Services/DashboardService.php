@@ -432,64 +432,55 @@ class DashboardService
 
     /**
      * Clear cache for an account
-     * Uses Redis pattern matching to delete all cached dashboard data
+     * Clears all cached dashboard data for a specific time range
      */
     public function clearCache(Account $account): void
     {
-        // Use Redis pattern matching to find and delete all cache keys for this account
-        $patterns = [
-            "dashboard:financial:{$account->id}:*",
-            "dashboard:operational:{$account->id}:*",
-            "dashboard:operational_warehouse:{$account->id}:*",
-            "dashboard:inventory_alerts:{$account->id}:*",
-            "dashboard:services:{$account->id}:*",
-            "dashboard:rentals:{$account->id}:*",
-            "dashboard:credits:{$account->id}:*",
+        // Generate cache keys for the last 48 hours + next 2 hours
+        // This ensures we clear both current and recent cached data
+        $now = Carbon::now();
+        $hours = [];
+        for ($i = -48; $i <= 2; $i++) {
+            $hours[] = $now->copy()->addHours($i)->format('Y-m-d-H');
+        }
+
+        // All cache key prefixes for this account
+        $prefixes = [
+            "dashboard:financial:{$account->id}:",
+            "dashboard:credits:{$account->id}:",
         ];
 
-        try {
-            // Get the Redis connection
-            $redis = Cache::getStore()->getRedis();
+        // Prefixes that might have warehouse variations
+        $warehousePrefixes = [
+            "dashboard:operational:{$account->id}:",
+            "dashboard:operational_warehouse:{$account->id}:",
+            "dashboard:inventory_alerts:{$account->id}:",
+            "dashboard:services:{$account->id}:",
+            "dashboard:rentals:{$account->id}:",
+        ];
 
-            foreach ($patterns as $pattern) {
-                // Add Laravel's cache prefix to the pattern
-                $prefixedPattern = config('cache.prefix') . ':' . $pattern;
-
-                // Find all keys matching the pattern
-                $keys = $redis->keys($prefixedPattern);
-
-                // Delete each key
-                if (!empty($keys)) {
-                    foreach ($keys as $key) {
-                        // Remove the Laravel cache prefix before forgetting
-                        $keyWithoutPrefix = str_replace(config('cache.prefix') . ':', '', $key);
-                        Cache::forget($keyWithoutPrefix);
-                    }
-                }
+        // Clear simple prefixes (no warehouse variations)
+        foreach ($prefixes as $prefix) {
+            foreach ($hours as $hour) {
+                Cache::forget($prefix . $hour);
             }
-        } catch (\Exception $e) {
-            // If Redis pattern matching fails, fall back to clearing specific keys
-            \Log::warning('Dashboard cache clearing with pattern failed, using fallback method: ' . $e->getMessage());
+        }
 
-            // Generate keys for the last 24 hours + next hour as fallback
-            $now = Carbon::now();
-            $hours = [];
-            for ($i = -24; $i <= 1; $i++) {
-                $hours[] = $now->copy()->addHours($i)->format('Y-m-d-H');
-            }
-
-            // Clear specific keys without warehouse variations
-            $simplePrefixes = [
-                "dashboard:financial:{$account->id}:",
-                "dashboard:inventory_alerts:{$account->id}:",
-                "dashboard:credits:{$account->id}:",
-            ];
-
-            foreach ($simplePrefixes as $prefix) {
+        // Clear warehouse-specific prefixes
+        // Try common warehouse IDs (1-20) and 'all'
+        $warehouseIds = array_merge(['all'], range(1, 20));
+        foreach ($warehousePrefixes as $basePrefix) {
+            foreach ($warehouseIds as $warehouseId) {
+                $prefix = str_replace($account->id . ':', $account->id . ':' . $warehouseId . ':', $basePrefix);
                 foreach ($hours as $hour) {
                     Cache::forget($prefix . $hour);
                 }
             }
         }
+
+        \Log::info('Dashboard cache cleared', [
+            'account_id' => $account->id,
+            'keys_cleared' => count($prefixes) * count($hours) + count($warehousePrefixes) * count($warehouseIds) * count($hours),
+        ]);
     }
 }

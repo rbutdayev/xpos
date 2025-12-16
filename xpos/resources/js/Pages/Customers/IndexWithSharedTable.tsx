@@ -327,6 +327,7 @@ export default function Index({ customers, filters }: Props) {
                         }
 
                         // Mobile responsiveness
+                        fullWidth={true}
                         mobileClickable={true}
                         hideMobileActions={true}
                     />

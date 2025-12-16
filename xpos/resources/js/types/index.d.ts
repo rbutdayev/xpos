@@ -779,9 +779,12 @@ export interface Sale {
     sale_date: string;
     created_at?: string;
     updated_at?: string;
+    deleted_at?: string;
+    deleted_by?: number;
     customer?: Customer;
     branch?: Branch;
     user?: User;
+    deleted_by_user?: User;
     items?: SaleItem[];
     payments?: Payment[];
     negative_stock_alerts?: NegativeStockAlert[];
