@@ -237,7 +237,7 @@ class SaleController extends Controller
         // Add payment validation only if not a full credit sale
         if (!$request->input('credit_amount') || $request->input('credit_amount', 0) < $request->input('total', 0)) {
             $rules['payments'] = 'required|array|min:1';
-            $rules['payments.*.method'] = 'required|in:nağd,kart,köçürmə';
+            $rules['payments.*.method'] = 'required|in:cash,card,bank_transfer';
             $rules['payments.*.amount'] = 'required|numeric|min:0';
             $rules['payments.*.transaction_id'] = 'nullable|string|max:255';
             $rules['payments.*.card_type'] = 'nullable|string|max:50';
@@ -246,7 +246,7 @@ class SaleController extends Controller
         } else {
             // For full credit sales, payments are optional
             $rules['payments'] = 'nullable|array';
-            $rules['payments.*.method'] = 'nullable|in:nağd,kart,köçürmə';
+            $rules['payments.*.method'] = 'nullable|in:cash,card,bank_transfer';
             $rules['payments.*.amount'] = 'nullable|numeric|min:0';
             $rules['payments.*.transaction_id'] = 'nullable|string|max:255';
             $rules['payments.*.card_type'] = 'nullable|string|max:50';
@@ -352,7 +352,7 @@ class SaleController extends Controller
             }
 
             // Handle credit sale if specified
-            if ($validated['credit_amount'] && $validated['credit_amount'] > 0) {
+            if (isset($validated['credit_amount']) && $validated['credit_amount'] > 0) {
                 $creditAmount = $validated['credit_amount'];
                 $totalPaid = !empty($validated['payments']) ? array_sum(array_column($validated['payments'], 'amount')) : 0;
                 
@@ -736,7 +736,7 @@ class SaleController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01|max:' . ($sale->customerCredit?->remaining_amount ?? $sale->credit_amount),
             'description' => 'nullable|string|max:500',
-            'method' => 'nullable|string|in:nağd,kart,köçürmə|default:nağd',
+            'method' => 'nullable|string|in:cash,card,bank_transfer|default:cash',
         ]);
 
         try {
@@ -745,7 +745,7 @@ class SaleController extends Controller
                 // Create a Payment record for this credit payment
                 Payment::create([
                     'sale_id' => $sale->sale_id,
-                    'method' => $validated['method'] ?? 'nağd',
+                    'method' => $validated['method'] ?? 'cash',
                     'amount' => $validated['amount'],
                     'notes' => 'Kredit ödəməsi: ' . ($validated['description'] ?: ''),
                     'transaction_id' => null,
@@ -805,9 +805,9 @@ class SaleController extends Controller
             ->groupBy('method')
             ->get();
 
-        $cashTotal = $selectedPayments->where('method', 'nağd')->first()->total ?? 0;
-        $cardTotal = $selectedPayments->where('method', 'kart')->first()->total ?? 0;
-        $transferTotal = $selectedPayments->where('method', 'köçürmə')->first()->total ?? 0;
+        $cashTotal = $selectedPayments->where('method', 'cash')->first()->total ?? 0;
+        $cardTotal = $selectedPayments->where('method', 'card')->first()->total ?? 0;
+        $transferTotal = $selectedPayments->where('method', 'bank_transfer')->first()->total ?? 0;
 
         // Selected date's credit (unpaid amount) - clone query to avoid mutation
         $selectedCreditQuery = clone $selectedDateQuery;

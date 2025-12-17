@@ -4,7 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $account_id
+ * @property int $user_id
+ * @property string $type
+ * @property Carbon $date_from
+ * @property Carbon $date_to
+ * @property array $data
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class GeneratedReport extends Model
 {
     protected $fillable = [
@@ -18,8 +30,8 @@ class GeneratedReport extends Model
 
     protected $casts = [
         'data' => 'array',
-        'date_from' => 'date',
-        'date_to' => 'date'
+        'date_from' => 'datetime',
+        'date_to' => 'datetime'
     ];
 
     public function account(): BelongsTo

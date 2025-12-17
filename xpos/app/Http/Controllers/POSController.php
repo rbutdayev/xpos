@@ -530,6 +530,19 @@ class POSController extends Controller
                         'amount' => $validated['paid_amount'],
                         'method' => $paymentMethod
                     ]);
+                } elseif ($validated['payment_status'] === 'unpaid' && $remainingAmount > 0) {
+                    // Unpaid/Credit sale - create a cash payment record for tracking (will be paid later)
+                    Payment::create([
+                        'sale_id' => $sale->sale_id,
+                        'method' => 'cash',
+                        'amount' => $remainingAmount,
+                        'notes' => 'POS satışı - borclu',
+                    ]);
+                    \Log::info('Payment created for credit sale', [
+                        'sale_id' => $sale->sale_id,
+                        'amount' => $remainingAmount,
+                        'method' => 'cash'
+                    ]);
                 }
 
                 // Handle loyalty points redemption

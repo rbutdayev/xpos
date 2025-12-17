@@ -237,7 +237,7 @@ class GoodsReceiptController extends Controller
             $goodsReceipt->supplier_id = $request->supplier_id;
             $goodsReceipt->employee_id = auth()->id();
             $goodsReceipt->invoice_number = $invoiceNumber;
-            $goodsReceipt->total_cost = $totalCost;
+            $goodsReceipt->total_cost = sprintf('%.2f', $totalCost);
             $goodsReceipt->status = $status;
             $goodsReceipt->notes = $request->notes;
 
@@ -254,18 +254,18 @@ class GoodsReceiptController extends Controller
 
             // Create goods receipt items
             foreach ($items as $itemData) {
-                $item = new \App\Models\GoodsReceiptItem();
-                $item->goods_receipt_id = $goodsReceipt->id;
-                $item->account_id = auth()->user()->account_id;
-                $item->product_id = $itemData['product_id'];
-                $item->variant_id = $itemData['variant_id'];
-                $item->quantity = $itemData['quantity'];
-                $item->unit = $itemData['unit'];
-                $item->unit_cost = $itemData['unit_cost'];
-                $item->total_cost = $itemData['total_cost'];
-                $item->discount_percent = $itemData['discount_percent'];
-                $item->additional_data = $itemData['additional_data'];
-                $item->save();
+                $item = \App\Models\GoodsReceiptItem::create([
+                    'goods_receipt_id' => $goodsReceipt->id,
+                    'account_id' => auth()->user()->account_id,
+                    'product_id' => $itemData['product_id'],
+                    'variant_id' => $itemData['variant_id'],
+                    'quantity' => $itemData['quantity'],
+                    'unit' => $itemData['unit'],
+                    'unit_cost' => $itemData['unit_cost'],
+                    'total_cost' => $itemData['total_cost'],
+                    'discount_percent' => $itemData['discount_percent'],
+                    'additional_data' => $itemData['additional_data'],
+                ]);
 
                 // Skip stock and price updates for drafts
                 if ($isDraft) {
@@ -612,7 +612,7 @@ class GoodsReceiptController extends Controller
                 $goodsReceipt->warehouse_id = $request->warehouse_id;
                 $goodsReceipt->supplier_id = $request->supplier_id;
                 $goodsReceipt->invoice_number = $request->invoice_number;
-                $goodsReceipt->total_cost = $totalCost;
+                $goodsReceipt->total_cost = sprintf('%.2f', $totalCost);
                 $goodsReceipt->notes = $request->notes;
 
                 // Handle document upload
@@ -631,18 +631,18 @@ class GoodsReceiptController extends Controller
 
                 // Create new items
                 foreach ($items as $itemData) {
-                    $item = new \App\Models\GoodsReceiptItem();
-                    $item->goods_receipt_id = $goodsReceipt->id;
-                    $item->account_id = auth()->user()->account_id;
-                    $item->product_id = $itemData['product_id'];
-                    $item->variant_id = $itemData['variant_id'];
-                    $item->quantity = $itemData['quantity'];
-                    $item->unit = $itemData['unit'];
-                    $item->unit_cost = $itemData['unit_cost'];
-                    $item->total_cost = $itemData['total_cost'];
-                    $item->discount_percent = $itemData['discount_percent'];
-                    $item->additional_data = $itemData['additional_data'];
-                    $item->save();
+                    \App\Models\GoodsReceiptItem::create([
+                        'goods_receipt_id' => $goodsReceipt->id,
+                        'account_id' => auth()->user()->account_id,
+                        'product_id' => $itemData['product_id'],
+                        'variant_id' => $itemData['variant_id'],
+                        'quantity' => $itemData['quantity'],
+                        'unit' => $itemData['unit'],
+                        'unit_cost' => $itemData['unit_cost'],
+                        'total_cost' => $itemData['total_cost'],
+                        'discount_percent' => $itemData['discount_percent'],
+                        'additional_data' => $itemData['additional_data'],
+                    ]);
                 }
 
             } else {

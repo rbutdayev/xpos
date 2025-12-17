@@ -44,42 +44,44 @@ class Refund extends Model
     // Scopes
     public function scopeCash(Builder $query): Builder
     {
-        return $query->where('method', 'nağd');
+        return $query->where('method', 'cash');
     }
 
     public function scopeCard(Builder $query): Builder
     {
-        return $query->where('method', 'kart');
+        return $query->where('method', 'card');
     }
 
     public function scopeTransfer(Builder $query): Builder
     {
-        return $query->where('method', 'köçürmə');
+        return $query->where('method', 'bank_transfer');
     }
 
     // Method checkers
     public function isCash(): bool
     {
-        return $this->method === 'nağd';
+        return $this->method === 'cash';
     }
 
     public function isCard(): bool
     {
-        return $this->method === 'kart';
+        return $this->method === 'card';
     }
 
     public function isTransfer(): bool
     {
-        return $this->method === 'köçürmə';
+        return $this->method === 'bank_transfer';
     }
 
     // Display attribute
     public function getMethodDisplayAttribute(): string
     {
         return match($this->method) {
-            'nağd' => 'Nağd',
-            'kart' => 'Kart',
-            'köçürmə' => 'Köçürmə',
+            'cash' => 'Nağd',
+            'card' => 'Kart',
+            'bank_transfer' => 'Köçürmə',
+            'bank_credit' => 'Bank Kredit',
+            'gift_card' => 'Hədiyyə Kartı',
             null => 'Bilinmir',
             default => $this->method ?? 'Bilinmir',
         };

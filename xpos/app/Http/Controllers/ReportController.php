@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Models\Sale;
 use App\Models\SaleReturn;
-use App\Models\ServiceRecord;
+use App\Models\TailorService;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Customer;
@@ -113,10 +113,10 @@ class ReportController extends Controller
 
         $user = Auth::user();
         $account = $user->account;
-        $type = $request->type;
-        $dateFrom = Carbon::parse($request->date_from)->startOfDay();
-        $dateTo = Carbon::parse($request->date_to)->endOfDay();
-        $format = $request->format ?? 'table';
+        $type = $request->input('type');
+        $dateFrom = Carbon::parse($request->input('date_from'))->startOfDay();
+        $dateTo = Carbon::parse($request->input('date_to'))->endOfDay();
+        $format = $request->input('format', 'table');
 
         switch ($type) {
             case 'end_of_day':
@@ -787,7 +787,7 @@ class ReportController extends Controller
 
         $netRevenue = $sales - $returns;
 
-        // Note: Supplier payments are now part of the Expense model
+        // Get all expenses including supplier payments (consolidated into expenses table)
         $totalExpenses = Expense::where('account_id', $account->id)
             ->whereBetween('expense_date', [$dateFrom, $dateTo])
             ->sum('amount');
@@ -834,7 +834,7 @@ class ReportController extends Controller
             ->pluck('total_returns', 'date');
 
         // Get all expenses grouped by date (1 query instead of 365+)
-        // Note: This includes supplier payments (now part of Expense model)
+        // This includes supplier payments which are now consolidated into expenses table
         $expensesByDate = Expense::where('account_id', $account->id)
             ->whereBetween('expense_date', [$dateFrom, $dateTo])
             ->selectRaw('DATE(expense_date) as date, SUM(amount) as total_expenses')
@@ -920,17 +920,16 @@ class ReportController extends Controller
 
     private function generateServiceReport($account, $dateFrom, $dateTo)
     {
-        $services = ServiceRecord::whereHas('customer', function ($query) use ($account) {
-                $query->where('account_id', $account->id);
-            })
-            ->whereBetween('service_date', [$dateFrom, $dateTo])
-            ->with(['customer', 'vehicle'])
+        $services = TailorService::where('account_id', $account->id)
+            ->whereBetween('received_date', [$dateFrom, $dateTo])
+            ->with(['customer', 'customerItem'])
             ->get();
 
         $summary = [
             'total_services' => $services->count(),
             'completed_services' => $services->where('status', 'completed')->count(),
-            'pending_services' => $services->where('status', 'pending')->count(),
+            'in_progress_services' => $services->where('status', 'in_progress')->count(),
+            'delivered_services' => $services->where('status', 'delivered')->count(),
             'total_service_revenue' => $services->sum('total_cost'),
             'average_service_cost' => $services->avg('total_cost')
         ];
@@ -938,9 +937,9 @@ class ReportController extends Controller
         $serviceData = $services->map(function ($service) {
             return [
                 'service_number' => $service->service_number,
-                'customer_name' => $service->customer->name,
-                'vehicle_info' => $service->vehicle ? "{$service->vehicle->make} {$service->vehicle->model}" : 'N/A',
-                'service_date' => $service->service_date,
+                'customer_name' => $service->customer->name ?? 'Naməlum',
+                'item_info' => $service->customerItem ? $service->customerItem->name : 'N/A',
+                'service_date' => $service->received_date->format('Y-m-d'),
                 'description' => $service->description,
                 'total_cost' => $service->total_cost,
                 'status' => $service->status
@@ -1127,7 +1126,7 @@ class ReportController extends Controller
                 $q->where('account_id', $account->id)
                   ->whereBetween('sale_date', [$dateFrom, $dateTo]);
             })
-            ->where('method', 'nağd')
+            ->where('method', 'cash')
             ->with(['sale.customer', 'sale.branch', 'sale.user'])
             ->get();
 

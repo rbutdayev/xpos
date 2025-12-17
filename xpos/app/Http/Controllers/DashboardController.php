@@ -447,7 +447,7 @@ class DashboardController extends Controller
             ->where('sales.account_id', $account->id)
             ->where('sales.user_id', $user->id)
             ->whereDate('sales.sale_date', $today)
-            ->where('payments.method', 'nağd')
+            ->where('payments.method', 'cash')
             ->sum('payments.amount') ?? 0;
 
         $cardTransfers = DB::table('payments')
@@ -455,7 +455,7 @@ class DashboardController extends Controller
             ->where('sales.account_id', $account->id)
             ->where('sales.user_id', $user->id)
             ->whereDate('sales.sale_date', $today)
-            ->whereIn('payments.method', ['kart', 'köçürmə'])
+            ->whereIn('payments.method', ['card', 'bank_transfer'])
             ->sum('payments.amount') ?? 0;
 
         return [
