@@ -72,7 +72,7 @@ class DashboardController extends Controller
             default => abort(403, 'Unauthorized role')
         };
 
-        // Use DashboardNew (Cuba-style) for account owners/admins
+        // Account owners use DashboardNew, others use Dashboard with role-specific components
         $viewName = in_array($user->role, ['account_owner', 'admin']) ? 'DashboardNew' : 'Dashboard';
 
         return Inertia::render($viewName, $data);

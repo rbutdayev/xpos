@@ -426,6 +426,20 @@ export default function DashboardNew({
                                     value={formatCurrency(financial.supplier_debts.value)}
                                     subtitle={tAny('new.financial.supplierCount', { count: financial.supplier_debts.count })}
                                 />
+                                <MainKPICard
+                                    icon={CubeIcon}
+                                    iconBg="bg-gradient-to-br from-purple-400 to-purple-600"
+                                    label={t('operational.productsInStock')}
+                                    value={operational.products_count}
+                                    subtitle={`${operational.products_in_stock} ${t('operational.total')}`}
+                                />
+                                <MainKPICard
+                                    icon={UserIcon}
+                                    iconBg="bg-gradient-to-br from-indigo-400 to-indigo-600"
+                                    label={t('operational.activeCustomers')}
+                                    value={operational.active_customers}
+                                    subtitle={`+${operational.new_customers} ${t('operational.newThisMonth')}`}
+                                />
                             </div>
                         </div>
 

@@ -31,11 +31,11 @@
   },
 
   "financial": {
-    "thisMonthRevenue": "Bu Ay Gəlir",
+    "thisMonthRevenue": "Satışlar Bu Ay",
     "thisMonthExpenses": "Bu Ay Xərclər",
     "profit": "Mənfəət",
     "margin": "margin",
-    "pendingPayment": "Gözləyən Ödəniş",
+    "pendingPayment": "Müştəri borcları",
     "supplierDebts": "Təchizatçı Borcları",
     "customer": "müştəri",
     "customers": "müştəri",
@@ -68,7 +68,7 @@
 
   "rentals": {
     "activeRentals": "Aktiv İcarələr",
-    "thisMonthRevenue": "Bu Ay Gəlir",
+    "thisMonthRevenue": "Satışlar Bu Ay",
     "pendingReturns": "Gözlənilən Qaytarmalar",
     "overdue": "Gecikmiş"
   },
@@ -153,7 +153,7 @@
   },
 
   "branch": {
-    "thisMonthRevenue": "Bu Ay Gəlir",
+    "thisMonthRevenue": "Satışlar Bu Ay",
     "branchRevenue": "Filial gəliri",
     "sales": "Satışlar",
     "staff": "İşçilər",
@@ -264,7 +264,7 @@
       "newExpense": "Yeni Xərc"
     },
     "financial": {
-      "revenueThisMonth": "Gəlir Bu Ay",
+      "revenueThisMonth": "Satışlar Bu Ay",
       "expensesThisMonth": "Xərclər Bu Ay",
       "netProfit": "Xalis Mənfəət",
       "marginLabel": "Marja: {{margin}}%",

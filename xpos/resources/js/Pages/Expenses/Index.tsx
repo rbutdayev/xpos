@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Head, router, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
@@ -18,7 +18,11 @@ import {
     PencilIcon,
     TrashIcon,
     CheckCircleIcon,
-    XCircleIcon
+    XCircleIcon,
+    ChevronRightIcon,
+    FunnelIcon,
+    MagnifyingGlassIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 
 interface Expense {
@@ -131,6 +135,19 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
     const [selectedSupplierCredit, setSelectedSupplierCredit] = useState<SupplierCredit | null>(null);
     const [selectedGoodsReceipt, setSelectedGoodsReceipt] = useState<GoodsReceipt | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+    const [isMobile, setIsMobile] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Detect mobile screen size
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // md breakpoint
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Toggle group expansion
     const toggleGroup = (supplierCreditId: number) => {
@@ -797,6 +814,293 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         }
     };
 
+    // Get payment method badge
+    const getPaymentMethodBadge = (expense: Expense) => {
+        const remainingAmount = expense.remaining_amount ?? 0;
+        const isPartiallyPaid = (expense.type === 'supplier_credit' || expense.type === 'goods_receipt')
+            && remainingAmount > 0
+            && remainingAmount < expense.amount;
+
+        if (isPartiallyPaid) {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                    Qismən ödənilib
+                </span>
+            );
+        }
+
+        if (expense.type === 'supplier_credit' && expense.status !== 'paid') {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                    {t('paymentMethods.unpaid')}
+                </span>
+            );
+        }
+
+        if (expense.type === 'goods_receipt' && expense.payment_status !== 'paid') {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                    {t('paymentMethods.unpaid')}
+                </span>
+            );
+        }
+
+        if (expense.payment_method === 'borc') {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                    {t('paymentMethods.unpaid')}
+                </span>
+            );
+        }
+
+        const methodColors: Record<string, string> = {
+            cash: 'bg-green-50 text-green-700 border-green-200',
+            card: 'bg-blue-50 text-blue-700 border-blue-200',
+            transfer: 'bg-purple-50 text-purple-700 border-purple-200',
+        };
+
+        const methodColor = methodColors[expense.payment_method] || 'bg-gray-50 text-gray-700 border-gray-200';
+
+        return (
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${methodColor}`}>
+                {expense.payment_method === 'cash' ? t('paymentMethods.cash') :
+                 expense.payment_method === 'card' ? t('paymentMethods.card') : t('paymentMethods.transfer')}
+            </span>
+        );
+    };
+
+    // Get action buttons for mobile card
+    const getActionButtons = (expense: Expense) => {
+        const buttons = [];
+
+        // View button
+        if ((expense.type === 'goods_receipt' && expense.goods_receipt_id) ||
+            (expense.type === 'supplier_credit' && expense.goods_receipt_id) ||
+            (expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' && expense.expense_id)) {
+
+            const href = ((expense.type === 'goods_receipt' || expense.type === 'supplier_credit') && expense.goods_receipt_id)
+                ? `/goods-receipts/${expense.goods_receipt_id}`
+                : expense.expense_id ? `/expenses/${expense.expense_id}` : '#';
+
+            buttons.push(
+                <Link
+                    key="view"
+                    href={href}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 border border-blue-200"
+                >
+                    <EyeIcon className="w-4 h-4" />
+                    {t('actions.view', { ns: 'common' })}
+                </Link>
+            );
+        }
+
+        // Pay button
+        if (expense.type === 'supplier_credit' && expense.status !== 'paid') {
+            buttons.push(
+                <button
+                    key="pay"
+                    onClick={() => handlePaySupplierCredit(expense)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 border border-green-200"
+                >
+                    <CurrencyDollarIcon className="w-4 h-4" />
+                    {t('actions.pay')}
+                </button>
+            );
+        }
+
+        if (expense.type === 'goods_receipt' && expense.payment_status !== 'paid') {
+            buttons.push(
+                <button
+                    key="pay"
+                    onClick={() => handlePayGoodsReceipt(expense)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 border border-green-200"
+                >
+                    <CurrencyDollarIcon className="w-4 h-4" />
+                    {t('actions.pay')}
+                </button>
+            );
+        }
+
+        // Edit button
+        if (expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt') {
+            buttons.push(
+                <Link
+                    key="edit"
+                    href={`/expenses/${expense.expense_id}/edit`}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 border border-gray-200"
+                >
+                    <PencilIcon className="w-4 h-4" />
+                    {t('actions.edit', { ns: 'common' })}
+                </Link>
+            );
+        }
+
+        // Delete button
+        if ((expense.type !== 'supplier_credit') &&
+            !(expense.type === 'goods_receipt' && expense.expense_id === null) &&
+            expense.expense_id !== null) {
+            buttons.push(
+                <button
+                    key="delete"
+                    onClick={() => handleDelete(expense)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 border border-red-200"
+                >
+                    <TrashIcon className="w-4 h-4" />
+                    {t('actions.delete', { ns: 'common' })}
+                </button>
+            );
+        }
+
+        return buttons;
+    };
+
+    // Mobile card view
+    const renderMobileView = () => {
+        const groups = groupedExpensesData();
+
+        if (groups.length === 0) {
+            return (
+                <div className="bg-white rounded-lg shadow p-8 text-center">
+                    <CurrencyDollarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        {t('messages.noExpensesFound')}
+                    </h3>
+                    <p className="text-gray-500">
+                        {t('messages.startAddingExpenses')}
+                    </p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="space-y-3">
+                {groups.map((group, groupIndex) => {
+                    const { main, children } = group;
+                    const hasChildren = children.length > 0;
+                    const isExpanded = main.supplier_credit_id ? expandedGroups.has(main.supplier_credit_id) : false;
+                    const remainingAmount = main.remaining_amount ?? 0;
+
+                    return (
+                        <div key={groupIndex} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            {/* Main expense card */}
+                            <div className={`p-4 ${hasChildren ? 'border-l-4 border-l-orange-400' : ''}`}>
+                                {/* Header with expand button */}
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                                                {main.description}
+                                            </h3>
+                                            {hasChildren && (
+                                                <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                                                    {children.length} ödəniş
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1 text-xs text-gray-500 font-mono">
+                                            <DocumentTextIcon className="w-3.5 h-3.5" />
+                                            {main.reference_number}
+                                        </div>
+                                    </div>
+                                    {hasChildren && main.supplier_credit_id && (
+                                        <button
+                                            onClick={() => toggleGroup(main.supplier_credit_id!)}
+                                            className="flex-shrink-0 ml-2 p-2 rounded-lg hover:bg-gray-100"
+                                        >
+                                            <ChevronRightIcon className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Amount and date */}
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <div className="text-2xl font-bold text-gray-900">
+                                            {main.amount.toLocaleString('az-AZ')} ₼
+                                        </div>
+                                        {remainingAmount > 0 && (
+                                            <div className="text-sm text-orange-600 font-medium mt-1">
+                                                Qalıq: {remainingAmount.toLocaleString('az-AZ')} ₼
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <CalendarIcon className="w-4 h-4 mr-1" />
+                                            {new Date(main.expense_date).toLocaleDateString('az-AZ')}
+                                        </div>
+                                        {getPaymentMethodBadge(main)}
+                                    </div>
+                                </div>
+
+                                {/* Category and supplier */}
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {main.category && (
+                                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+                                            {main.category.name}
+                                        </span>
+                                    )}
+                                    {main.supplier && (
+                                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                                            {main.supplier.name}
+                                        </span>
+                                    )}
+                                    {main.branch && (
+                                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-md bg-gray-50 text-gray-700 border border-gray-200">
+                                            <BuildingOfficeIcon className="w-3.5 h-3.5 mr-1" />
+                                            {main.branch.name}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Action buttons */}
+                                <div className="flex gap-2 pt-3 border-t border-gray-100">
+                                    {getActionButtons(main)}
+                                </div>
+                            </div>
+
+                            {/* Child payments */}
+                            {hasChildren && isExpanded && (
+                                <div className="border-t border-gray-200 bg-blue-50/30">
+                                    {children.map((child, childIndex) => (
+                                        <div key={childIndex} className="px-4 py-3 border-b border-blue-100 last:border-b-0">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 border-2 border-blue-300 flex items-center justify-center">
+                                                        <CheckCircleIcon className="w-3.5 h-3.5 text-blue-600" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            Ödəniş
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 font-mono">
+                                                            {child.reference_number}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {new Date(child.expense_date).toLocaleDateString('az-AZ')}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right flex-shrink-0 ml-3">
+                                                    <div className="text-lg font-bold text-green-600">
+                                                        {child.amount.toLocaleString('az-AZ')} ₼
+                                                    </div>
+                                                    {getPaymentMethodBadge(child)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title={t('title')} />
@@ -837,7 +1141,140 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         </div>
                     )}
 
-                    <SharedDataTable
+                    {/* Mobile View */}
+                    {isMobile ? (
+                        <div className="space-y-4">
+                            {/* Mobile Search and Filters */}
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                {/* Search Bar */}
+                                <div className="relative mb-3">
+                                    <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                        placeholder={t('placeholders.searchExpenses')}
+                                        className="pl-10 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+
+                                {/* Filter Toggle Button */}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowFilters(!showFilters)}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100"
+                                    >
+                                        <FunnelIcon className="w-4 h-4" />
+                                        Filtrlər
+                                    </button>
+                                    <button
+                                        onClick={handleSearch}
+                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                                    >
+                                        Axtar
+                                    </button>
+                                    <button
+                                        onClick={handleReset}
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                                    >
+                                        <XMarkIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* Filter Options */}
+                                {showFilters && (
+                                    <div className="mt-4 space-y-3 pt-4 border-t border-gray-200">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                {t('fields.category')}
+                                            </label>
+                                            <select
+                                                value={selectedCategory}
+                                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                            >
+                                                <option value="">{t('filters.allCategories')}</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.category_id} value={cat.category_id.toString()}>
+                                                        {cat.parent ? `${cat.parent.name} > ${cat.name}` : cat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                {t('fields.branch')}
+                                            </label>
+                                            <select
+                                                value={selectedBranch}
+                                                onChange={(e) => setSelectedBranch(e.target.value)}
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                            >
+                                                <option value="">{t('filters.allBranches')}</option>
+                                                {branches.map(branch => (
+                                                    <option key={branch.id} value={branch.id.toString()}>
+                                                        {branch.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                {t('fields.paymentMethod')}
+                                            </label>
+                                            <select
+                                                value={selectedPaymentMethod}
+                                                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                            >
+                                                <option value="">{t('filters.allMethods')}</option>
+                                                {Object.entries(paymentMethods).map(([value, label]) => (
+                                                    <option key={value} value={value}>
+                                                        {label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Mobile Cards */}
+                            {renderMobileView()}
+
+                            {/* Mobile Pagination */}
+                            {expenses.data.length > 0 && expenses.last_page > 1 && (
+                                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-700">
+                                            Göstərilir {expenses.from}-{expenses.to} / {expenses.total}
+                                        </span>
+                                        <div className="flex gap-2">
+                                            {expenses.current_page > 1 && (
+                                                <Link
+                                                    href={`/expenses?page=${expenses.current_page - 1}`}
+                                                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                                                >
+                                                    Əvvəlki
+                                                </Link>
+                                            )}
+                                            {expenses.current_page < expenses.last_page && (
+                                                <Link
+                                                    href={`/expenses?page=${expenses.current_page + 1}`}
+                                                    className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                                                >
+                                                    Növbəti
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        /* Desktop Table View */
+                        <SharedDataTable
                         data={{
                             ...expenses,
                             data: (() => {
@@ -902,6 +1339,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                             return '';
                         }}
                     />
+                    )}
                 </div>
             </div>
 
