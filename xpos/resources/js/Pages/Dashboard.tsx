@@ -60,8 +60,7 @@ export default function Dashboard(props: DashboardData) {
         switch (user.role) {
             case 'account_owner':
             case 'admin':
-                // Account owner and admin use DashboardNew.tsx (Cuba-style)
-                // This case should never be reached as DashboardController routes them to DashboardNew
+                // These roles use DashboardNew.tsx directly (not wrapped in this component)
                 return null;
 
             case 'accountant':
