@@ -10,8 +10,10 @@ use App\Models\Warehouse;
 use App\Models\StockMovement;
 use App\Models\StockHistory;
 use App\Models\ProductStock;
+use App\Models\AsyncJob;
 use App\Services\DocumentUploadService;
 use App\Services\DashboardService;
+use App\Jobs\ProcessGoodsReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -358,6 +360,125 @@ class GoodsReceiptController extends Controller
                 ->withErrors(['error' => 'Mal qəbulu yaradılarkən xəta baş verdi: ' . $e->getMessage()])
                 ->withInput();
         }
+    }
+
+    /**
+     * Store a goods receipt asynchronously (background job)
+     * Returns immediately with a job ID for polling
+     */
+    public function storeAsync(Request $request)
+    {
+        Gate::authorize('access-account-data');
+
+        $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'invoice_number' => 'nullable|string|max:255',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.variant_id' => 'nullable|exists:product_variants,id',
+            'products.*.quantity' => 'required|numeric|gt:0',
+            'products.*.base_quantity' => 'nullable|numeric|gt:0',
+            'products.*.unit' => 'required|string|max:50',
+            'products.*.receiving_unit' => 'nullable|string|max:50',
+            'products.*.unit_cost' => 'nullable|numeric|min:0',
+            'products.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+            'products.*.sale_price' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'payment_method' => 'required|in:instant,credit',
+            'payment_status' => 'nullable|in:paid,unpaid,partial',
+            'custom_payment_terms' => 'nullable|integer|min:0|max:365',
+            'use_custom_terms' => 'boolean',
+            'status' => 'nullable|in:draft,completed',
+            'idempotency_key' => 'nullable|string|max:100',
+        ]);
+
+        $user = Auth::user();
+        $accountId = $user->account_id;
+        $userId = $user->id;
+
+        // Generate idempotency key if not provided
+        $idempotencyKey = $request->idempotency_key ?? AsyncJob::generateIdempotencyKey(
+            $accountId,
+            $userId,
+            $request->all()
+        );
+
+        // Check for duplicate submission
+        $existingJob = AsyncJob::findByIdempotencyKey($accountId, $idempotencyKey);
+        if ($existingJob) {
+            return response()->json([
+                'success' => true,
+                'job_id' => $existingJob->job_id,
+                'message' => 'Bu sorğu artıq emal edilir',
+                'is_duplicate' => true,
+            ]);
+        }
+
+        // Handle document upload - save to temp location for job to process
+        $documentTempPath = null;
+        if ($request->hasFile('document')) {
+            $file = $request->file('document');
+            $tempFileName = uniqid('gr_doc_') . '.' . $file->getClientOriginalExtension();
+            $documentTempPath = 'temp/goods-receipt-docs/' . $tempFileName;
+            Storage::disk('local')->put($documentTempPath, file_get_contents($file->getRealPath()));
+        }
+
+        // Prepare data for the job (exclude file)
+        $jobData = $request->except(['document', 'idempotency_key']);
+
+        // Create async job record
+        $asyncJob = AsyncJob::create([
+            'account_id' => $accountId,
+            'user_id' => $userId,
+            'type' => 'goods_receipt',
+            'status' => 'pending',
+            'message' => 'Növbədə gözləyir...',
+            'input_data' => $jobData,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        // Dispatch the job to the queue
+        ProcessGoodsReceipt::dispatch($asyncJob, $documentTempPath)
+            ->onQueue('goods-receipts');
+
+        return response()->json([
+            'success' => true,
+            'job_id' => $asyncJob->job_id,
+            'message' => 'Mal qəbulu növbəyə əlavə edildi',
+            'is_duplicate' => false,
+        ]);
+    }
+
+    /**
+     * Get the status of an async goods receipt job
+     */
+    public function jobStatus(Request $request, string $jobId)
+    {
+        Gate::authorize('access-account-data');
+
+        $asyncJob = AsyncJob::where('job_id', $jobId)
+            ->where('account_id', Auth::user()->account_id)
+            ->first();
+
+        if (!$asyncJob) {
+            return response()->json([
+                'success' => false,
+                'message' => 'İş tapılmadı',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'job_id' => $asyncJob->job_id,
+            'status' => $asyncJob->status,
+            'message' => $asyncJob->message,
+            'data' => $asyncJob->result_data ?? [],
+            'created_at' => $asyncJob->created_at?->toISOString(),
+            'started_at' => $asyncJob->started_at?->toISOString(),
+            'completed_at' => $asyncJob->completed_at?->toISOString(),
+        ]);
     }
 
     public function complete(Request $request, GoodsReceipt $goodsReceipt)

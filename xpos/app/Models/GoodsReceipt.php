@@ -196,7 +196,7 @@ class GoodsReceipt extends Model
         $supplierCredit = SupplierCredit::create([
             'account_id' => $this->account_id,
             'supplier_id' => $this->supplier_id,
-            'branch_id' => $this->warehouse->branch_id ?? null,
+            'branch_id' => $this->warehouse->branches->first()?->id ?? Branch::where('account_id', $this->account_id)->first()?->id,
             'type' => 'credit',
             'amount' => $this->total_cost,
             'remaining_amount' => $this->total_cost,
@@ -204,7 +204,7 @@ class GoodsReceipt extends Model
             'credit_date' => $this->created_at,
             'due_date' => $this->due_date,
             'status' => 'pending',
-            'user_id' => auth()->id(),
+            'user_id' => $this->employee_id,
             'notes' => "Avtomatik yaradıldı - Mal qəbulu: {$this->receipt_number}",
         ]);
 

@@ -250,7 +250,7 @@ print_status "Setting up Supervisor..."
 sudo tee /etc/supervisor/conf.d/\$APP_NAME-worker.conf > /dev/null << EOF
 [program:\$APP_NAME-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php \$APP_PATH/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+command=php \$APP_PATH/artisan queue:work redis --queue=default,goods-receipts --sleep=3 --tries=3 --max-time=3600
 autostart=true
 autorestart=true
 stopasgroup=true

@@ -369,6 +369,31 @@ sudo -u www-data php artisan storage:link
 print_success "Application optimized"
 
 # =====================================================
+# CONFIGURE QUEUE WORKERS
+# =====================================================
+print_status "Configuring queue workers..."
+
+# Create/update supervisor config for queue workers
+sudo tee /etc/supervisor/conf.d/\$APP_NAME-worker.conf > /dev/null << 'SUPERVISOREOF'
+[program:xpos-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/xpos/artisan queue:work redis --queue=default,goods-receipts --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/xpos/storage/logs/worker.log
+stopwaitsecs=3600
+SUPERVISOREOF
+
+sudo supervisorctl reread
+sudo supervisorctl update
+print_success "Queue workers configured"
+
+# =====================================================
 # RESTART SERVICES
 # =====================================================
 print_status "Restarting services..."
@@ -376,8 +401,9 @@ print_status "Restarting services..."
 # Restart PHP-FPM
 sudo systemctl restart php8.3-fpm
 
-# Restart queue workers (ignore errors if supervisor group doesn't exist)
-sudo supervisorctl restart \$APP_NAME-worker:* 2>/dev/null || print_warning "Queue workers not configured yet"
+# Restart queue workers
+sudo supervisorctl restart \$APP_NAME-worker:* 2>/dev/null || print_warning "Queue workers restart failed - starting fresh"
+sudo supervisorctl start \$APP_NAME-worker:* 2>/dev/null || true
 
 # Restart Nginx
 sudo systemctl restart nginx

@@ -591,6 +591,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Goods Receipt Management
     Route::post('/goods-receipts/search-barcode', [GoodsReceiptController::class, 'searchProductByBarcode'])->name('goods-receipts.search-barcode');
+    Route::post('/goods-receipts/store-async', [GoodsReceiptController::class, 'storeAsync'])->name('goods-receipts.store-async');
+    Route::get('/goods-receipts/job-status/{jobId}', [GoodsReceiptController::class, 'jobStatus'])->name('goods-receipts.job-status');
     Route::post('/goods-receipts/{goodsReceipt}/complete', [GoodsReceiptController::class, 'complete'])->name('goods-receipts.complete');
     Route::get('/goods-receipts/{goodsReceipt}/view-document', [GoodsReceiptController::class, 'viewDocument'])->name('goods-receipts.view-document');
     Route::get('/goods-receipts/{goodsReceipt}/download-document', [GoodsReceiptController::class, 'downloadDocument'])->name('goods-receipts.download-document');

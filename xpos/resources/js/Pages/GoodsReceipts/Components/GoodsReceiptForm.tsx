@@ -7,7 +7,7 @@ import SearchableWarehouseSelect from '@/Components/SearchableWarehouseSelect';
 import useGoodsReceiptForm, { ProductItem } from '../Hooks/useGoodsReceiptForm';
 import { useProductSearch } from '../Hooks/useProductSearch';
 import ProductSearchSection from './ProductSearchSection';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, ArrowPathIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { GoodsReceipt } from '@/types';
 import { useTranslations } from '@/Hooks/useTranslations';
 import { useTranslation } from 'react-i18next';
@@ -33,8 +33,11 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
         form, submit, submitAsDraft, submitAsCompleted, addProduct, removeProduct, updateProduct, handleFileChange,
         selectedSupplier, calculatedDueDate, handleSupplierChange, handlePaymentMethodChange,
         handleCustomTermsToggle, handleCustomTermsChange,
-        showInstantPaymentConfirmation, confirmInstantPaymentAndSubmit, cancelInstantPaymentConfirmation
+        showInstantPaymentConfirmation, confirmInstantPaymentAndSubmit, cancelInstantPaymentConfirmation,
+        asyncJob, isSubmitting, resetAsyncJob
     } = useGoodsReceiptForm(receipt, isEditing);
+
+    const isFormDisabled = isSubmitting || form.processing;
 
     const { query, setQuery, results, loading, error } = useProductSearch();
 
@@ -375,6 +378,45 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                 />
             </div>
 
+            {/* Async Job Status Indicator */}
+            {asyncJob && (
+                <div className={`rounded-lg p-4 ${
+                    asyncJob.status === 'completed' ? 'bg-green-50 border border-green-200' :
+                    asyncJob.status === 'failed' ? 'bg-red-50 border border-red-200' :
+                    'bg-blue-50 border border-blue-200'
+                }`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            {(asyncJob.status === 'pending' || asyncJob.status === 'processing') && (
+                                <ArrowPathIcon className="h-5 w-5 text-blue-500 animate-spin mr-2" />
+                            )}
+                            {asyncJob.status === 'completed' && (
+                                <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
+                            )}
+                            {asyncJob.status === 'failed' && (
+                                <XCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+                            )}
+                            <span className={`font-medium ${
+                                asyncJob.status === 'completed' ? 'text-green-700' :
+                                asyncJob.status === 'failed' ? 'text-red-700' :
+                                'text-blue-700'
+                            }`}>
+                                {asyncJob.message || (asyncJob.status === 'pending' ? 'Gözlənilir...' : 'Emal edilir...')}
+                            </span>
+                        </div>
+                        {asyncJob.status === 'failed' && (
+                            <button
+                                type="button"
+                                onClick={resetAsyncJob}
+                                className="text-sm text-red-600 hover:text-red-800 underline"
+                            >
+                                Yenidən cəhd et
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-600 sm:flex-1">
                     {form.data.products.length > 0 && (
@@ -387,29 +429,38 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                         <button
                             type="button"
                             onClick={submitAsDraft}
-                            disabled={form.processing || form.data.products.length === 0}
-                            className="w-full sm:w-auto px-4 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            disabled={isFormDisabled || form.data.products.length === 0}
+                            className="w-full sm:w-auto px-4 py-2 bg-black text-white font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                         >
-                            {form.processing ? t('processing') : 'Qaralama olaraq saxla'}
+                            {isFormDisabled && (
+                                <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                            )}
+                            {isFormDisabled ? t('processing') : 'Qaralama olaraq saxla'}
                         </button>
                         {/* Complete Receipt Button - Blue */}
                         <button
                             type="button"
                             onClick={submitAsCompleted}
-                            disabled={form.processing || form.data.products.length === 0}
-                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            disabled={isFormDisabled || form.data.products.length === 0}
+                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                         >
-                            {form.processing ? t('processing') : 'Mal qəbulunu tamamla'}
+                            {isFormDisabled && (
+                                <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                            )}
+                            {isFormDisabled ? t('processing') : 'Mal qəbulunu tamamla'}
                         </button>
                     </>
                 ) : (
                     <PrimaryButton
                         type="button"
                         onClick={submit}
-                        disabled={form.processing || form.data.products.length === 0}
+                        disabled={isFormDisabled || form.data.products.length === 0}
                         className="w-full sm:w-auto"
                     >
-                        {form.processing ? t('processing') : t('goodsReceipts.save')}
+                        {isFormDisabled && (
+                            <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                        )}
+                        {isFormDisabled ? t('processing') : t('goodsReceipts.save')}
                     </PrimaryButton>
                 )}
             </div>
