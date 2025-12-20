@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\GoodsReceipt;
+use App\Models\GoodsReceiptItem;
 use App\Models\Supplier;
 use App\Models\Product;
 use Illuminate\Console\Command;
@@ -18,16 +19,18 @@ class SyncSupplierProducts extends Command
         $this->info('Starting supplier-product synchronization...');
 
         $accountId = $this->option('account-id');
-        
-        // Get unique supplier-product combinations from goods receipts
-        $query = GoodsReceipt::select('supplier_id', 'product_id', 'account_id')
-            ->selectRaw('AVG(unit_cost) as avg_price, MAX(created_at) as latest_receipt')
-            ->whereNotNull('supplier_id')
-            ->whereNotNull('product_id')
-            ->groupBy('supplier_id', 'product_id', 'account_id');
+
+        // Get unique supplier-product combinations from goods receipt items
+        $query = DB::table('goods_receipt_items as gri')
+            ->join('goods_receipts as gr', 'gri.goods_receipt_id', '=', 'gr.id')
+            ->select('gr.supplier_id', 'gri.product_id', 'gr.account_id')
+            ->selectRaw('AVG(gri.unit_cost) as avg_price, MAX(gri.created_at) as latest_receipt')
+            ->whereNotNull('gr.supplier_id')
+            ->whereNotNull('gri.product_id')
+            ->groupBy('gr.supplier_id', 'gri.product_id', 'gr.account_id');
 
         if ($accountId) {
-            $query->where('account_id', $accountId);
+            $query->where('gr.account_id', $accountId);
         }
 
         $supplierProducts = $query->get();

@@ -50,8 +50,7 @@ export default function Edit({ productStock }: Props) {
         <AuthenticatedLayout>
             <Head title="Stok Məlumatlarını Redaktə Et" />
             
-            <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 border-b border-gray-200">
                             <div className="flex items-center justify-between">
@@ -192,7 +191,6 @@ export default function Edit({ productStock }: Props) {
                         </div>
                     </div>
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

@@ -128,9 +128,17 @@ class Product extends Model
         return $this->hasMany(SupplierProduct::class);
     }
 
-    public function goodsReceipts(): HasMany
+    public function goodsReceipts(): BelongsToMany
     {
-        return $this->hasMany(GoodsReceipt::class);
+        // After restructuring, products relate to goods_receipts through goods_receipt_items
+        return $this->belongsToMany(GoodsReceipt::class, 'goods_receipt_items', 'product_id', 'goods_receipt_id')
+            ->withPivot(['variant_id', 'quantity', 'unit', 'unit_cost', 'total_cost', 'discount_percent'])
+            ->withTimestamps();
+    }
+
+    public function goodsReceiptItems(): HasMany
+    {
+        return $this->hasMany(GoodsReceiptItem::class);
     }
 
     public function productStocks(): HasMany

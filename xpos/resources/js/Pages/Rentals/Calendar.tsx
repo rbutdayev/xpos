@@ -129,7 +129,7 @@ export default function Calendar({ branches, categories }: Props) {
         <AuthenticatedLayout>
             <Head title="Kirayə Təqvimi" />
 
-            <div className="max-w-7xl mx-auto">
+            <div className="px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between">

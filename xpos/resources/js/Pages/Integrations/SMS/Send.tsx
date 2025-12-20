@@ -90,8 +90,7 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
             >
                 <Head title="SMS Göndər" />
 
-                <div className="py-12">
-                    <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="py-12 px-4 sm:px-6 lg:px-8">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                             <h3 className="text-lg font-medium text-yellow-900 mb-2">
                                 SMS Parametrləri Qeyd Edilməyib
@@ -107,7 +106,6 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
                             </a>
                         </div>
                     </div>
-                </div>
             </AuthenticatedLayout>
         );
     }
@@ -116,8 +114,7 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
         <AuthenticatedLayout>
             <Head title="SMS Göndər" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             {/* Mode Selection */}
@@ -287,7 +284,6 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
                         </div>
                     </div>
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

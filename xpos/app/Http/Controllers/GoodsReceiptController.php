@@ -10,7 +10,10 @@ use App\Models\Warehouse;
 use App\Models\StockMovement;
 use App\Models\StockHistory;
 use App\Models\ProductStock;
+use App\Models\AsyncJob;
 use App\Services\DocumentUploadService;
+use App\Services\DashboardService;
+use App\Jobs\ProcessGoodsReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,27 +24,38 @@ use Inertia\Inertia;
 class GoodsReceiptController extends Controller
 {
     private DocumentUploadService $documentService;
+    private DashboardService $dashboardService;
 
-    public function __construct(DocumentUploadService $documentService)
+    public function __construct(DocumentUploadService $documentService, DashboardService $dashboardService)
     {
         $this->middleware('auth');
         $this->middleware('account.access');
         $this->documentService = $documentService;
+        $this->dashboardService = $dashboardService;
     }
 
     public function index(Request $request)
     {
         Gate::authorize('access-account-data');
 
-        $query = GoodsReceipt::with(['product', 'variant', 'supplier', 'warehouse', 'employee', 'supplierCredit'])
+        $query = GoodsReceipt::with(['items.product', 'items.variant', 'supplier', 'warehouse', 'employee', 'supplierCredit'])
             ->where('account_id', Auth::user()->account_id);
+
+        // Filter by status (draft/completed)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        } else {
+            // By default, show only completed receipts
+            $query->where('status', 'completed');
+        }
 
         if ($request->filled('search')) {
             $validated = $request->validate(['search' => 'required|string|max:255']);
             $searchTerm = $validated['search'];
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('receipt_number', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('product', function ($subQ) use ($searchTerm) {
+                  ->orWhere('invoice_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('items.product', function ($subQ) use ($searchTerm) {
                       $subQ->where('name', 'like', '%' . $searchTerm . '%')
                            ->orWhere('sku', 'like', '%' . $searchTerm . '%');
                   })
@@ -57,6 +71,14 @@ class GoodsReceiptController extends Controller
 
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
+        }
+
+        if ($request->filled('receipt_number')) {
+            $query->where('receipt_number', 'like', '%' . $request->receipt_number . '%');
+        }
+
+        if ($request->filled('invoice_number')) {
+            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
         }
 
         if ($request->filled('date_from') && $request->filled('date_to')) {
@@ -94,7 +116,7 @@ class GoodsReceiptController extends Controller
             'categories' => $categories,
             'branches' => $branches,
             'paymentMethods' => \App\Models\Expense::getPaymentMethods(),
-            'filters' => $request->only(['search', 'warehouse_id', 'supplier_id', 'date_from', 'date_to']),
+            'filters' => $request->only(['search', 'warehouse_id', 'supplier_id', 'date_from', 'date_to', 'status']),
         ]);
     }
 
@@ -126,6 +148,7 @@ class GoodsReceiptController extends Controller
         $request->validate([
             'warehouse_id' => 'required|exists:warehouses,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
+            'invoice_number' => 'nullable|string|max:255',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'required|exists:products,id',
             'products.*.variant_id' => 'nullable|exists:product_variants,id',
@@ -134,6 +157,7 @@ class GoodsReceiptController extends Controller
             'products.*.unit' => 'required|string|max:50',
             'products.*.receiving_unit' => 'nullable|string|max:50',
             'products.*.unit_cost' => 'nullable|numeric|min:0',
+            'products.*.discount_percent' => 'nullable|numeric|min:0|max:100',
             'products.*.sale_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -141,14 +165,21 @@ class GoodsReceiptController extends Controller
             'payment_status' => 'nullable|in:paid,unpaid,partial',
             'custom_payment_terms' => 'nullable|integer|min:0|max:365',
             'use_custom_terms' => 'boolean',
+            'status' => 'nullable|in:draft,completed',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $goodsReceiptIds = [];
-            $totalCost = 0;
+            // Determine if this is a draft or completed receipt
+            $status = $request->input('status', 'completed');
+            $isDraft = $status === 'draft';
 
+            $invoiceNumber = $request->invoice_number;
+            $totalCost = 0;
+            $items = [];
+
+            // Validate and prepare all items first
             foreach ($request->products as $productData) {
                 // Validate variant belongs to product and account if provided
                 if (!empty($productData['variant_id'])) {
@@ -165,83 +196,115 @@ class GoodsReceiptController extends Controller
                 // Determine the quantity to use for inventory tracking
                 $inventoryQuantity = $productData['base_quantity'] ?: $productData['quantity'];
 
-                $goodsReceipt = new GoodsReceipt();
-                $goodsReceipt->account_id = auth()->user()->account_id;
-                $goodsReceipt->warehouse_id = $request->warehouse_id;
-                $goodsReceipt->product_id = $productData['product_id'];
-                $goodsReceipt->variant_id = $productData['variant_id'] ?? null;
-                $goodsReceipt->supplier_id = $request->supplier_id;
-                $goodsReceipt->employee_id = auth()->id();
-                $goodsReceipt->quantity = $inventoryQuantity; // Use base quantity for inventory
-                $goodsReceipt->unit = $productData['receiving_unit'] ?: $productData['unit'];
-                $goodsReceipt->unit_cost = $productData['unit_cost'] ?? 0;
-                $goodsReceipt->notes = $request->notes;
-                
-                // Store additional data for packaging information
-                $goodsReceipt->additional_data = [
-                    'received_quantity' => $productData['quantity'],
-                    'received_unit' => $productData['receiving_unit'],
-                    'base_quantity' => $inventoryQuantity,
-                    'base_unit' => $productData['unit'],
+                // Get the product to access its prices
+                $product = Product::find($productData['product_id']);
+
+                // Calculate costs with per-product discount
+                // If unit_cost is not provided or is 0, fallback to product's purchase_price
+                $unitCost = !empty($productData['unit_cost']) ? $productData['unit_cost'] : ($product->purchase_price ?? 0);
+                $discountPercent = floatval($productData['discount_percent'] ?? 0);
+                $itemSubtotal = $unitCost * $inventoryQuantity;
+                $itemDiscountAmount = ($itemSubtotal * $discountPercent) / 100;
+                $itemFinalTotal = $itemSubtotal - $itemDiscountAmount;
+
+                $totalCost += $itemFinalTotal;
+
+                // Store item data for later
+                $items[] = [
+                    'product_id' => $productData['product_id'],
+                    'variant_id' => $productData['variant_id'] ?? null,
+                    'quantity' => $inventoryQuantity,
+                    'unit' => $productData['receiving_unit'] ?: $productData['unit'],
+                    'unit_cost' => $unitCost,
+                    'total_cost' => $itemFinalTotal,
+                    'discount_percent' => $discountPercent,
+                    'sale_price' => $productData['sale_price'] ?? null,
+                    'additional_data' => [
+                        'received_quantity' => $productData['quantity'],
+                        'received_unit' => $productData['receiving_unit'],
+                        'base_quantity' => $inventoryQuantity,
+                        'base_unit' => $productData['unit'],
+                        'subtotal_before_discount' => $itemSubtotal,
+                        'discount_percent' => $discountPercent,
+                        'discount_amount' => $itemDiscountAmount,
+                    ],
+                    'product' => $product,
                 ];
+            }
 
-                if ($request->hasFile('document')) {
-                    $documentPath = $this->documentService->uploadGoodsReceiptDocument(
-                        $request->file('document'),
-                        'qaimə'
-                    );
-                    $goodsReceipt->document_path = $documentPath;
+            // Create ONE goods receipt for the entire transaction
+            $goodsReceipt = new GoodsReceipt();
+            $goodsReceipt->account_id = auth()->user()->account_id;
+            $goodsReceipt->warehouse_id = $request->warehouse_id;
+            $goodsReceipt->supplier_id = $request->supplier_id;
+            $goodsReceipt->employee_id = auth()->id();
+            $goodsReceipt->invoice_number = $invoiceNumber;
+            $goodsReceipt->total_cost = sprintf('%.2f', $totalCost);
+            $goodsReceipt->status = $status;
+            $goodsReceipt->notes = $request->notes;
+
+            // Upload document if provided
+            if ($request->hasFile('document')) {
+                $documentPath = $this->documentService->uploadGoodsReceiptDocument(
+                    $request->file('document'),
+                    'qaimə'
+                );
+                $goodsReceipt->document_path = $documentPath;
+            }
+
+            $goodsReceipt->save();
+
+            // Create goods receipt items
+            foreach ($items as $itemData) {
+                $item = \App\Models\GoodsReceiptItem::create([
+                    'goods_receipt_id' => $goodsReceipt->id,
+                    'account_id' => auth()->user()->account_id,
+                    'product_id' => $itemData['product_id'],
+                    'variant_id' => $itemData['variant_id'],
+                    'quantity' => $itemData['quantity'],
+                    'unit' => $itemData['unit'],
+                    'unit_cost' => $itemData['unit_cost'],
+                    'total_cost' => $itemData['total_cost'],
+                    'discount_percent' => $itemData['discount_percent'],
+                    'additional_data' => $itemData['additional_data'],
+                ]);
+
+                // Skip stock and price updates for drafts
+                if ($isDraft) {
+                    continue;
                 }
 
-                $goodsReceipt->save();
-                $goodsReceiptIds[] = $goodsReceipt->id;
-
-                // Update the product's purchase_price (alış qiyməti) from unit_cost
-                if (!empty($productData['unit_cost'])) {
-                    // Update product or variant purchase price
-                    if (!empty($productData['variant_id'])) {
-                        $variant = ProductVariant::find($productData['variant_id']);
-                        if ($variant && $variant->price_adjustment !== null) {
-                            // Variant has custom price - update variant's price_adjustment
-                            // Note: This maintains the variant pricing structure
-                        }
-                    }
-
-                    // Always update the base product's purchase_price
-                    $product = Product::find($productData['product_id']);
-                    if ($product) {
-                        $product->purchase_price = $productData['unit_cost'];
-
-                        // Update sale_price if provided
-                        if (!empty($productData['sale_price'])) {
-                            $product->sale_price = $productData['sale_price'];
-                        }
-
-                        $product->save();
-                    }
+                // Update product prices
+                if (!empty($itemData['unit_cost'])) {
+                    $itemData['product']->purchase_price = $itemData['unit_cost'];
+                    $itemData['product']->save();
                 }
 
-                // Calculate total cost for payment processing
-                $totalCost += ($productData['unit_cost'] ?? 0) * $inventoryQuantity;
+                if (!empty($itemData['sale_price'])) {
+                    $itemData['product']->sale_price = $itemData['sale_price'];
+                    $itemData['product']->save();
+                }
 
+                // Create stock movement
                 $stockMovement = new StockMovement();
                 $stockMovement->account_id = auth()->user()->account_id;
                 $stockMovement->warehouse_id = $request->warehouse_id;
-                $stockMovement->product_id = $productData['product_id'];
-                $stockMovement->variant_id = $productData['variant_id'] ?? null;
+                $stockMovement->product_id = $itemData['product_id'];
+                $stockMovement->variant_id = $itemData['variant_id'];
                 $stockMovement->movement_type = 'daxil_olma';
-                $stockMovement->quantity = $inventoryQuantity; // Use base quantity for inventory tracking
-                $stockMovement->unit_cost = $productData['unit_cost'] ?? 0;
+                $stockMovement->quantity = $itemData['quantity'];
+                $stockMovement->unit_cost = $itemData['unit_cost'];
                 $stockMovement->reference_type = 'goods_receipt';
                 $stockMovement->reference_id = $goodsReceipt->id;
                 $stockMovement->employee_id = $goodsReceipt->employee_id;
                 $stockMovement->notes = "Mal qəbulu: {$goodsReceipt->receipt_number}";
                 $stockMovement->save();
 
+                // Update product stock
                 $productStock = ProductStock::firstOrCreate(
                     [
-                        'product_id' => $productData['product_id'],
-                        'variant_id' => $productData['variant_id'] ?? null,
+                        'product_id' => $itemData['product_id'],
+                        'variant_id' => $itemData['variant_id'],
                         'warehouse_id' => $request->warehouse_id,
                         'account_id' => auth()->user()->account_id,
                     ],
@@ -253,16 +316,16 @@ class GoodsReceiptController extends Controller
                 );
 
                 $quantityBefore = $productStock->quantity;
-                $productStock->increment('quantity', $inventoryQuantity);
+                $productStock->increment('quantity', $itemData['quantity']);
 
                 // Create stock history record
                 StockHistory::create([
-                    'product_id' => $productData['product_id'],
-                    'variant_id' => $productData['variant_id'] ?? null,
+                    'product_id' => $itemData['product_id'],
+                    'variant_id' => $itemData['variant_id'],
                     'warehouse_id' => $request->warehouse_id,
                     'quantity_before' => $quantityBefore,
-                    'quantity_change' => $inventoryQuantity,
-                    'quantity_after' => $quantityBefore + $inventoryQuantity,
+                    'quantity_change' => $itemData['quantity'],
+                    'quantity_after' => $quantityBefore + $itemData['quantity'],
                     'type' => 'daxil_olma',
                     'reference_type' => 'goods_receipt',
                     'reference_id' => $goodsReceipt->id,
@@ -272,37 +335,24 @@ class GoodsReceiptController extends Controller
                 ]);
             }
 
-            // Process payment after successful goods receipt creation
-            if (!empty($goodsReceiptIds)) {
-                // Get all created goods receipts
-                $goodsReceipts = GoodsReceipt::whereIn('id', $goodsReceiptIds)->get();
-
-                // Process payment for instant payment method
-                if ($request->payment_method === 'instant') {
-                    // Create a single expense and supplier payment for all products
-                    $firstGoodsReceipt = $goodsReceipts->first();
-                    $firstGoodsReceipt->total_cost = $totalCost;
-                    $this->processGoodsReceiptPayment($firstGoodsReceipt, $request);
-
-                    // Mark all goods receipts as paid
-                    foreach ($goodsReceipts as $receipt) {
-                        $receipt->update([
-                            'payment_status' => 'paid',
-                            'payment_method' => 'instant'
-                        ]);
-                    }
-                } else {
-                    // For credit payment, process each goods receipt separately to create individual supplier credits
-                    foreach ($goodsReceipts as $receipt) {
-                        $this->processGoodsReceiptPayment($receipt, $request);
-                    }
-                }
+            // Process payment after successful goods receipt creation (skip for drafts)
+            if (!$isDraft) {
+                $this->processGoodsReceiptPayment($goodsReceipt, $request);
             }
 
             DB::commit();
 
+            // Clear dashboard cache to reflect new goods receipt (only for completed, not drafts)
+            if (!$isDraft) {
+                $this->dashboardService->clearCache(auth()->user()->account);
+            }
+
+            $successMessage = $isDraft
+                ? 'Mal qəbulu qaralama olaraq saxlanıldı'
+                : 'Mal qəbulu uğurla yaradıldı';
+
             return redirect()->route('goods-receipts.index')
-                ->with('success', 'Mal qəbulu uğurla yaradıldı');
+                ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -312,11 +362,243 @@ class GoodsReceiptController extends Controller
         }
     }
 
+    /**
+     * Store a goods receipt asynchronously (background job)
+     * Returns immediately with a job ID for polling
+     */
+    public function storeAsync(Request $request)
+    {
+        Gate::authorize('access-account-data');
+
+        $request->validate([
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'invoice_number' => 'nullable|string|max:255',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.variant_id' => 'nullable|exists:product_variants,id',
+            'products.*.quantity' => 'required|numeric|gt:0',
+            'products.*.base_quantity' => 'nullable|numeric|gt:0',
+            'products.*.unit' => 'required|string|max:50',
+            'products.*.receiving_unit' => 'nullable|string|max:50',
+            'products.*.unit_cost' => 'nullable|numeric|min:0',
+            'products.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+            'products.*.sale_price' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'payment_method' => 'required|in:instant,credit',
+            'payment_status' => 'nullable|in:paid,unpaid,partial',
+            'custom_payment_terms' => 'nullable|integer|min:0|max:365',
+            'use_custom_terms' => 'boolean',
+            'status' => 'nullable|in:draft,completed',
+            'idempotency_key' => 'nullable|string|max:100',
+        ]);
+
+        $user = Auth::user();
+        $accountId = $user->account_id;
+        $userId = $user->id;
+
+        // Generate idempotency key if not provided
+        $idempotencyKey = $request->idempotency_key ?? AsyncJob::generateIdempotencyKey(
+            $accountId,
+            $userId,
+            $request->all()
+        );
+
+        // Check for duplicate submission
+        $existingJob = AsyncJob::findByIdempotencyKey($accountId, $idempotencyKey);
+        if ($existingJob) {
+            return response()->json([
+                'success' => true,
+                'job_id' => $existingJob->job_id,
+                'message' => 'Bu sorğu artıq emal edilir',
+                'is_duplicate' => true,
+            ]);
+        }
+
+        // Handle document upload - save to temp location for job to process
+        $documentTempPath = null;
+        if ($request->hasFile('document')) {
+            $file = $request->file('document');
+            $tempFileName = uniqid('gr_doc_') . '.' . $file->getClientOriginalExtension();
+            $documentTempPath = 'temp/goods-receipt-docs/' . $tempFileName;
+            Storage::disk('local')->put($documentTempPath, file_get_contents($file->getRealPath()));
+        }
+
+        // Prepare data for the job (exclude file)
+        $jobData = $request->except(['document', 'idempotency_key']);
+
+        // Create async job record
+        $asyncJob = AsyncJob::create([
+            'account_id' => $accountId,
+            'user_id' => $userId,
+            'type' => 'goods_receipt',
+            'status' => 'pending',
+            'message' => 'Növbədə gözləyir...',
+            'input_data' => $jobData,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        // Dispatch the job to the queue
+        ProcessGoodsReceipt::dispatch($asyncJob, $documentTempPath)
+            ->onQueue('goods-receipts');
+
+        return response()->json([
+            'success' => true,
+            'job_id' => $asyncJob->job_id,
+            'message' => 'Mal qəbulu növbəyə əlavə edildi',
+            'is_duplicate' => false,
+        ]);
+    }
+
+    /**
+     * Get the status of an async goods receipt job
+     */
+    public function jobStatus(Request $request, string $jobId)
+    {
+        Gate::authorize('access-account-data');
+
+        $asyncJob = AsyncJob::where('job_id', $jobId)
+            ->where('account_id', Auth::user()->account_id)
+            ->first();
+
+        if (!$asyncJob) {
+            return response()->json([
+                'success' => false,
+                'message' => 'İş tapılmadı',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'job_id' => $asyncJob->job_id,
+            'status' => $asyncJob->status,
+            'message' => $asyncJob->message,
+            'data' => $asyncJob->result_data ?? [],
+            'created_at' => $asyncJob->created_at?->toISOString(),
+            'started_at' => $asyncJob->started_at?->toISOString(),
+            'completed_at' => $asyncJob->completed_at?->toISOString(),
+        ]);
+    }
+
+    public function complete(Request $request, GoodsReceipt $goodsReceipt)
+    {
+        Gate::authorize('access-account-data');
+
+        // Validate the goods receipt is a draft
+        if (!$goodsReceipt->isDraft()) {
+            return back()->withErrors(['error' => 'Bu mal qəbulu artıq tamamlanmışdır']);
+        }
+
+        // Validate payment details are provided for completion
+        $request->validate([
+            'payment_method' => 'required|in:instant,credit',
+            'payment_status' => 'nullable|in:paid,unpaid,partial',
+            'custom_payment_terms' => 'nullable|integer|min:0|max:365',
+            'use_custom_terms' => 'boolean',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Generate receipt number and mark as completed
+            $goodsReceipt->receipt_number = $goodsReceipt->generateReceiptNumber();
+            $goodsReceipt->status = 'completed';
+            $goodsReceipt->save();
+
+            // Process all items in this goods receipt
+            foreach ($goodsReceipt->items as $item) {
+                // Update product purchase price
+                if ($item->unit_cost > 0) {
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $product->purchase_price = $item->unit_cost;
+                        $product->save();
+                    }
+                }
+
+                // Create stock movement
+                $stockMovement = new StockMovement();
+                $stockMovement->account_id = $goodsReceipt->account_id;
+                $stockMovement->warehouse_id = $goodsReceipt->warehouse_id;
+                $stockMovement->product_id = $item->product_id;
+                $stockMovement->variant_id = $item->variant_id;
+                $stockMovement->movement_type = 'daxil_olma';
+                $stockMovement->quantity = $item->quantity;
+                $stockMovement->unit_cost = $item->unit_cost;
+                $stockMovement->reference_type = 'goods_receipt';
+                $stockMovement->reference_id = $goodsReceipt->id;
+                $stockMovement->employee_id = $goodsReceipt->employee_id;
+                $stockMovement->notes = "Mal qəbulu: {$goodsReceipt->receipt_number}";
+                $stockMovement->save();
+
+                // Update product stock
+                $productStock = ProductStock::firstOrCreate(
+                    [
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'warehouse_id' => $goodsReceipt->warehouse_id,
+                        'account_id' => $goodsReceipt->account_id,
+                    ],
+                    [
+                        'quantity' => 0,
+                        'reserved_quantity' => 0,
+                        'min_level' => 3,
+                    ]
+                );
+
+                $quantityBefore = $productStock->quantity;
+                $productStock->increment('quantity', $item->quantity);
+
+                // Create stock history record
+                StockHistory::create([
+                    'product_id' => $item->product_id,
+                    'variant_id' => $item->variant_id,
+                    'warehouse_id' => $goodsReceipt->warehouse_id,
+                    'quantity_before' => $quantityBefore,
+                    'quantity_change' => $item->quantity,
+                    'quantity_after' => $quantityBefore + $item->quantity,
+                    'type' => 'daxil_olma',
+                    'reference_type' => 'goods_receipt',
+                    'reference_id' => $goodsReceipt->id,
+                    'user_id' => auth()->id(),
+                    'notes' => "Mal qəbulu: {$goodsReceipt->receipt_number}",
+                    'occurred_at' => $goodsReceipt->created_at ?? now(),
+                ]);
+            }
+
+            // Process payment
+            $this->processGoodsReceiptPayment($goodsReceipt, $request);
+
+            DB::commit();
+
+            // Clear dashboard cache to reflect completed goods receipt
+            $this->dashboardService->clearCache(auth()->user()->account);
+
+            return redirect()->route('goods-receipts.index')
+                ->with('success', 'Mal qəbulu uğurla tamamlandı');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Mal qəbulu tamamlanarkən xəta baş verdi: ' . $e->getMessage()])
+                ->withInput();
+        }
+    }
+
     public function show(GoodsReceipt $goodsReceipt)
     {
         Gate::authorize('access-account-data');
 
-        $goodsReceipt->load(['product', 'variant', 'supplier', 'warehouse', 'employee', 'supplierCredit']);
+        $goodsReceipt->load([
+            'items.product',
+            'items.variant',
+            'supplier',
+            'warehouse',
+            'employee',
+            'supplierCredit',
+            'expenses.user', // Load payments (expenses) related to this goods receipt
+        ]);
 
         // Add document URLs if document exists
         if ($goodsReceipt->hasDocument()) {
@@ -333,7 +615,7 @@ class GoodsReceiptController extends Controller
     {
         Gate::authorize('access-account-data');
 
-        $goodsReceipt->load(['product', 'variant', 'supplier', 'warehouse', 'employee']);
+        $goodsReceipt->load(['items.product', 'items.variant', 'supplier', 'warehouse', 'employee']);
 
         $suppliers = Supplier::byAccount(auth()->user()->account_id)
             ->active()
@@ -355,225 +637,174 @@ class GoodsReceiptController extends Controller
     {
         Gate::authorize('access-account-data');
 
-        $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'employee_id' => 'nullable|exists:users,id',
-            'variant_id' => 'nullable|exists:product_variants,id',
-            'quantity' => 'required|numeric|gt:0',
-            'unit' => 'required|string|max:50',
-            'unit_cost' => 'nullable|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:1000',
-            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            // payment_method and payment_status are not editable - removed from validation
-        ]);
+        // For drafts, allow full editing of items
+        // For completed receipts, only allow updating basic fields (no item changes)
+        $isDraft = $goodsReceipt->isDraft();
+
+        if ($isDraft) {
+            // Full validation for drafts (same as store)
+            $request->validate([
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'supplier_id' => 'nullable|exists:suppliers,id',
+                'invoice_number' => 'nullable|string|max:255',
+                'products' => 'required|array|min:1',
+                'products.*.product_id' => 'required|exists:products,id',
+                'products.*.variant_id' => 'nullable|exists:product_variants,id',
+                'products.*.quantity' => 'required|numeric|gt:0',
+                'products.*.base_quantity' => 'nullable|numeric|gt:0',
+                'products.*.unit' => 'required|string|max:50',
+                'products.*.receiving_unit' => 'nullable|string|max:50',
+                'products.*.unit_cost' => 'nullable|numeric|min:0',
+                'products.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+                'products.*.sale_price' => 'nullable|numeric|min:0',
+                'notes' => 'nullable|string|max:1000',
+                'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            ]);
+        } else {
+            // Limited validation for completed receipts (only basic fields)
+            $request->validate([
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'supplier_id' => 'nullable|exists:suppliers,id',
+                'invoice_number' => 'nullable|string|max:255',
+                'notes' => 'nullable|string|max:1000',
+                'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            ]);
+        }
 
         try {
             DB::beginTransaction();
 
-            // Validate variant belongs to product and account if provided
-            if (!empty($request->variant_id)) {
-                $variant = ProductVariant::where('id', $request->variant_id)
-                    ->where('account_id', auth()->user()->account_id)
-                    ->where('product_id', $goodsReceipt->product_id)
-                    ->first();
+            if ($isDraft) {
+                // DRAFT EDITING: Allow full changes including items
 
-                if (!$variant) {
-                    throw new \Exception('Seçilmiş variant bu məhsula aid deyil və ya mövcud deyil');
-                }
-            }
+                // Delete all existing items (no stock impact since it's a draft)
+                $goodsReceipt->items()->delete();
 
-            // Calculate difference in quantity for stock adjustment
-            $quantityDifference = $request->quantity - $goodsReceipt->quantity;
-            $variantChanged = $request->variant_id != $goodsReceipt->variant_id;
+                // Recalculate total from new products
+                $totalCost = 0;
+                $items = [];
 
-            // Update goods receipt (payment_method and payment_status are not editable)
-            $goodsReceipt->warehouse_id = $request->warehouse_id;
-            $goodsReceipt->supplier_id = $request->supplier_id;
-            $goodsReceipt->employee_id = $request->employee_id;
-            $goodsReceipt->variant_id = $request->variant_id;
-            $goodsReceipt->quantity = $request->quantity;
-            $goodsReceipt->unit = $request->unit;
-            $goodsReceipt->unit_cost = $request->unit_cost ?? 0;
-            $goodsReceipt->notes = $request->notes;
+                foreach ($request->products as $productData) {
+                    // Validate variant belongs to product and account if provided
+                    if (!empty($productData['variant_id'])) {
+                        $variant = ProductVariant::where('id', $productData['variant_id'])
+                            ->where('account_id', auth()->user()->account_id)
+                            ->where('product_id', $productData['product_id'])
+                            ->first();
 
-            // Handle document upload
-            if ($request->hasFile('document')) {
-                // Delete old document if exists
-                if ($goodsReceipt->document_path) {
-                    $this->documentService->deleteFile($goodsReceipt->document_path);
-                }
-                
-                $documentPath = $this->documentService->uploadGoodsReceiptDocument(
-                    $request->file('document'),
-                    'qaimə'
-                );
-                $goodsReceipt->document_path = $documentPath;
-            }
-
-            $goodsReceipt->save();
-
-            // Update the product's purchase_price (alış qiyməti) from unit_cost if changed
-            if ($request->filled('unit_cost')) {
-                $product = Product::find($goodsReceipt->product_id);
-                if ($product) {
-                    $product->purchase_price = $request->input('unit_cost');
-
-                    // Update sale_price if provided
-                    if ($request->filled('sale_price')) {
-                        $product->sale_price = $request->input('sale_price');
+                        if (!$variant) {
+                            throw new \Exception('Seçilmiş variant bu məhsula aid deyil və ya mövcud deyil');
+                        }
                     }
 
-                    $product->save();
-                }
-            }
+                    $inventoryQuantity = $productData['base_quantity'] ?: $productData['quantity'];
+                    $product = Product::find($productData['product_id']);
 
-            // Update the original stock movement's unit_cost if it changed
-            $originalStockMovement = StockMovement::where('reference_type', 'goods_receipt')
-                ->where('reference_id', $goodsReceipt->id)
-                ->first();
+                    // Calculate costs with per-product discount
+                    $unitCost = !empty($productData['unit_cost']) ? $productData['unit_cost'] : ($product->purchase_price ?? 0);
+                    $discountPercent = floatval($productData['discount_percent'] ?? 0);
+                    $itemSubtotal = $unitCost * $inventoryQuantity;
+                    $itemDiscountAmount = ($itemSubtotal * $discountPercent) / 100;
+                    $itemFinalTotal = $itemSubtotal - $itemDiscountAmount;
 
-            if ($originalStockMovement && $originalStockMovement->unit_cost != $request->unit_cost) {
-                $originalStockMovement->update(['unit_cost' => $request->unit_cost ?? 0]);
-            }
+                    $totalCost += $itemFinalTotal;
 
-            // Adjust stock if quantity or variant changed
-            if ($quantityDifference != 0 || $variantChanged) {
-                // If variant changed, we need to handle old and new stock separately
-                if ($variantChanged) {
-                    $oldVariantId = $goodsReceipt->getOriginal('variant_id');
-
-                    // Remove stock from old variant
-                    $oldProductStock = ProductStock::where('product_id', $goodsReceipt->product_id)
-                        ->where('variant_id', $oldVariantId)
-                        ->where('warehouse_id', $goodsReceipt->warehouse_id)
-                        ->where('account_id', $goodsReceipt->account_id)
-                        ->first();
-
-                    if ($oldProductStock) {
-                        $oldQuantityBefore = $oldProductStock->quantity;
-                        $oldProductStock->decrement('quantity', $goodsReceipt->getOriginal('quantity'));
-
-                        // Create stock history for old variant
-                        StockHistory::create([
-                            'product_id' => $goodsReceipt->product_id,
-                            'variant_id' => $oldVariantId,
-                            'warehouse_id' => $goodsReceipt->warehouse_id,
-                            'quantity_before' => $oldQuantityBefore,
-                            'quantity_change' => -$goodsReceipt->getOriginal('quantity'),
-                            'quantity_after' => $oldQuantityBefore - $goodsReceipt->getOriginal('quantity'),
-                            'type' => 'duzelis_azaltma',
-                            'reference_type' => 'goods_receipt_update',
-                            'reference_id' => $goodsReceipt->id,
-                            'user_id' => auth()->id(),
-                            'notes' => "Mal qəbulu düzəlişi (variant dəyişdi): {$goodsReceipt->receipt_number}",
-                            'occurred_at' => now(),
-                        ]);
-                    }
-
-                    // Add stock to new variant
-                    $newProductStock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $goodsReceipt->product_id,
-                            'variant_id' => $request->variant_id,
-                            'warehouse_id' => $goodsReceipt->warehouse_id,
-                            'account_id' => $goodsReceipt->account_id,
+                    $items[] = [
+                        'product_id' => $productData['product_id'],
+                        'variant_id' => $productData['variant_id'] ?? null,
+                        'quantity' => $inventoryQuantity,
+                        'unit' => $productData['receiving_unit'] ?: $productData['unit'],
+                        'unit_cost' => $unitCost,
+                        'total_cost' => $itemFinalTotal,
+                        'discount_percent' => $discountPercent,
+                        'additional_data' => [
+                            'received_quantity' => $productData['quantity'],
+                            'received_unit' => $productData['receiving_unit'],
+                            'base_quantity' => $inventoryQuantity,
+                            'base_unit' => $productData['unit'],
+                            'subtotal_before_discount' => $itemSubtotal,
+                            'discount_percent' => $discountPercent,
+                            'discount_amount' => $itemDiscountAmount,
                         ],
-                        [
-                            'quantity' => 0,
-                            'reserved_quantity' => 0,
-                            'min_level' => 3,
-                        ]
-                    );
-                    $newQuantityBefore = $newProductStock->quantity;
-                    $newProductStock->increment('quantity', $request->quantity);
-
-                    // Create stock history for new variant
-                    StockHistory::create([
-                        'product_id' => $goodsReceipt->product_id,
-                        'variant_id' => $request->variant_id,
-                        'warehouse_id' => $goodsReceipt->warehouse_id,
-                        'quantity_before' => $newQuantityBefore,
-                        'quantity_change' => $request->quantity,
-                        'quantity_after' => $newQuantityBefore + $request->quantity,
-                        'type' => 'duzelis_artim',
-                        'reference_type' => 'goods_receipt_update',
-                        'reference_id' => $goodsReceipt->id,
-                        'user_id' => auth()->id(),
-                        'notes' => "Mal qəbulu düzəlişi (variant dəyişdi): {$goodsReceipt->receipt_number}",
-                        'occurred_at' => now(),
-                    ]);
-
-                    // Create stock movement for variant change
-                    $stockMovement = new StockMovement();
-                    $stockMovement->account_id = auth()->user()->account_id;
-                    $stockMovement->warehouse_id = $goodsReceipt->warehouse_id;
-                    $stockMovement->product_id = $goodsReceipt->product_id;
-                    $stockMovement->variant_id = $request->variant_id;
-                    $stockMovement->movement_type = 'duzelis_artim';
-                    $stockMovement->quantity = $request->quantity;
-                    $stockMovement->unit_cost = $goodsReceipt->unit_cost;
-                    $stockMovement->reference_type = 'goods_receipt_update';
-                    $stockMovement->reference_id = $goodsReceipt->id;
-                    $stockMovement->employee_id = $goodsReceipt->employee_id;
-                    $stockMovement->notes = "Mal qəbulu düzəlişi (variant dəyişdi): {$goodsReceipt->receipt_number}";
-                    $stockMovement->save();
-                } else {
-                    // Only quantity changed, same variant
-                    $productStock = ProductStock::where('product_id', $goodsReceipt->product_id)
-                        ->where('variant_id', $request->variant_id)
-                        ->where('warehouse_id', $goodsReceipt->warehouse_id)
-                        ->where('account_id', $goodsReceipt->account_id)
-                        ->first();
-
-                    if ($productStock) {
-                        $quantityBefore = $productStock->quantity;
-                        $productStock->increment('quantity', $quantityDifference);
-
-                        // Create stock history for quantity adjustment
-                        $movementType = $quantityDifference > 0 ? 'duzelis_artim' : 'duzelis_azaltma';
-                        StockHistory::create([
-                            'product_id' => $goodsReceipt->product_id,
-                            'variant_id' => $request->variant_id,
-                            'warehouse_id' => $goodsReceipt->warehouse_id,
-                            'quantity_before' => $quantityBefore,
-                            'quantity_change' => $quantityDifference,
-                            'quantity_after' => $quantityBefore + $quantityDifference,
-                            'type' => $movementType,
-                            'reference_type' => 'goods_receipt_update',
-                            'reference_id' => $goodsReceipt->id,
-                            'user_id' => auth()->id(),
-                            'notes' => "Mal qəbulu düzəlişi: {$goodsReceipt->receipt_number}",
-                            'occurred_at' => now(),
-                        ]);
-                    }
-
-                    // Create stock movement for the adjustment
-                    $movementType = $quantityDifference > 0 ? 'duzelis_artim' : 'duzelis_azaltma';
-                    $stockMovement = new StockMovement();
-                    $stockMovement->account_id = auth()->user()->account_id;
-                    $stockMovement->warehouse_id = $goodsReceipt->warehouse_id;
-                    $stockMovement->product_id = $goodsReceipt->product_id;
-                    $stockMovement->variant_id = $request->variant_id;
-                    $stockMovement->movement_type = $movementType;
-                    $stockMovement->quantity = abs($quantityDifference);
-                    $stockMovement->unit_cost = $goodsReceipt->unit_cost;
-                    $stockMovement->reference_type = 'goods_receipt_update';
-                    $stockMovement->reference_id = $goodsReceipt->id;
-                    $stockMovement->employee_id = $goodsReceipt->employee_id;
-                    $stockMovement->notes = "Mal qəbulu düzəlişi: {$goodsReceipt->receipt_number}";
-                    $stockMovement->save();
+                    ];
                 }
+
+                // Update receipt-level fields
+                $goodsReceipt->warehouse_id = $request->warehouse_id;
+                $goodsReceipt->supplier_id = $request->supplier_id;
+                $goodsReceipt->invoice_number = $request->invoice_number;
+                $goodsReceipt->total_cost = sprintf('%.2f', $totalCost);
+                $goodsReceipt->notes = $request->notes;
+
+                // Handle document upload
+                if ($request->hasFile('document')) {
+                    if ($goodsReceipt->document_path) {
+                        $this->documentService->deleteFile($goodsReceipt->document_path);
+                    }
+                    $documentPath = $this->documentService->uploadGoodsReceiptDocument(
+                        $request->file('document'),
+                        'qaimə'
+                    );
+                    $goodsReceipt->document_path = $documentPath;
+                }
+
+                $goodsReceipt->save();
+
+                // Create new items
+                foreach ($items as $itemData) {
+                    \App\Models\GoodsReceiptItem::create([
+                        'goods_receipt_id' => $goodsReceipt->id,
+                        'account_id' => auth()->user()->account_id,
+                        'product_id' => $itemData['product_id'],
+                        'variant_id' => $itemData['variant_id'],
+                        'quantity' => $itemData['quantity'],
+                        'unit' => $itemData['unit'],
+                        'unit_cost' => $itemData['unit_cost'],
+                        'total_cost' => $itemData['total_cost'],
+                        'discount_percent' => $itemData['discount_percent'],
+                        'additional_data' => $itemData['additional_data'],
+                    ]);
+                }
+
+            } else {
+                // COMPLETED RECEIPT EDITING: Only allow basic field updates (no item changes)
+
+                $goodsReceipt->warehouse_id = $request->warehouse_id;
+                $goodsReceipt->supplier_id = $request->supplier_id;
+                $goodsReceipt->invoice_number = $request->invoice_number;
+                $goodsReceipt->notes = $request->notes;
+
+                // Handle document upload
+                if ($request->hasFile('document')) {
+                    if ($goodsReceipt->document_path) {
+                        $this->documentService->deleteFile($goodsReceipt->document_path);
+                    }
+                    $documentPath = $this->documentService->uploadGoodsReceiptDocument(
+                        $request->file('document'),
+                        'qaimə'
+                    );
+                    $goodsReceipt->document_path = $documentPath;
+                }
+
+                $goodsReceipt->save();
             }
 
             DB::commit();
 
-            return redirect()->route('goods-receipts.index')
+            // Clear dashboard cache to reflect updated goods receipt (only for completed, not drafts)
+            if (!$isDraft) {
+                $this->dashboardService->clearCache(auth()->user()->account);
+            }
+
+            return redirect()->route('goods-receipts.show', $goodsReceipt)
                 ->with('success', 'Mal qəbulu uğurla yeniləndi');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error updating goods receipt: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'receipt_id' => $goodsReceipt->id,
+            ]);
             return back()
                 ->withErrors(['error' => 'Mal qəbulu yenilənərkən xəta baş verdi: ' . $e->getMessage()])
                 ->withInput();
@@ -701,100 +932,212 @@ class GoodsReceiptController extends Controller
 
     public function destroy(GoodsReceipt $goodsReceipt)
     {
-        Gate::authorize('access-account-data');
+        Gate::authorize('delete-account-data');
+        Gate::authorize('access-account-data', $goodsReceipt);
 
-        // Validation Check 1: Block if paid
+        // STRICT VALIDATION: Block if paid
+        // Paid receipts have completed financial transactions that should not be reversed
         if ($goodsReceipt->payment_status === 'paid') {
             return back()->withErrors([
-                'error' => 'Ödənilmiş mal qəbulunu silmək mümkün deyil. Əvvəlcə ödəniş statusunu dəyişin.'
+                'error' => 'Ödənilmiş mal qəbulunu silmək mümkün deyil. Əvvəlcə ödəməni (xərci) silin.'
             ]);
         }
 
-        // Validation Check 2: Block if expenses exist
-        $linkedExpenses = \App\Models\Expense::where('goods_receipt_id', $goodsReceipt->id)->exists();
-        if ($linkedExpenses) {
-            return back()->withErrors([
-                'error' => 'Xərc qeydi ilə əlaqəli mal qəbulunu silmək mümkün deyil. Əvvəlcə xərci silin və ya əlaqəni kəsin.'
-            ]);
+        // STRICT VALIDATION: Check if any stock from this receipt has been sold (current stock < received quantity)
+        // This prevents inventory data corruption
+        foreach ($goodsReceipt->items as $item) {
+            $currentStock = ProductStock::where('product_id', $item->product_id)
+                ->where('warehouse_id', $goodsReceipt->warehouse_id)
+                ->where('variant_id', $item->variant_id)
+                ->where('account_id', $goodsReceipt->account_id)
+                ->first();
+
+            if ($currentStock && $currentStock->quantity < $item->quantity) {
+                return back()->withErrors([
+                    'error' => 'Diqqət: Cari stok miqdarı (' . $currentStock->quantity . ') qəbul edilən miqdardan (' . $item->quantity . ') azdır. ' .
+                               'Stok satılmış ola bilər. Silmək təhlükəlidir və inventar məlumatlarını pozacaq. Məhsul: ' . $item->product->name
+                ]);
+            }
         }
 
-        // Validation Check 3: Block if supplier credit exists
-        if ($goodsReceipt->supplier_credit_id) {
+        // STRICT VALIDATION: Partial payments are not allowed to be deleted
+        // If there are any payments against a credit, they must be reversed first
+        if ($goodsReceipt->payment_status === 'partial') {
             return back()->withErrors([
-                'error' => 'Təchizatçı krediti ilə əlaqəli mal qəbulunu silmək mümkün deyil. Əvvəlcə krediti ləğv edin.'
-            ]);
-        }
-
-        // Validation Check 4: Warn if stock likely sold
-        $receivedQuantity = $goodsReceipt->quantity;
-        $currentStock = ProductStock::where('product_id', $goodsReceipt->product_id)
-            ->where('warehouse_id', $goodsReceipt->warehouse_id)
-            ->where('variant_id', $goodsReceipt->variant_id)
-            ->where('account_id', $goodsReceipt->account_id)
-            ->first();
-
-        if ($currentStock && $currentStock->quantity < $receivedQuantity) {
-            return back()->withErrors([
-                'error' => 'Diqqət: Cari stok miqdarı (' . $currentStock->quantity . ') qəbul edilən miqdardan (' . $receivedQuantity . ') azdır. ' .
-                           'Stok satılmış ola bilər. Silmək təhlükəlidir və inventar məlumatlarını pozacaq.'
+                'error' => 'Qismən ödənilmiş mal qəbulunu silmək mümkün deyil. Ödəmələr edilib və geri qaytarılmalıdır.'
             ]);
         }
 
         try {
             DB::beginTransaction();
 
-            $stockMovement = StockMovement::where('reference_type', 'goods_receipt')
-                ->where('reference_id', $goodsReceipt->id)
-                ->first();
+            \Log::info("Starting goods receipt deletion cascade", [
+                'receipt_id' => $goodsReceipt->id,
+                'receipt_number' => $goodsReceipt->receipt_number,
+                'payment_method' => $goodsReceipt->payment_method,
+                'payment_status' => $goodsReceipt->payment_status,
+                'user_id' => auth()->id(),
+            ]);
 
-            if ($stockMovement) {
-                $productStock = ProductStock::where('product_id', $goodsReceipt->product_id)
-                    ->where('variant_id', $goodsReceipt->variant_id)
+            // STEP 1: Handle SUPPLIER CREDIT deletion (for credit payment method)
+            // This must be done FIRST before deleting expenses
+            if ($goodsReceipt->supplier_credit_id) {
+                $supplierCredit = \App\Models\SupplierCredit::find($goodsReceipt->supplier_credit_id);
+
+                if ($supplierCredit) {
+                    // STRICT CHECK: Credit must be fully unpaid (no payments made)
+                    if ($supplierCredit->status !== 'pending' || $supplierCredit->remaining_amount != $supplierCredit->amount) {
+                        DB::rollBack();
+                        return back()->withErrors([
+                            'error' => 'Təchizatçı kreditinə ödəmələr edilib. Əvvəlcə bütün ödəmələri geri qaytarın və ya krediti ləğv edin.'
+                        ]);
+                    }
+
+                    \Log::info("Deleting supplier credit", [
+                        'credit_id' => $supplierCredit->id,
+                        'credit_reference' => $supplierCredit->reference_number,
+                        'amount' => $supplierCredit->amount,
+                    ]);
+
+                    // Delete the supplier credit (unpaid only)
+                    $supplierCredit->delete();
+                }
+            }
+
+            // STEP 2: Handle EXPENSE and SUPPLIER PAYMENT deletion (for instant payment method)
+            // These are created together for instant payments and must be deleted together
+            $linkedExpenses = \App\Models\Expense::where('goods_receipt_id', $goodsReceipt->id)->get();
+
+            foreach ($linkedExpenses as $expense) {
+                \Log::info("Deleting linked expense", [
+                    'expense_id' => $expense->expense_id,
+                    'reference_number' => $expense->reference_number,
+                    'amount' => $expense->amount,
+                    'supplier_payment_id' => $expense->supplier_payment_id,
+                ]);
+
+                // Delete the expense record
+                $expense->delete();
+            }
+
+            // STEP 3: Handle STOCK MOVEMENTS
+            // Delete all stock movements related to this goods receipt
+            $stockMovements = StockMovement::where('reference_type', 'goods_receipt')
+                ->where('reference_id', $goodsReceipt->id)
+                ->get();
+
+            foreach ($stockMovements as $stockMovement) {
+                \Log::info("Deleting stock movement", [
+                    'movement_id' => $stockMovement->id,
+                    'movement_type' => $stockMovement->movement_type,
+                    'quantity' => $stockMovement->quantity,
+                ]);
+
+                $stockMovement->delete();
+            }
+
+            // Also check for adjustment movements created during edits
+            $adjustmentMovements = StockMovement::where('reference_type', 'goods_receipt_update')
+                ->where('reference_id', $goodsReceipt->id)
+                ->get();
+
+            foreach ($adjustmentMovements as $movement) {
+                \Log::info("Deleting adjustment stock movement", [
+                    'movement_id' => $movement->id,
+                    'movement_type' => $movement->movement_type,
+                    'quantity' => $movement->quantity,
+                ]);
+
+                $movement->delete();
+            }
+
+            // STEP 4: REVERSE PRODUCT STOCK quantities for all items
+            // This is critical for inventory accuracy
+            foreach ($goodsReceipt->items as $item) {
+                $productStock = ProductStock::where('product_id', $item->product_id)
+                    ->where('variant_id', $item->variant_id)
                     ->where('warehouse_id', $goodsReceipt->warehouse_id)
                     ->where('account_id', $goodsReceipt->account_id)
                     ->first();
 
                 if ($productStock) {
                     $quantityBefore = $productStock->quantity;
-                    $productStock->decrement('quantity', (float) $goodsReceipt->quantity);
+                    $productStock->decrement('quantity', (float) $item->quantity);
 
-                    // Create stock history for deletion with enhanced audit trail
-                    StockHistory::create([
-                        'product_id' => $goodsReceipt->product_id,
-                        'variant_id' => $goodsReceipt->variant_id,
+                    \Log::info("Reversed product stock", [
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
                         'warehouse_id' => $goodsReceipt->warehouse_id,
                         'quantity_before' => $quantityBefore,
-                        'quantity_change' => -(float) $goodsReceipt->quantity,
-                        'quantity_after' => $quantityBefore - (float) $goodsReceipt->quantity,
+                        'quantity_reversed' => $item->quantity,
+                        'quantity_after' => $quantityBefore - (float) $item->quantity,
+                    ]);
+
+                    // STEP 5: Create STOCK HISTORY for audit trail
+                    StockHistory::create([
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'warehouse_id' => $goodsReceipt->warehouse_id,
+                        'quantity_before' => $quantityBefore,
+                        'quantity_change' => -(float) $item->quantity,
+                        'quantity_after' => $quantityBefore - (float) $item->quantity,
                         'type' => 'duzelis_azaltma',
                         'reference_type' => 'goods_receipt_delete',
                         'reference_id' => $goodsReceipt->id,
                         'user_id' => auth()->id(),
-                        'notes' => "Mal qəbulu silindi (soft delete): {$goodsReceipt->receipt_number} | " .
+                        'notes' => "Mal qəbulu silindi (kaskad): {$goodsReceipt->receipt_number} | " .
                                    "İstifadəçi: " . auth()->user()->name . " | " .
                                    "Tarix: " . now()->format('Y-m-d H:i:s') . " | " .
-                                   "Səbəb: İstifadəçi tərəfindən silinmə tələbi",
+                                   "Ödəniş metodu: {$goodsReceipt->payment_method} | " .
+                                   "Məbləğ: {$goodsReceipt->total_cost} AZN | " .
+                                   "Məhsul: {$item->product->name} | " .
+                                   "Səbəb: Tam kaskad silinmə (xərclər, ödəmələr, kredit və stok bərpa edildi)",
                         'occurred_at' => now(),
                     ]);
                 }
-
-                $stockMovement->delete();
             }
 
+            // STEP 6: Delete DOCUMENT file if exists
             if ($goodsReceipt->document_path) {
+                \Log::info("Deleting document file", [
+                    'document_path' => $goodsReceipt->document_path,
+                ]);
+
                 $this->documentService->deleteFile($goodsReceipt->document_path);
             }
 
-            // Soft delete (sets deleted_at timestamp, record is preserved)
+            // STEP 7: SOFT DELETE the goods receipt itself
+            // This preserves the record in database with deleted_at timestamp
+            \Log::info("Soft deleting goods receipt", [
+                'receipt_id' => $goodsReceipt->id,
+                'receipt_number' => $goodsReceipt->receipt_number,
+            ]);
+
             $goodsReceipt->delete();
 
             DB::commit();
 
+            // Clear dashboard cache to reflect deleted goods receipt
+            $this->dashboardService->clearCache(auth()->user()->account);
+
+            \Log::info("Goods receipt deletion completed successfully", [
+                'receipt_id' => $goodsReceipt->id,
+                'receipt_number' => $goodsReceipt->receipt_number,
+            ]);
+
             return redirect()->route('goods-receipts.index')
-                ->with('success', 'Mal qəbulu uğurla silindi');
+                ->with('success', 'Mal qəbulu və bütün əlaqəli maliyyə qeydləri uğurla silindi (xərclər, ödəmələr, kredit və stok bərpa edildi)');
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            \Log::error("Goods receipt deletion failed", [
+                'receipt_id' => $goodsReceipt->id,
+                'receipt_number' => $goodsReceipt->receipt_number,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return back()
                 ->withErrors(['error' => 'Mal qəbulu silinərkən xəta baş verdi: ' . $e->getMessage()]);
         }
@@ -924,11 +1267,17 @@ class GoodsReceiptController extends Controller
                     ]);
                 }
 
-                // Get the warehouse's branch or use the first available branch
-                $warehouse = \App\Models\Warehouse::find($goodsReceipt->warehouse_id);
-                $branchId = $warehouse->branch_id ?? \App\Models\Branch::byAccount(auth()->user()->account_id)->first()->id;
+                // Get the first branch that has access to this warehouse, or use the first available branch
+                $warehouse = \App\Models\Warehouse::with('branches')->find($goodsReceipt->warehouse_id);
+                $branchId = $warehouse->branches->first()?->id
+                    ?? \App\Models\Branch::byAccount(auth()->user()->account_id)->first()?->id;
 
-                // Create expense record
+                // Validate that we have a branch
+                if (!$branchId) {
+                    throw new \Exception('Filial tapılmadı. Xahiş edirik sistem administratoru ilə əlaqə saxlayın.');
+                }
+
+                // Create expense record for instant payment
                 $expense = \App\Models\Expense::create([
                     'account_id' => auth()->user()->account_id,
                     'category_id' => $expenseCategory->category_id,
@@ -937,23 +1286,11 @@ class GoodsReceiptController extends Controller
                     'description' => "Dərhal ödəniş - Mal qəbulu: {$goodsReceipt->receipt_number}",
                     'expense_date' => now()->format('Y-m-d'),
                     'payment_method' => 'cash', // Default to cash for instant payment
+                    'invoice_number' => $goodsReceipt->receipt_number,
                     'user_id' => Auth::id(),
                     'supplier_id' => $goodsReceipt->supplier_id,
                     'goods_receipt_id' => $goodsReceipt->id,
                     'notes' => "Avtomatik yaradıldı - Dərhal ödəniş",
-                ]);
-
-                // Create supplier payment record
-                $supplierPayment = \App\Models\SupplierPayment::create([
-                    'account_id' => auth()->user()->account_id,
-                    'supplier_id' => $goodsReceipt->supplier_id,
-                    'amount' => $goodsReceipt->total_cost,
-                    'description' => "Dərhal ödəniş - Mal qəbulu: {$goodsReceipt->receipt_number}",
-                    'payment_date' => now()->format('Y-m-d'),
-                    'payment_method' => 'cash',
-                    'invoice_number' => $goodsReceipt->receipt_number,
-                    'user_id' => Auth::id(),
-                    'notes' => "Avtomatik yaradıldı - Xerc: {$expense->reference_number}",
                 ]);
             }
 
@@ -971,8 +1308,20 @@ class GoodsReceiptController extends Controller
         if ($request->use_custom_terms && $request->custom_payment_terms !== null) {
             return now()->addDays($request->custom_payment_terms);
         }
-        
+
         // Fall back to supplier payment terms or goods receipt calculation
         return $goodsReceipt->calculateDueDate();
+    }
+
+    public function print(GoodsReceipt $goodsReceipt)
+    {
+        Gate::authorize('access-account-data', $goodsReceipt);
+
+        $goodsReceipt->load(['items.product', 'items.variant', 'supplier', 'warehouse', 'employee', 'account']);
+
+        return view('goods-receipts.print', [
+            'receipt' => $goodsReceipt,
+            'account' => $goodsReceipt->account,
+        ]);
     }
 }

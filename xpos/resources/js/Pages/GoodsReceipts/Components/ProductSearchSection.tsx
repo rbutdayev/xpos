@@ -25,6 +25,17 @@ interface Props {
 }
 
 function ProductSearchSection({ query, setQuery, loading, results, error, onSelect, selectedProduct }: Props) {
+  const [waitingForResults, setWaitingForResults] = React.useState(false);
+
+  // Auto-select when results arrive after Enter or paste
+  React.useEffect(() => {
+    if (waitingForResults && !loading && results.length === 1) {
+      onSelect(results[0]);
+      setQuery('');
+      setWaitingForResults(false);
+    }
+  }, [waitingForResults, loading, results, onSelect, setQuery]);
+
   return (
     <div className="relative">
       <div className="relative">
@@ -33,15 +44,25 @@ function ProductSearchSection({ query, setQuery, loading, results, error, onSele
           id="productSearch"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onPaste={(e) => {
+            // When barcode is pasted, wait for results to auto-select
+            const pastedText = e.clipboardData.getData('text');
+            if (pastedText.trim()) {
+              setWaitingForResults(true);
+            }
+          }}
           onKeyDown={(e) => {
             // Prevent Enter key from submitting the form when scanning barcodes
             if (e.key === 'Enter') {
               e.preventDefault();
-              
-              // If there's exactly one search result, select it automatically
+
+              // If already have 1 result, select it immediately
               if (results.length === 1) {
                 onSelect(results[0]);
                 setQuery('');
+              } else if (query.trim()) {
+                // Otherwise wait for results to load
+                setWaitingForResults(true);
               }
             }
           }}

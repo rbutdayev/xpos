@@ -53,7 +53,7 @@ export default function Index({ returns }: Props) {
     const columns = [
         {
             key: 'return_id',
-            label: 'İadə ID',
+            label: 'Qaytarma ID',
             render: (productReturn: ProductReturn) => `#${productReturn.return_id}`
         },
         {
@@ -63,13 +63,31 @@ export default function Index({ returns }: Props) {
         },
         {
             key: 'product',
-            label: 'Məhsul',
-            render: (productReturn: ProductReturn) => productReturn.product?.name || '-'
+            label: 'Məhsul(lar)',
+            render: (productReturn: ProductReturn) => {
+                // Check if it's a multi-item return
+                if (productReturn.items && productReturn.items.length > 0) {
+                    if (productReturn.items.length === 1) {
+                        return productReturn.items[0].product?.name || '-';
+                    }
+                    return `${productReturn.items.length} məhsul`;
+                }
+                // Fallback to single product (legacy)
+                return productReturn.product?.name || '-';
+            }
         },
         {
             key: 'quantity',
             label: 'Miqdar',
-            render: (productReturn: ProductReturn) => productReturn.quantity
+            render: (productReturn: ProductReturn) => {
+                // Check if it's a multi-item return
+                if (productReturn.items && productReturn.items.length > 0) {
+                    const totalQty = productReturn.items.reduce((sum, item) => sum + parseFloat(item.quantity || '0'), 0);
+                    return totalQty.toFixed(3);
+                }
+                // Fallback to single quantity (legacy)
+                return productReturn.quantity || 0;
+            }
         },
         {
             key: 'total_cost',
@@ -83,13 +101,13 @@ export default function Index({ returns }: Props) {
         },
         {
             key: 'return_date',
-            label: 'İadə tarixi',
+            label: 'Qaytarma tarixi',
             render: (productReturn: ProductReturn) => new Date(productReturn.return_date).toLocaleDateString('az-AZ')
         },
         {
             key: 'reason',
-            label: 'İadə səbəbi',
-            render: (productReturn: ProductReturn) => productReturn.reason.length > 50 
+            label: 'Qaytarma səbəbi',
+            render: (productReturn: ProductReturn) => productReturn.reason.length > 50
                 ? productReturn.reason.substring(0, 50) + '...'
                 : productReturn.reason
         }
@@ -102,43 +120,24 @@ export default function Index({ returns }: Props) {
             variant: 'view' as const
         },
         {
-            label: 'İadəni təsdiq et',
-            onClick: (productReturn: ProductReturn) => {
-                router.patch(route('product-returns.approve', productReturn.return_id), {
-                    approved_by: 1 // This should be current user's employee_id
-                });
-            },
-            variant: 'primary' as const,
-            show: (productReturn: ProductReturn) => productReturn.status === 'gozlemede'
-        },
-        {
-            label: 'İadəni göndər',
-            onClick: (productReturn: ProductReturn) => {
-                router.patch(route('product-returns.send', productReturn.return_id));
-            },
-            variant: 'secondary' as const,
-            show: (productReturn: ProductReturn) => productReturn.status === 'tesdiq_edilib'
-        },
-        {
             label: 'Sil',
             onClick: handleDelete,
-            variant: 'delete' as const,
-            show: (productReturn: ProductReturn) => productReturn.status === 'gozlemede'
+            variant: 'delete' as const
         }
     ];
 
     return (
         <AuthenticatedLayout>
-            <Head title="Məhsul İadələri" />
+            <Head title="Məhsul Qaytarmaları" />
 
             <div className="w-full">
                 <div className="md:flex md:items-center md:justify-between mb-6">
                     <div className="flex-1 min-w-0">
                         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                            Məhsul İadələri
+                            Məhsul Qaytarmaları
                         </h2>
                         <p className="mt-1 text-sm text-gray-500">
-                            Təchizatçıya iadə
+                            Təchizatçıya qaytarma
                         </p>
                     </div>
                     <div className="mt-4 flex md:mt-0 md:ml-4">
@@ -146,7 +145,7 @@ export default function Index({ returns }: Props) {
                             href={route('product-returns.create')}
                             className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
-                            İadə əlavə et
+                            Qaytarma əlavə et
                         </Link>
                     </div>
                 </div>

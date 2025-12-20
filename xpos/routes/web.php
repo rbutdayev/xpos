@@ -30,7 +30,6 @@ use App\Http\Controllers\PrinterConfigController;
 use App\Http\Controllers\ReceiptTemplateController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpenseCategoryController;
-use App\Http\Controllers\SupplierPaymentController;
 use App\Http\Controllers\EmployeeSalaryController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\SuperAdminController;
@@ -592,8 +591,12 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Goods Receipt Management
     Route::post('/goods-receipts/search-barcode', [GoodsReceiptController::class, 'searchProductByBarcode'])->name('goods-receipts.search-barcode');
+    Route::post('/goods-receipts/store-async', [GoodsReceiptController::class, 'storeAsync'])->name('goods-receipts.store-async');
+    Route::get('/goods-receipts/job-status/{jobId}', [GoodsReceiptController::class, 'jobStatus'])->name('goods-receipts.job-status');
+    Route::post('/goods-receipts/{goodsReceipt}/complete', [GoodsReceiptController::class, 'complete'])->name('goods-receipts.complete');
     Route::get('/goods-receipts/{goodsReceipt}/view-document', [GoodsReceiptController::class, 'viewDocument'])->name('goods-receipts.view-document');
     Route::get('/goods-receipts/{goodsReceipt}/download-document', [GoodsReceiptController::class, 'downloadDocument'])->name('goods-receipts.download-document');
+    Route::get('/goods-receipts/{goodsReceipt}/print', [GoodsReceiptController::class, 'print'])->name('goods-receipts.print');
     Route::resource('goods-receipts', GoodsReceiptController::class);
     
     Route::get('/warehouse-transfers/search', [WarehouseTransferController::class, 'search'])->name('warehouse-transfers.search');
@@ -606,9 +609,10 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     Route::get('/product-returns/search', [ProductReturnController::class, 'search'])->name('product-returns.search');
     Route::post('/product-returns/products-by-supplier', [ProductReturnController::class, 'getProductsBySupplier'])->name('product-returns.products-by-supplier');
-    Route::patch('/product-returns/{return}/approve', [ProductReturnController::class, 'approve'])->name('product-returns.approve');
-    Route::patch('/product-returns/{return}/send', [ProductReturnController::class, 'send'])->name('product-returns.send');
-    Route::patch('/product-returns/{return}/complete', [ProductReturnController::class, 'complete'])->name('product-returns.complete');
+    Route::get('/product-returns/{productReturn}/print', [ProductReturnController::class, 'print'])->name('product-returns.print');
+    Route::patch('/product-returns/{productReturn}/approve', [ProductReturnController::class, 'approve'])->name('product-returns.approve');
+    Route::patch('/product-returns/{productReturn}/send', [ProductReturnController::class, 'send'])->name('product-returns.send');
+    Route::patch('/product-returns/{productReturn}/complete', [ProductReturnController::class, 'complete'])->name('product-returns.complete');
     Route::resource('product-returns', ProductReturnController::class);
     
     Route::get('/alerts/search', [MinMaxAlertController::class, 'search'])->name('alerts.search');
@@ -642,6 +646,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     Route::get('/sales/search', [SaleController::class, 'search'])->name('sales.search');
     Route::resource('sales', SaleController::class)->except(['create']);
+    Route::post('/sales/{id}/restore', [SaleController::class, 'restore'])->name('sales.restore');
     Route::patch('/sales/{sale}/make-credit', [SaleController::class, 'makeCredit'])->name('sales.make-credit');
     Route::patch('/sales/{sale}/pay-credit', [SaleController::class, 'paySaleCredit'])->name('sales.pay-credit');
     Route::get('/sales/{sale}/print-options', [SaleController::class, 'getPrintOptions'])->name('sales.print-options');
@@ -716,11 +721,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/expenses/{expense}/view-receipt', [ExpenseController::class, 'viewReceipt'])->name('expenses.view-receipt');
     Route::get('/expenses/{expense}/download-receipt', [ExpenseController::class, 'downloadReceipt'])->name('expenses.download-receipt');
     Route::resource('expenses', ExpenseController::class);
-    
-    // Supplier Payments
-    Route::get('/supplier-payments/search', [SupplierPaymentController::class, 'search'])->name('supplier-payments.search');
-    Route::resource('supplier-payments', SupplierPaymentController::class);
-    
+
     // Employee Salaries
     Route::get('/employee-salaries/search', [EmployeeSalaryController::class, 'search'])->name('employee-salaries.search');
     Route::patch('/employee-salaries/{employee_salary}/mark-as-paid', [EmployeeSalaryController::class, 'markAsPaid'])->name('employee-salaries.mark-as-paid');

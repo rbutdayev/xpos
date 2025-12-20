@@ -297,17 +297,70 @@ export interface SupplierCredit {
     total_paid_amount?: number;
 }
 
+export interface GoodsReceiptItem {
+    id: number;
+    goods_receipt_id: number;
+    account_id: number;
+    product_id: number;
+    variant_id?: number;
+    quantity: number;
+    unit: string;
+    unit_cost: number;
+    total_cost: number;
+    discount_percent: number;
+    additional_data?: Record<string, any>;
+    created_at?: string;
+    updated_at?: string;
+    // Relations
+    product?: Product;
+    variant?: ProductVariant;
+}
+
+export interface Expense {
+    expense_id: number | null;
+    description: string;
+    amount: number;
+    remaining_amount?: number;
+    expense_date: string;
+    due_date?: string;
+    reference_number: string;
+    payment_method: string;
+    status?: string;
+    payment_status?: string;
+    type?: 'supplier_credit' | 'goods_receipt';
+    supplier_credit_id?: number;
+    goods_receipt_id?: number;
+    receipt_file_path: string | null;
+    category?: {
+        category_id: number;
+        name: string;
+        type: string;
+    } | null;
+    branch?: {
+        id: number;
+        name: string;
+    } | null;
+    supplier?: {
+        id: number;
+        name: string;
+    } | null;
+    supplier_id?: number;
+    user?: {
+        id: number;
+        name: string;
+    };
+    notes?: string;
+    created_at?: string;
+}
+
 export interface GoodsReceipt {
     id: number;
     account_id: number;
     warehouse_id: number;
-    product_id: number;
     supplier_id: number;
     employee_id?: number;
     receipt_number: string;
-    quantity: number;
-    unit: string;
-    unit_cost: number;
+    invoice_number?: string;
     total_cost: number;
     document_path?: string;
     notes?: string;
@@ -316,19 +369,29 @@ export interface GoodsReceipt {
     payment_method: 'instant' | 'credit';
     due_date?: string;
     supplier_credit_id?: number;
+    status: 'draft' | 'completed';
     created_at?: string;
     updated_at?: string;
     // Relations
+    items?: GoodsReceiptItem[];
     warehouse?: Warehouse;
-    product?: Product;
     supplier?: Supplier;
     employee?: Employee;
     supplier_credit?: SupplierCredit;
+    expenses?: Expense[];
     // Computed attributes
     has_document?: boolean;
     is_unpaid?: boolean;
     document_view_url?: string;
     document_download_url?: string;
+    // Legacy fields for backward compatibility (deprecated after migration)
+    product_id?: number;
+    variant_id?: number;
+    quantity?: number;
+    unit?: string;
+    unit_cost?: number;
+    product?: Product;
+    variant?: ProductVariant;
 }
 
 export interface GoodsReceiptFormData {
@@ -716,9 +779,12 @@ export interface Sale {
     sale_date: string;
     created_at?: string;
     updated_at?: string;
+    deleted_at?: string;
+    deleted_by?: number;
     customer?: Customer;
     branch?: Branch;
     user?: User;
+    deleted_by_user?: User;
     items?: SaleItem[];
     payments?: Payment[];
     negative_stock_alerts?: NegativeStockAlert[];
@@ -828,14 +894,30 @@ export interface Action {
     className?: string;
 }
 
+export interface ProductReturnItem {
+    id: number;
+    return_id: number;
+    account_id: number;
+    product_id: number;
+    variant_id?: number;
+    quantity: string;
+    unit: string;
+    unit_cost: string;
+    total_cost: string;
+    created_at?: string;
+    updated_at?: string;
+    product?: Product;
+    variant?: ProductVariant;
+}
+
 export interface ProductReturn {
     return_id: number;
     account_id: number;
     supplier_id: number;
-    product_id: number;
+    product_id?: number;
     warehouse_id: number;
-    quantity: number;
-    unit_cost: number;
+    quantity?: number;
+    unit_cost?: number;
     total_cost: number;
     reason: string;
     status: 'gozlemede' | 'tesdiq_edilib' | 'gonderildi' | 'tamamlanib' | 'ləğv_edildi';
@@ -845,13 +927,15 @@ export interface ProductReturn {
     refund_amount?: number;
     refund_date?: string;
     supplier_response?: string;
-    created_at?: string;
+    created_at: string;
     updated_at?: string;
     supplier?: Supplier;
     product?: Product;
+    variant?: ProductVariant;
     warehouse?: Warehouse;
     requestedBy?: User;
     approvedBy?: User;
+    items?: ProductReturnItem[];
 }
 
 export interface WarehouseTransfer {

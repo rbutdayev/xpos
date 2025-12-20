@@ -30,7 +30,7 @@ export default function Show({ company, branches = [], warehouses = [], users = 
         <AuthenticatedLayout>
             <Head title={`Şirkət: ${company.name}`} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 <Header company={company} onDelete={deleteCompany} />
 
                 <TabsNav active={activeTab} onChange={(t) => setActiveTab(t)} />

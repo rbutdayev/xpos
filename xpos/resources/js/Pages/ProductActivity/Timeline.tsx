@@ -128,8 +128,7 @@ export default function Timeline({ products, warehouses, activities, productInfo
             <div className="mx-auto sm:px-6 lg:px-8 mb-6">
                 <InventoryNavigation currentRoute="product-activity.timeline" />
             </div>
-            <div className="py-6">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-6 px-4 sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <h2 className="text-2xl font-semibold text-gray-900 mb-6">
@@ -349,7 +348,6 @@ export default function Timeline({ products, warehouses, activities, productInfo
                         </div>
                     </div>
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

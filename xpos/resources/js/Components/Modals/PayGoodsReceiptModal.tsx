@@ -33,8 +33,14 @@ export default function PayGoodsReceiptModal({
     // Use the first branch as default (user can change if needed)
     const defaultBranchId = branches.length > 0 ? String(branches[0].id) : '';
 
+    // Check if this is a batch payment
+    const isBatch = (goodsReceipt as any).isBatch;
+    const batchItems = (goodsReceipt as any).batchItems || [];
+
     const [formData, setFormData] = useState({
-        goods_receipt_id: goodsReceipt.id,
+        goods_receipt_id: isBatch ? undefined : goodsReceipt.id,
+        batch_item_ids: isBatch ? batchItems.map((item: any) => item.id) : undefined,
+        batch_id: isBatch ? (goodsReceipt as any).batch_id : undefined,
         payment_amount: remainingAmount,
         category_id: '',
         branch_id: defaultBranchId,
@@ -45,9 +51,15 @@ export default function PayGoodsReceiptModal({
     // Reset form data when modal opens with a new receipt
     useEffect(() => {
         if (show) {
+            const isBatch = (goodsReceipt as any).isBatch;
+            const batchItems = (goodsReceipt as any).batchItems || [];
+            const remaining = parseFloat(String(goodsReceipt.supplier_credit?.remaining_amount || goodsReceipt.total_cost || 0));
+
             setFormData({
-                goods_receipt_id: goodsReceipt.id,
-                payment_amount: remainingAmount,
+                goods_receipt_id: isBatch ? undefined : goodsReceipt.id,
+                batch_item_ids: isBatch ? batchItems.map((item: any) => item.id) : undefined,
+                batch_id: isBatch ? (goodsReceipt as any).batch_id : undefined,
+                payment_amount: remaining,
                 category_id: '',
                 branch_id: branches.length > 0 ? String(branches[0].id) : '',
                 payment_method: 'cash',
@@ -55,19 +67,54 @@ export default function PayGoodsReceiptModal({
             });
             setErrors({});
         }
-    }, [show, goodsReceipt.id, remainingAmount, branches]);
+    }, [show, goodsReceipt.id]);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        setProcessing(true);
         setErrors({});
 
-        router.post(route('expenses.pay-goods-receipt'), formData, {
+        // Validate category is selected
+        if (!formData.category_id) {
+            setErrors({ category_id: 'Xerc kateqoriyası seçilməlidir' });
+            return;
+        }
+
+        // Validate branch is selected
+        if (!formData.branch_id) {
+            setErrors({ branch_id: 'Filial seçilməlidir' });
+            return;
+        }
+
+        // Validate payment amount
+        if (!formData.payment_amount || formData.payment_amount <= 0) {
+            setErrors({ payment_amount: 'Ödəniş məbləği düzgün deyil' });
+            return;
+        }
+
+        setProcessing(true);
+
+        // Build the payload based on whether it's a batch payment or single payment
+        const payload: any = {
+            payment_amount: formData.payment_amount,
+            category_id: formData.category_id,
+            branch_id: formData.branch_id,
+            payment_method: formData.payment_method,
+            notes: formData.notes,
+        };
+
+        if (isBatch) {
+            payload.batch_item_ids = formData.batch_item_ids;
+            payload.batch_id = formData.batch_id;
+        } else {
+            payload.goods_receipt_id = formData.goods_receipt_id;
+        }
+
+        router.post(route('expenses.pay-goods-receipt'), payload, {
             preserveState: true,
             onSuccess: (page) => {
                 onClose();
                 // Reload the page to show updated data
-                router.reload({ only: ['receipts'] });
+                router.reload();
             },
             onError: (errors: any) => {
                 setErrors(errors);
@@ -156,13 +203,13 @@ export default function PayGoodsReceiptModal({
                         <select
                             id="category_id"
                             value={formData.category_id}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                             required
                         >
                             <option value="">Kateqoriya seçin</option>
                             {categories.map((category) => (
-                                <option key={category.category_id} value={category.category_id}>
+                                <option key={category.category_id} value={String(category.category_id)}>
                                     {category.name}
                                 </option>
                             ))}
@@ -175,13 +222,13 @@ export default function PayGoodsReceiptModal({
                         <select
                             id="branch_id"
                             value={formData.branch_id}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, branch_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                             required
                         >
                             <option value="">Filial seçin</option>
                             {branches.map((branch) => (
-                                <option key={branch.id} value={branch.id}>
+                                <option key={branch.id} value={String(branch.id)}>
                                     {branch.name}
                                 </option>
                             ))}
@@ -194,8 +241,8 @@ export default function PayGoodsReceiptModal({
                         <select
                             id="payment_method"
                             value={formData.payment_method}
-                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, payment_method: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                             required
                         >
                             {Object.entries(paymentMethods).map(([key, label]) => (

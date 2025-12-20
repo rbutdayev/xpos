@@ -168,8 +168,7 @@ export default function Edit({ service, customers, customerItems, employees, pro
         <AuthenticatedLayout>
             <Head title={`${serviceConfig.nameSingular} Redaktə Et`} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             {/* General Error Message */}
@@ -602,7 +601,6 @@ export default function Edit({ service, customers, customerItems, employees, pro
                         </div>
                     </div>
                 </div>
-            </div>
         </AuthenticatedLayout>
     );
 }

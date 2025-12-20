@@ -204,34 +204,39 @@ class SupplierController extends Controller
     {
         Gate::authorize('access-account-data', $supplier);
 
-        $products = \App\Models\Product::whereIn('id', function($query) use ($supplier) {
-            $query->select('product_id')
-                ->from('goods_receipts')
-                ->where('supplier_id', $supplier->id)
-                ->where('account_id', $supplier->account_id)
+        $products = \App\Models\Product::where('account_id', $supplier->account_id)
+        ->whereIn('id', function($query) use ($supplier) {
+            $query->select('gri.product_id')
+                ->from('goods_receipt_items as gri')
+                ->join('goods_receipts as gr', 'gri.goods_receipt_id', '=', 'gr.id')
+                ->where('gr.supplier_id', $supplier->id)
+                ->where('gr.account_id', $supplier->account_id)
                 ->distinct();
         })
         ->get()
         ->map(function($product) use ($supplier) {
             // Get purchase data for this product from this supplier
-            $receipts = \App\Models\GoodsReceipt::where('supplier_id', $supplier->id)
-                ->where('product_id', $product->id)
-                ->where('account_id', $supplier->account_id);
+            $receiptItems = \App\Models\GoodsReceiptItem::where('account_id', $supplier->account_id)
+            ->whereHas('goodsReceipt', function($q) use ($supplier) {
+                $q->where('supplier_id', $supplier->id)
+                  ->where('account_id', $supplier->account_id);
+            })
+            ->where('product_id', $product->id);
 
-            $latestReceipt = $receipts->latest()->first();
-            $avgPrice = $receipts->avg('unit_cost');
-            $totalQuantity = $receipts->sum('quantity');
-            $receiptCount = $receipts->count();
+            $latestItem = $receiptItems->latest()->first();
+            $avgPrice = $receiptItems->avg('unit_cost') ?? 0;
+            $totalQuantity = $receiptItems->sum('quantity') ?? 0;
+            $purchaseCount = $receiptItems->count();
 
             // Add purchase data as "pivot" for frontend compatibility
             $product->pivot = (object) [
-                'supplier_price' => round($avgPrice, 2) ?? 0,
-                'latest_price' => $latestReceipt->unit_cost ?? 0,
+                'supplier_price' => $avgPrice > 0 ? round($avgPrice, 2) : 0,
+                'latest_price' => $latestItem->unit_cost ?? 0,
                 'total_purchased' => $totalQuantity,
-                'purchase_count' => $receiptCount,
-                'last_purchased' => $latestReceipt->created_at ?? null,
+                'purchase_count' => $purchaseCount,
+                'last_purchased' => $latestItem?->created_at ?? null,
                 'is_active' => true,
-                'notes' => "Son alış: " . ($latestReceipt->created_at ? $latestReceipt->created_at->format('d.m.Y') : 'N/A')
+                'notes' => "Son alış: " . ($latestItem?->created_at?->format('d.m.Y') ?? 'N/A')
             ];
 
             return $product;

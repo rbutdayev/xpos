@@ -17,29 +17,24 @@ class GoodsReceipt extends Model
     protected $fillable = [
         'account_id',
         'warehouse_id',
-        'product_id',
-        'variant_id',        // Product variant (size/color) - nullable
         'supplier_id',
         'employee_id',
         'receipt_number',
-        'quantity',
-        'unit',
-        'unit_cost',
-        'total_cost',
+        'invoice_number',    // Supplier's invoice number (optional)
+        'total_cost',        // Sum of all items' total_cost
         'document_path',
         'notes',
-        'additional_data',
+        'additional_data',   // Receipt-level metadata
         'payment_status',
         'payment_method',
         'due_date',
         'supplier_credit_id',
+        'status',            // Draft or completed status
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity' => 'decimal:3',
-            'unit_cost' => 'decimal:2',
             'total_cost' => 'decimal:2',
             'additional_data' => 'json',
             'due_date' => 'date',
@@ -56,15 +51,9 @@ class GoodsReceipt extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
-    public function product(): BelongsTo
+    public function items()
     {
-        return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'variant_id')
-            ->where('account_id', $this->account_id);
+        return $this->hasMany(GoodsReceiptItem::class);
     }
 
     public function supplier(): BelongsTo
@@ -82,14 +71,14 @@ class GoodsReceipt extends Model
         return $this->belongsTo(SupplierCredit::class);
     }
 
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class, 'goods_receipt_id', 'id');
+    }
+
     public function scopeByWarehouse(Builder $query, $warehouseId): Builder
     {
         return $query->where('warehouse_id', $warehouseId);
-    }
-
-    public function scopeByProduct(Builder $query, $productId): Builder
-    {
-        return $query->where('product_id', $productId);
     }
 
     public function scopeBySupplier(Builder $query, $supplierId): Builder
@@ -100,6 +89,21 @@ class GoodsReceipt extends Model
     public function scopeByDateRange(Builder $query, $startDate, $endDate): Builder
     {
         return $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    public function scopeByInvoice(Builder $query, $invoiceNumber): Builder
+    {
+        return $query->where('invoice_number', $invoiceNumber);
+    }
+
+    public function scopeDrafts(Builder $query): Builder
+    {
+        return $query->where('status', 'draft');
+    }
+
+    public function scopeCompleted(Builder $query): Builder
+    {
+        return $query->where('status', 'completed');
     }
 
     public function generateReceiptNumber(): string
@@ -120,6 +124,22 @@ class GoodsReceipt extends Model
         return $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Calculate total cost from all items
+     */
+    public function calculateTotalCost(): float
+    {
+        return (float) $this->items()->sum('total_cost');
+    }
+
+    /**
+     * Get item count
+     */
+    public function getItemCountAttribute(): int
+    {
+        return $this->items()->count();
+    }
+
     public function hasDocument(): bool
     {
         return !empty($this->document_path);
@@ -131,6 +151,22 @@ class GoodsReceipt extends Model
     public function isUnpaid(): bool
     {
         return $this->payment_status === 'unpaid';
+    }
+
+    /**
+     * Check if the goods receipt is a draft
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    /**
+     * Check if the goods receipt is completed
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed';
     }
 
     /**
@@ -160,7 +196,7 @@ class GoodsReceipt extends Model
         $supplierCredit = SupplierCredit::create([
             'account_id' => $this->account_id,
             'supplier_id' => $this->supplier_id,
-            'branch_id' => $this->warehouse->branch_id ?? null,
+            'branch_id' => $this->warehouse->branches->first()?->id ?? Branch::where('account_id', $this->account_id)->first()?->id,
             'type' => 'credit',
             'amount' => $this->total_cost,
             'remaining_amount' => $this->total_cost,
@@ -168,7 +204,7 @@ class GoodsReceipt extends Model
             'credit_date' => $this->created_at,
             'due_date' => $this->due_date,
             'status' => 'pending',
-            'user_id' => auth()->id(),
+            'user_id' => $this->employee_id,
             'notes' => "Avtomatik yaradıldı - Mal qəbulu: {$this->receipt_number}",
         ]);
 
@@ -199,20 +235,14 @@ class GoodsReceipt extends Model
         parent::boot();
 
         static::creating(function ($goodsReceipt) {
-            if (empty($goodsReceipt->receipt_number)) {
+            // Only generate receipt_number for completed receipts, not drafts
+            if (empty($goodsReceipt->receipt_number) && $goodsReceipt->status === 'completed') {
                 $goodsReceipt->receipt_number = $goodsReceipt->generateReceiptNumber();
             }
 
-            if ($goodsReceipt->unit_cost && $goodsReceipt->quantity) {
-                $goodsReceipt->total_cost = $goodsReceipt->unit_cost * $goodsReceipt->quantity;
-            }
+            // Don't auto-calculate total_cost here - it's set in the controller with discount applied
         });
 
-
-        static::updating(function ($goodsReceipt) {
-            if ($goodsReceipt->unit_cost && $goodsReceipt->quantity) {
-                $goodsReceipt->total_cost = $goodsReceipt->unit_cost * $goodsReceipt->quantity;
-            }
-        });
+        // Removed updating event - total_cost is now managed in controller with discount logic
     }
 }

@@ -6,6 +6,7 @@ use App\Traits\BelongsToAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductReturn extends Model
 {
@@ -76,6 +77,11 @@ class ProductReturn extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'approved_by', 'id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ProductReturnItem::class, 'return_id', 'return_id');
     }
 
     public function scopeByStatus($query, string $status)

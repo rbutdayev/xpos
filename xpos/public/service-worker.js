@@ -1,7 +1,6 @@
-const CACHE_NAME = 'onyx-xpos-v5';
-// Only cache essential static pages - no external redirects
+const CACHE_NAME = 'onyx-xpos-v6';
+// Only cache essential static assets - exclude pages with CSRF tokens
 const urlsToCache = [
-  '/login',
   '/manifest.json'
 ];
 
@@ -61,12 +60,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Don't cache API requests, dynamic data, or shop product pages
-  // These should always fetch fresh data from the network
+  // Don't cache API requests, dynamic data, authentication pages, or pages with CSRF tokens
+  // These should always fetch fresh data from the network to prevent token mismatch
   const skipCache =
     url.pathname.includes('/api/') ||
     url.pathname.includes('/shop/') ||
     url.pathname.includes('/products/') ||
+    url.pathname.includes('/login') ||
+    url.pathname.includes('/logout') ||
+    url.pathname.includes('/register') ||
     url.pathname.includes('/dashboard') ||
     url.pathname.includes('/sales') ||
     url.pathname.includes('/inventory') ||

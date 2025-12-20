@@ -10,24 +10,73 @@ import { initBarcodePrinter } from './utils/barcodePrinter';
 // Cache bust: Route parameter fix for stock-movements applied
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-// CRITICAL: Set CSRF token IMMEDIATELY before anything else runs
-// This prevents 419 errors on first action after login
-const csrfTokenMeta = document.head.querySelector('meta[name="csrf-token"]');
-if (csrfTokenMeta && window.axios) {
-    const csrfToken = csrfTokenMeta.getAttribute('content');
-    if (csrfToken) {
-        window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+// Store CSRF token reference - will be initialized when DOM is ready
+let lastKnownCSRFToken: string | null | undefined = null;
+
+// CRITICAL: Initialize CSRF token safely after DOM is ready
+// This ensures the meta tag has the fresh token from session regeneration
+function initializeCSRFToken() {
+    // CRITICAL FIX: Check sessionStorage for pending token from previous page
+    // This handles tokens sent via response header before page reload
+    const pendingToken = sessionStorage.getItem('pending_csrf_token');
+
+    if (pendingToken) {
+        // Update meta tag with pending token
+        const csrfTokenMeta = document.head.querySelector('meta[name="csrf-token"]');
+        if (csrfTokenMeta) {
+            csrfTokenMeta.setAttribute('content', pendingToken);
+        }
+
+        // Update axios
+        if (window.axios) {
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = pendingToken;
+        }
+
+        lastKnownCSRFToken = pendingToken;
+
+        // Clear pending token after applying
+        sessionStorage.removeItem('pending_csrf_token');
+    } else {
+
+        // No pending token, use meta tag value
+        const csrfTokenMeta = document.head.querySelector('meta[name="csrf-token"]');
+        if (csrfTokenMeta && window.axios) {
+            const csrfToken = csrfTokenMeta.getAttribute('content');
+            if (csrfToken) {
+                window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+                lastKnownCSRFToken = csrfToken;
+            }
+        }
     }
 }
 
-// Store CSRF token on page load for comparison
-let lastKnownCSRFToken = csrfTokenMeta?.getAttribute('content');
+// Run token initialization immediately if DOM is already loaded
+// Otherwise wait for DOMContentLoaded event
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCSRFToken);
+} else {
+    // DOM is already loaded (script is deferred or dynamically loaded)
+    initializeCSRFToken();
+}
 
 // Global error handler for Inertia requests
 document.addEventListener('inertia:error', (event: any) => {
     // Handle 419 CSRF token mismatch errors
     if (event.detail?.response?.status === 419) {
         event.preventDefault(); // Prevent default Inertia error handling
+
+        // CRITICAL FIX: Extract fresh CSRF token from 419 response headers BEFORE reloading
+        // Laravel sends the new token even in error responses
+        const response = event.detail?.response;
+
+        if (response?.headers) {
+            const freshToken = response.headers['x-csrf-token'] || response.headers['X-CSRF-TOKEN'];
+
+            if (freshToken) {
+                // Save to sessionStorage so it survives the reload
+                sessionStorage.setItem('pending_csrf_token', freshToken);
+            }
+        }
 
         // Check if this is a logout request - if so, handle silently
         const url = event.detail?.url || '';
@@ -92,6 +141,50 @@ router.on('before', (event) => {
         event.detail.visit.headers['X-Locale'] = locale;
     }
 });
+
+// CRITICAL FIX: Intercept XMLHttpRequest prototype to capture CSRF token
+// This intercepts ALL XHR requests (which axios uses)
+(function() {
+    const originalOpen = XMLHttpRequest.prototype.open;
+    const originalSend = XMLHttpRequest.prototype.send;
+
+    const xhrRequestMap = new WeakMap();
+
+    XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, ...args: any[]) {
+        const url = args[1];
+        const urlStr = String(url);
+        xhrRequestMap.set(this, urlStr);
+        return originalOpen.apply(this, args as any);
+    };
+
+    XMLHttpRequest.prototype.send = function(this: XMLHttpRequest, ...args: any[]) {
+        this.addEventListener('load', function(this: XMLHttpRequest) {
+            // Get CSRF token from response header
+            const freshToken = this.getResponseHeader('x-csrf-token') || this.getResponseHeader('X-CSRF-TOKEN');
+
+            if (freshToken) {
+                // CRITICAL: Store in sessionStorage so it survives page reload
+                sessionStorage.setItem('pending_csrf_token', freshToken);
+
+                // Update meta tag
+                const metaTag = document.head.querySelector('meta[name="csrf-token"]');
+                if (metaTag) {
+                    metaTag.setAttribute('content', freshToken);
+                }
+
+                // Update axios defaults
+                if ((window as any).axios) {
+                    (window as any).axios.defaults.headers.common['X-CSRF-TOKEN'] = freshToken;
+                }
+
+                // Update last known token
+                lastKnownCSRFToken = freshToken;
+            }
+        });
+
+        return originalSend.apply(this, args as any);
+    };
+})();
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

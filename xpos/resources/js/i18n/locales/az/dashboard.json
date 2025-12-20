@@ -35,9 +35,12 @@
     "thisMonthExpenses": "Bu Ay Xərclər",
     "profit": "Mənfəət",
     "margin": "margin",
-    "pendingPayment": "Gözləyən Ödəniş",
+    "pendingPayment": "Borclu Müştəri",
+    "supplierDebts": "Təchizatçı Borcları",
     "customer": "müştəri",
-    "customers": "müştəri"
+    "customers": "müştəri",
+    "supplier": "təchizatçı",
+    "suppliers": "təchizatçı"
   },
 
   "operational": {
@@ -244,6 +247,12 @@
       "avgRevenue": "Orta Gəlir",
       "revenue": "Gəlir",
       "salesCount": "Satış sayı"
+    }
+  },
+  "new": {
+    "financial": {
+      "customerCount": "{{count}} müştəri",
+      "supplierCount": "{{count}} təchizatçı"
     }
   }
 }

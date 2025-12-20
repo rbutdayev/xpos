@@ -51,7 +51,7 @@ export default function Index({ product, variants }: Props) {
     <AuthenticatedLayout>
       <Head title={`${product.name} - Variantlar`} />
 
-      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6 lg:px-8">
         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           {/* Header */}
           <div className="p-6 bg-white border-b border-gray-200">

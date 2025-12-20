@@ -91,7 +91,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
             <Head title={t('edit.title', { saleNumber: sale.sale_number })} />
 
             <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <div className="px-4 sm:px-6 lg:px-8 space-y-6">
 
                     {/* Sale Summary (Read-only) */}
                     <div className="bg-gray-50 overflow-hidden shadow-sm sm:rounded-lg p-6">

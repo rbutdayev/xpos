@@ -926,7 +926,8 @@ class ProductController extends Controller
                 'user_id' => Auth::id(),
                 'exception' => $e->getTraceAsString()
             ]);
-            return response()->json(['error' => 'Search failed'], 500);
+            // Return an empty array instead of an error object to prevent .map() errors
+            return response()->json([]);
         }
     }
 

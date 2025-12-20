@@ -36,8 +36,11 @@
     "profit": "Mənfəət",
     "margin": "margin",
     "pendingPayment": "Gözləyən Ödəniş",
+    "supplierDebts": "Təchizatçı Borcları",
     "customer": "müştəri",
-    "customers": "müştəri"
+    "customers": "müştəri",
+    "supplier": "təchizatçı",
+    "suppliers": "təchizatçı"
   },
 
   "operational": {
@@ -265,7 +268,8 @@
       "expensesThisMonth": "Xərclər Bu Ay",
       "netProfit": "Xalis Mənfəət",
       "marginLabel": "Marja: {{margin}}%",
-      "customerCount": "{{count}} müştəri"
+      "customerCount": "{{count}} müştəri",
+      "supplierCount": "{{count}} təchizatçı"
     },
     "operational": {
       "subtitle": "Müştəri və stok statistikası",

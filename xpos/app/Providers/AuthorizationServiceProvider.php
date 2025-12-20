@@ -123,6 +123,11 @@ class AuthorizationServiceProvider extends ServiceProvider
             return $user->isOwner() && $user->account && $user->account->isActive();
         });
 
+        // Delete Sales - Only account owner can delete sales
+        Gate::define('delete-sales', function (User $user) {
+            return $user->isOwner() && $user->account && $user->account->isActive();
+        });
+
         // Subscription management
         Gate::define('manage-subscription', function (User $user) {
             return $user->isOwner();
@@ -195,13 +200,16 @@ class AuthorizationServiceProvider extends ServiceProvider
             }
 
             // If the model has an account_id, check it matches user's account
-            if (isset($model->account_id)) {
+            if (property_exists($model, 'account_id') || array_key_exists('account_id', $model->getAttributes())) {
                 return $model->account_id === $user->account_id;
             }
 
             // If the model belongs to an account through a relationship
             if (method_exists($model, 'account')) {
-                return $model->account->id === $user->account_id;
+                $account = $model->account;
+                if ($account) {
+                    return $account->id === $user->account_id;
+                }
             }
 
             return true;

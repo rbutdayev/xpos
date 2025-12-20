@@ -14,6 +14,7 @@ use App\Models\NegativeStockAlert;
 use App\Models\StockMovement;
 use App\Models\ReceiptTemplate;
 use App\Services\ThermalPrintService;
+use App\Services\SaleDeletionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -86,11 +87,33 @@ class SaleController extends Controller
             'has_negative_stock' => 'nullable|boolean',
             'payment_status' => 'nullable|string|in:paid,credit,partial',
             'online' => 'nullable|boolean',
+            'show_deleted' => 'nullable|string',
         ]);
 
-        $query = Sale::with(['customer', 'branch', 'user', 'items.product', 'customerCredit'])
-            ->where('account_id', Auth::user()->account_id)
-            ->countable(); // Only include POS sales + completed online orders
+        // Include deleted sales if requested and user is account owner
+        $showDeleted = $request->input('show_deleted') === 'true' || $request->input('show_deleted') === '1';
+
+        \Log::info('Sales Index Query', [
+            'show_deleted_param' => $request->input('show_deleted'),
+            'show_deleted_bool' => $showDeleted,
+            'user_role' => Auth::user()->role,
+        ]);
+
+        $query = Sale::query();
+        if ($showDeleted && Auth::user()->role === 'account_owner') {
+            \Log::info('Showing ONLY deleted sales');
+            $query = Sale::onlyTrashed();
+        } else {
+            \Log::info('Showing active sales');
+        }
+
+        $query->with(['customer', 'branch', 'user', 'items.product', 'customerCredit', 'deletedBy'])
+            ->where('account_id', Auth::user()->account_id);
+
+        // Only apply countable scope if not showing deleted sales
+        if (!$showDeleted) {
+            $query->countable(); // Only include POS sales + completed online orders
+        }
 
         // Filter by sales_staff's branch if user is sales_staff
         if (Auth::user()->role === 'sales_staff') {
@@ -156,10 +179,11 @@ class SaleController extends Controller
 
         return Inertia::render('Sales/Index', [
             'sales' => $sales,
-            'filters' => $request->only(['search', 'status', 'branch_id', 'date_from', 'date_to', 'has_negative_stock', 'payment_status']),
+            'filters' => $request->only(['search', 'status', 'branch_id', 'date_from', 'date_to', 'has_negative_stock', 'payment_status', 'show_deleted']),
             'branches' => $branches,
             'dailySummary' => $dailySummary,
             'summaryDate' => $summaryDate,
+            'canDeleteSales' => Auth::user()->role === 'account_owner',
         ]);
     }
 
@@ -213,7 +237,7 @@ class SaleController extends Controller
         // Add payment validation only if not a full credit sale
         if (!$request->input('credit_amount') || $request->input('credit_amount', 0) < $request->input('total', 0)) {
             $rules['payments'] = 'required|array|min:1';
-            $rules['payments.*.method'] = 'required|in:nağd,kart,köçürmə';
+            $rules['payments.*.method'] = 'required|in:cash,card,bank_transfer';
             $rules['payments.*.amount'] = 'required|numeric|min:0';
             $rules['payments.*.transaction_id'] = 'nullable|string|max:255';
             $rules['payments.*.card_type'] = 'nullable|string|max:50';
@@ -222,7 +246,7 @@ class SaleController extends Controller
         } else {
             // For full credit sales, payments are optional
             $rules['payments'] = 'nullable|array';
-            $rules['payments.*.method'] = 'nullable|in:nağd,kart,köçürmə';
+            $rules['payments.*.method'] = 'nullable|in:cash,card,bank_transfer';
             $rules['payments.*.amount'] = 'nullable|numeric|min:0';
             $rules['payments.*.transaction_id'] = 'nullable|string|max:255';
             $rules['payments.*.card_type'] = 'nullable|string|max:50';
@@ -328,7 +352,7 @@ class SaleController extends Controller
             }
 
             // Handle credit sale if specified
-            if ($validated['credit_amount'] && $validated['credit_amount'] > 0) {
+            if (isset($validated['credit_amount']) && $validated['credit_amount'] > 0) {
                 $creditAmount = $validated['credit_amount'];
                 $totalPaid = !empty($validated['payments']) ? array_sum(array_column($validated['payments'], 'amount')) : 0;
                 
@@ -360,10 +384,11 @@ class SaleController extends Controller
             abort(403);
         }
 
-        $sale->load(['customer', 'branch', 'user', 'items.product', 'payments', 'negativeStockAlerts.product', 'customerCredit']);
+        $sale->load(['customer', 'branch', 'user', 'items.product', 'payments', 'negativeStockAlerts.product', 'customerCredit', 'deletedBy']);
 
         return Inertia::render('Sales/Show', [
             'sale' => $sale,
+            'canDeleteSales' => Auth::user()->role === 'account_owner',
         ]);
     }
 
@@ -376,9 +401,15 @@ class SaleController extends Controller
             abort(403);
         }
 
+        // Don't allow editing deleted sales
+        if ($sale->trashed()) {
+            return redirect()->route('sales.show', $sale->sale_id)
+                ->with('error', 'Silinmiš satış dəyişdirilə bilməz.');
+        }
+
         // Allow editing for payment-related changes, restrict only for refunded sales
         if ($sale->status === 'refunded') {
-            return redirect()->route('sales.show', $sale)
+            return redirect()->route('sales.show', $sale->sale_id)
                 ->with('error', 'Geri qaytarılmış satış dəyişdirilə bilməz.');
         }
 
@@ -397,9 +428,20 @@ class SaleController extends Controller
     {
         Gate::authorize('edit-account-data');
 
+        // Verify sale belongs to current account
+        if ($sale->account_id !== Auth::user()->account_id) {
+            abort(403);
+        }
+
+        // Don't allow editing deleted sales
+        if ($sale->trashed()) {
+            return redirect()->route('sales.show', $sale->sale_id)
+                ->with('error', 'Silinmiš satış dəyişdirilə bilməz.');
+        }
+
         // Allow limited editing for completed sales (mainly for customer assignment and notes)
         if ($sale->status === 'refunded') {
-            return redirect()->route('sales.show', $sale)
+            return redirect()->route('sales.show', $sale->sale_id)
                 ->with('error', 'Geri qaytarılmış satış dəyişdirilə bilməz.');
         }
 
@@ -437,23 +479,79 @@ class SaleController extends Controller
             ]);
         }
 
-        return redirect()->route('sales.show', $sale)
+        return redirect()->route('sales.show', $sale->sale_id)
             ->with('success', 'Satış məlumatları yeniləndi.');
     }
 
-    public function destroy(Sale $sale)
+    public function destroy(Sale $sale, SaleDeletionService $deletionService)
     {
-        Gate::authorize('delete-account-data');
+        // Only account owner can delete sales
+        Gate::authorize('delete-sales');
 
-        if ($sale->status === 'completed') {
-            return redirect()->route('sales.index')
-                ->with('error', 'Tamamlanmış satış silinə bilməz.');
+        // Verify sale belongs to current account
+        if ($sale->account_id !== Auth::user()->account_id) {
+            abort(403);
         }
 
-        $sale->delete();
+        // Prevent deletion of already deleted sales
+        if ($sale->trashed()) {
+            return redirect()->route('sales.index')
+                ->with('error', 'Bu satış artıq silinib.');
+        }
 
-        return redirect()->route('sales.index')
-            ->with('success', 'Satış silindi.');
+        try {
+            // Use the deletion service to properly handle stock restoration and related data
+            $deletionService->deleteSale($sale, Auth::id());
+
+            return redirect()->route('sales.index')
+                ->with('success', 'Satış uğurla silindi. Stoklar bərpa edildi və məbləğ sistemdən çıxarıldı.');
+        } catch (\Exception $e) {
+            \Log::error('Sale deletion failed', [
+                'sale_id' => $sale->sale_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('sales.index')
+                ->with('error', 'Satış silinərkən xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Restore a soft-deleted sale
+     */
+    public function restore($id, \App\Services\SaleRestorationService $restorationService)
+    {
+        // Only account owner can restore sales
+        Gate::authorize('delete-sales');
+
+        // Find the soft-deleted sale
+        $sale = Sale::withTrashed()
+            ->where('sale_id', $id)
+            ->where('account_id', Auth::user()->account_id)
+            ->firstOrFail();
+
+        // Check if sale is actually deleted
+        if (!$sale->trashed()) {
+            return redirect()->route('sales.show', $sale)
+                ->with('error', 'Bu satış silinməyib.');
+        }
+
+        try {
+            $restorationService->restoreSale($sale, Auth::id());
+
+            return redirect()->route('sales.show', $sale)
+                ->with('success', 'Satış uğurla bərpa edildi. Stoklar çıxarıldı və məbləğ sistemə əlavə edildi.');
+        } catch (\Exception $e) {
+            \Log::error('Sale restoration failed', [
+                'sale_id' => $sale->sale_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('sales.index')
+                ->with('error', 'Satış bərpa edilərkən xəta baş verdi: ' . $e->getMessage());
+        }
     }
 
     private function updateProductStock(int $productId, float $quantity, Sale $sale): void
@@ -638,7 +736,7 @@ class SaleController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01|max:' . ($sale->customerCredit?->remaining_amount ?? $sale->credit_amount),
             'description' => 'nullable|string|max:500',
-            'method' => 'nullable|string|in:nağd,kart,köçürmə|default:nağd',
+            'method' => 'nullable|string|in:cash,card,bank_transfer|default:cash',
         ]);
 
         try {
@@ -647,7 +745,7 @@ class SaleController extends Controller
                 // Create a Payment record for this credit payment
                 Payment::create([
                     'sale_id' => $sale->sale_id,
-                    'method' => $validated['method'] ?? 'nağd',
+                    'method' => $validated['method'] ?? 'cash',
                     'amount' => $validated['amount'],
                     'notes' => 'Kredit ödəməsi: ' . ($validated['description'] ?: ''),
                     'transaction_id' => null,
@@ -707,9 +805,9 @@ class SaleController extends Controller
             ->groupBy('method')
             ->get();
 
-        $cashTotal = $selectedPayments->where('method', 'nağd')->first()->total ?? 0;
-        $cardTotal = $selectedPayments->where('method', 'kart')->first()->total ?? 0;
-        $transferTotal = $selectedPayments->where('method', 'köçürmə')->first()->total ?? 0;
+        $cashTotal = $selectedPayments->where('method', 'cash')->first()->total ?? 0;
+        $cardTotal = $selectedPayments->where('method', 'card')->first()->total ?? 0;
+        $transferTotal = $selectedPayments->where('method', 'bank_transfer')->first()->total ?? 0;
 
         // Selected date's credit (unpaid amount) - clone query to avoid mutation
         $selectedCreditQuery = clone $selectedDateQuery;

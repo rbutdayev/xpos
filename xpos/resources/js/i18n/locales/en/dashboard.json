@@ -35,9 +35,12 @@
     "thisMonthExpenses": "This Month Expenses",
     "profit": "Profit",
     "margin": "margin",
-    "pendingPayment": "Pending Payment",
+    "pendingPayment": "Customer Debts",
+    "supplierDebts": "Supplier Debts",
     "customer": "customer",
-    "customers": "customers"
+    "customers": "customers",
+    "supplier": "supplier",
+    "suppliers": "suppliers"
   },
 
   "operational": {
@@ -244,6 +247,12 @@
       "avgRevenue": "Avg Revenue",
       "revenue": "Revenue",
       "salesCount": "Sales count"
+    }
+  },
+  "new": {
+    "financial": {
+      "customerCount": "{{count}} customer",
+      "supplierCount": "{{count}} supplier"
     }
   }
 }

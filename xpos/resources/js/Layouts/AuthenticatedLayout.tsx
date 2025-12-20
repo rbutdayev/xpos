@@ -145,7 +145,6 @@ export default function Authenticated({
 
         if (currentRoute?.includes('expenses') ||
             currentRoute?.includes('employee-salaries') ||
-            currentRoute?.includes('supplier-payments') ||
             currentRoute?.includes('reports')) {
             openMenus.push(t('navigation.finance_and_reports'));
         }

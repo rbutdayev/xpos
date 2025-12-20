@@ -130,7 +130,7 @@ export default function Create({ customers, customerItems, employees, products, 
             <Head title={`Yeni ${serviceConfig.nameSingular}`} />
 
             <div className="py-6">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">

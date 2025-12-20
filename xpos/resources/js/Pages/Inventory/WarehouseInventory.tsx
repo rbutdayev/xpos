@@ -311,6 +311,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                         title: t('emptyState.noProductsFound'),
                         description: t('emptyState.noProductsInWarehouse')
                     }}
+                    fullWidth={true}
                 />
 
                 {/* Summary */}

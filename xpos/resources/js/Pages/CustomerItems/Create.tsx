@@ -75,7 +75,7 @@ export default function Create({ customers }: Props) {
             <Head title="Yeni məhsul qəbulu" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <form onSubmit={submit} className="p-4 sm:p-6 space-y-6">
                             {/* Service Type Selector */}

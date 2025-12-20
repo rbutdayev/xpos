@@ -96,7 +96,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
             <Head title={t('editExpense')} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {/* Flash Messages */}
                     {flash?.success && (
                         <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4">

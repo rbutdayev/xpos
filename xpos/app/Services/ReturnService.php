@@ -311,11 +311,19 @@ class ReturnService
         $payments = $sale->payments()->get();
 
         if ($payments->isEmpty()) {
-            // No payments recorded, refund as cash
+            // No payments recorded, create a cash payment record first
+            $payment = \App\Models\Payment::create([
+                'sale_id' => $sale->sale_id,
+                'method' => 'cash',
+                'amount' => $sale->total,
+                'notes' => 'Avtomatik yaradılmış ödəniş (qaytarma üçün)',
+            ]);
+
+            // Now create refund with the payment_id
             Refund::create([
                 'return_id' => $return->return_id,
-                'payment_id' => null,
-                'method' => 'nağd',
+                'payment_id' => $payment->payment_id,
+                'method' => 'cash',
                 'amount' => $refundAmount,
                 'notes' => 'Nağd geri ödəniş',
             ]);

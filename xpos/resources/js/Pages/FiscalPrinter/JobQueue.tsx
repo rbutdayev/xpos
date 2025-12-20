@@ -177,7 +177,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
             <Head title="Fiskal Printer Növbəsi" />
 
             <div className="py-6">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="px-4 sm:px-6 lg:px-8">
                     {flash?.success && (
                         <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                             {flash.success}

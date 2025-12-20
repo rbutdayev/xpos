@@ -36,7 +36,13 @@ export default function Edit({ receipt, suppliers, warehouses, employees }: Prop
                                 {t('goodsReceipts.editTitle')}
                             </h1>
                             <p className="text-sm text-gray-600 mt-1">
-                                {t('goodsReceipts.receiptNumber')}: {receipt.receipt_number}
+                                {receipt.status === 'draft' ? (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Qaralama
+                                    </span>
+                                ) : (
+                                    <>{t('goodsReceipts.receiptNumber')}: {receipt.receipt_number}</>
+                                )}
                             </p>
                         </div>
                         <div className="flex space-x-3">

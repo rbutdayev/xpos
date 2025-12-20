@@ -63,7 +63,7 @@ export default function Edit({ movement, products, warehouses, movementTypes }: 
         <AuthenticatedLayout>
             <Head title={t('editStockMovement')} />
 
-            <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div className="p-6 bg-white border-b border-gray-200">
                         <div className="flex items-center justify-between mb-6">

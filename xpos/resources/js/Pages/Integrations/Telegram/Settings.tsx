@@ -43,7 +43,7 @@ export default function Settings({ auth, credentials }: TelegramSettingsProps) {
             <Head title="Telegram Bot Parametrləri" />
 
             <div className="py-12">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <div className="px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* Info Box */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                         <div className="flex items-start">

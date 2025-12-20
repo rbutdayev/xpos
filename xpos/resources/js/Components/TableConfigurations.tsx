@@ -2230,30 +2230,60 @@ export const goodsReceiptsTableConfig = {
             key: 'receipt_number',
             label: 'Qəbul №',
             sortable: true,
-            width: '140px',
+            width: '160px',
             render: (r: GoodsReceipt) => (
-                <div className="text-sm font-medium text-gray-900 font-mono">{r.receipt_number}</div>
+                <div className="space-y-1">
+                    <div className="text-sm font-medium text-gray-900 font-mono">{r.receipt_number}</div>
+                    {r.invoice_number && (
+                        <div className="text-xs text-green-600 truncate" title={`Invoice: ${r.invoice_number}`}>
+                            📄 {r.invoice_number}
+                        </div>
+                    )}
+                </div>
             )
         },
         {
-            key: 'product',
-            label: 'Məhsul',
+            key: 'items',
+            label: 'Məhsullar',
             width: '280px',
-            render: (r: GoodsReceipt) => (
-                <div className="flex items-center min-w-0">
-                    <CubeIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900 truncate" title={r.product?.name}>
-                            {r.product?.name || 'Məhsul silinib'}
-                        </div>
-                        {r.product?.sku && (
-                            <div className="text-xs text-gray-500 truncate" title={`SKU: ${r.product.sku}`}>
-                                SKU: {r.product.sku}
+            render: (r: GoodsReceipt) => {
+                const itemCount = r.items?.length || 0;
+                if (itemCount === 0) {
+                    // Fallback for legacy single-product receipts
+                    return (
+                        <div className="flex items-center min-w-0">
+                            <CubeIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium text-gray-900 truncate" title={r.product?.name}>
+                                    {r.product?.name || 'Məhsul silinib'}
+                                </div>
+                                {r.product?.sku && (
+                                    <div className="text-xs text-gray-500 truncate" title={`SKU: ${r.product.sku}`}>
+                                        SKU: {r.product.sku}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    );
+                }
+
+                // Show first product + count of others
+                const firstItem = r.items?.[0];
+                return (
+                    <div className="flex items-center min-w-0">
+                        <CubeIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-gray-900 truncate" title={firstItem?.product?.name}>
+                                {firstItem?.product?.name}
+                                {itemCount > 1 && <span className="ml-1 text-xs text-gray-500">+{itemCount - 1} daha</span>}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                                {itemCount} məhsul
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )
+                );
+            }
         },
         {
             key: 'supplier',
@@ -2276,38 +2306,34 @@ export const goodsReceiptsTableConfig = {
             )
         },
         {
-            key: 'quantity',
-            label: 'Miqdar',
-            sortable: true,
+            key: 'items_count',
+            label: 'Məhsul sayı',
             width: '120px',
-            align: 'right',
-            render: (r: GoodsReceipt) => (
-                <div className="text-sm font-medium text-gray-900">
-                    {parseFloat(String(r.quantity)).toLocaleString('az-AZ')}{r.unit ? ` ${r.unit}` : ''}
-                </div>
-            )
-        },
-        {
-            key: 'unit_cost',
-            label: 'Vahid Qiyməti',
-            width: '130px',
-            align: 'right',
-            render: (r: GoodsReceipt) => (
-                <div className="text-sm text-gray-900">
-                    {r.unit_cost ? `${parseFloat(String(r.unit_cost)).toFixed(2)} AZN` : '-'}
-                </div>
-            )
+            align: 'center',
+            render: (r: GoodsReceipt) => {
+                const itemCount = r.items?.length || 1;
+                return (
+                    <div className="text-sm font-medium text-gray-900">
+                        {itemCount} məhsul
+                    </div>
+                );
+            }
         },
         {
             key: 'total_cost',
             label: 'Cəmi',
             width: '130px',
             align: 'right',
-            render: (r: GoodsReceipt) => (
-                <div className="text-sm font-semibold text-gray-900">
-                    {r.total_cost ? `${parseFloat(String(r.total_cost)).toFixed(2)} AZN` : '-'}
-                </div>
-            )
+            render: (r: GoodsReceipt) => {
+                // total_cost now stores the final amount (after discount if any)
+                const totalCost = r.total_cost ? parseFloat(String(r.total_cost)) : 0;
+
+                return (
+                    <div className="text-sm font-semibold text-gray-900">
+                        {totalCost ? `${totalCost.toFixed(2)} AZN` : '-'}
+                    </div>
+                );
+            }
         },
         {
             key: 'payment_status',
@@ -2331,28 +2357,6 @@ export const goodsReceiptsTableConfig = {
                 };
                 
                 return getPaymentStatusBadge(r.payment_status || 'unpaid');
-            }
-        },
-        {
-            key: 'payment_method',
-            label: 'Ödəmə Metodu',
-            width: '120px',
-            align: 'center',
-            render: (r: GoodsReceipt) => {
-                const getPaymentMethodText = (method: string) => {
-                    // For goods receipts: instant = Cash, credit = Credit
-                    if (method === 'instant') {
-                        return translatePaymentMethod('cash');
-                    }
-                    // Return 'Borc' for credit (TODO: add to translation system)
-                    return method === 'credit' ? (localStorage.getItem('i18nextLng') === 'en' ? 'Credit' : 'Borc') : method;
-                };
-
-                return (
-                    <div className="text-sm text-gray-900">
-                        {r.payment_method ? getPaymentMethodText(r.payment_method) : '-'}
-                    </div>
-                );
             }
         },
         {
@@ -2393,10 +2397,6 @@ export const goodsReceiptsTableConfig = {
         {
             ...commonActions.view(),
             href: (r: GoodsReceipt) => route('goods-receipts.show', r.id)
-        },
-        {
-            ...commonActions.edit(),
-            href: (r: GoodsReceipt) => route('goods-receipts.edit', r.id)
         },
         {
             label: 'Ödə',

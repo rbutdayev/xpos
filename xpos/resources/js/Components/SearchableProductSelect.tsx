@@ -187,11 +187,23 @@ export default function SearchableProductSelect({
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onPaste={(e) => {
+                            // When barcode is pasted, auto-select if single result
+                            const pastedText = e.clipboardData.getData('text');
+                            if (pastedText.trim()) {
+                                // Small delay to let the search results load
+                                setTimeout(() => {
+                                    if (filteredProducts.length === 1) {
+                                        handleSelect(filteredProducts[0]);
+                                    }
+                                }, 300);
+                            }
+                        }}
                         onKeyDown={(e) => {
                             // Prevent Enter key from submitting the form when scanning barcodes
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-                                
+
                                 // If there's exactly one search result, select it automatically
                                 if (filteredProducts.length === 1) {
                                     handleSelect(filteredProducts[0]);

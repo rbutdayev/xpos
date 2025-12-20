@@ -60,6 +60,11 @@ class SupplierCredit extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function goodsReceipt()
+    {
+        return $this->hasOne(GoodsReceipt::class, 'supplier_credit_id');
+    }
+
     public function scopeBySupplier(Builder $query, $supplierId): Builder
     {
         return $query->where('supplier_id', $supplierId);
@@ -157,6 +162,28 @@ class SupplierCredit extends Model
             }
             if ($credit->type === 'credit') {
                 $credit->remaining_amount = $credit->amount;
+            }
+        });
+
+        // Sync goods receipt payment status when supplier credit status changes
+        static::updated(function ($credit) {
+            // Only sync if this credit is linked to a goods receipt
+            if ($credit->goodsReceipt) {
+                $goodsReceipt = $credit->goodsReceipt;
+
+                // Determine correct payment status based on credit status
+                if ($credit->remaining_amount == 0) {
+                    $newStatus = 'paid';
+                } elseif ($credit->remaining_amount < $credit->amount) {
+                    $newStatus = 'partial';
+                } else {
+                    $newStatus = 'unpaid';
+                }
+
+                // Only update if status has changed to avoid unnecessary queries
+                if ($goodsReceipt->payment_status !== $newStatus) {
+                    $goodsReceipt->update(['payment_status' => $newStatus]);
+                }
             }
         });
     }

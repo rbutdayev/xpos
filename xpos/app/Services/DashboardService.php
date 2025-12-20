@@ -9,7 +9,6 @@ use App\Models\SaleItem;
 use App\Models\SaleReturn;
 use App\Models\Expense;
 use App\Models\CustomerCredit;
-use App\Models\SupplierPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -66,7 +65,7 @@ class DashboardService
                 ? ($profit / $monthlyRevenue) * 100
                 : 0;
 
-            // Pending payments (customer credit)
+            // Pending payments (customer credit) - Alacaq
             $pendingPayments = CustomerCredit::where('account_id', $account->id)
                 ->where('remaining_amount', '>', 0)
                 ->sum('remaining_amount') ?? 0;
@@ -75,6 +74,16 @@ class DashboardService
                 ->where('remaining_amount', '>', 0)
                 ->distinct()
                 ->count('customer_id');
+
+            // Supplier debts (supplier credit) - Borclar
+            $supplierDebts = \App\Models\SupplierCredit::where('account_id', $account->id)
+                ->where('remaining_amount', '>', 0)
+                ->sum('remaining_amount') ?? 0;
+
+            $supplierDebtsCount = \App\Models\SupplierCredit::where('account_id', $account->id)
+                ->where('remaining_amount', '>', 0)
+                ->distinct()
+                ->count('supplier_id');
 
             return [
                 'revenue' => [
@@ -93,6 +102,10 @@ class DashboardService
                 'pending_payments' => [
                     'value' => round($pendingPayments, 2),
                     'count' => $pendingPaymentsCount,
+                ],
+                'supplier_debts' => [
+                    'value' => round($supplierDebts, 2),
+                    'count' => $supplierDebtsCount,
                 ],
             ];
         });
@@ -143,20 +156,14 @@ class DashboardService
 
     /**
      * Calculate expenses for a given month
+     * Note: Supplier payments are now part of the Expense model
      */
     private function calculateExpenses(Account $account, Carbon $month): float
     {
-        $expenses = Expense::where('account_id', $account->id)
+        return Expense::where('account_id', $account->id)
             ->whereYear('expense_date', $month->year)
             ->whereMonth('expense_date', $month->month)
             ->sum('amount') ?? 0;
-
-        $supplierPayments = SupplierPayment::where('account_id', $account->id)
-            ->whereYear('payment_date', $month->year)
-            ->whereMonth('payment_date', $month->month)
-            ->sum('amount') ?? 0;
-
-        return $expenses + $supplierPayments;
     }
 
     /**
@@ -425,20 +432,55 @@ class DashboardService
 
     /**
      * Clear cache for an account
+     * Clears all cached dashboard data for a specific time range
      */
     public function clearCache(Account $account): void
     {
-        $patterns = [
-            "dashboard:financial:{$account->id}:*",
-            "dashboard:operational:{$account->id}:*",
-            "dashboard:inventory_alerts:{$account->id}:*",
-            "dashboard:services:{$account->id}:*",
-            "dashboard:rentals:{$account->id}:*",
-            "dashboard:credits:{$account->id}:*",
+        // Generate cache keys for the last 48 hours + next 2 hours
+        // This ensures we clear both current and recent cached data
+        $now = Carbon::now();
+        $hours = [];
+        for ($i = -48; $i <= 2; $i++) {
+            $hours[] = $now->copy()->addHours($i)->format('Y-m-d-H');
+        }
+
+        // All cache key prefixes for this account
+        $prefixes = [
+            "dashboard:financial:{$account->id}:",
+            "dashboard:credits:{$account->id}:",
         ];
 
-        foreach ($patterns as $pattern) {
-            Cache::forget($pattern);
+        // Prefixes that might have warehouse variations
+        $warehousePrefixes = [
+            "dashboard:operational:{$account->id}:",
+            "dashboard:operational_warehouse:{$account->id}:",
+            "dashboard:inventory_alerts:{$account->id}:",
+            "dashboard:services:{$account->id}:",
+            "dashboard:rentals:{$account->id}:",
+        ];
+
+        // Clear simple prefixes (no warehouse variations)
+        foreach ($prefixes as $prefix) {
+            foreach ($hours as $hour) {
+                Cache::forget($prefix . $hour);
+            }
         }
+
+        // Clear warehouse-specific prefixes
+        // Try common warehouse IDs (1-20) and 'all'
+        $warehouseIds = array_merge(['all'], range(1, 20));
+        foreach ($warehousePrefixes as $basePrefix) {
+            foreach ($warehouseIds as $warehouseId) {
+                $prefix = str_replace($account->id . ':', $account->id . ':' . $warehouseId . ':', $basePrefix);
+                foreach ($hours as $hour) {
+                    Cache::forget($prefix . $hour);
+                }
+            }
+        }
+
+        \Log::info('Dashboard cache cleared', [
+            'account_id' => $account->id,
+            'keys_cleared' => count($prefixes) * count($hours) + count($warehousePrefixes) * count($warehouseIds) * count($hours),
+        ]);
     }
 }

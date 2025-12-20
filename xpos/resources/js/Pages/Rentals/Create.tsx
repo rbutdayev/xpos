@@ -746,7 +746,7 @@ export default function Create({ customers, branches, templates, categories = []
         <AuthenticatedLayout>
             <Head title="Yeni Kirayə" />
 
-            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="mb-6">
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Yeni Kirayə</h1>
                     <p className="mt-1 text-sm sm:text-base text-gray-600">
@@ -1131,6 +1131,32 @@ export default function Create({ customers, branches, templates, categories = []
                                                         onChange={(e) => {
                                                             setActiveItemIndex(index);
                                                             handleInventorySearchChange(e.target.value, index);
+                                                        }}
+                                                        onPaste={(e) => {
+                                                            // When barcode is pasted, auto-select if single result
+                                                            const pastedText = e.clipboardData.getData('text');
+                                                            if (pastedText.trim() && formData.branch_id) {
+                                                                setActiveItemIndex(index);
+                                                                // Small delay to let the search results load
+                                                                setTimeout(() => {
+                                                                    if (inventorySearchResults.length === 1) {
+                                                                        handleInventorySelect(index, inventorySearchResults[0]);
+                                                                        setInventorySearchQuery('');
+                                                                        setInventorySearchResults([]);
+                                                                    }
+                                                                }, 500);
+                                                            }
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            // Auto-select on Enter if single result
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                if (inventorySearchResults.length === 1) {
+                                                                    handleInventorySelect(index, inventorySearchResults[0]);
+                                                                    setInventorySearchQuery('');
+                                                                    setInventorySearchResults([]);
+                                                                }
+                                                            }
                                                         }}
                                                         onFocus={() => setActiveItemIndex(index)}
                                                         onBlur={() => {

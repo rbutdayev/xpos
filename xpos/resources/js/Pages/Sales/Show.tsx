@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrintModal from '@/Components/PrintModal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import DangerButton from '@/Components/DangerButton';
 import StatusBadge from '@/Components/StatusBadge';
 import { PageProps, Sale } from '@/types';
 import toast from 'react-hot-toast';
@@ -22,6 +23,10 @@ interface SalesShowProps extends PageProps {
             name: string;
         };
         user: {
+            id: number;
+            name: string;
+        };
+        deleted_by_user?: {
             id: number;
             name: string;
         };
@@ -61,13 +66,15 @@ interface SalesShowProps extends PageProps {
             alert_date: string;
         }>;
     };
+    canDeleteSales: boolean;
 }
 
-export default function Show({ auth, sale }: SalesShowProps) {
+export default function Show({ auth, sale, canDeleteSales }: SalesShowProps) {
     const { t } = useTranslation('sales');
     const [showPrintModal, setShowPrintModal] = React.useState(false);
     const [fiscalPrintStatus, setFiscalPrintStatus] = useState<string | null>(null);
     const [fiscalPrintLoading, setFiscalPrintLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const { flash } = usePage<any>().props;
 
     // Fiscal printer status polling
@@ -196,15 +203,46 @@ export default function Show({ auth, sale }: SalesShowProps) {
         return new Date(dateString).toLocaleString('az-AZ');
     };
 
+    const handleDeleteSale = () => {
+        if (!confirm('Bu satışı silmək istədiyinizə əminsiniz? Stoklar bərpa ediləcək və məbləğ sistemdən çıxarılacaq.')) {
+            return;
+        }
+
+        router.delete(route('sales.destroy', sale.sale_id), {
+            onSuccess: () => {
+                toast.success('Satış uğurla silindi');
+            },
+            onError: (errors) => {
+                toast.error(errors[0] || 'Xəta baş verdi');
+            },
+        });
+    };
+
+    const handleRestoreSale = () => {
+        if (!confirm('Bu satışı bərpa etmək istədiyinizə əminsiniz? DIQQƏT: Stoklar avtomatik çıxarılmayacaq!')) {
+            return;
+        }
+
+        router.post(route('sales.restore', sale.sale_id), {}, {
+            onSuccess: () => {
+                toast.success('Satış bərpa edildi');
+            },
+            onError: (errors) => {
+                toast.error(errors[0] || 'Xəta baş verdi');
+            },
+        });
+    };
+
     const totalPaid = sale.payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0) || 0;
     const remainingBalance = (Number(sale.total) || 0) - totalPaid;
+    const isDeleted = !!sale.deleted_at;
 
     return (
         <AuthenticatedLayout>
             <Head title={`Satış #${sale.sale_number}`} />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <div className="px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* Fiscal Print Status Banner */}
                     {fiscalPrintLoading && (
                         <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
@@ -224,13 +262,45 @@ export default function Show({ auth, sale }: SalesShowProps) {
                         </div>
                     )}
 
+                    {/* Deleted Sale Banner */}
+                    {isDeleted && (
+                        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-red-700 font-medium">
+                                        Bu satış silinib - {formatDate(sale.deleted_at!)}
+                                    </p>
+                                    {sale.deleted_by_user && (
+                                        <p className="text-xs text-red-600 mt-1">
+                                            Silən: {sale.deleted_by_user.name}
+                                        </p>
+                                    )}
+                                </div>
+                                {canDeleteSales && (
+                                    <PrimaryButton onClick={handleRestoreSale} className="ml-4">
+                                        Bərpa et
+                                    </PrimaryButton>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Sale Header */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="text-xl font-semibold text-gray-900">{t('show.saleInfo')}</h2>
-                            <PrimaryButton onClick={() => setShowPrintModal(true)}>
-                                {t('actions.printReceipt')}
-                            </PrimaryButton>
+                            <div className="flex gap-2">
+                                {!isDeleted && (
+                                    <PrimaryButton onClick={() => setShowPrintModal(true)}>
+                                        {t('actions.printReceipt')}
+                                    </PrimaryButton>
+                                )}
+                                {canDeleteSales && !isDeleted && (
+                                    <DangerButton onClick={handleDeleteSale}>
+                                        Sil
+                                    </DangerButton>
+                                )}
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div>
