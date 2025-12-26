@@ -43,6 +43,7 @@ interface IntegrationsProps extends PageProps {
     loyaltyProgramActive: boolean;
     shopEnabled: boolean;
     shopConfigured: boolean;
+    shopUrl: string | null;
     servicesModuleEnabled: boolean;
     rentModuleEnabled: boolean;
     discountsModuleEnabled: boolean;
@@ -63,6 +64,7 @@ export default function Index({
     loyaltyProgramActive,
     shopEnabled,
     shopConfigured,
+    shopUrl,
     servicesModuleEnabled,
     rentModuleEnabled,
     discountsModuleEnabled,
@@ -455,6 +457,21 @@ export default function Index({
                                             <p className="mt-2 text-sm text-gray-600">
                                                 {integration.description}
                                             </p>
+
+                                            {/* Shop URL Display */}
+                                            {integration.id === 'shop' && shopEnabled && shopUrl && (
+                                                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                                    <p className="text-xs font-medium text-blue-800">Mağaza URL:</p>
+                                                    <a
+                                                        href={shopUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-blue-600 hover:text-blue-800 underline break-all"
+                                                    >
+                                                        {shopUrl}
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Dependency Warning */}

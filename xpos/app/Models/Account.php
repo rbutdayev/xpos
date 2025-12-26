@@ -220,7 +220,12 @@ class Account extends Model
         if (!$this->isShopEnabled()) {
             return null;
         }
-        return url('/shop/' . $this->shop_slug);
+
+        // Generate shop URL using subdomain: shop.xpos.az/{slug}
+        $shopDomain = config('app.shop_domain', 'shop.' . parse_url(config('app.url'), PHP_URL_HOST));
+        $protocol = parse_url(config('app.url'), PHP_URL_SCHEME) ?: 'https';
+
+        return $protocol . '://' . $shopDomain . '/' . $this->shop_slug;
     }
 
     public function getShopSetting(string $key, $default = null)

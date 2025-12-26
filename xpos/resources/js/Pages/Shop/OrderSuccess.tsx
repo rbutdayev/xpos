@@ -127,7 +127,7 @@ export default function OrderSuccess({ account, order_number }: Props) {
                             {/* Action Buttons */}
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <Link
-                                    href={`/shop/${account.shop_slug}`}
+                                    href={route('shop.home', account.shop_slug)}
                                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all shadow-lg hover:shadow-xl"
                                 >
                                     <HomeIcon className="w-5 h-5" />

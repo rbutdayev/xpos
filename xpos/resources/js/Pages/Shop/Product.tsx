@@ -541,15 +541,58 @@ export default function ProductPage({ account, product }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Order Button */}
+                                {/* Order Buttons */}
                                 {!showOrderForm ? (
-                                    <div className="mt-8">
+                                    <div className="mt-8 space-y-3">
+                                        {/* Add to Cart Button */}
+                                        <button
+                                            onClick={() => {
+                                                // Add to cart in localStorage
+                                                const cartKey = `shop_cart_${account.shop_slug}`;
+                                                const savedCart = localStorage.getItem(cartKey);
+                                                const cart = savedCart ? JSON.parse(savedCart) : {};
+
+                                                const productToAdd = {
+                                                    id: selectedVariantProduct?.id || product.id,
+                                                    name: selectedVariantProduct?.name || product.name,
+                                                    sale_price: currentPrice,
+                                                    image_url: displayImages[0]?.url || null,
+                                                    brand: displayProduct.brand,
+                                                    variant_info: selectedVariant ? {
+                                                        variant_id: selectedVariant,
+                                                        size: variants.find(v => v.id === selectedVariant)?.size || null,
+                                                        color: variants.find(v => v.id === selectedVariant)?.color || null,
+                                                    } : null
+                                                };
+
+                                                const productKey = selectedVariantProduct?.id || product.id;
+
+                                                if (cart[productKey]) {
+                                                    cart[productKey].quantity += quantity;
+                                                } else {
+                                                    cart[productKey] = {
+                                                        product: productToAdd,
+                                                        quantity: quantity
+                                                    };
+                                                }
+
+                                                localStorage.setItem(cartKey, JSON.stringify(cart));
+
+                                                // Redirect to home page with cart open
+                                                router.visit(route('shop.home', account.shop_slug) + '?cart=open');
+                                            }}
+                                            className="w-full border-2 border-gray-900 text-gray-900 py-4 hover:bg-gray-900 hover:text-white font-medium text-base transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <ShoppingCartIcon className="w-5 h-5" />
+                                            Səbətə at
+                                        </button>
+
+                                        {/* Buy Now Button */}
                                         <button
                                             onClick={() => setShowOrderForm(true)}
                                             className="w-full bg-gray-900 text-white py-4 hover:bg-gray-800 font-medium text-base transition-colors flex items-center justify-center gap-2"
                                         >
-                                            <ShoppingCartIcon className="w-5 h-5" />
-                                            Sifariş ver
+                                            İndi al
                                         </button>
                                     </div>
                                 ) : (

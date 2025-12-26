@@ -415,6 +415,14 @@ print_success "Services restarted"
 # =====================================================
 print_status "Setting up SSL certificate..."
 
+# Extract base domain (xpos.az from app.xpos.az)
+BASE_DOMAIN=\$(echo "\$DOMAIN_NAME" | sed 's/^[^.]*\.//')
+SHOP_DOMAIN="shop.\$BASE_DOMAIN"
+
+print_status "Configuring domains:"
+print_status "  - Admin/POS: \$DOMAIN_NAME"
+print_status "  - E-commerce Shop: \$SHOP_DOMAIN"
+
 # First ensure nginx config exists and is valid
 if [ ! -f "/etc/nginx/sites-available/\$APP_NAME" ]; then
     print_warning "Nginx configuration not found. Creating it now..."
@@ -485,8 +493,77 @@ NGINXEOF
     sudo nginx -t && sudo systemctl restart nginx
 fi
 
-# Install SSL certificate (try with both main and www subdomain)
-if sudo certbot --nginx -d \$DOMAIN_NAME -d www.\$DOMAIN_NAME --non-interactive --agree-tos --email admin@\$DOMAIN_NAME --redirect 2>/dev/null; then
+# Create nginx config for shop subdomain (same Laravel app)
+if [ ! -f "/etc/nginx/sites-available/\$APP_NAME-shop" ]; then
+    print_status "Creating nginx configuration for shop subdomain..."
+
+    sudo tee /etc/nginx/sites-available/\$APP_NAME-shop > /dev/null << 'SHOPNGINXEOF'
+server {
+    listen 80;
+    server_name SHOP_DOMAIN_PLACEHOLDER;
+    root APP_PATH_PLACEHOLDER/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.html index.htm index.php;
+
+    charset utf-8;
+
+    fastcgi_buffer_size 128k;
+    fastcgi_buffers 4 256k;
+    fastcgi_busy_buffers_size 256k;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private no_last_modified no_etag auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
+}
+SHOPNGINXEOF
+
+    sudo sed -i "s/SHOP_DOMAIN_PLACEHOLDER/\$SHOP_DOMAIN/g" /etc/nginx/sites-available/\$APP_NAME-shop
+    sudo sed -i "s|APP_PATH_PLACEHOLDER|\$APP_PATH|g" /etc/nginx/sites-available/\$APP_NAME-shop
+
+    # Enable shop site
+    sudo ln -sf /etc/nginx/sites-available/\$APP_NAME-shop /etc/nginx/sites-enabled/\$APP_NAME-shop
+
+    sudo nginx -t && sudo systemctl restart nginx
+    print_success "Shop subdomain nginx configuration created"
+fi
+
+# Install SSL certificate for all domains (app, shop, www)
+print_status "Installing SSL certificate for all domains..."
+if sudo certbot --nginx -d \$DOMAIN_NAME -d \$SHOP_DOMAIN -d www.\$DOMAIN_NAME --non-interactive --agree-tos --email admin@\$DOMAIN_NAME --redirect 2>/dev/null; then
     print_success "SSL certificate installed successfully"
 
     # Setup auto-renewal if not already configured
@@ -494,14 +571,14 @@ if sudo certbot --nginx -d \$DOMAIN_NAME -d www.\$DOMAIN_NAME --non-interactive 
         (sudo crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | sudo crontab -
         print_success "SSL auto-renewal configured"
     fi
-elif sudo certbot --nginx -d \$DOMAIN_NAME --non-interactive --agree-tos --email admin@\$DOMAIN_NAME --redirect 2>/dev/null; then
-    print_success "SSL certificate installed for main domain"
+elif sudo certbot --nginx -d \$DOMAIN_NAME -d \$SHOP_DOMAIN --non-interactive --agree-tos --email admin@\$DOMAIN_NAME --redirect 2>/dev/null; then
+    print_success "SSL certificate installed for main and shop domains"
 else
     print_warning "SSL certificate installation failed"
     print_warning "Please ensure:"
-    print_warning "1. Domain \$DOMAIN_NAME points to this server"
+    print_warning "1. Domains \$DOMAIN_NAME and \$SHOP_DOMAIN point to this server"
     print_warning "2. Ports 80 and 443 are accessible"
-    print_warning "3. Run manually: sudo certbot --nginx -d \$DOMAIN_NAME -d www.\$DOMAIN_NAME"
+    print_warning "3. Run manually: sudo certbot --nginx -d \$DOMAIN_NAME -d \$SHOP_DOMAIN -d www.\$DOMAIN_NAME"
 fi
 
 # =====================================================
@@ -521,7 +598,8 @@ sudo chmod -R 755 \$APP_PATH
 sudo chmod -R 775 \$APP_PATH/storage \$APP_PATH/bootstrap/cache
 
 print_success "=== APPLICATION DEPLOYMENT COMPLETED ==="
-print_success "Application URL: https://\$DOMAIN_NAME"
+print_success "Admin/POS URL: https://\$DOMAIN_NAME"
+print_success "E-commerce Shop URL: https://\$SHOP_DOMAIN"
 print_success "Server IP: \$(hostname -I | awk '{print \$1}')"
 print_success "Application Path: \$APP_PATH"
 
@@ -550,14 +628,16 @@ rm -f xpos-deploy.tar.gz
 print_success "Application deployment completed successfully!"
 print_success ""
 print_status "Application Details:"
-print_status "- URL: https://$DOMAIN_NAME"
+print_status "- Admin/POS URL: https://$DOMAIN_NAME"
+print_status "- E-commerce Shop URL: https://shop.${DOMAIN_NAME#*.}"
 print_status "- Server IP: $SERVER_IP"
 print_status "- Application Path: $APP_PATH"
 print_status ""
 print_status "Post-deployment tasks:"
-print_status "1. Verify application is accessible at https://$DOMAIN_NAME"
-print_status "2. Configure Azure MySQL connection in .env if needed"
-print_status "3. Check application logs: $APP_PATH/storage/logs/"
-print_status "4. Monitor queue workers: sudo supervisorctl status"
+print_status "1. Verify admin panel is accessible at https://$DOMAIN_NAME"
+print_status "2. Verify shop subdomain is accessible at https://shop.${DOMAIN_NAME#*.}"
+print_status "3. Configure Azure MySQL connection in .env if needed"
+print_status "4. Check application logs: $APP_PATH/storage/logs/"
+print_status "5. Monitor queue workers: sudo supervisorctl status"
 print_status ""
 print_success "Deployment completed successfully!"

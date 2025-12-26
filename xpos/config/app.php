@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Shop Domain
+    |--------------------------------------------------------------------------
+    |
+    | This value is the domain for public e-commerce shops.
+    | Production: shop.xpos.az
+    | Local: shop.localhost
+    |
+    */
+
+    'shop_domain' => env('SHOP_DOMAIN', 'shop.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

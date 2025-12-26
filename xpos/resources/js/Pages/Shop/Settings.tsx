@@ -263,7 +263,7 @@ export default function ShopSettings({
                                         {errors.shop_slug && (
                                             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shop_slug}</p>
                                         )}
-                                        {data.shop_slug && data.shop_enabled && (
+                                        {data.shop_slug && data.shop_enabled && shop_settings.shop_url && (
                                             <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
                                                 <div className="flex items-center">
                                                     <GlobeAltIcon className="w-5 h-5 text-blue-600 mr-2" />
@@ -272,12 +272,12 @@ export default function ShopSettings({
                                                             {t('shop.shopUrlLabel')}
                                                         </p>
                                                         <a
-                                                            href={`${window.location.origin}/shop/${data.shop_slug}`}
+                                                            href={shop_settings.shop_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
                                                         >
-                                                            {window.location.origin}/shop/{data.shop_slug}
+                                                            {shop_settings.shop_url}
                                                         </a>
                                                     </div>
                                                 </div>

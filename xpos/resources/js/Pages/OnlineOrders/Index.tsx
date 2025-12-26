@@ -87,7 +87,7 @@ interface Props {
 }
 
 export default function Index({ orders, filters, statusCounts, fiscalPrinterEnabled = false, fiscalConfig }: Props) {
-    const { t } = useTranslation() as { t: (key: string) => string };
+    const { t } = useTranslation('orders') as { t: (key: string) => string };
     const [search, setSearch] = useState(filters.search || '');
     const [selectedStatus, setSelectedStatus] = useState<string>(filters.status || '');
     const [selectedSource, setSelectedSource] = useState<string>(filters.source || '');
@@ -178,19 +178,19 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
         const badges = {
             shop: {
                 color: 'bg-green-100 text-green-800 border-green-200',
-                label: t('orders.source.shop')
+                label: t('source.shop')
             },
             wolt: {
                 color: 'bg-purple-100 text-purple-800 border-purple-200',
-                label: t('orders.source.wolt')
+                label: t('source.wolt')
             },
             yango: {
                 color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                label: t('orders.source.yango')
+                label: t('source.yango')
             },
             bolt: {
                 color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                label: t('orders.source.bolt')
+                label: t('source.bolt')
             },
         };
 
@@ -275,11 +275,11 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                                         onChange={(e) => handleSourceFilter(e.target.value)}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                     >
-                                        <option value="">{t('orders.source.all')}</option>
-                                        <option value="shop">{t('orders.source.shop')}</option>
-                                        <option value="wolt">{t('orders.source.wolt')}</option>
-                                        <option value="yango">{t('orders.source.yango')}</option>
-                                        <option value="bolt">{t('orders.source.bolt')}</option>
+                                        <option value="">{t('source.all')}</option>
+                                        <option value="shop">{t('source.shop')}</option>
+                                        <option value="wolt">{t('source.wolt')}</option>
+                                        <option value="yango">{t('source.yango')}</option>
+                                        <option value="bolt">{t('source.bolt')}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -349,7 +349,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                                                 </div>
                                                 {order.platform_order_id && (
                                                     <div className="mb-2 text-xs text-gray-500">
-                                                        <span className="font-semibold">{t('orders.source.platformOrderId')}:</span> {order.platform_order_id}
+                                                        <span className="font-semibold">{t('source.platformOrderId')}:</span> {order.platform_order_id}
                                                     </div>
                                                 )}
                                                 <div className="space-y-1 text-sm text-gray-600">
