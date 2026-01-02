@@ -47,6 +47,7 @@ use App\Http\Controllers\FiscalShiftController;
 use App\Http\Controllers\IntegrationsController;
 use App\Http\Controllers\RentalTemplateController;
 use App\Http\Controllers\ProductActivityController;
+use App\Http\Controllers\KioskTokenController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -823,6 +824,15 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/{bridgeToken}', [\App\Http\Controllers\BridgeTokenController::class, 'show'])->name('show');
         Route::post('/{bridgeToken}/revoke', [\App\Http\Controllers\BridgeTokenController::class, 'revoke'])->name('revoke');
         Route::delete('/{bridgeToken}', [\App\Http\Controllers\BridgeTokenController::class, 'destroy'])->name('destroy');
+    });
+
+    // Kiosk Token Management
+    Route::prefix('settings/kiosk-tokens')->name('kiosk-tokens.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\KioskTokenController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\KioskTokenController::class, 'store'])->name('store');
+        Route::get('/{kioskDeviceToken}/show', [\App\Http\Controllers\KioskTokenController::class, 'show'])->name('show');
+        Route::post('/{kioskDeviceToken}/revoke', [\App\Http\Controllers\KioskTokenController::class, 'revoke'])->name('revoke');
+        Route::delete('/{kioskDeviceToken}', [\App\Http\Controllers\KioskTokenController::class, 'destroy'])->name('destroy');
     });
 
     // Loyalty Program

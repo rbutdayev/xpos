@@ -203,6 +203,20 @@ export default function Index({ company, pos_settings }: Props) {
                             </div>
                         </Link>
 
+                        {/* Kiosk Tokens */}
+                        <Link
+                            href="/settings/kiosk-tokens"
+                            className="relative rounded-lg border border-gray-300 bg-white p-6 shadow-sm hover:border-blue-500 hover:shadow-md transition-all"
+                        >
+                            <div className="flex items-center">
+                                <ComputerDesktopIcon className="h-8 w-8 text-indigo-600" />
+                                <div className="ml-4">
+                                    <h4 className="text-sm font-medium text-gray-900">Kiosk Tokenlər</h4>
+                                    <p className="text-xs text-gray-500">Kiosk cihazları üçün giriş tokenlərini idarə edin</p>
+                                </div>
+                            </div>
+                        </Link>
+
                         {/* Notification Channels */}
                         <Link
                             href="/notification-channels"

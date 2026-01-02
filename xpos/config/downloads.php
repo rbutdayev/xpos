@@ -49,4 +49,48 @@ return [
             'macos' => 'macOS 10.15 (Catalina) və ya daha yüksək',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kiosk App Downloads
+    |--------------------------------------------------------------------------
+    |
+    | Download links for the XPOS Kiosk application.
+    | Offline-capable POS system for retail locations.
+    |
+    */
+
+    'kiosk_app' => [
+        'version' => '1.0.0',
+        'release_date' => '2026-01-03',
+
+        'installers' => [
+            'windows' => [
+                'name' => 'Windows x64',
+                'platform' => 'Windows',
+                'url' => '/downloads/kiosk/XPOS-Kiosk-Setup-1.0.0.exe',
+                'size' => '120 MB',
+                'icon' => '🪟',
+            ],
+            'macos_intel' => [
+                'name' => 'macOS Intel',
+                'platform' => 'macOS (Intel)',
+                'url' => '/downloads/kiosk/XPOS-Kiosk-1.0.0-x64.dmg',
+                'size' => '150 MB',
+                'icon' => '🍎',
+            ],
+            'macos_arm' => [
+                'name' => 'macOS ARM',
+                'platform' => 'macOS (M1/M2/M3)',
+                'url' => '/downloads/kiosk/XPOS-Kiosk-1.0.0-arm64.dmg',
+                'size' => '150 MB',
+                'icon' => '🍎',
+            ],
+        ],
+
+        'system_requirements' => [
+            'windows' => 'Windows 7 SP1 / 10 / 11 (64-bit)',
+            'macos' => 'macOS 10.13+ (High Sierra və ya daha yeni)',
+        ],
+    ],
 ];
