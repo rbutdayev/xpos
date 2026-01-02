@@ -14,7 +14,7 @@ import {
     ChevronRightIcon,
     CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Account {
     company_name: string;
@@ -79,7 +79,14 @@ interface OrderFormData {
 }
 
 export default function Home({ account, products, categories }: Props) {
-    const [cart, setCart] = useState<{ [key: number]: CartItem }>({});
+    // Load cart from localStorage on mount
+    const [cart, setCart] = useState<{ [key: number]: CartItem }>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem(`shop_cart_${account.shop_slug}`);
+            return saved ? JSON.parse(saved) : {};
+        }
+        return {};
+    });
     const [showCart, setShowCart] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +96,7 @@ export default function Home({ account, products, categories }: Props) {
     const [showOrderModal, setShowOrderModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [orderQuantity, setOrderQuantity] = useState(1);
+    const [showCartCheckout, setShowCartCheckout] = useState(false);
     const [orderFormData, setOrderFormData] = useState<OrderFormData>({
         customer_name: '',
         customer_phone: '',
@@ -97,6 +105,53 @@ export default function Home({ account, products, categories }: Props) {
         notes: ''
     });
     const [submitting, setSubmitting] = useState(false);
+    const [showAddedToast, setShowAddedToast] = useState(false);
+
+    // Save cart to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`shop_cart_${account.shop_slug}`, JSON.stringify(cart));
+        }
+    }, [cart, account.shop_slug]);
+
+    // Open cart if URL has ?cart=open parameter
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('cart') === 'open') {
+                setShowCart(true);
+                // Clean up the URL
+                window.history.replaceState({}, '', route('shop.home', account.shop_slug));
+            }
+        }
+    }, []);
+
+    const addToCart = (product: Product) => {
+        setCart(prev => {
+            const existing = prev[product.id];
+            if (existing) {
+                return {
+                    ...prev,
+                    [product.id]: {
+                        ...existing,
+                        quantity: existing.quantity + 1
+                    }
+                };
+            } else {
+                return {
+                    ...prev,
+                    [product.id]: {
+                        product,
+                        quantity: 1
+                    }
+                };
+            }
+        });
+
+        // Show toast notification
+        setShowAddedToast(true);
+        setTimeout(() => setShowAddedToast(false), 2000);
+    };
 
     const updateCartQuantity = (productId: number, quantity: number) => {
         if (quantity <= 0) {
@@ -150,6 +205,41 @@ export default function Home({ account, products, categories }: Props) {
                 setOrderFormData({ customer_name: '', customer_phone: '', city: '', address: '', notes: '' });
                 setOrderQuantity(1);
                 setSelectedProduct(null);
+            },
+            onError: (errors) => {
+                alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+                console.error(errors);
+            },
+            onFinish: () => setSubmitting(false)
+        });
+    };
+
+    const handleCartCheckout = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (cartItems.length === 0) return;
+
+        setSubmitting(true);
+        const items = cartItems.map(item => ({
+            product_id: item.product.id,
+            variant_id: null,
+            quantity: item.quantity,
+            sale_price: item.product.sale_price
+        }));
+
+        router.post(route('shop.order', account.shop_slug), {
+            customer_name: orderFormData.customer_name,
+            customer_phone: orderFormData.customer_phone,
+            items: items,
+            city: orderFormData.city,
+            address: orderFormData.address,
+            notes: orderFormData.notes
+        }, {
+            onSuccess: () => {
+                alert('Sifarişiniz qəbul edildi! Tezliklə sizinlə əlaqə saxlanılacaq.');
+                setShowCart(false);
+                setShowCartCheckout(false);
+                setCart({});
+                setOrderFormData({ customer_name: '', customer_phone: '', city: '', address: '', notes: '' });
             },
             onError: (errors) => {
                 alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
@@ -314,39 +404,31 @@ export default function Home({ account, products, categories }: Props) {
                     {filteredProducts.length > 0 ? (
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                             {filteredProducts.map(product => (
-                                <Link
-                                    key={product.id}
-                                    href={route('shop.product', { shop_slug: account.shop_slug, id: product.id })}
-                                    className="group block"
-                                >
-                                    {/* Product Image */}
-                                    <div className="aspect-square bg-gray-100 overflow-hidden mb-3 relative">
-                                        {product.image_url ? (
-                                            <img
-                                                src={product.image_url}
-                                                alt={product.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                <ShoppingCartIcon className="w-16 h-16" />
-                                            </div>
-                                        )}
-
-                                        {/* Quick Order Button on Hover */}
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                openOrderModal(product);
-                                            }}
-                                            className="absolute bottom-3 left-3 right-3 bg-white text-gray-900 py-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100"
-                                        >
-                                            Sifariş ver
-                                        </button>
-                                    </div>
+                                <div key={product.id} className="group block">
+                                    <Link
+                                        href={route('shop.product', { shop_slug: account.shop_slug, id: product.id })}
+                                    >
+                                        {/* Product Image */}
+                                        <div className="aspect-square bg-gray-100 overflow-hidden mb-3 relative">
+                                            {product.image_url ? (
+                                                <img
+                                                    src={product.image_url}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                    <ShoppingCartIcon className="w-16 h-16" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Link>
 
                                     {/* Product Info */}
-                                    <div className="space-y-1">
+                                    <Link
+                                        href={route('shop.product', { shop_slug: account.shop_slug, id: product.id })}
+                                        className="space-y-1 block"
+                                    >
                                         {/* Brand */}
                                         {product.brand && (
                                             <p className="text-xs text-gray-500 uppercase tracking-wide">
@@ -378,8 +460,45 @@ export default function Home({ account, products, categories }: Props) {
                                                 ₼{Number(product.sale_price).toFixed(2)}
                                             </p>
                                         )}
+                                    </Link>
+
+                                    {/* Action Buttons */}
+                                    <div className="mt-3 flex gap-2">
+                                        {/* Add to Cart Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                // If product has variants, redirect to product page for selection
+                                                if ((product.available_sizes?.length || 0) > 0 || (product.available_colors?.length || 0) > 0) {
+                                                    router.visit(route('shop.product', { shop_slug: account.shop_slug, id: product.id }));
+                                                } else {
+                                                    addToCart(product);
+                                                }
+                                            }}
+                                            className="flex-1 border-2 border-gray-900 text-gray-900 py-2 text-sm font-medium hover:bg-gray-900 hover:text-white transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            <ShoppingCartIcon className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Səbətə</span>
+                                        </button>
+
+                                        {/* Buy Now Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                // If product has variants, redirect to product page for selection
+                                                if ((product.available_sizes?.length || 0) > 0 || (product.available_colors?.length || 0) > 0) {
+                                                    router.visit(route('shop.product', { shop_slug: account.shop_slug, id: product.id }));
+                                                } else {
+                                                    // Otherwise open quick order modal
+                                                    openOrderModal(product);
+                                                }
+                                            }}
+                                            className="flex-1 bg-gray-900 text-white py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+                                        >
+                                            {((product.available_sizes?.length || 0) > 0 || (product.available_colors?.length || 0) > 0) ? 'Seçim et' : 'Al'}
+                                        </button>
                                     </div>
-                                </Link>
+                                </div>
                             ))}
                         </div>
                     ) : (
@@ -576,79 +695,166 @@ export default function Home({ account, products, categories }: Props) {
                 {/* Shopping Cart Modal */}
                 {showCart && (
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white max-w-2xl w-full max-h-[90vh] flex flex-col">
+                        <div className="bg-white max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
                             {/* Cart Header */}
                             <div className="flex justify-between items-center p-6 border-b border-gray-200">
                                 <h2 className="text-xl font-semibold text-gray-900">
-                                    Səbət ({cartCount})
+                                    {showCartCheckout ? 'Sifariş məlumatları' : `Səbət (${cartCount})`}
                                 </h2>
                                 <button
-                                    onClick={() => setShowCart(false)}
+                                    onClick={() => {
+                                        setShowCart(false);
+                                        setShowCartCheckout(false);
+                                    }}
                                     className="text-gray-400 hover:text-gray-600"
                                 >
                                     <XMarkIcon className="w-6 h-6" />
                                 </button>
                             </div>
 
-                            {/* Cart Items */}
-                            <div className="flex-1 overflow-y-auto p-6">
-                                {cartItems.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {cartItems.map(item => (
-                                            <div key={item.product.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
-                                                <div className="w-24 h-24 bg-gray-100 flex-shrink-0">
-                                                    {item.product.image_url ? (
-                                                        <img
-                                                            src={item.product.image_url}
-                                                            alt={item.product.name}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <ShoppingCartIcon className="w-8 h-8 text-gray-300" />
+                            {/* Cart Content */}
+                            <div className="flex-1 overflow-y-auto">
+                                {!showCartCheckout ? (
+                                    <div className="p-6">
+                                        {cartItems.length > 0 ? (
+                                            <div className="space-y-4">
+                                                {cartItems.map(item => (
+                                                    <div key={item.product.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0">
+                                                        <div className="w-24 h-24 bg-gray-100 flex-shrink-0">
+                                                            {item.product.image_url ? (
+                                                                <img
+                                                                    src={item.product.image_url}
+                                                                    alt={item.product.name}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center">
+                                                                    <ShoppingCartIcon className="w-8 h-8 text-gray-300" />
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
-                                                    <p className="text-sm text-gray-600 mb-3">
-                                                        ₼{Number(item.product.sale_price).toFixed(2)}
-                                                    </p>
-                                                    <div className="flex items-center gap-3">
-                                                        <button
-                                                            onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
-                                                            className="w-8 h-8 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
-                                                        >
-                                                            <MinusIcon className="w-4 h-4" />
-                                                        </button>
-                                                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                                        <button
-                                                            onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
-                                                            className="w-8 h-8 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
-                                                        >
-                                                            <PlusIcon className="w-4 h-4" />
-                                                        </button>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
+                                                            <p className="text-sm text-gray-600 mb-3">
+                                                                ₼{Number(item.product.sale_price).toFixed(2)}
+                                                            </p>
+                                                            <div className="flex items-center gap-3">
+                                                                <button
+                                                                    onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                                                                    className="w-8 h-8 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
+                                                                >
+                                                                    <MinusIcon className="w-4 h-4" />
+                                                                </button>
+                                                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                                                <button
+                                                                    onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                                                                    className="w-8 h-8 border border-gray-300 hover:border-gray-900 flex items-center justify-center transition-colors"
+                                                                >
+                                                                    <PlusIcon className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col items-end justify-between">
+                                                            <button
+                                                                onClick={() => removeFromCart(item.product.id)}
+                                                                className="text-gray-400 hover:text-gray-900"
+                                                            >
+                                                                <XMarkIcon className="w-5 h-5" />
+                                                            </button>
+                                                            <p className="font-semibold text-gray-900">
+                                                                ₼{(Number(item.product.sale_price) * item.quantity).toFixed(2)}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex flex-col items-end justify-between">
-                                                    <button
-                                                        onClick={() => removeFromCart(item.product.id)}
-                                                        className="text-gray-400 hover:text-gray-900"
-                                                    >
-                                                        <XMarkIcon className="w-5 h-5" />
-                                                    </button>
-                                                    <p className="font-semibold text-gray-900">
-                                                        ₼{(Number(item.product.sale_price) * item.quantity).toFixed(2)}
-                                                    </p>
-                                                </div>
+                                                ))}
                                             </div>
-                                        ))}
+                                        ) : (
+                                            <div className="text-center py-16">
+                                                <ShoppingCartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                                <p className="text-gray-600">Səbətiniz boşdur</p>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-16">
-                                        <ShoppingCartIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                        <p className="text-gray-600">Səbətiniz boşdur</p>
-                                    </div>
+                                    <form onSubmit={handleCartCheckout} className="p-6 space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Ad Soyad *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={orderFormData.customer_name}
+                                                onChange={(e) => setOrderFormData({ ...orderFormData, customer_name: e.target.value })}
+                                                required
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                                placeholder="Adınızı daxil edin"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Telefon nömrəsi *
+                                            </label>
+                                            <div className="flex">
+                                                <span className="inline-flex items-center px-4 py-2.5 bg-gray-100 border border-r-0 border-gray-300 text-gray-700 font-medium">
+                                                    +994
+                                                </span>
+                                                <input
+                                                    type="tel"
+                                                    value={orderFormData.customer_phone}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.replace(/\D/g, '');
+                                                        setOrderFormData({ ...orderFormData, customer_phone: value });
+                                                    }}
+                                                    required
+                                                    maxLength={9}
+                                                    className="flex-1 px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                                    placeholder="501234567"
+                                                />
+                                            </div>
+                                            <p className="mt-1 text-xs text-gray-500">Nümunə: 501234567 və ya 551234567</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Şəhər *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={orderFormData.city}
+                                                onChange={(e) => setOrderFormData({ ...orderFormData, city: e.target.value })}
+                                                required
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                                placeholder="Məsələn: Bakı, Gəncə, Sumqayıt..."
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Ünvan (istəyə bağlı)
+                                            </label>
+                                            <textarea
+                                                value={orderFormData.address}
+                                                onChange={(e) => setOrderFormData({ ...orderFormData, address: e.target.value })}
+                                                rows={2}
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                                                placeholder="Dəqiq ünvan (küçə, bina, mənzil...)"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Əlavə qeydlər (istəyə bağlı)
+                                            </label>
+                                            <textarea
+                                                value={orderFormData.notes}
+                                                onChange={(e) => setOrderFormData({ ...orderFormData, notes: e.target.value })}
+                                                rows={2}
+                                                className="w-full px-4 py-2.5 border border-gray-300 focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                                                placeholder="Əlavə məlumat..."
+                                            />
+                                        </div>
+                                    </form>
                                 )}
                             </div>
 
@@ -661,9 +867,38 @@ export default function Home({ account, products, categories }: Props) {
                                             ₼{cartTotal.toFixed(2)}
                                         </span>
                                     </div>
-                                    <button className="w-full bg-gray-900 text-white py-3.5 hover:bg-gray-800 font-medium transition-colors">
-                                        Sifarişi tamamla
-                                    </button>
+                                    {!showCartCheckout ? (
+                                        <button
+                                            onClick={() => setShowCartCheckout(true)}
+                                            className="w-full bg-gray-900 text-white py-3.5 hover:bg-gray-800 font-medium transition-colors"
+                                        >
+                                            Sifarişi tamamla
+                                        </button>
+                                    ) : (
+                                        <div className="flex gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCartCheckout(false)}
+                                                className="flex-1 border border-gray-300 text-gray-700 py-3 hover:bg-gray-50 font-medium transition-colors"
+                                            >
+                                                Geri
+                                            </button>
+                                            <button
+                                                onClick={handleCartCheckout}
+                                                disabled={submitting}
+                                                className="flex-1 bg-gray-900 text-white py-3 hover:bg-gray-800 font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                {submitting ? (
+                                                    <>
+                                                        <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                                        Göndərilir...
+                                                    </>
+                                                ) : (
+                                                    'Sifarişi təsdiq et'
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -854,6 +1089,16 @@ export default function Home({ account, products, categories }: Props) {
                                     </div>
                                 </form>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Toast Notification - Added to Cart */}
+                {showAddedToast && (
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+                        <div className="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+                            <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                            <span className="font-medium">Səbətə əlavə edildi</span>
                         </div>
                     </div>
                 )}

@@ -48,6 +48,7 @@ class IntegrationsController extends Controller
         // Check Shop configuration
         $shopEnabled = $account->shop_enabled ?? false;
         $shopConfigured = !empty($account->shop_slug);
+        $shopUrl = $account->getShopUrl();
 
         // Check Services module
         $servicesModuleEnabled = $account->services_module_enabled ?? false;
@@ -86,6 +87,7 @@ class IntegrationsController extends Controller
             'loyaltyProgramActive' => $loyaltyProgramActive && $loyaltyModuleEnabled,
             'shopEnabled' => $shopEnabled,
             'shopConfigured' => $shopConfigured,
+            'shopUrl' => $shopUrl,
             'servicesModuleEnabled' => $servicesModuleEnabled,
             'rentModuleEnabled' => $rentModuleEnabled,
             'discountsModuleEnabled' => $discountsModuleEnabled,

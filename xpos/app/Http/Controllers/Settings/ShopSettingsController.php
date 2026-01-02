@@ -102,24 +102,65 @@ class ShopSettingsController extends Controller
         // MULTI-TENANT: Use shop_slug to make email unique across accounts
         $systemEmail = "online-shop@system-{$account->shop_slug}.local";
 
-        // Check if online shop user already exists
+        // Check if online shop user already exists for this account
         $onlineUser = User::where('account_id', $account->id)
             ->where('email', $systemEmail)
             ->first();
 
         if (!$onlineUser) {
+            // Check if user exists but with wrong account_id (orphaned user)
+            $orphanedUser = User::where('email', $systemEmail)->first();
+
+            if ($orphanedUser) {
+                // Update orphaned user with correct account_id
+                $branch = \App\Models\Branch::where('account_id', $account->id)->first();
+
+                $orphanedUser->account_id = $account->id;
+                $orphanedUser->branch_id = $branch ? $branch->id : $orphanedUser->branch_id;
+                $orphanedUser->role = 'sales_staff';
+                $orphanedUser->status = 'active';
+                $orphanedUser->permissions = ['manage_sales' => true];
+                $orphanedUser->save();
+
+                \Log::info('Fixed orphaned online shop user', [
+                    'account_id' => $account->id,
+                    'user_id' => $orphanedUser->id,
+                    'email' => $systemEmail,
+                ]);
+
+                return;
+            }
+
+            // Get first branch for this account (required field)
+            $branch = \App\Models\Branch::where('account_id', $account->id)->first();
+
+            if (!$branch) {
+                \Log::error('Cannot create online shop user - no branch found', [
+                    'account_id' => $account->id,
+                ]);
+                return;
+            }
+
             // Create the online shop system user
-            User::create([
-                'account_id' => $account->id,
+            $user = User::create([
                 'name' => 'Online Mağaza',
                 'email' => $systemEmail,
                 'password' => Hash::make(bin2hex(random_bytes(32))), // Random unguessable password
-                'role' => 'sales_staff', // Limited role - can only create sales
-                'status' => 'active',
+                'branch_id' => $branch->id,
+                'position' => 'System',
+                'hire_date' => now(),
             ]);
+
+            // Set guarded fields separately
+            $user->account_id = $account->id;
+            $user->role = 'sales_staff'; // Limited role - can only create sales
+            $user->status = 'active';
+            $user->permissions = ['manage_sales' => true];
+            $user->save();
 
             \Log::info('Created online shop system user', [
                 'account_id' => $account->id,
+                'user_id' => $user->id,
                 'email' => $systemEmail,
             ]);
         }

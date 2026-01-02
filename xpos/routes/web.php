@@ -926,10 +926,15 @@ Route::middleware(['auth', 'account.access'])->group(function () {
 });
 
 // Public shop routes (no auth, rate limiting only)
-Route::prefix('shop/{shop_slug}')->name('shop.')->middleware(['throttle:60,1'])->group(function () {
-    Route::get('/', [App\Http\Controllers\PublicShopController::class, 'index'])->name('home');
-    Route::get('/product/{id}', [App\Http\Controllers\PublicShopController::class, 'show'])->name('product');
-    Route::post('/order', [App\Http\Controllers\PublicShopController::class, 'createOrder'])->name('order');
-    Route::get('/order/success/{order_number}', [App\Http\Controllers\PublicShopController::class, 'orderSuccess'])->name('order.success');
-});
+// Subdomain routing: shop.xpos.az/{shop_slug}
+Route::domain(config('app.shop_domain', 'shop.' . parse_url(config('app.url'), PHP_URL_HOST)))
+    ->prefix('{shop_slug}')
+    ->name('shop.')
+    ->middleware(['throttle:60,1'])
+    ->group(function () {
+        Route::get('/', [App\Http\Controllers\PublicShopController::class, 'index'])->name('home');
+        Route::get('/product/{id}', [App\Http\Controllers\PublicShopController::class, 'show'])->name('product');
+        Route::post('/order', [App\Http\Controllers\PublicShopController::class, 'createOrder'])->name('order');
+        Route::get('/order/success/{order_number}', [App\Http\Controllers\PublicShopController::class, 'orderSuccess'])->name('order.success');
+    });
 
