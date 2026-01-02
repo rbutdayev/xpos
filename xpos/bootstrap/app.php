@@ -161,6 +161,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => \App\Http\Middleware\SuperAdminAccess::class,
             'branch.access' => \App\Http\Middleware\BranchAccess::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'kiosk.auth' => \App\Http\Middleware\KioskAuthMiddleware::class,
+            'kiosk.rate_limit' => \App\Http\Middleware\KioskRateLimitMiddleware::class,
         ]);
 
         // API routes don't need CSRF protection (stateless)
