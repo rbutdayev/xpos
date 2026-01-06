@@ -62,6 +62,9 @@ class IntegrationsController extends Controller
         // Check Gift Cards module
         $giftCardsModuleEnabled = $account->gift_cards_module_enabled ?? false;
 
+        // Check Expeditor module
+        $expeditorModuleEnabled = $account->expeditor_module_enabled ?? false;
+
         // Check Delivery Platforms
         $woltEnabled = $account->wolt_enabled ?? false;
         $yangoEnabled = $account->yango_enabled ?? false;
@@ -92,6 +95,7 @@ class IntegrationsController extends Controller
             'rentModuleEnabled' => $rentModuleEnabled,
             'discountsModuleEnabled' => $discountsModuleEnabled,
             'giftCardsModuleEnabled' => $giftCardsModuleEnabled,
+            'expeditorModuleEnabled' => $expeditorModuleEnabled,
             'woltEnabled' => $woltEnabled,
             'yangoEnabled' => $yangoEnabled,
             'boltEnabled' => $boltEnabled,
@@ -139,5 +143,123 @@ class IntegrationsController extends Controller
         return Inertia::render('Integrations/Telegram/Settings', [
             'credentials' => $credentials,
         ]);
+    }
+
+    /**
+     * Bulk disable integrations
+     */
+    public function bulkDisable(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|string',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $account = Auth::user()->account;
+
+        try {
+            \DB::beginTransaction();
+
+            $disabledCount = 0;
+            $toggleableModules = ['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'shop', 'wolt', 'yango', 'bolt'];
+
+            foreach ($request->ids as $integrationId) {
+                // Only disable if it's a toggleable module
+                if (in_array($integrationId, $toggleableModules)) {
+                    // Map integration ID to account field
+                    $fieldMap = [
+                        'services' => 'services_module_enabled',
+                        'rent' => 'rent_module_enabled',
+                        'discounts' => 'discounts_module_enabled',
+                        'gift_cards' => 'gift_cards_module_enabled',
+                        'expeditor' => 'expeditor_module_enabled',
+                        'shop' => 'shop_enabled',
+                        'wolt' => 'wolt_enabled',
+                        'yango' => 'yango_enabled',
+                        'bolt' => 'bolt_enabled',
+                    ];
+
+                    if (isset($fieldMap[$integrationId])) {
+                        $field = $fieldMap[$integrationId];
+
+                        // Update only if account_id matches (security check)
+                        \DB::table('accounts')
+                            ->where('id', $accountId)
+                            ->update([$field => false]);
+
+                        $disabledCount++;
+                    }
+                }
+            }
+
+            \DB::commit();
+
+            return redirect()->back()->with('success', "$disabledCount inteqrasiya deaktiv edildi");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk activate integrations
+     */
+    public function bulkActivate(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|string',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+        $account = Auth::user()->account;
+
+        try {
+            \DB::beginTransaction();
+
+            $activatedCount = 0;
+            $toggleableModules = ['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'shop', 'wolt', 'yango', 'bolt'];
+
+            foreach ($request->ids as $integrationId) {
+                // Only activate if it's a toggleable module
+                if (in_array($integrationId, $toggleableModules)) {
+                    // Map integration ID to account field
+                    $fieldMap = [
+                        'services' => 'services_module_enabled',
+                        'rent' => 'rent_module_enabled',
+                        'discounts' => 'discounts_module_enabled',
+                        'gift_cards' => 'gift_cards_module_enabled',
+                        'expeditor' => 'expeditor_module_enabled',
+                        'shop' => 'shop_enabled',
+                        'wolt' => 'wolt_enabled',
+                        'yango' => 'yango_enabled',
+                        'bolt' => 'bolt_enabled',
+                    ];
+
+                    if (isset($fieldMap[$integrationId])) {
+                        $field = $fieldMap[$integrationId];
+
+                        // Update only if account_id matches (security check)
+                        \DB::table('accounts')
+                            ->where('id', $accountId)
+                            ->update([$field => true]);
+
+                        $activatedCount++;
+                    }
+                }
+            }
+
+            \DB::commit();
+
+            return redirect()->back()->with('success', "$activatedCount inteqrasiya aktiv edildi");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+        }
     }
 }

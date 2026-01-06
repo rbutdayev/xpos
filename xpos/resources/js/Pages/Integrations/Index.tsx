@@ -13,7 +13,14 @@ import {
     WrenchScrewdriverIcon,
     ClockIcon,
     TruckIcon,
+    ExclamationTriangleIcon,
+    ArrowTopRightOnSquareIcon,
+    ChevronRightIcon,
+    EyeIcon,
+    PencilIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 
 interface Integration {
     id: string;
@@ -26,7 +33,7 @@ interface Integration {
     color: string;
     features: string[];
     requiresOwner?: boolean;
-    isSimpleToggle?: boolean; // For modules that don't have configuration
+    isSimpleToggle?: boolean;
 }
 
 interface DependencyStatus {
@@ -48,6 +55,7 @@ interface IntegrationsProps extends PageProps {
     rentModuleEnabled: boolean;
     discountsModuleEnabled: boolean;
     giftCardsModuleEnabled: boolean;
+    expeditorModuleEnabled: boolean;
     woltEnabled?: boolean;
     yangoEnabled?: boolean;
     boltEnabled?: boolean;
@@ -69,6 +77,7 @@ export default function Index({
     rentModuleEnabled,
     discountsModuleEnabled,
     giftCardsModuleEnabled,
+    expeditorModuleEnabled,
     woltEnabled = false,
     yangoEnabled = false,
     boltEnabled = false,
@@ -76,7 +85,6 @@ export default function Index({
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
 
-    // Helper to check if a module can be enabled
     const canEnableModule = (moduleId: string): { canEnable: boolean; message?: string } => {
         if (!dependencyStatus[moduleId]) {
             return { canEnable: true };
@@ -293,13 +301,30 @@ export default function Index({
                 'Çoxdəfəli istifadə'
             ],
             isSimpleToggle: true
+        },
+        {
+            id: 'expeditor',
+            name: 'Ekspeditor (Sahə Satışı)',
+            description: 'Müştəri yerində məhsul kataloqu göstərib satış aparın',
+            icon: TruckIcon,
+            category: 'business',
+            status: expeditorModuleEnabled ? 'active' : 'inactive',
+            route: '/expeditor',
+            color: 'orange',
+            features: [
+                'Mobil məhsul kataloqu',
+                'Müştəri yerində satış',
+                'GPS məkan qeydi',
+                'Sürətli sifariş təkrarı'
+            ],
+            isSimpleToggle: true
         }
     ];
 
     const categories = [
         { id: 'all', name: 'Hamısı', count: integrations.length },
         { id: 'business', name: 'Biznes Modulları', count: integrations.filter(i => i.category === 'business').length },
-        { id: 'delivery', name: 'Çatdırılma Platformaları', count: integrations.filter(i => i.category === 'delivery').length },
+        { id: 'delivery', name: 'Çatdırılma', count: integrations.filter(i => i.category === 'delivery').length },
         { id: 'communication', name: 'Əlaqə', count: integrations.filter(i => i.category === 'communication').length },
         { id: 'fiscal', name: 'Fiskal', count: integrations.filter(i => i.category === 'fiscal').length },
         { id: 'loyalty', name: 'Loyallıq', count: integrations.filter(i => i.category === 'loyalty').length },
@@ -312,47 +337,6 @@ export default function Index({
         ? integrations
         : integrations.filter(i => i.category === selectedCategory);
 
-    const getStatusBadge = (status: Integration['status'], isSimpleToggle?: boolean) => {
-        switch (status) {
-            case 'active':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircleIcon className="w-4 h-4 mr-1" />
-                        Aktiv
-                    </span>
-                );
-            case 'inactive':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {isSimpleToggle ? 'Deaktiv' : 'Konfiqurasiya edilib'}
-                    </span>
-                );
-            case 'not_configured':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Quraşdırılmayıb
-                    </span>
-                );
-        }
-    };
-
-    const getColorClasses = (color: string, type: 'bg' | 'border' | 'text' | 'button' = 'bg') => {
-        const classes: Record<string, Record<string, string>> = {
-            blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', button: 'bg-blue-600' },
-            sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', button: 'bg-sky-600' },
-            emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', button: 'bg-emerald-600' },
-            green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-600', button: 'bg-green-600' },
-            purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', button: 'bg-purple-600' },
-            violet: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-600', button: 'bg-violet-600' },
-            indigo: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-600', button: 'bg-indigo-600' },
-            teal: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600', button: 'bg-teal-600' },
-            amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', button: 'bg-amber-600' },
-            yellow: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-600', button: 'bg-yellow-600' },
-            pink: { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-600', button: 'bg-pink-600' },
-        };
-        return classes[color]?.[type] || classes.blue[type];
-    };
-
     const handleIntegrationClick = (integration: Integration) => {
         if (integration.requiresOwner && !isOwner) {
             alert('Bu inteqrasiyaya yalnız account owner daxil ola bilər.');
@@ -362,7 +346,6 @@ export default function Index({
     };
 
     const handleToggleModule = (moduleId: string, currentlyEnabled: boolean) => {
-        // If trying to enable, check dependencies first
         if (!currentlyEnabled) {
             const { canEnable, message } = canEnableModule(moduleId);
             if (!canEnable) {
@@ -378,222 +361,353 @@ export default function Index({
         });
     };
 
+    // Handle double-click to view/configure integration
+    const handleRowDoubleClick = (integration: Integration) => {
+        handleIntegrationClick(integration);
+    };
+
+    // Handle bulk disable for multiple integrations
+    const handleBulkDisable = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} inteqrasiyanı deaktiv etmək istədiyinizə əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.post('/integrations/bulk-disable', {
+                ids: selectedIds
+            }, {
+                onError: (errors) => {
+                    alert('Deaktiv etmə zamanı xəta baş verdi');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Handle bulk activate for multiple integrations
+    const handleBulkActivate = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} inteqrasiyanı aktiv etmək istədiyinizə əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.post('/integrations/bulk-activate', {
+                ids: selectedIds
+            }, {
+                onError: (errors) => {
+                    alert('Aktiv etmə zamanı xəta baş verdi');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedIntegrations: Integration[]): BulkAction[] => {
+        // If only ONE integration is selected, show individual actions
+        if (selectedIds.length === 1 && selectedIntegrations.length === 1) {
+            const integration = selectedIntegrations[0];
+
+            const actions: BulkAction[] = [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => handleIntegrationClick(integration)
+                },
+                {
+                    label: integration.status === 'not_configured' ? 'Quraşdır' : 'Parametrlər',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => handleIntegrationClick(integration)
+                }
+            ];
+
+            // Add toggle actions for toggleable integrations
+            if (['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'shop', 'wolt', 'yango', 'bolt'].includes(integration.id)) {
+                if (integration.status === 'active') {
+                    actions.push({
+                        label: 'Deaktiv et',
+                        icon: <TrashIcon className="w-4 h-4" />,
+                        variant: 'danger' as const,
+                        onClick: () => handleToggleModule(integration.id, true)
+                    });
+                } else if (integration.status === 'inactive') {
+                    actions.push({
+                        label: 'Aktiv et',
+                        icon: <CheckCircleIcon className="w-4 h-4" />,
+                        variant: 'success' as const,
+                        onClick: () => handleToggleModule(integration.id, false)
+                    });
+                }
+            }
+
+            return actions;
+        }
+
+        // Multiple integrations selected - show bulk actions
+        return [
+            {
+                label: 'Aktiv et',
+                icon: <CheckCircleIcon className="w-4 h-4" />,
+                variant: 'success' as const,
+                onClick: handleBulkActivate
+            },
+            {
+                label: 'Deaktiv et',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDisable
+            }
+        ];
+    };
+
+    // Brand color configurations for each integration
+    const brandColors: Record<string, { gradient: string; iconColor: string; border?: string }> = {
+        'shop': {
+            gradient: 'bg-gradient-to-br from-blue-500 to-indigo-600',
+            iconColor: 'text-white'
+        },
+        'wolt': {
+            gradient: 'bg-gradient-to-br from-[#009DE0] to-[#0077B6]',
+            iconColor: 'text-white'
+        },
+        'yango': {
+            gradient: 'bg-gradient-to-br from-[#FFCC00] to-[#FF9900]',
+            iconColor: 'text-gray-900'
+        },
+        'bolt': {
+            gradient: 'bg-gradient-to-br from-[#34D186] to-[#14B068]',
+            iconColor: 'text-white'
+        },
+        'sms': {
+            gradient: 'bg-gradient-to-br from-blue-400 to-blue-600',
+            iconColor: 'text-white'
+        },
+        'telegram': {
+            gradient: 'bg-gradient-to-br from-[#2AABEE] to-[#229ED9]',
+            iconColor: 'text-white'
+        },
+        'fiscal-printer': {
+            gradient: 'bg-gradient-to-br from-emerald-500 to-green-600',
+            iconColor: 'text-white'
+        },
+        'loyalty-program': {
+            gradient: 'bg-gradient-to-br from-purple-500 to-pink-600',
+            iconColor: 'text-white'
+        },
+        'services': {
+            gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+            iconColor: 'text-white'
+        },
+        'rent': {
+            gradient: 'bg-gradient-to-br from-teal-500 to-cyan-600',
+            iconColor: 'text-white'
+        },
+        'discounts': {
+            gradient: 'bg-gradient-to-br from-orange-500 to-red-600',
+            iconColor: 'text-white'
+        },
+        'gift_cards': {
+            gradient: 'bg-gradient-to-br from-pink-500 to-rose-600',
+            iconColor: 'text-white'
+        }
+    };
+
+    // Table columns configuration
+    const tableColumns = [
+        {
+            key: 'icon',
+            label: '',
+            render: (integration: Integration) => {
+                const IconComponent = integration.icon;
+                const colors = brandColors[integration.id] || {
+                    gradient: 'bg-gradient-to-br from-gray-400 to-gray-600',
+                    iconColor: 'text-white'
+                };
+
+                return (
+                    <div className="flex-shrink-0">
+                        <div className={`w-12 h-12 rounded-lg ${colors.gradient} flex items-center justify-center shadow-sm`}>
+                            <IconComponent className={`w-6 h-6 ${colors.iconColor}`} />
+                        </div>
+                    </div>
+                );
+            }
+        },
+        {
+            key: 'name',
+            label: 'Ad',
+            sortable: true,
+            render: (integration: Integration) => (
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-base font-semibold text-gray-900">{integration.name}</h3>
+                        {integration.requiresOwner && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                Owner
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-sm text-gray-600">{integration.description}</p>
+                </div>
+            )
+        },
+        {
+            key: 'category',
+            label: 'Kateqoriya',
+            render: (integration: Integration) => {
+                const categoryLabels: Record<string, string> = {
+                    'communication': 'Əlaqə',
+                    'fiscal': 'Fiskal',
+                    'loyalty': 'Loyallıq',
+                    'payment': 'Ödəniş',
+                    'business': 'Biznes',
+                    'delivery': 'Çatdırılma',
+                    'other': 'Digər'
+                };
+                return (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-xs font-medium text-gray-700">
+                        {categoryLabels[integration.category] || integration.category}
+                    </span>
+                );
+            }
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (integration: Integration) => {
+                if (integration.status === 'active') {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-xs font-medium text-emerald-700">Aktiv</span>
+                        </span>
+                    );
+                } else if (integration.status === 'inactive') {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-50 border border-gray-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                            <span className="text-xs font-medium text-gray-600">
+                                {integration.isSimpleToggle ? 'Deaktiv' : 'Konfiqurasiya edilib'}
+                            </span>
+                        </span>
+                    );
+                } else {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="text-xs font-medium text-amber-700">Quraşdırılmayıb</span>
+                        </span>
+                    );
+                }
+            }
+        },
+        {
+            key: 'features',
+            label: 'Xüsusiyyətlər',
+            render: (integration: Integration) => (
+                <div className="flex flex-wrap gap-1.5">
+                    {integration.features.slice(0, 3).map((feature, index) => (
+                        <span
+                            key={index}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs text-gray-700"
+                        >
+                            <CheckCircleIcon className="w-3 h-3 text-gray-400" />
+                            {feature}
+                        </span>
+                    ))}
+                    {integration.features.length > 3 && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs text-gray-500">
+                            +{integration.features.length - 3}
+                        </span>
+                    )}
+                </div>
+            )
+        }
+    ];
+
+    // Prepare data for SharedDataTable - it expects paginated data structure
+    const paginatedData = {
+        data: filteredIntegrations,
+        links: [],
+        current_page: 1,
+        last_page: 1,
+        total: filteredIntegrations.length,
+        per_page: filteredIntegrations.length,
+        from: 1,
+        to: filteredIntegrations.length
+    };
+
+    // Category filter configuration
+    const tableFilters = [
+        {
+            key: 'category',
+            type: 'dropdown' as const,
+            label: 'Kateqoriya',
+            value: selectedCategory,
+            onChange: setSelectedCategory,
+            options: categories.map(cat => ({
+                value: cat.id,
+                label: `${cat.name} (${cat.count})`
+            }))
+        }
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Tətbiqlər və İnteqrasiyalar" />
 
-            <div className="py-6 sm:py-12">
-                <div className="px-4 sm:px-6 lg:px-8">
-                    {/* Category Filter - Enterprise Style */}
-                    <div className="mb-6">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-                            <nav className="flex flex-wrap gap-1">
-                                {categories.map((category) => (
-                                    <button
-                                        key={category.id}
-                                        onClick={() => setSelectedCategory(category.id)}
-                                        className={`
-                                            relative flex items-center gap-2.5 px-4 py-3 rounded-md
-                                            font-medium text-sm transition-all duration-200 ease-in-out
-                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
-                                            whitespace-nowrap
-                                            ${selectedCategory === category.id
-                                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
-                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
-                                            }
-                                        `}
-                                    >
-                                        <span className="font-semibold">{category.name}</span>
-                                        <span className={`
-                                            py-0.5 px-2.5 rounded-full text-xs font-medium
-                                            ${selectedCategory === category.id
-                                                ? 'bg-white/20 text-white'
-                                                : 'bg-gray-100 text-gray-700'
-                                            }
-                                        `}>
-                                            {category.count}
-                                        </span>
-                                        {selectedCategory === category.id && (
-                                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
-                                        )}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
-                    </div>
+            <div className="w-full">
+                {/* Header Section */}
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                        İnteqrasiyalar
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600">
+                        Biznesinizi genişləndirmək və avtomatlaşdırmaq üçün xidmətləri və modulları idarə edin
+                    </p>
+                </div>
 
-                    {/* Integrations Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                        {filteredIntegrations.map((integration) => {
-                            const IconComponent = integration.icon;
-                            const isDisabled = integration.requiresOwner && !isOwner;
-
-                            return (
-                                <div
-                                    key={integration.id}
-                                    className={`
-                                        bg-white rounded-lg shadow-sm border-2 overflow-hidden
-                                        ${isDisabled ? 'opacity-60' : 'hover:shadow-md'}
-                                        transition-all duration-200
-                                        ${getColorClasses(integration.color, 'border')}
-                                        flex flex-col
-                                    `}
-                                >
-                                    <div className={`p-4 sm:p-6 ${getColorClasses(integration.color, 'bg')} flex-1 flex flex-col`}>
-                                        <div className="flex items-start justify-between">
-                                            <div className={`p-2 sm:p-3 rounded-lg ${getColorClasses(integration.color, 'text')} bg-white`}>
-                                                <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
-                                            </div>
-                                            {getStatusBadge(integration.status, integration.isSimpleToggle)}
-                                        </div>
-
-                                        <div className="mt-3 sm:mt-4">
-                                            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                                                {integration.name}
-                                                {integration.requiresOwner && (
-                                                    <span className="ml-2 text-xs text-gray-500">(Owner)</span>
-                                                )}
-                                            </h3>
-                                            <p className="mt-2 text-sm text-gray-600">
-                                                {integration.description}
-                                            </p>
-
-                                            {/* Shop URL Display */}
-                                            {integration.id === 'shop' && shopEnabled && shopUrl && (
-                                                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                                                    <p className="text-xs font-medium text-blue-800">Mağaza URL:</p>
-                                                    <a
-                                                        href={shopUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xs text-blue-600 hover:text-blue-800 underline break-all"
-                                                    >
-                                                        {shopUrl}
-                                                    </a>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Dependency Warning */}
-                                        {integration.status !== 'active' && !canEnableModule(integration.id).canEnable && (
-                                            <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                                                <div className="flex items-start">
-                                                    <svg className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                    </svg>
-                                                    <div>
-                                                        <p className="text-xs font-medium text-yellow-800">
-                                                            Qoşulma tələb edir
-                                                        </p>
-                                                        <p className="text-xs text-yellow-700 mt-1">
-                                                            {canEnableModule(integration.id).message}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Features */}
-                                        <div className="mt-4 space-y-2 flex-1">
-                                            {integration.features.map((feature, index) => (
-                                                <div key={index} className="flex items-center text-sm text-gray-700">
-                                                    <CheckCircleIcon className={`w-4 h-4 mr-2 ${getColorClasses(integration.color, 'text')}`} />
-                                                    {feature}
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Action Button */}
-                                        <div className="mt-auto pt-4 sm:pt-6">
-                                            {['services', 'rent', 'discounts', 'gift_cards', 'shop', 'wolt', 'yango', 'bolt'].includes(integration.id) ? (
-                                                // Toggle switch for business modules
-                                                <button
-                                                    onClick={() => handleToggleModule(integration.id, integration.status === 'active')}
-                                                    disabled={integration.status !== 'active' && !canEnableModule(integration.id).canEnable}
-                                                    className={`
-                                                        w-full flex items-center justify-center px-3 sm:px-4 py-2 border-2
-                                                        rounded-md shadow-sm text-xs sm:text-sm font-medium
-                                                        ${integration.status !== 'active' && !canEnableModule(integration.id).canEnable
-                                                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                            : integration.status === 'active'
-                                                                ? `${getColorClasses(integration.color, 'button')} text-white hover:opacity-90`
-                                                                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                                                        }
-                                                        focus:outline-none focus:ring-2 focus:ring-offset-2
-                                                        transition-all duration-200
-                                                    `}
-                                                >
-                                                    {integration.status === 'active' ? (
-                                                        <>
-                                                            <CheckCircleIcon className="w-5 h-5 mr-2" />
-                                                            Aktivdir - Söndür
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Cog6ToothIcon className="w-5 h-5 mr-2" />
-                                                            Aktivləşdir
-                                                        </>
-                                                    )}
-                                                </button>
-                                            ) : (
-                                                // Regular button for other integrations
-                                                <button
-                                                    onClick={() => handleIntegrationClick(integration)}
-                                                    disabled={isDisabled}
-                                                    className={`
-                                                        w-full flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent
-                                                        rounded-md shadow-sm text-xs sm:text-sm font-medium text-white
-                                                        ${isDisabled
-                                                            ? 'bg-gray-400 cursor-not-allowed'
-                                                            : `${getColorClasses(integration.color, 'button')} hover:opacity-90`
-                                                        }
-                                                        focus:outline-none focus:ring-2 focus:ring-offset-2
-                                                        transition-colors duration-200
-                                                    `}
-                                                >
-                                                    <Cog6ToothIcon className="w-5 h-5 mr-2" />
-                                                    {integration.status === 'not_configured' ? 'Quraşdır' : 'Parametrlər'}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Empty State */}
-                    {filteredIntegrations.length === 0 && (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500">Bu kateqoriyada heç bir inteqrasiya yoxdur.</p>
-                        </div>
-                    )}
-
-                    {/* Info Box */}
-                    <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                {/* Info Banner */}
+                <div className="mb-6 bg-blue-50/50 border border-blue-100 rounded-lg p-4">
+                    <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                 </svg>
                             </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-blue-800">
-                                    İnteqrasiyalar haqqında
-                                </h3>
-                                <div className="mt-2 text-xs sm:text-sm text-blue-700">
-                                    <p>
-                                        Tətbiqlər və inteqrasiyalar sizin biznesinizi daha effektiv idarə etməyə kömək edir.
-                                        Hər bir xidməti aktivləşdirmək üçün uyğun parametrləri konfiqurasiya etməlisiniz.
-                                    </p>
-                                    <p className="mt-2">
-                                        <strong>Qeyd:</strong> Bəzi inteqrasiyalar (məsələn, Fiskal Printer) yalnız account owner tərəfindən idarə oluna bilər.
-                                    </p>
-                                </div>
-                            </div>
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                                Tətbiqlər və inteqrasiyalar sizin biznesinizi daha effektiv idarə etməyə kömək edir.
+                                Hər bir xidməti aktivləşdirmək üçün uyğun parametrləri konfiqurasiya etməlisiniz.
+                            </p>
+                            <p className="text-xs text-gray-600 mt-2">
+                                <strong className="font-semibold">Qeyd:</strong> Bəzi inteqrasiyalar yalnız account owner tərəfindən idarə oluna bilər.
+                            </p>
                         </div>
                     </div>
                 </div>
+
+                <SharedDataTable
+                    data={paginatedData as any}
+                    columns={tableColumns as any}
+                    selectable={true}
+                    bulkActions={getBulkActions}
+                    filters={tableFilters}
+                    emptyState={{
+                        icon: <Cog6ToothIcon className="w-12 h-12" />,
+                        title: 'Heç bir inteqrasiya tapılmadı',
+                        description: 'Bu kateqoriyada heç bir inteqrasiya yoxdur.'
+                    }}
+                    fullWidth={true}
+                    dense={false}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(integration: Integration) => {
+                        const isDisabled = integration.requiresOwner && !isOwner;
+                        return `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                            isDisabled ? 'opacity-60' : ''
+                        }`;
+                    }}
+                />
             </div>
         </AuthenticatedLayout>
     );

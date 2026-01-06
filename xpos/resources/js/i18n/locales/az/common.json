@@ -26,7 +26,13 @@
     "remove": "Sil",
     "addPayment": "Ödəniş əlavə et",
     "scanBarcode": "Barkod oxut",
-    "logout": "Çıxış"
+    "logout": "Çıxış",
+    "pay": "Ödə",
+    "bulkDelete": "Toplu Silmə",
+    "create_sale": "Yeni Satış Yarat",
+    "create_product": "Yeni Məhsul Əlavə Et",
+    "create_customer": "Yeni Müştəri Əlavə Et",
+    "create_expense": "Yeni Xərc Əlavə Et"
   },
   "labels": {
     "name": "Ad",
@@ -141,11 +147,38 @@
     "home": "Ana səhifə",
     "expand": "Genişlət",
     "collapse": "Kiçilt",
-    "reports": "Hesabatlar"
+    "reports": "Hesabatlar",
+    "warehouse": "Anbar",
+    "finance": "Maliyyə",
+    "administration": "İdarəetmə",
+    "rentals": "İcarə",
+    "pos": "POS",
+    "returns": "Geri Qaytarma",
+    "new_sale": "Yeni Satış",
+    "new_product": "Yeni Məhsul",
+    "new_expense": "Yeni Xərc",
+    "bulk_create": "Toplu Yaratma",
+    "discounts": "Endirimlər",
+    "send_sms": "SMS Göndər",
+    "product_stock": "Məhsul Stoku",
+    "transfers": "Transfer",
+    "alerts": "Xəbərdarlıqlar",
+    "product_history": "Məhsul Tarixçəsi",
+    "expense_categories": "Xərc Kateqoriyaları",
+    "printer_configs": "Printer Konfiqurasiyaları",
+    "search": "Axtar",
+    "products_list": "Məhsul Siyahısı"
   },
   "footer": {
     "version": "Versiya",
     "support": "Dəstək"
+  },
+  "command_palette": {
+    "search_placeholder": "Səhifələri, əməliyyatları axtar...",
+    "no_results": "Nəticə tapılmadı",
+    "action": "Əməliyyat",
+    "navigate": "Naviqasiya",
+    "select": "Seç"
   },
   "pagination": {
     "previous": "Əvvəlki",
@@ -212,7 +245,9 @@
     "cancelled": "Ləğv edildi",
     "refunded": "Geri qaytarıldı",
     "active": "Aktiv",
-    "inactive": "Qeyri-aktiv"
+    "inactive": "Qeyri-aktiv",
+    "sent": "Göndərildi",
+    "failed": "Uğursuz"
   },
   "dataTable": {
     "emptyTitle": "Məlumat tapılmadı",

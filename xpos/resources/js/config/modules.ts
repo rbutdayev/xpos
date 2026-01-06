@@ -13,6 +13,7 @@ import {
     GiftIcon,
     ReceiptPercentIcon,
     ChatBubbleLeftRightIcon,
+    TruckIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -24,7 +25,7 @@ export interface ModuleConfig {
     nameAz: string; // Azerbaijani translation
     description: string;
     icon: React.ComponentType<{ className?: string }>;
-    flagKey?: 'services_module_enabled' | 'rent_module_enabled' | 'shop_enabled' | 'loyalty_module_enabled' | 'discounts_module_enabled'; // Optional for modules like SMS
+    flagKey?: 'services_module_enabled' | 'rent_module_enabled' | 'shop_enabled' | 'loyalty_module_enabled' | 'discounts_module_enabled' | 'expeditor_module_enabled'; // Optional for modules like SMS
     routes: string[];
     permissions: string[];
     requiredRoles: string[];
@@ -136,6 +137,21 @@ export const MODULES: Record<string, ModuleConfig> = {
         ],
         permissions: ['manage-products'],
         requiredRoles: ['admin', 'account_owner'],
+        category: 'sales',
+    },
+
+    expeditor: {
+        id: 'expeditor',
+        name: 'Expeditor (Field Sales)',
+        nameAz: 'Ekspeditor (Sahə Satışı)',
+        description: 'Müştəri yerində kataloq göstərmə və satış',
+        icon: TruckIcon,
+        flagKey: 'expeditor_module_enabled',
+        routes: [
+            '/expeditor'
+        ],
+        permissions: ['access-pos'],
+        requiredRoles: ['admin', 'account_owner', 'sales_staff'],
         category: 'sales',
     },
 };

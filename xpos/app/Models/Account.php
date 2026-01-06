@@ -84,6 +84,7 @@ class Account extends Model
         'rent_module_enabled' => 'boolean',
         'discounts_module_enabled' => 'boolean',
         'gift_cards_module_enabled' => 'boolean',
+        'expeditor_module_enabled' => 'boolean',
         // Delivery platform integrations
         'wolt_enabled' => 'boolean',
         'wolt_api_key' => 'encrypted',
@@ -268,6 +269,12 @@ class Account extends Model
     public function isGiftCardsModuleEnabled(): bool
     {
         return $this->gift_cards_module_enabled ?? false;
+    }
+
+    // Expeditor module helper methods
+    public function isExpeditorModuleEnabled(): bool
+    {
+        return $this->expeditor_module_enabled ?? false;
     }
 
     // Delivery platform helper methods

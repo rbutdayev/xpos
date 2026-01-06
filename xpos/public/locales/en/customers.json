@@ -76,6 +76,7 @@
     "view": "View",
     "edit": "Edit",
     "delete": "Delete",
+    "bulkDelete": "Delete Selected",
     "reset": "Reset",
     "cancel": "Cancel",
     "save": "Save",

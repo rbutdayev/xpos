@@ -217,7 +217,7 @@ class KioskSaleProcessor
             'discount_amount' => $discountAmount,
             'total' => $total,
             'status' => 'completed',
-            'user_id' => null, // Kiosk sales don't have a specific user
+            'user_id' => $data['user_id'] ?? null, // Kiosk user who made the sale
             'notes' => $notes,
             'sale_date' => $saleDate,
             'payment_status' => $data['payment_status'] ?? 'paid',
@@ -352,7 +352,7 @@ class KioskSaleProcessor
                 'type' => 'xaric_olma',
                 'reference_type' => 'sale',
                 'reference_id' => $sale->sale_id,
-                'user_id' => null, // Kiosk sale
+                'user_id' => $sale->user_id, // Kiosk user who made the sale
                 'notes' => "Kiosk Satış #{$sale->sale_number}",
                 'occurred_at' => $sale->created_at ?? now(),
             ]);

@@ -1324,4 +1324,156 @@ class GoodsReceiptController extends Controller
             'account' => $goodsReceipt->account,
         ]);
     }
+
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:goods_receipts,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $accountId = Auth::user()->account_id;
+            $deletedCount = 0;
+            $errors = [];
+
+            // Fetch all goods receipts that belong to the user's account
+            $goodsReceipts = GoodsReceipt::whereIn('id', $request->ids)
+                ->where('account_id', $accountId)
+                ->get();
+
+            // Check if any IDs were not found or don't belong to the account
+            if ($goodsReceipts->count() !== count($request->ids)) {
+                throw new \Exception('Bəzi mal qəbulları tapılmadı və ya sizə aid deyil');
+            }
+
+            foreach ($goodsReceipts as $goodsReceipt) {
+                // Validate business rules for each receipt
+                if ($goodsReceipt->payment_status === 'paid') {
+                    $errors[] = "Qəbul #{$goodsReceipt->receipt_number}: Ödənilmiş mal qəbulunu silmək mümkün deyil";
+                    continue;
+                }
+
+                if ($goodsReceipt->payment_status === 'partial') {
+                    $errors[] = "Qəbul #{$goodsReceipt->receipt_number}: Qismən ödənilmiş mal qəbulunu silmək mümkün deyil";
+                    continue;
+                }
+
+                // Check if stock has been sold for completed receipts
+                if ($goodsReceipt->status === 'completed') {
+                    $hasStockIssues = false;
+                    foreach ($goodsReceipt->items as $item) {
+                        $currentStock = ProductStock::where('product_id', $item->product_id)
+                            ->where('warehouse_id', $goodsReceipt->warehouse_id)
+                            ->where('variant_id', $item->variant_id)
+                            ->where('account_id', $goodsReceipt->account_id)
+                            ->first();
+
+                        if ($currentStock && $currentStock->quantity < $item->quantity) {
+                            $errors[] = "Qəbul #{$goodsReceipt->receipt_number}: Stok satılmış ola bilər (Məhsul: {$item->product->name})";
+                            $hasStockIssues = true;
+                            break;
+                        }
+                    }
+
+                    if ($hasStockIssues) {
+                        continue;
+                    }
+                }
+
+                // Delete supplier credit if exists
+                if ($goodsReceipt->supplier_credit_id) {
+                    $supplierCredit = \App\Models\SupplierCredit::find($goodsReceipt->supplier_credit_id);
+                    if ($supplierCredit) {
+                        if ($supplierCredit->status !== 'pending' || $supplierCredit->remaining_amount != $supplierCredit->amount) {
+                            $errors[] = "Qəbul #{$goodsReceipt->receipt_number}: Təchizatçı kreditinə ödəmələr edilib";
+                            continue;
+                        }
+                        $supplierCredit->delete();
+                    }
+                }
+
+                // Delete linked expenses
+                $linkedExpenses = \App\Models\Expense::where('goods_receipt_id', $goodsReceipt->id)->get();
+                foreach ($linkedExpenses as $expense) {
+                    $expense->delete();
+                }
+
+                // Delete stock movements
+                StockMovement::where('reference_type', 'goods_receipt')
+                    ->where('reference_id', $goodsReceipt->id)
+                    ->delete();
+
+                StockMovement::where('reference_type', 'goods_receipt_update')
+                    ->where('reference_id', $goodsReceipt->id)
+                    ->delete();
+
+                // Reverse product stock for completed receipts
+                if ($goodsReceipt->status === 'completed') {
+                    foreach ($goodsReceipt->items as $item) {
+                        $productStock = ProductStock::where('product_id', $item->product_id)
+                            ->where('variant_id', $item->variant_id)
+                            ->where('warehouse_id', $goodsReceipt->warehouse_id)
+                            ->where('account_id', $goodsReceipt->account_id)
+                            ->first();
+
+                        if ($productStock) {
+                            $quantityBefore = $productStock->quantity;
+                            $productStock->decrement('quantity', (float) $item->quantity);
+
+                            // Create stock history
+                            StockHistory::create([
+                                'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'warehouse_id' => $goodsReceipt->warehouse_id,
+                                'quantity_before' => $quantityBefore,
+                                'quantity_change' => -(float) $item->quantity,
+                                'quantity_after' => $quantityBefore - (float) $item->quantity,
+                                'type' => 'duzelis_azaltma',
+                                'reference_type' => 'goods_receipt_delete',
+                                'reference_id' => $goodsReceipt->id,
+                                'user_id' => auth()->id(),
+                                'notes' => "Toplu silinmə - Qəbul: {$goodsReceipt->receipt_number}",
+                                'occurred_at' => now(),
+                            ]);
+                        }
+                    }
+                }
+
+                // Delete document if exists
+                if ($goodsReceipt->document_path) {
+                    $this->documentService->deleteFile($goodsReceipt->document_path);
+                }
+
+                // Soft delete the goods receipt
+                $goodsReceipt->delete();
+                $deletedCount++;
+            }
+
+            DB::commit();
+
+            // Clear dashboard cache
+            if ($deletedCount > 0) {
+                $this->dashboardService->clearCache(auth()->user()->account);
+            }
+
+            if (count($errors) > 0) {
+                return back()
+                    ->with('warning', "$deletedCount mal qəbulu silindi. " . count($errors) . " qəbul silinə bilmədi:")
+                    ->withErrors($errors);
+            }
+
+            return redirect()->route('goods-receipts.index')
+                ->with('success', "$deletedCount mal qəbulu uğurla silindi");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk delete goods receipts failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Toplu silinmə zamanı xəta baş verdi: ' . $e->getMessage()]);
+        }
+    }
 }

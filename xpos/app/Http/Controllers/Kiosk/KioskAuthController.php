@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Kiosk;
 
 use App\Http\Controllers\Controller;
 use App\Models\KioskDeviceToken;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class KioskAuthController extends Controller
@@ -149,6 +151,124 @@ class KioskAuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Device disconnected successfully'
+        ]);
+    }
+
+    /**
+     * Login user to kiosk with PIN
+     */
+    public function loginWithPin(Request $request): JsonResponse
+    {
+        $accountId = $request->input('kiosk_account_id');
+        $branchId = $request->input('kiosk_branch_id');
+
+        // Validate request
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+            'pin' => 'required|string|min:4|max:6',
+        ]);
+
+        // Find user by ID and account_id
+        $user = User::where('id', $validated['user_id'])
+            ->where('account_id', $accountId)
+            ->first();
+
+        if (!$user) {
+            Log::warning('Kiosk login failed: User not found', [
+                'user_id' => $validated['user_id'],
+                'account_id' => $accountId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid user ID or PIN'
+            ], 401);
+        }
+
+        // Check if kiosk is enabled for this user
+        if (!$user->kiosk_enabled) {
+            Log::warning('Kiosk login failed: Kiosk not enabled', [
+                'user_id' => $user->id,
+                'account_id' => $accountId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Kiosk access not enabled for this user'
+            ], 403);
+        }
+
+        // Verify PIN
+        if (!Hash::check($validated['pin'], $user->kiosk_pin)) {
+            Log::warning('Kiosk login failed: Invalid PIN', [
+                'user_id' => $user->id,
+                'account_id' => $accountId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid user ID or PIN'
+            ], 401);
+        }
+
+        // Check if user is assigned to this branch
+        if ($user->branch_id !== $branchId) {
+            Log::warning('Kiosk login failed: User not assigned to branch', [
+                'user_id' => $user->id,
+                'user_branch_id' => $user->branch_id,
+                'kiosk_branch_id' => $branchId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'You are not assigned to this branch. Please contact your manager.'
+            ], 403);
+        }
+
+        Log::info('Kiosk user logged in', [
+            'user_id' => $user->id,
+            'account_id' => $accountId,
+            'branch_id' => $branchId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'branch_id' => $user->branch_id,
+        ]);
+    }
+
+    /**
+     * Get all kiosk-enabled users for offline sync
+     */
+    public function getKioskUsers(Request $request): JsonResponse
+    {
+        $accountId = $request->input('kiosk_account_id');
+
+        // Get all kiosk-enabled users for this account
+        $users = User::where('account_id', $accountId)
+            ->where('kiosk_enabled', true)
+            ->whereNotNull('kiosk_pin')
+            ->select([
+                'id',
+                'account_id',
+                'name',
+                'kiosk_enabled',
+                'kiosk_pin', // Hashed PIN for offline verification
+                'branch_id',
+                'updated_at'
+            ])
+            ->get();
+
+        Log::info('Kiosk users fetched for sync', [
+            'account_id' => $accountId,
+            'user_count' => $users->count(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'users' => $users,
         ]);
     }
 }

@@ -30,6 +30,7 @@ class StockMovementController extends Controller
             'search' => 'nullable|string|max:255',
             'movement_type' => 'nullable|string|in:daxil_olma,xaric_olma',
             'warehouse_id' => 'nullable|integer|exists:warehouses,id',
+            'product_id' => 'nullable|integer|exists:products,id',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'per_page' => 'nullable|integer|min:10|max:100',
@@ -37,6 +38,7 @@ class StockMovementController extends Controller
         $search = $validated['search'] ?? null;
         $movementType = $validated['movement_type'] ?? null;
         $warehouseId = $validated['warehouse_id'] ?? null;
+        $productId = $validated['product_id'] ?? null;
         $dateFrom = $validated['date_from'] ?? null;
         $dateTo = $validated['date_to'] ?? null;
         $perPage = $validated['per_page'] ?? 25;
@@ -54,6 +56,9 @@ class StockMovementController extends Controller
             })
             ->when($warehouseId, function ($query, $warehouseId) {
                 $query->where('warehouse_id', $warehouseId);
+            })
+            ->when($productId, function ($query, $productId) {
+                $query->where('product_id', $productId);
             })
             ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
                 $query->whereBetween('created_at', [$dateFrom, $dateTo]);
@@ -75,7 +80,7 @@ class StockMovementController extends Controller
             'movements' => $movements,
             'warehouses' => $warehouses,
             'movementTypes' => $movementTypes,
-            'filters' => $request->only(['search', 'movement_type', 'warehouse_id', 'date_from', 'date_to']),
+            'filters' => $request->only(['search', 'movement_type', 'warehouse_id', 'product_id', 'date_from', 'date_to']),
         ]);
     }
 
@@ -328,5 +333,52 @@ class StockMovementController extends Controller
             ->get();
 
         return response()->json($movements);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:stock_movements,movement_id',
+        ]);
+
+        $accountId = auth()->user()->account_id;
+        $deletedCount = 0;
+        $errors = [];
+
+        DB::transaction(function () use ($validated, $accountId, &$deletedCount, &$errors) {
+            $movements = StockMovement::whereIn('movement_id', $validated['ids'])
+                ->where('account_id', $accountId)
+                ->get();
+
+            foreach ($movements as $movement) {
+                // Prevent deletion of system-created stock movements
+                if ($movement->reference_type !== null) {
+                    $errors[] = "Movement #{$movement->movement_id} cannot be deleted (system-created)";
+                    continue;
+                }
+
+                try {
+                    $this->reverseStockMovement($movement);
+                    $movement->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to delete movement #{$movement->movement_id}: {$e->getMessage()}";
+                }
+            }
+        });
+
+        if (count($errors) > 0) {
+            return back()->with([
+                'warning' => __('app.bulk_delete_partial', [
+                    'deleted' => $deletedCount,
+                    'total' => count($validated['ids'])
+                ]) . ' Errors: ' . implode(', ', $errors)
+            ]);
+        }
+
+        return back()->with('success', __('app.bulk_delete_success', ['count' => $deletedCount]));
     }
 }

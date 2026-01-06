@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import ExpensesNavigation from '@/Components/ExpensesNavigation';
+import SharedDataTable, { Column, Filter, Action, BulkAction } from '@/Components/SharedDataTable';
 import CreateExpenseModal from '@/Components/Modals/CreateExpenseModal';
 import PaySupplierCreditModal from '@/Components/Modals/PaySupplierCreditModal';
 import CreateSupplierPaymentModal from '@/Components/Modals/CreateSupplierPaymentModal';
@@ -37,6 +36,8 @@ interface Expense {
     status?: string;
     payment_status?: string;
     type?: 'supplier_credit' | 'goods_receipt';
+    entry_type?: 'automatic' | 'manual' | 'migration';
+    old_system_reference?: string;
     supplier_credit_id?: number;
     goods_receipt_id?: number;
     goods_receipt_data?: GoodsReceipt;
@@ -68,6 +69,8 @@ interface SupplierCredit {
     description: string;
     amount: number;
     remaining_amount: number;
+    entry_type?: 'automatic' | 'manual' | 'migration';
+    old_system_reference?: string;
     supplier: {
         id: number;
         name: string;
@@ -340,6 +343,16 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                         {hasChildren && (
                                             <span className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
                                                 {group.children.length} ödəniş
+                                            </span>
+                                        )}
+                                        {/* Manual/Migration Entry Badge */}
+                                        {expense.type === 'supplier_credit' && expense.entry_type && expense.entry_type !== 'automatic' && (
+                                            <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                expense.entry_type === 'manual'
+                                                    ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                                                    : 'bg-amber-100 text-amber-700 border border-amber-200'
+                                            }`}>
+                                                {expense.entry_type === 'manual' ? 'Əl ilə' : 'Köçürmə'}
                                             </span>
                                         )}
                                     </div>
@@ -1101,18 +1114,111 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
         );
     };
 
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} xərci silmək istədiyinizdən əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.post('/expenses/bulk-delete', {
+                ids: selectedIds
+            }, {
+                onError: (errors) => {
+                    console.error('Bulk delete error:', errors);
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Handle row double click
+    const handleRowDoubleClick = (expense: Expense) => {
+        // Route to goods receipt page for goods receipts AND supplier credits linked to goods receipts
+        if ((expense.type === 'goods_receipt' || expense.type === 'supplier_credit') && expense.goods_receipt_id) {
+            router.visit(`/goods-receipts/${expense.goods_receipt_id}`);
+        }
+        // Route to expense page for regular expenses
+        else if (expense.expense_id) {
+            router.visit(`/expenses/${expense.expense_id}`);
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedExpenses: Expense[]): BulkAction[] => {
+        // If only ONE expense is selected, show individual actions
+        if (selectedIds.length === 1 && selectedExpenses.length === 1) {
+            const expense = selectedExpenses[0];
+
+            const actions: BulkAction[] = [];
+
+            // View action
+            if ((expense.type === 'goods_receipt' && expense.goods_receipt_id) ||
+                (expense.type === 'supplier_credit' && expense.goods_receipt_id) ||
+                (expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt' && expense.expense_id)) {
+
+                const href = ((expense.type === 'goods_receipt' || expense.type === 'supplier_credit') && expense.goods_receipt_id)
+                    ? `/goods-receipts/${expense.goods_receipt_id}`
+                    : expense.expense_id ? `/expenses/${expense.expense_id}` : '#';
+
+                actions.push({
+                    label: t('actions.view', { ns: 'common' }) as string,
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(href)
+                });
+            }
+
+            // Edit action (only for regular expenses, not supplier credits or goods receipts)
+            if (expense.type !== 'supplier_credit' && expense.type !== 'goods_receipt') {
+                actions.push({
+                    label: t('actions.edit', { ns: 'common' }) as string,
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(`/expenses/${expense.expense_id}/edit`)
+                });
+            }
+
+            // Delete action
+            if ((expense.type !== 'supplier_credit') &&
+                !(expense.type === 'goods_receipt' && expense.expense_id === null) &&
+                expense.expense_id !== null) {
+                actions.push({
+                    label: t('actions.delete', { ns: 'common' }) as string,
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDelete(expense)
+                });
+            }
+
+            return actions;
+        }
+
+        // Multiple expenses selected - show bulk delete only
+        // Filter to only show deletable expenses
+        const deletableExpenses = selectedExpenses.filter(expense =>
+            expense.type !== 'supplier_credit' &&
+            !(expense.type === 'goods_receipt' && expense.expense_id === null) &&
+            expense.expense_id !== null
+        );
+
+        if (deletableExpenses.length === 0) {
+            return [];
+        }
+
+        return [
+            {
+                label: (t('actions.bulkDelete', { ns: 'common' }) || 'Seçilmişləri Sil') as string,
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title={t('title')} />
 
             <div className="py-6 px-4 sm:px-6 lg:px-8">
-                {/* Expense Navigation */}
-                <ExpensesNavigation
-                    currentRoute={route().current()}
-                    onCreateExpense={() => setShowCreateExpenseModal(true)}
-                    onCreateSupplierPayment={() => setShowSupplierPaymentModal(true)}
-                />
-
                 <div className="w-full">
                     {/* Flash Messages */}
                     {flash?.success && (
@@ -1140,6 +1246,18 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                             </div>
                         </div>
                     )}
+
+                    {/* Action Buttons */}
+                    <div className="mb-4 flex gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowSupplierPaymentModal(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg shadow-md shadow-blue-500/30 hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+                        >
+                            <CurrencyDollarIcon className="w-5 h-5" />
+                            Təchizatçıya Ödə
+                        </button>
+                    </div>
 
                     {/* Mobile View */}
                     {isMobile ? (
@@ -1310,6 +1428,9 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                         fullWidth={true}
                         mobileClickable={true}
                         hideMobileActions={true}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        onRowDoubleClick={handleRowDoubleClick}
                         rowClassName={(expense: Expense) => {
                             // Find group info
                             const groups = groupedExpensesData();
@@ -1325,18 +1446,18 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                             const isExpanded = expense.supplier_credit_id ? expandedGroups.has(expense.supplier_credit_id) : false;
 
                             if (isChild) {
-                                return 'bg-blue-50/30 border-l-4 border-l-blue-200';
+                                return 'bg-blue-50/30 border-l-4 border-l-blue-200 hover:bg-blue-50/50 cursor-pointer';
                             }
 
                             if (hasChildren && isExpanded) {
-                                return 'bg-orange-50/40 border-l-4 border-l-orange-300 shadow-sm';
+                                return 'bg-orange-50/40 border-l-4 border-l-orange-300 shadow-sm hover:bg-orange-50/60 cursor-pointer';
                             }
 
                             if (hasChildren) {
-                                return 'bg-orange-50/20 border-l-4 border-l-orange-200';
+                                return 'bg-orange-50/20 border-l-4 border-l-orange-200 hover:bg-orange-50/40 cursor-pointer';
                             }
 
-                            return '';
+                            return 'hover:bg-gray-50 cursor-pointer';
                         }}
                     />
                     )}

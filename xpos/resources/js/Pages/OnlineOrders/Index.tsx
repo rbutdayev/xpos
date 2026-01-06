@@ -12,8 +12,10 @@ import {
     TruckIcon,
     XCircleIcon,
     PencilIcon,
-    EyeIcon
+    EyeIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 
 interface Sale {
     sale_id: number;
@@ -52,10 +54,13 @@ interface SaleItem {
 
 interface PaginatedSales {
     data: Sale[];
+    links: any[];
     current_page: number;
     last_page: number;
     per_page: number;
     total: number;
+    from: number;
+    to: number;
 }
 
 interface FiscalConfig {
@@ -99,8 +104,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
     const [statusNotes, setStatusNotes] = useState('');
     const [useFiscalPrinter, setUseFiscalPrinter] = useState(true);
 
-    const handleSearch = (e: FormEvent) => {
-        e.preventDefault();
+    const handleSearch = () => {
         router.get('/online-orders', {
             search,
             status: selectedStatus,
@@ -108,6 +112,17 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
             date_from: dateFrom,
             date_to: dateTo,
         }, {
+            preserveState: true,
+        });
+    };
+
+    const handleReset = () => {
+        setSearch('');
+        setSelectedStatus('');
+        setSelectedSource('');
+        setDateFrom('');
+        setDateTo('');
+        router.get('/online-orders', {}, {
             preserveState: true,
         });
     };
@@ -204,6 +219,212 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
         );
     };
 
+    // Handle double-click to view order
+    const handleRowDoubleClick = (order: Sale) => {
+        router.visit(`/sales/${order.sale_id}`);
+    };
+
+    // Handle bulk actions
+    const handleBulkStatusUpdate = (selectedIds: (string | number)[], status: string) => {
+        const statusLabels = {
+            pending: 'Gözləyir',
+            completed: 'Tamamlandı',
+            cancelled: 'Ləğv edilib'
+        };
+        const statusLabel = statusLabels[status as keyof typeof statusLabels];
+        const confirmMessage = `${selectedIds.length} sifarişin statusunu "${statusLabel}" olaraq dəyişmək istədiyinizdən əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.patch('/online-orders/bulk-status', {
+                ids: selectedIds,
+                status: status
+            }, {
+                onError: (errors) => {
+                    alert('Xəta baş verdi: Status dəyişdirilə bilmədi');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    const handleBulkCancel = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} sifarişi ləğv etmək istədiyinizdən əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.delete('/online-orders/bulk-cancel', {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert('Xəta baş verdi: Sifarişlər ləğv edilə bilmədi');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedOrders: Sale[]): BulkAction[] => {
+        // If only ONE order is selected, show individual actions
+        if (selectedIds.length === 1 && selectedOrders.length === 1) {
+            const order = selectedOrders[0];
+
+            return [
+                {
+                    label: 'Ətraflı',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/sales/${order.sale_id}`)
+                },
+                {
+                    label: 'Status Dəyiş',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => {
+                        setStatusModalOrder(order);
+                        setNewStatus(order.status);
+                    }
+                },
+                {
+                    label: 'Ləğv et',
+                    icon: <XCircleIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleBulkCancel([order.sale_id])
+                }
+            ];
+        }
+
+        // Multiple orders selected - show bulk actions
+        return [
+            {
+                label: 'Gözləyir',
+                icon: <ClockIcon className="w-4 h-4" />,
+                variant: 'secondary' as const,
+                onClick: (selectedIds: (string | number)[]) => handleBulkStatusUpdate(selectedIds, 'pending')
+            },
+            {
+                label: 'Tamamlandı',
+                icon: <CheckCircleIcon className="w-4 h-4" />,
+                variant: 'success' as const,
+                onClick: (selectedIds: (string | number)[]) => handleBulkStatusUpdate(selectedIds, 'completed')
+            },
+            {
+                label: 'Ləğv et',
+                icon: <XCircleIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkCancel
+            }
+        ];
+    };
+
+    // Table columns configuration
+    const columns = [
+        {
+            key: 'sale_number',
+            label: 'Sifariş №',
+            render: (order: Sale) => (
+                <div className="font-medium text-gray-900">
+                    #{order.sale_number}
+                </div>
+            )
+        },
+        {
+            key: 'customer_info',
+            label: 'Müştəri',
+            render: (order: Sale) => (
+                <div>
+                    <div className="font-medium text-gray-900">{order.customer_name || 'N/A'}</div>
+                    {order.customer_phone && (
+                        <a
+                            href={`tel:${order.customer_phone}`}
+                            className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <PhoneIcon className="w-3 h-3" />
+                            {order.customer_phone}
+                        </a>
+                    )}
+                </div>
+            )
+        },
+        {
+            key: 'source',
+            label: 'Mənbə',
+            render: (order: Sale) => getSourceBadge(order.source)
+        },
+        {
+            key: 'items_count',
+            label: 'Məhsul',
+            align: 'center' as const,
+            render: (order: Sale) => (
+                <div className="text-sm text-gray-600">
+                    {order.items.length} məhsul
+                </div>
+            )
+        },
+        {
+            key: 'total',
+            label: 'Məbləğ',
+            align: 'right' as const,
+            render: (order: Sale) => (
+                <div className="font-bold text-gray-900">
+                    {Number(order.total).toFixed(2)} ₼
+                </div>
+            )
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            align: 'center' as const,
+            render: (order: Sale) => getStatusBadge(order.status)
+        },
+        {
+            key: 'sale_date',
+            label: 'Tarix',
+            render: (order: Sale) => (
+                <div className="text-sm text-gray-600">
+                    {new Date(order.sale_date).toLocaleDateString('az-AZ', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </div>
+            )
+        }
+    ];
+
+    // Table filters configuration
+    const tableFilters = [
+        {
+            key: 'source',
+            type: 'dropdown' as const,
+            label: 'Mənbə',
+            value: selectedSource,
+            onChange: setSelectedSource,
+            options: [
+                { value: '', label: t('source.all') },
+                { value: 'shop', label: t('source.shop') },
+                { value: 'wolt', label: t('source.wolt') },
+                { value: 'yango', label: t('source.yango') },
+                { value: 'bolt', label: t('source.bolt') }
+            ]
+        },
+        {
+            key: 'date_from',
+            type: 'date' as const,
+            label: 'Tarixdən',
+            value: dateFrom,
+            onChange: setDateFrom
+        },
+        {
+            key: 'date_to',
+            type: 'date' as const,
+            label: 'Tarixə',
+            value: dateTo,
+            onChange: setDateTo
+        }
+    ];
+
     return (
         <AuthenticatedLayout
         >
@@ -253,242 +474,31 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                         </div>
                     </div>
 
-                    {/* Search and Filters */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-                        <form onSubmit={handleSearch} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                <div className="md:col-span-2">
-                                    <div className="relative">
-                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
-                                            placeholder="Sifariş №, müştəri adı, telefon..."
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <select
-                                        value={selectedSource}
-                                        onChange={(e) => handleSourceFilter(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    >
-                                        <option value="">{t('source.all')}</option>
-                                        <option value="shop">{t('source.shop')}</option>
-                                        <option value="wolt">{t('source.wolt')}</option>
-                                        <option value="yango">{t('source.yango')}</option>
-                                        <option value="bolt">{t('source.bolt')}</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <input
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) => setDateFrom(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    />
-                                </div>
-                                <div>
-                                    <input
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) => setDateTo(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                                >
-                                    Axtar
-                                </button>
-                                {(search || dateFrom || dateTo || selectedStatus || selectedSource) && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSearch('');
-                                            setDateFrom('');
-                                            setDateTo('');
-                                            setSelectedSource('');
-                                            router.get('/online-orders');
-                                        }}
-                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                                    >
-                                        Təmizlə
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
-
-                    {/* Orders List */}
-                    <div className="space-y-4">
-                        {orders.data.length === 0 ? (
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                                <p className="text-gray-500">Sifariş tapılmadı</p>
-                            </div>
-                        ) : (
-                            orders.data.map((order) => (
-                                <div
-                                    key={order.sale_id}
-                                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-                                >
-                                    <div className="p-6">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <h3 className="text-lg font-semibold text-gray-900">
-                                                        Sifariş #{order.sale_number}
-                                                    </h3>
-                                                    {getStatusBadge(order.status)}
-                                                    {getSourceBadge(order.source)}
-                                                </div>
-                                                {order.platform_order_id && (
-                                                    <div className="mb-2 text-xs text-gray-500">
-                                                        <span className="font-semibold">{t('source.platformOrderId')}:</span> {order.platform_order_id}
-                                                    </div>
-                                                )}
-                                                <div className="space-y-1 text-sm text-gray-600">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium">{order.customer_name}</span>
-                                                        {order.customer_phone && (
-                                                            <>
-                                                                <span>•</span>
-                                                                <a
-                                                                    href={`tel:${order.customer_phone}`}
-                                                                    className="flex items-center gap-1 text-indigo-600 hover:text-indigo-700"
-                                                                >
-                                                                    <PhoneIcon className="w-4 h-4" />
-                                                                    {order.customer_phone}
-                                                                </a>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        {new Date(order.sale_date).toLocaleDateString('az-AZ', {
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-2xl font-bold text-gray-900">
-                                                    {Number(order.total).toFixed(2)} ₼
-                                                </div>
-                                                <div className="text-sm text-gray-600 mt-1">
-                                                    {order.items.length} məhsul
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Customer Notes */}
-                                        {order.notes && (
-                                            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                                <div className="flex items-start gap-2">
-                                                    <span className="text-amber-600 font-semibold text-sm">Müştəri qeydi:</span>
-                                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{order.notes}</p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Items Preview */}
-                                        <div className="mb-4 bg-gray-50 rounded-lg p-4">
-                                            <div className="space-y-2">
-                                                {order.items.slice(0, expandedOrder === order.sale_id ? undefined : 2).map((item) => (
-                                                    <div key={item.item_id} className="space-y-1">
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-gray-700">
-                                                                {item.product.name}
-                                                                {item.variant && (
-                                                                    <span className="text-gray-500">
-                                                                        {' '}({item.variant.size} {item.variant.color})
-                                                                    </span>
-                                                                )}
-                                                                {' '}× {item.quantity}
-                                                            </span>
-                                                            <span className="font-medium text-gray-900">
-                                                                {Number(item.total).toFixed(2)} ₼
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex gap-4 text-xs text-gray-500">
-                                                            {item.product.sku && (
-                                                                <div className="font-mono">
-                                                                    SKU: {item.product.sku}
-                                                                </div>
-                                                            )}
-                                                            {item.product.barcode && (
-                                                                <div className="font-mono">
-                                                                    Barkod: {item.product.barcode}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {order.items.length > 2 && expandedOrder !== order.sale_id && (
-                                                <button
-                                                    onClick={() => setExpandedOrder(order.sale_id)}
-                                                    className="text-sm text-indigo-600 hover:text-indigo-700 mt-2"
-                                                >
-                                                    +{order.items.length - 2} məhsul daha
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setStatusModalOrder(order);
-                                                    setNewStatus(order.status);
-                                                }}
-                                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
-                                            >
-                                                <PencilIcon className="w-4 h-4" />
-                                                Status Dəyiş
-                                            </button>
-                                            <Link
-                                                href={`/sales/${order.sale_id}`}
-                                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
-                                            >
-                                                <EyeIcon className="w-4 h-4" />
-                                                Ətraflı
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-
-                    {/* Pagination */}
-                    {orders.last_page > 1 && (
-                        <div className="mt-6 flex justify-center">
-                            <div className="flex gap-2">
-                                {Array.from({ length: orders.last_page }, (_, i) => i + 1).map((page) => (
-                                    <Link
-                                        key={page}
-                                        href={`/online-orders?page=${page}`}
-                                        className={`px-4 py-2 rounded-lg ${
-                                            page === orders.current_page
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                                        }`}
-                                    >
-                                        {page}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* Orders Table */}
+                    <SharedDataTable
+                        data={orders}
+                        columns={columns}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        searchValue={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Sifariş №, müştəri adı, telefon..."
+                        filters={tableFilters}
+                        onSearch={handleSearch}
+                        onReset={handleReset}
+                        emptyState={{
+                            icon: <XCircleIcon className="w-12 h-12" />,
+                            title: 'Sifariş tapılmadı',
+                            description: 'Heç bir sifariş mövcud deyil'
+                        }}
+                        fullWidth={true}
+                        dense={false}
+                        idField="sale_id"
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(order: Sale) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                        }
+                    />
                 </div>
             </div>
 

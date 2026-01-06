@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Warehouse;
 use App\Models\WarehouseBranchAccess;
 use App\Models\ProductStock;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\QuickScanExport;
 
 class WarehouseController extends Controller
 {
@@ -196,11 +200,11 @@ class WarehouseController extends Controller
     {
         Gate::authorize('access-account-data', $warehouse);
         Gate::authorize('manage-inventory');
-        
+
         $query = ProductStock::with(['product.category', 'warehouse'])
             ->where('warehouse_id', $warehouse->id)
             ->where('account_id', Auth::user()->account_id);
-        
+
         // Apply filters
         if ($request->has('search') && !empty($request->search)) {
             $request->validate(['search' => 'required|string|max:255']);
@@ -212,13 +216,13 @@ class WarehouseController extends Controller
                   ->orWhere('barcode', 'like', '%' . $searchTerm . '%');
             });
         }
-        
+
         if ($request->has('category_id') && !empty($request->category_id)) {
             $query->whereHas('product', function ($q) use ($request) {
                 $q->where('category_id', $request->category_id);
             });
         }
-        
+
         if ($request->has('status') && !empty($request->status)) {
             switch ($request->status) {
                 case 'low_stock':
@@ -232,20 +236,239 @@ class WarehouseController extends Controller
                     break;
             }
         }
-        
+
         $productStock = $query->paginate(50);
-        
+
         // Get categories for filter dropdown
         $categories = Auth::user()->account->categories()
             ->where('is_service', false)
             ->orderBy('name')
             ->get();
-        
+
         return Inertia::render('Inventory/WarehouseInventory', [
             'warehouse' => $warehouse,
             'productStock' => $productStock,
             'categories' => $categories,
             'filters' => $request->only(['search', 'category_id', 'status'])
         ]);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+        Gate::authorize('manage-inventory');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:warehouses,id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedWarehouses = [];
+
+        DB::beginTransaction();
+        try {
+            $warehouses = Warehouse::whereIn('id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($warehouses as $warehouse) {
+                try {
+                    // Check if warehouse has stock or transactions before deletion
+                    $hasStock = ProductStock::where('warehouse_id', $warehouse->id)
+                        ->where('quantity', '>', 0)
+                        ->exists();
+
+                    if ($hasStock) {
+                        $failedWarehouses[] = $warehouse->name;
+                        continue;
+                    }
+
+                    $warehouse->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $failedWarehouses[] = $warehouse->name;
+                }
+            }
+
+            DB::commit();
+
+            if ($deletedCount > 0 && count($failedWarehouses) === 0) {
+                return redirect()->back()->with('success', "{$deletedCount} anbar uğurla silindi.");
+            } elseif ($deletedCount > 0 && count($failedWarehouses) > 0) {
+                return redirect()->back()->with('warning', "{$deletedCount} anbar silindi. " . count($failedWarehouses) . " anbar silinmədi (məhsul stoku var).");
+            } else {
+                return redirect()->back()->with('error', 'Heç bir anbar silinmədi. Anbarların məhsul stoku var.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Anbarlar silinərkən xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Quick Scan - Scan a barcode and count it in session
+     */
+    /**
+     * Show Quick Scan page
+     */
+    public function showQuickScan(Warehouse $warehouse)
+    {
+        Gate::authorize('access-account-data', $warehouse);
+        Gate::authorize('manage-inventory');
+
+        return Inertia::render('Warehouse/QuickScan', [
+            'warehouse' => $warehouse
+        ]);
+    }
+
+    public function quickScan(Request $request, Warehouse $warehouse)
+    {
+        Gate::authorize('access-account-data', $warehouse);
+        Gate::authorize('manage-inventory');
+
+        $validated = $request->validate([
+            'barcode' => 'required|string|max:255'
+        ]);
+
+        // Find product by barcode
+        $product = Product::where('account_id', Auth::user()->account_id)
+            ->where('barcode', $validated['barcode'])
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Məhsul tapılmadı'
+            ], 404);
+        }
+
+        // Get database stock quantity for this warehouse
+        $productStock = ProductStock::where('account_id', Auth::user()->account_id)
+            ->where('product_id', $product->id)
+            ->where('warehouse_id', $warehouse->id)
+            ->first();
+
+        $dbQuantity = $productStock ? (float)$productStock->quantity : 0;
+
+        // Get or create session key for this warehouse
+        $sessionKey = "quick_scan_{$warehouse->id}_" . Auth::id();
+        $scans = session($sessionKey, []);
+
+        // Check if product already scanned
+        if (isset($scans[$validated['barcode']])) {
+            $scans[$validated['barcode']]['count']++;
+            $scans[$validated['barcode']]['db_quantity'] = $dbQuantity; // Update db_quantity every scan
+            $scans[$validated['barcode']]['last_scanned_at'] = now()->toIso8601String();
+            $scans[$validated['barcode']]['difference'] = $scans[$validated['barcode']]['count'] - $dbQuantity;
+        } else {
+            $scans[$validated['barcode']] = [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'barcode' => $validated['barcode'],
+                'sku' => $product->sku,
+                'count' => 1,
+                'db_quantity' => $dbQuantity,
+                'difference' => 1 - $dbQuantity,
+                'first_scanned_at' => now()->toIso8601String(),
+                'last_scanned_at' => now()->toIso8601String()
+            ];
+        }
+
+        // Save to session
+        session([$sessionKey => $scans]);
+
+        // Calculate stats
+        $totalScans = array_sum(array_column($scans, 'count'));
+        $uniqueProducts = count($scans);
+
+        return response()->json([
+            'success' => true,
+            'product' => [
+                'name' => $product->name,
+                'barcode' => $product->barcode,
+                'sku' => $product->sku,
+            ],
+            'current_count' => $scans[$validated['barcode']]['count'],
+            'stats' => [
+                'total_scans' => $totalScans,
+                'unique_products' => $uniqueProducts
+            ],
+            'scans' => array_values($scans) // Return as array for frontend
+        ]);
+    }
+
+    /**
+     * Get current quick scan session data
+     */
+    public function getQuickScanSession(Request $request, Warehouse $warehouse)
+    {
+        Gate::authorize('access-account-data', $warehouse);
+        Gate::authorize('manage-inventory');
+
+        $sessionKey = "quick_scan_{$warehouse->id}_" . Auth::id();
+        $scans = session($sessionKey, []);
+
+        // Update database quantities and differences (in case stock changed)
+        foreach ($scans as &$scan) {
+            $productStock = ProductStock::where('account_id', Auth::user()->account_id)
+                ->where('product_id', $scan['product_id'])
+                ->where('warehouse_id', $warehouse->id)
+                ->first();
+
+            $dbQuantity = $productStock ? (float)$productStock->quantity : 0;
+            $scan['db_quantity'] = $dbQuantity;
+            $scan['difference'] = $scan['count'] - $dbQuantity;
+        }
+
+        $totalScans = array_sum(array_column($scans, 'count'));
+        $uniqueProducts = count($scans);
+
+        return response()->json([
+            'scans' => array_values($scans),
+            'stats' => [
+                'total_scans' => $totalScans,
+                'unique_products' => $uniqueProducts
+            ]
+        ]);
+    }
+
+    /**
+     * Clear quick scan session
+     */
+    public function clearQuickScanSession(Request $request, Warehouse $warehouse)
+    {
+        Gate::authorize('access-account-data', $warehouse);
+        Gate::authorize('manage-inventory');
+
+        $sessionKey = "quick_scan_{$warehouse->id}_" . Auth::id();
+        session()->forget($sessionKey);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sayım təmizləndi'
+        ]);
+    }
+
+    /**
+     * Export quick scan session to Excel
+     */
+    public function exportQuickScan(Request $request, Warehouse $warehouse)
+    {
+        Gate::authorize('access-account-data', $warehouse);
+        Gate::authorize('manage-inventory');
+
+        $sessionKey = "quick_scan_{$warehouse->id}_" . Auth::id();
+        $scans = session($sessionKey, []);
+
+        if (empty($scans)) {
+            return redirect()->back()->with('error', 'Heç bir scan məlumatı yoxdur');
+        }
+
+        $export = new QuickScanExport($scans);
+        $filename = "suretli_sayim_{$warehouse->name}_" . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download($export, $filename);
     }
 }

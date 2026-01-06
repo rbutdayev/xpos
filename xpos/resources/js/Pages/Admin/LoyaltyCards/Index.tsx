@@ -4,6 +4,8 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import SuperAdminNav from '@/Components/SuperAdminNav';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
+import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface LoyaltyCard {
     id: number;
@@ -39,10 +41,13 @@ interface Account {
 interface Props {
     cards: {
         data: LoyaltyCard[];
+        links: any[];
         current_page: number;
         last_page: number;
         per_page: number;
         total: number;
+        from: number;
+        to: number;
     };
     stats: Stats;
     filters: {
@@ -67,12 +72,16 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
         account_id: '',
     });
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSearch = () => {
         const params = new URLSearchParams();
         if (searchTerm) params.append('search', searchTerm);
         if (statusFilter) params.append('status', statusFilter);
         window.location.href = `/admin/loyalty-cards?${params.toString()}`;
+    };
+
+    const handleSearchForm = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleSearch();
     };
 
     const handleGenerateCards = (e: React.FormEvent) => {
@@ -121,6 +130,145 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
                 return null;
         }
     };
+
+    // Handle double-click to view card (not implemented yet - would need a show route)
+    const handleRowDoubleClick = (card: LoyaltyCard) => {
+        // For now, do nothing or could open a modal with card details
+        console.log('Double-clicked card:', card);
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        if (confirm(`${selectedIds.length} loaylıq kartını silmək istədiyinizdən əminsiniz?`)) {
+            router.delete(route('superadmin.loyalty-cards.bulk-delete'), {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert('Kartlar silinərkən xəta baş verdi.');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedCards: LoyaltyCard[]): BulkAction[] => {
+        // If only ONE card is selected, show individual actions
+        if (selectedIds.length === 1 && selectedCards.length === 1) {
+            const card = selectedCards[0];
+
+            const actions: BulkAction[] = [];
+
+            // View action (could be implemented later)
+            // actions.push({
+            //     label: 'Bax',
+            //     icon: <EyeIcon className="w-4 h-4" />,
+            //     variant: 'view' as const,
+            //     onClick: () => router.visit(route('superadmin.loyalty-cards.show', card.id))
+            // });
+
+            // Actions based on status
+            if (card.status === 'used') {
+                actions.push({
+                    label: 'Müştəridən ayır',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => handleUnassignCard(card)
+                });
+            }
+
+            if (card.status === 'free') {
+                actions.push({
+                    label: 'Deaktiv et',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDeactivateCard(card)
+                });
+            }
+
+            if (card.status === 'inactive') {
+                actions.push({
+                    label: 'Aktiv et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => handleActivateCard(card)
+                });
+            }
+
+            // Delete action
+            actions.push({
+                label: 'Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: () => {
+                    if (confirm(`Kart ${card.card_number} silmək istədiyinizdən əminsiniz?`)) {
+                        handleBulkDelete([card.id]);
+                    }
+                }
+            });
+
+            return actions;
+        }
+
+        // Multiple cards selected - show bulk delete only
+        return [
+            {
+                label: 'Toplu Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
+    // Define table columns
+    const columns = [
+        {
+            key: 'card_number',
+            label: 'Kart Nömrəsi',
+            render: (card: LoyaltyCard) => (
+                <div className="text-sm font-medium text-gray-900">
+                    {card.card_number}
+                </div>
+            )
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            render: (card: LoyaltyCard) => getStatusBadge(card.status)
+        },
+        {
+            key: 'account',
+            label: 'Hesab',
+            render: (card: LoyaltyCard) => (
+                <div className="text-sm text-gray-900">
+                    {card.account ? card.account.company_name : '-'}
+                </div>
+            )
+        },
+        {
+            key: 'customer',
+            label: 'Müştəri',
+            render: (card: LoyaltyCard) => (
+                <div className="text-sm text-gray-900">
+                    {card.customer ? (
+                        <>
+                            <div>{card.customer.name}</div>
+                            <div className="text-xs text-gray-500">{card.customer.phone}</div>
+                        </>
+                    ) : '-'}
+                </div>
+            )
+        },
+        {
+            key: 'assigned_at',
+            label: 'Təyin tarixi',
+            render: (card: LoyaltyCard) => (
+                <div className="text-sm text-gray-500">
+                    {card.assigned_at ? new Date(card.assigned_at).toLocaleDateString('az-AZ') : '-'}
+                </div>
+            )
+        }
+    ];
 
     return (
         <>
@@ -262,7 +410,7 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
                     <div className="bg-white rounded-lg shadow p-6 mb-6">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                             <div className="flex-1 max-w-lg">
-                                <form onSubmit={handleSearch} className="flex space-x-2">
+                                <form onSubmit={handleSearchForm} className="flex space-x-2">
                                     <TextInput
                                         type="text"
                                         value={searchTerm}
@@ -364,142 +512,52 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
                     </div>
 
                     {/* Cards Table */}
-                    <div className="bg-white shadow rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Kart Nömrəsi
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Hesab
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Müştəri
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Təyin tarixi
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Əməliyyatlar
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {cards.data.map((card) => (
-                                    <tr key={card.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {card.card_number}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {getStatusBadge(card.status)}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {card.account ? card.account.company_name : '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {card.customer ? (
-                                                    <>
-                                                        <div>{card.customer.name}</div>
-                                                        <div className="text-xs text-gray-500">{card.customer.phone}</div>
-                                                    </>
-                                                ) : '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {card.assigned_at ? new Date(card.assigned_at).toLocaleDateString('az-AZ') : '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end space-x-2">
-                                                {card.status === 'used' && (
-                                                    <button
-                                                        onClick={() => handleUnassignCard(card)}
-                                                        className="text-indigo-600 hover:text-indigo-900"
-                                                    >
-                                                        Ayır
-                                                    </button>
-                                                )}
-                                                {card.status === 'free' && (
-                                                    <button
-                                                        onClick={() => handleDeactivateCard(card)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                    >
-                                                        Deaktiv et
-                                                    </button>
-                                                )}
-                                                {card.status === 'inactive' && (
-                                                    <button
-                                                        onClick={() => handleActivateCard(card)}
-                                                        className="text-green-600 hover:text-green-900"
-                                                    >
-                                                        Aktiv et
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {/* Pagination */}
-                        {cards.last_page > 1 && (
-                            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                                <div className="flex-1 flex justify-between sm:hidden">
-                                    {cards.current_page > 1 && (
-                                        <a
-                                            href={`?page=${cards.current_page - 1}`}
-                                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                        >
-                                            Əvvəlki
-                                        </a>
-                                    )}
-                                    {cards.current_page < cards.last_page && (
-                                        <a
-                                            href={`?page=${cards.current_page + 1}`}
-                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                        >
-                                            Növbəti
-                                        </a>
-                                    )}
-                                </div>
-                                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-700">
-                                            <span className="font-medium">{cards.total}</span> nəticədən{' '}
-                                            <span className="font-medium">{(cards.current_page - 1) * cards.per_page + 1}</span>-
-                                            <span className="font-medium">{Math.min(cards.current_page * cards.per_page, cards.total)}</span> arası göstərilir
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                            {Array.from({ length: cards.last_page }, (_, i) => i + 1).map((page) => (
-                                                <a
-                                                    key={page}
-                                                    href={`?page=${page}`}
-                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                        page === cards.current_page
-                                                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                    }`}
-                                                >
-                                                    {page}
-                                                </a>
-                                            ))}
-                                        </nav>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <SharedDataTable
+                        data={cards}
+                        columns={columns as any}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        searchValue={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        searchPlaceholder="Kart nömrəsi ilə axtar..."
+                        filters={[
+                            {
+                                key: 'status',
+                                type: 'dropdown' as const,
+                                label: 'Status',
+                                value: statusFilter,
+                                onChange: setStatusFilter,
+                                options: [
+                                    { value: '', label: 'Hamı' },
+                                    { value: 'free', label: 'Azad' },
+                                    { value: 'used', label: 'İstifadə olunan' },
+                                    { value: 'inactive', label: 'Deaktiv' }
+                                ]
+                            }
+                        ]}
+                        onSearch={handleSearch}
+                        onReset={() => {
+                            setSearchTerm('');
+                            setStatusFilter('');
+                            router.get('/admin/loyalty-cards', {}, {
+                                preserveState: true,
+                                replace: true,
+                            });
+                        }}
+                        emptyState={{
+                            icon: <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>,
+                            title: 'Loaylıq kartı tapılmadı',
+                            description: 'Yeni loaylıq kartları yaratmaq üçün "Kart Yarat" düyməsinə klikləyin.'
+                        }}
+                        fullWidth={true}
+                        dense={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(card: LoyaltyCard) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                        }
+                    />
                 </div>
             </div>
         </>

@@ -118,6 +118,8 @@
     },
     "messages": {
       "confirmDelete": "Bu kateqoriyanı silmək istədiyinizə əminsiniz?",
+      "confirmBulkDelete": "{{count}} kateqoriyanı silmək istədiyinizə əminsiniz?",
+      "deleteError": "Kateqoriya silinə bilmədi",
       "cannotDeleteWithChildren": "Alt kateqoriyaları olan kateqoriya silinə bilməz.",
       "cannotDeleteWithExpenses": "Xərcləri olan kateqoriya silinə bilməz.",
       "noCategoriesFound": "Heç bir kateqoriya tapılmadı",

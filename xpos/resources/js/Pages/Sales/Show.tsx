@@ -349,12 +349,83 @@ export default function Show({ auth, sale, canDeleteSales }: SalesShowProps) {
                                 <p className="font-medium">{sale.user.name}</p>
                             </div>
                         </div>
-                        {sale.notes && (
-                            <div className="mt-6">
-                                <h4 className="text-sm font-medium text-gray-500 mb-2">{t('fields.notes')}</h4>
-                                <p className="text-gray-700">{sale.notes}</p>
-                            </div>
-                        )}
+
+                        {/* Notes and Location - Side by side in smaller boxes */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                            {/* Notes Box - Only show if notes exist */}
+                            {sale.notes && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <h4 className="text-sm font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        {t('fields.notes')}
+                                    </h4>
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{sale.notes}</p>
+                                </div>
+                            )}
+
+                            {/* Location Box - Show if GPS coordinates OR manual address exists */}
+                            {((sale.visit_latitude && sale.visit_longitude) || sale.visit_address) && (() => {
+                                const hasGPS = sale.visit_latitude && sale.visit_longitude;
+                                const lat = hasGPS ? Number(sale.visit_latitude) : null;
+                                const lng = hasGPS ? Number(sale.visit_longitude) : null;
+
+                                return (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                Visit Location
+                                            </h4>
+                                            {hasGPS && (
+                                                <a
+                                                    href={`https://www.google.com/maps?q=${lat},${lng}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                    Map
+                                                </a>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2 text-sm">
+                                            {sale.visit_address && (
+                                                <div>
+                                                    <span className="text-xs text-blue-700 font-medium">Address:</span>
+                                                    <a
+                                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sale.visit_address)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-gray-800 hover:text-blue-600 underline decoration-dotted block mt-1"
+                                                    >
+                                                        {sale.visit_address}
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {hasGPS && (
+                                                <div>
+                                                    <span className="text-xs text-blue-700 font-medium">GPS:</span>
+                                                    <p className="text-gray-800 font-mono text-xs">{lat!.toFixed(6)}, {lng!.toFixed(6)}</p>
+                                                </div>
+                                            )}
+                                            {sale.visit_timestamp && (
+                                                <div>
+                                                    <span className="text-xs text-blue-700 font-medium">Time:</span>
+                                                    <p className="text-gray-800 text-xs">{formatDate(sale.visit_timestamp)}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
                     </div>
 
                     {/* Negative Stock Alerts */}

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { goodsReceiptsTableConfig } from '@/Components/TableConfigurations';
 import useInventoryUpdate from '@/Pages/GoodsReceipts/Hooks/useInventoryUpdate';
 import PayGoodsReceiptModal from '@/Components/Modals/PayGoodsReceiptModal';
 import { GoodsReceipt, PageProps } from '@/types';
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, XCircleIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -125,6 +125,35 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
         router.get(route('goods-receipts.index'), {}, { preserveState: true, replace: true });
     };
 
+    // Handle double-click to view receipt
+    const handleRowDoubleClick = (receipt: GoodsReceipt) => {
+        router.visit(route('goods-receipts.show', receipt.id));
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = t('goodsReceipts.confirmBulkDelete', { count: selectedIds.length });
+
+        if (confirm(confirmMessage)) {
+            router.post(route('goods-receipts.bulk-delete'), {
+                ids: selectedIds
+            }, {
+                onSuccess: () => {
+                    toast.success(t('goodsReceipts.bulkDeleteSuccess', { count: selectedIds.length }));
+                },
+                onError: (errors) => {
+                    Object.values(errors).forEach((error: string | string[]) => {
+                        if (typeof error === 'string') {
+                            toast.error(error);
+                        } else if (Array.isArray(error)) {
+                            error.forEach((msg: string) => toast.error(msg));
+                        }
+                    });
+                }
+            });
+        }
+    };
+
     const filtersUI = [
         {
             key: 'warehouse_id',
@@ -155,45 +184,62 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
         return unsubscribe;
     }, []);
 
-    // Create modified actions with pay button handler, delete handler, and edit for drafts
-    const tableActions = (record: any) => {
-        const isDraft = record.status === 'draft';
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedReceipts: GoodsReceipt[]): BulkAction[] => {
+        // If only ONE receipt is selected, show individual actions
+        if (selectedIds.length === 1 && selectedReceipts.length === 1) {
+            const receipt = selectedReceipts[0];
+            const isDraft = receipt.status === 'draft';
 
-        // Ensure actions is an array
-        const configActions = Array.isArray(goodsReceiptsTableConfig?.actions) ? goodsReceiptsTableConfig.actions : [];
+            const actions: BulkAction[] = [
+                {
+                    label: t('common:actions.view'),
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('goods-receipts.show', receipt.id))
+                }
+            ];
 
-        let actions = configActions.map(action => {
-            if (action.label === 'Ödə') {
-                return {
-                    ...action,
+            // Add Edit for drafts
+            if (isDraft) {
+                actions.push({
+                    label: t('common:actions.edit'),
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('goods-receipts.edit', receipt.id))
+                });
+            }
+
+            // Add Pay button for completed receipts that are not fully paid
+            if (!isDraft && receipt.payment_status !== 'paid') {
+                actions.push({
                     label: t('goodsReceipts.pay'),
-                    onClick: handlePayClick
-                };
+                    icon: <CheckCircleIcon className="w-4 h-4" />,
+                    variant: 'primary' as const,
+                    onClick: () => handlePayClick(receipt)
+                });
             }
-            if (action.label === 'Sil') {
-                return {
-                    ...action,
-                    label: t('actions.delete', { ns: 'common' }),
-                    onClick: handleDelete
-                };
-            }
-            return action;
-        });
 
-        // For drafts, add Edit button and remove Pay button
-        if (isDraft) {
-            // Remove Pay button for drafts
-            actions = actions.filter(action => action.label !== t('goodsReceipts.pay'));
-
-            // Add Edit button at the beginning
-            actions.unshift({
-                label: 'Redaktə et',
-                href: route('goods-receipts.edit', record.id),
-                variant: 'primary' as const
+            // Add Delete button
+            actions.push({
+                label: t('common:actions.delete'),
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: () => handleDelete(receipt)
             });
+
+            return actions;
         }
 
-        return actions;
+        // Multiple receipts selected - show bulk delete only
+        return [
+            {
+                label: t('goodsReceipts.bulkDelete'),
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
     };
 
     return (
@@ -279,7 +325,8 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                     <SharedDataTable
                         data={receipts}
                         columns={goodsReceiptsTableConfig.columns}
-                        actions={tableActions as any}
+                        selectable={true}
+                        bulkActions={getBulkActions}
                         searchValue={search}
                         onSearchChange={setSearch}
                         searchPlaceholder={goodsReceiptsTableConfig.searchPlaceholder}
@@ -288,6 +335,7 @@ export default function Index({ receipts, warehouses, suppliers, categories, bra
                         onReset={handleReset}
                         dense={true}
                         fullWidth={true}
+                        onRowDoubleClick={handleRowDoubleClick}
                         mobileClickable={true}
                         hideMobileActions={true}
                     />

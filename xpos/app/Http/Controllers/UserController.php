@@ -100,6 +100,9 @@ class UserController extends Controller
             abort(403);
         }
 
+        // Define roles that require branch assignment
+        $branchRequiredRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
@@ -110,9 +113,25 @@ class UserController extends Controller
             'position' => 'nullable|string|max:255',
             'hire_date' => 'nullable|date',
             'hourly_rate' => 'nullable|numeric|min:0',
-            'branch_id' => 'nullable|exists:branches,id',
+            'branch_id' => [
+                in_array($request->role, $branchRequiredRoles) ? 'required' : 'nullable',
+                'exists:branches,id',
+            ],
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        // Additional validation: Ensure branch belongs to the same account
+        if (!empty($validated['branch_id'])) {
+            $branch = \App\Models\Branch::where('id', $validated['branch_id'])
+                ->where('account_id', Auth::user()->account_id)
+                ->first();
+
+            if (!$branch) {
+                return back()->withErrors([
+                    'branch_id' => 'Seçilən filial sizin hesabınıza aid deyil.'
+                ])->withInput();
+            }
+        }
 
         $validated['password'] = Hash::make($validated['password']);
 
@@ -145,9 +164,23 @@ class UserController extends Controller
             return back()->withErrors(['error' => 'Sistem istifadəçilərini görüntüləmək mümkün deyil.']);
         }
 
+        // Load branch relationship
+        $user->load('branch:id,name');
+
+        // Get user statistics
+        $stats = [
+            'total_sales' => \App\Models\Sale::where('user_id', $user->id)
+                ->where('account_id', Auth::user()->account_id)
+                ->count(),
+            'total_sales_amount' => \App\Models\Sale::where('user_id', $user->id)
+                ->where('account_id', Auth::user()->account_id)
+                ->sum('total'),
+        ];
+
         return Inertia::render('Users/Show', [
             'user' => $user,
             'roleText' => $this->getRoleText($user->role),
+            'stats' => $stats,
         ]);
     }
 
@@ -200,6 +233,9 @@ class UserController extends Controller
         // Determine validation rules based on whether user is account_owner
         $isAccountOwner = $user->role === 'account_owner';
 
+        // Define roles that require branch assignment
+        $branchRequiredRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -210,9 +246,27 @@ class UserController extends Controller
             'position' => 'nullable|string|max:255',
             'hire_date' => 'nullable|date',
             'hourly_rate' => 'nullable|numeric|min:0',
-            'branch_id' => 'nullable|exists:branches,id',
+            'branch_id' => [
+                in_array($request->role ?? $user->role, $branchRequiredRoles) ? 'required' : 'nullable',
+                'exists:branches,id',
+            ],
             'notes' => 'nullable|string|max:1000',
+            'kiosk_enabled' => 'nullable|boolean',
+            'kiosk_pin' => 'nullable|string|min:4|max:6|confirmed',
         ]);
+
+        // Additional validation: Ensure branch belongs to the same account
+        if (!empty($validated['branch_id'])) {
+            $branch = \App\Models\Branch::where('id', $validated['branch_id'])
+                ->where('account_id', Auth::user()->account_id)
+                ->first();
+
+            if (!$branch) {
+                return back()->withErrors([
+                    'branch_id' => 'Seçilən filial sizin hesabınıza aid deyil.'
+                ])->withInput();
+            }
+        }
 
         // Prevent changing the role of account_owner
         if ($isAccountOwner && isset($validated['role']) && $validated['role'] !== 'account_owner') {
@@ -225,6 +279,25 @@ class UserController extends Controller
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
+        }
+
+        // Handle kiosk PIN
+        if (isset($validated['kiosk_enabled'])) {
+            $validated['kiosk_enabled'] = (bool) $validated['kiosk_enabled'];
+
+            // If kiosk is being enabled and PIN is provided, hash it
+            if ($validated['kiosk_enabled'] && !empty($validated['kiosk_pin'])) {
+                $validated['kiosk_pin'] = Hash::make($validated['kiosk_pin']);
+            } elseif (!$validated['kiosk_enabled']) {
+                // If kiosk is being disabled, clear the PIN
+                $validated['kiosk_pin'] = null;
+            } else {
+                // Kiosk enabled but no new PIN provided, don't update PIN
+                unset($validated['kiosk_pin']);
+            }
+        } else {
+            // Kiosk enabled not in request, don't update it
+            unset($validated['kiosk_enabled'], $validated['kiosk_pin']);
         }
 
         // Security: Explicitly set protected fields (not mass assignable)
@@ -273,6 +346,91 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'İstifadəçi silindi.');
+    }
+
+    /**
+     * Bulk delete users
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        if (!Auth::user()->hasRole(['account_owner', 'admin'])) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:users,id',
+        ]);
+
+        $currentUser = Auth::user();
+        $deletedCount = 0;
+        $failedUsers = [];
+
+        \DB::beginTransaction();
+
+        try {
+            $users = User::whereIn('id', $validated['ids'])
+                ->where('account_id', $currentUser->account_id)
+                ->get();
+
+            foreach ($users as $user) {
+                // Skip if trying to delete yourself
+                if ($user->id === $currentUser->id) {
+                    $failedUsers[] = $user->name . ' (öz hesabınız)';
+                    continue;
+                }
+
+                // Skip if trying to delete account owner
+                if ($user->role === 'account_owner') {
+                    $failedUsers[] = $user->name . ' (hesab sahibi)';
+                    continue;
+                }
+
+                // Skip if trying to delete system user
+                if ($user->isSystemUser()) {
+                    $failedUsers[] = $user->name . ' (sistem istifadəçisi)';
+                    continue;
+                }
+
+                try {
+                    $user->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $failedUsers[] = $user->name;
+                    \Log::error('Error deleting user: ' . $e->getMessage(), [
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                    ]);
+                }
+            }
+
+            \DB::commit();
+
+            // Prepare response message
+            $message = '';
+            if ($deletedCount > 0) {
+                $message = "{$deletedCount} istifadəçi uğurla silindi";
+            }
+
+            if (!empty($failedUsers)) {
+                $failedList = implode(', ', $failedUsers);
+                $failedMessage = "Bu istifadəçilər silinə bilmədi: {$failedList}";
+                $message = $message ? $message . '. ' . $failedMessage : $failedMessage;
+            }
+
+            if ($deletedCount > 0) {
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', $message ?: 'Heç bir istifadəçi silinmədi');
+            }
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Bulk delete users failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'İstifadəçilər silinərkən xəta baş verdi');
+        }
     }
 
     /**

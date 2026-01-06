@@ -793,6 +793,11 @@ export interface Sale {
     customer_credit?: CustomerCredit;
     fiscal_number?: string;
     fiscal_document_id?: string;
+    // Expeditor visit location fields (decimals come as strings from Laravel)
+    visit_latitude?: number | string;
+    visit_longitude?: number | string;
+    visit_address?: string;
+    visit_timestamp?: string;
 }
 
 export interface CustomerCredit {

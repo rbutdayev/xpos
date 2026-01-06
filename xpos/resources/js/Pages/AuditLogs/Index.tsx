@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { auditLogTableConfig } from '@/Components/TableConfigurations';
+import { EyeIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface AuditLog {
     log_id: number;
@@ -78,6 +79,59 @@ export default function Index({ auditLogs, users, actions, modelTypes, filters }
             preserveState: true,
             replace: true,
         });
+    };
+
+    // Handle double-click to view audit log
+    const handleRowDoubleClick = (auditLog: AuditLog) => {
+        router.visit(`/audit-logs/${auditLog.log_id}`);
+    };
+
+    // Handle bulk delete for selected audit logs
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} audit log silinəcək. Əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.delete('/audit-logs/bulk-delete', {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert('Audit logları silərkən xəta baş verdi');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedLogs: AuditLog[]): BulkAction[] => {
+        // If only ONE log is selected, show individual actions
+        if (selectedIds.length === 1 && selectedLogs.length === 1) {
+            const auditLog = selectedLogs[0];
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/audit-logs/${auditLog.log_id}`)
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleBulkDelete([auditLog.log_id])
+                }
+            ];
+        }
+
+        // Multiple logs selected - show bulk delete only
+        return [
+            {
+                label: 'Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
     };
 
     const tableFilters = [
@@ -158,7 +212,8 @@ export default function Index({ auditLogs, users, actions, modelTypes, filters }
                     <SharedDataTable
                         data={auditLogs}
                         columns={auditLogTableConfig.columns}
-                        actions={auditLogTableConfig.actions}
+                        selectable={true}
+                        bulkActions={getBulkActions}
                         title="Audit Loglar"
                         searchPlaceholder="Audit logları axtar..."
                         searchValue={searchValue}
@@ -171,6 +226,8 @@ export default function Index({ auditLogs, users, actions, modelTypes, filters }
                             description: 'Hələlik sistem fəaliyyət qeydi mövcud deyil'
                         }}
                         fullWidth={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={() => 'cursor-pointer hover:bg-blue-50 transition-all duration-200'}
                         mobileClickable={true}
                         hideMobileActions={true}
                     />

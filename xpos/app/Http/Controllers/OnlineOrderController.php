@@ -571,4 +571,220 @@ class OnlineOrderController extends Controller
             ]);
         }
     }
+
+    /**
+     * Bulk update order status
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        Gate::authorize('manage-online-orders');
+
+        // Check if shop module OR any delivery platform is enabled
+        $account = Auth::user()->account;
+        $hasOnlineOrdering = $account->shop_enabled ||
+                             $account->wolt_enabled ||
+                             $account->yango_enabled ||
+                             $account->bolt_enabled;
+
+        if (!$hasOnlineOrdering) {
+            abort(403, __('errors.online_orders_not_enabled'));
+        }
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+            'status' => 'required|string|in:pending,completed,cancelled',
+        ]);
+
+        $user = Auth::user();
+        $updatedCount = 0;
+        $failedCount = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->ids as $saleId) {
+                try {
+                    // Fetch sale with account_id check
+                    $sale = Sale::where('sale_id', $saleId)
+                        ->where('account_id', $user->account_id)
+                        ->where('is_online_order', true)
+                        ->first();
+
+                    if (!$sale) {
+                        $failedCount++;
+                        continue;
+                    }
+
+                    // If user is branch_manager, verify order belongs to their branch
+                    if ($user->role === 'branch_manager' && $user->branch_id) {
+                        if ($sale->branch_id !== $user->branch_id) {
+                            $failedCount++;
+                            continue;
+                        }
+                    }
+
+                    $oldStatus = $sale->status;
+                    $newStatus = $request->status;
+
+                    // Update status
+                    $sale->status = $newStatus;
+
+                    // If changing to 'completed', update user_id and payment status
+                    if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+                        $sale->user_id = Auth::id();
+                        $sale->payment_status = 'paid';
+                        $sale->paid_amount = $sale->total;
+                        $sale->credit_amount = 0;
+
+                        // Deduct stock
+                        $this->deductStockForOrder($sale);
+                    }
+
+                    // If changing from 'completed' back to another status, restore stock and reset payment
+                    if ($oldStatus === 'completed' && $newStatus !== 'completed') {
+                        $this->restoreStockForOrder($sale);
+                        $sale->payment_status = 'credit';
+                        $sale->paid_amount = 0;
+                        $sale->credit_amount = $sale->total;
+                    }
+
+                    $sale->save();
+                    $updatedCount++;
+
+                    Log::info('Bulk status update for online order', [
+                        'sale_id' => $sale->sale_id,
+                        'old_status' => $oldStatus,
+                        'new_status' => $newStatus,
+                        'user_id' => Auth::id(),
+                    ]);
+
+                } catch (\Exception $e) {
+                    Log::error('Failed to update single order in bulk operation', [
+                        'sale_id' => $saleId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedCount++;
+                }
+            }
+
+            DB::commit();
+
+            $message = "{$updatedCount} sifariş uğurla yeniləndi";
+            if ($failedCount > 0) {
+                $message .= " ({$failedCount} sifariş yenilənə bilmədi)";
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk status update failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withErrors(['error' => 'Xəta baş verdi: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk cancel orders
+     */
+    public function bulkCancel(Request $request)
+    {
+        Gate::authorize('manage-online-orders');
+
+        // Check if shop module OR any delivery platform is enabled
+        $account = Auth::user()->account;
+        $hasOnlineOrdering = $account->shop_enabled ||
+                             $account->wolt_enabled ||
+                             $account->yango_enabled ||
+                             $account->bolt_enabled;
+
+        if (!$hasOnlineOrdering) {
+            abort(403, __('errors.online_orders_not_enabled'));
+        }
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = Auth::user();
+        $cancelledCount = 0;
+        $failedCount = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->ids as $saleId) {
+                try {
+                    // Fetch sale with account_id check
+                    $sale = Sale::where('sale_id', $saleId)
+                        ->where('account_id', $user->account_id)
+                        ->where('is_online_order', true)
+                        ->first();
+
+                    if (!$sale) {
+                        $failedCount++;
+                        continue;
+                    }
+
+                    // If user is branch_manager, verify order belongs to their branch
+                    if ($user->role === 'branch_manager' && $user->branch_id) {
+                        if ($sale->branch_id !== $user->branch_id) {
+                            $failedCount++;
+                            continue;
+                        }
+                    }
+
+                    $oldStatus = $sale->status;
+
+                    // If order was 'completed', restore stock and reset payment status
+                    if ($oldStatus === 'completed') {
+                        $this->restoreStockForOrder($sale);
+                        $sale->payment_status = 'credit';
+                        $sale->paid_amount = 0;
+                        $sale->credit_amount = $sale->total;
+                    }
+
+                    // Update to cancelled
+                    $sale->status = 'cancelled';
+                    $sale->save();
+
+                    $cancelledCount++;
+
+                    Log::info('Bulk cancel for online order', [
+                        'sale_id' => $sale->sale_id,
+                        'old_status' => $oldStatus,
+                        'user_id' => Auth::id(),
+                    ]);
+
+                } catch (\Exception $e) {
+                    Log::error('Failed to cancel single order in bulk operation', [
+                        'sale_id' => $saleId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedCount++;
+                }
+            }
+
+            DB::commit();
+
+            $message = "{$cancelledCount} sifariş uğurla ləğv edildi";
+            if ($failedCount > 0) {
+                $message .= " ({$failedCount} sifariş ləğv edilə bilmədi)";
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk cancel failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withErrors(['error' => 'Xəta baş verdi: ' . $e->getMessage()]);
+        }
+    }
 }

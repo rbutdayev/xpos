@@ -1,12 +1,12 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Column, Action, Filter } from '@/Components/SharedDataTable';
-import { 
-    PlusIcon, 
-    EyeIcon, 
-    PencilIcon, 
-    TrashIcon, 
+import SharedDataTable, { Column, Action, Filter, BulkAction } from '@/Components/SharedDataTable';
+import {
+    PlusIcon,
+    EyeIcon,
+    PencilIcon,
+    TrashIcon,
     DocumentDuplicateIcon,
     DocumentTextIcon,
     StarIcon
@@ -86,6 +86,78 @@ export default function Index({ receiptTemplates, filters }: Props) {
                 preserveState: true,
             });
         }
+    };
+
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} şablonu silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post('/receipt-templates/bulk-delete', {
+            ids: selectedIds
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleRowDoubleClick = (template: ReceiptTemplate) => {
+        router.visit(`/receipt-templates/${template.template_id}`);
+    };
+
+    const getBulkActions = (selectedIds: (string | number)[], selectedTemplates: ReceiptTemplate[]): BulkAction[] => {
+        // If only ONE template is selected, show individual actions
+        if (selectedIds.length === 1 && selectedTemplates.length === 1) {
+            const template = selectedTemplates[0];
+            const individualActions: BulkAction[] = [
+                {
+                    label: 'Önizləmə',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => router.visit(`/receipt-templates/${template.template_id}`)
+                },
+                {
+                    label: 'Redaktə et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(`/receipt-templates/${template.template_id}/edit`)
+                },
+                {
+                    label: 'Kopyala',
+                    icon: <DocumentDuplicateIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => handleDuplicate(template)
+                },
+            ];
+
+            // Add delete only if not default template
+            if (!template.is_default) {
+                individualActions.push({
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDelete(template)
+                });
+            }
+
+            return individualActions;
+        }
+
+        // Multiple templates selected - show bulk delete only for non-default templates
+        const allNonDefault = selectedTemplates.every(t => !t.is_default);
+
+        if (allNonDefault) {
+            return [{
+                label: 'Seçilmişləri Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }];
+        }
+
+        return [];
     };
 
     const columns: Column[] = [
@@ -237,6 +309,8 @@ export default function Index({ receiptTemplates, filters }: Props) {
                     data={receiptTemplates}
                     columns={columns}
                     actions={actions}
+                    selectable={true}
+                    bulkActions={getBulkActions}
                     searchValue={searchValue}
                     onSearchChange={setSearchValue}
                     searchPlaceholder="Şablon adı, növ və ya təsvir ilə axtarış..."
@@ -263,10 +337,15 @@ export default function Index({ receiptTemplates, filters }: Props) {
                         )
                     }}
                     fullWidth={true}
-
                     mobileClickable={true}
-
                     hideMobileActions={true}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(template: ReceiptTemplate) =>
+                        `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                            template.is_default ? 'bg-amber-50' : ''
+                        }`
+                    }
+                    idField="template_id"
                 />
             </div>
         </AuthenticatedLayout>

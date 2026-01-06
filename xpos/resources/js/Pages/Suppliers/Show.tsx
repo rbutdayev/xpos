@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Supplier } from '@/types';
+import { Supplier, Branch } from '@/types';
 import {
     ArrowLeftIcon,
     PencilIcon,
@@ -10,9 +11,28 @@ import {
     MapPinIcon,
     CalendarIcon,
     ClockIcon,
-    TagIcon
+    TagIcon,
+    BanknotesIcon,
+    PlusIcon,
+    CheckCircleIcon,
+    XCircleIcon
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import CreateManualSupplierCreditModal from '@/Components/Modals/CreateManualSupplierCreditModal';
+
+interface SupplierCredit {
+    id: number;
+    reference_number: string;
+    description: string;
+    amount: number;
+    remaining_amount: number;
+    credit_date: string;
+    due_date?: string;
+    status: 'pending' | 'partial' | 'paid';
+    entry_type?: 'automatic' | 'manual' | 'migration';
+    old_system_reference?: string;
+    created_at: string;
+}
 
 interface Props {
     supplier: Supplier & {
@@ -21,10 +41,18 @@ interface Props {
         total_orders?: number;
         total_spent?: number;
     };
+    credits: SupplierCredit[];
+    branches: Branch[];
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
 }
 
-export default function Show({ supplier }: Props) {
+export default function Show({ supplier, credits, branches, flash, errors }: Props) {
     const { t } = useTranslation(['suppliers', 'common']);
+    const [showManualCreditModal, setShowManualCreditModal] = useState(false);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('az-AZ', {
@@ -54,6 +82,25 @@ export default function Show({ supplier }: Props) {
             <Head title={`${supplier.name} - ${t('supplierDetails')}`} />
 
             <div className="mx-auto sm:px-6 lg:px-8">
+                {/* Flash Messages */}
+                {flash?.success && (
+                    <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4">
+                        <div className="flex">
+                            <CheckCircleIcon className="h-5 w-5 text-green-400" />
+                            <p className="ml-3 text-sm font-medium text-green-800">{flash.success}</p>
+                        </div>
+                    </div>
+                )}
+
+                {(flash?.error || errors?.error) && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                        <div className="flex">
+                            <XCircleIcon className="h-5 w-5 text-red-400" />
+                            <p className="ml-3 text-sm font-medium text-red-800">{flash?.error || errors?.error}</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center">
@@ -246,6 +293,93 @@ export default function Show({ supplier }: Props) {
 
                     {/* Sidebar */}
                     <div className="space-y-6">
+                        {/* Supplier Credits */}
+                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                            <div className="p-6 border-b border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <BanknotesIcon className="w-5 h-5 text-gray-400 mr-2" />
+                                        <h2 className="text-lg font-semibold text-gray-900">Borclar</h2>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowManualCreditModal(true)}
+                                        className="inline-flex items-center px-3 py-1.5 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150"
+                                    >
+                                        <PlusIcon className="w-4 h-4 mr-1" />
+                                        Borc Əlavə Et
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                {credits.length > 0 ? (
+                                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                                        {credits.map((credit) => (
+                                            <div key={credit.id} className="border border-gray-200 rounded-md p-3">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-sm font-medium text-gray-900">
+                                                                {credit.reference_number}
+                                                            </span>
+                                                            {credit.entry_type && credit.entry_type !== 'automatic' && (
+                                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                                    credit.entry_type === 'manual'
+                                                                        ? 'bg-purple-100 text-purple-700'
+                                                                        : 'bg-amber-100 text-amber-700'
+                                                                }`}>
+                                                                    {credit.entry_type === 'manual' ? 'Əl ilə' : 'Köçürmə'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-600">{credit.description}</p>
+                                                    </div>
+                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                                        credit.status === 'paid'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : credit.status === 'partial'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                    }`}>
+                                                        {credit.status === 'paid' ? 'Ödənilib' : credit.status === 'partial' ? 'Qismən' : 'Gözləyir'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-gray-600">
+                                                        {new Date(credit.credit_date).toLocaleDateString('az-AZ')}
+                                                    </span>
+                                                    <div className="text-right">
+                                                        <div className="font-semibold text-gray-900">
+                                                            {formatCurrency(credit.amount)}
+                                                        </div>
+                                                        {credit.remaining_amount > 0 && (
+                                                            <div className="text-xs text-orange-600">
+                                                                Qalıq: {formatCurrency(credit.remaining_amount)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6">
+                                        <BanknotesIcon className="mx-auto h-12 w-12 text-gray-400" />
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900">Borc yoxdur</h3>
+                                        <p className="mt-1 text-sm text-gray-500">Bu təchizatçının borcu yoxdur</p>
+                                        <div className="mt-4">
+                                            <button
+                                                onClick={() => setShowManualCreditModal(true)}
+                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            >
+                                                <PlusIcon className="w-4 h-4 mr-2" />
+                                                Borc əlavə et
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Payment Terms */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-6 border-b border-gray-200">
@@ -317,6 +451,15 @@ export default function Show({ supplier }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {/* Manual Credit Modal */}
+                <CreateManualSupplierCreditModal
+                    show={showManualCreditModal}
+                    onClose={() => setShowManualCreditModal(false)}
+                    suppliers={[{ id: supplier.id, name: supplier.name }]}
+                    branches={branches}
+                    preselectedSupplierId={supplier.id}
+                />
             </div>
         </AuthenticatedLayout>
     );

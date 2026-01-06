@@ -19,7 +19,13 @@
     "notes": "Notes",
     "companyName": "Company Name",
     "status": "Status",
-    "supplier": "Supplier"
+    "supplier": "Supplier",
+    "amount": "Amount",
+    "description": "Description",
+    "entryType": "Entry Type",
+    "oldSystemReference": "Old System Reference",
+    "creditDate": "Credit Date",
+    "dueDate": "Due Date"
   },
   "sections": {
     "basicInfo": "Basic Information",
@@ -51,7 +57,8 @@
     "createSupplier": "Create Supplier",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
-    "close": "Close"
+    "close": "Close",
+    "addManualCredit": "Add Credit"
   },
   "products": {
     "title": "{{name}} - Products",
@@ -64,23 +71,38 @@
     "times": "{{count}} times",
     "deliveryDays": "Delivery: {{days}} days"
   },
+  "entryTypes": {
+    "manual": "Manual",
+    "migration": "Migration"
+  },
   "placeholders": {
     "search": "Search supplier name, contact person or email...",
     "phone": "+994 XX XXX XX XX",
     "notes": "Additional notes about the supplier...",
-    "paymentTermsHint": "0 = cash payment, other numbers are credit days"
+    "paymentTermsHint": "0 = cash payment, other numbers are credit days",
+    "creditDescription": "Credit information",
+    "oldReference": "e.g., OLD-CR-12345"
+  },
+  "help": {
+    "manualEntry": "Manually created credit record",
+    "migrationEntry": "Credit record migrated from old system",
+    "oldReference": "Credit number from the old system (optional)"
   },
   "emptyState": {
     "title": "No suppliers found",
     "description": "Create a new supplier to get started.",
     "noProducts": "No products found",
-    "noProductsDescription": "No products found from this supplier."
+    "noProductsDescription": "No products found from this supplier.",
+    "noCredits": "No supplier credits found",
+    "noCreditsDescription": "Start by adding your first supplier credit."
   },
   "messages": {
     "confirmDelete": "Are you sure you want to delete the supplier {{name}}?",
     "created": "Supplier created successfully",
     "updated": "Supplier updated successfully",
-    "deleted": "Supplier deleted successfully"
+    "deleted": "Supplier deleted successfully",
+    "manual_credit_created_successfully": "Manual credit created successfully",
+    "manual_credit_creation_failed": "Failed to create manual credit"
   },
   "stats": {
     "registered": "Registered",
@@ -89,6 +111,9 @@
     "totalSpent": "Total Spent",
     "notSpecified": "Not specified"
   },
+  "supplierCredits": "Supplier Credits",
+  "manageSupplierCredits": "Manage your supplier credit records",
+  "newSupplierCredit": "New Supplier Credit",
   "payments": {
     "title": "Supplier Payments",
     "newPayment": "New Supplier Payment",

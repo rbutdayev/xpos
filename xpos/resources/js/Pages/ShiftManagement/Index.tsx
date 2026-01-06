@@ -5,7 +5,6 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import { PageProps } from '@/types';
-import SalesNavigation from '@/Components/SalesNavigation';
 import {
     ClockIcon,
     CheckCircleIcon,
@@ -140,17 +139,6 @@ export default function Index({ auth, fiscalConfig, discountsEnabled, giftCardsE
         return (
             <AuthenticatedLayout>
                 <Head title="Növbə İdarəetməsi" />
-                <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                    <SalesNavigation currentRoute="shift-management" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
-                        <Link
-                            href={route('pos.index')}
-                            className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                        >
-                            <PlusCircleIcon className="w-5 h-5 text-white" />
-                            <span className="font-semibold">Satış et</span>
-                        </Link>
-                    </SalesNavigation>
-                </div>
                 <div className="py-12 px-4 sm:px-6 lg:px-8">
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-6 text-center">
@@ -181,17 +169,6 @@ export default function Index({ auth, fiscalConfig, discountsEnabled, giftCardsE
     return (
         <AuthenticatedLayout>
             <Head title="Növbə İdarəetməsi" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="shift-management" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
-                    <Link
-                        href={route('pos.index')}
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                    >
-                        <PlusCircleIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">Satış et</span>
-                    </Link>
-                </SalesNavigation>
-            </div>
             <div className="py-12">
                 <div className="px-4 sm:px-6 lg:px-8 space-y-6">
                     {/* Header */}

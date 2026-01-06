@@ -4,6 +4,8 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import SuperAdminNav from '@/Components/SuperAdminNav';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
+import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface AccountPayment {
     id: number;
@@ -54,12 +56,17 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
         payment_start_date: '',
     });
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSearch = () => {
         const params = new URLSearchParams();
         if (searchTerm) params.append('search', searchTerm);
         if (statusFilter) params.append('status', statusFilter);
         window.location.href = `/admin/payments?${params.toString()}`;
+    };
+
+    const handleReset = () => {
+        setSearchTerm('');
+        setStatusFilter('');
+        window.location.href = '/admin/payments';
     };
 
     const handleMarkAsPaid = (accountId: number, companyName: string) => {
@@ -108,6 +115,100 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
         }
     };
 
+    // Handle double-click to view account details
+    const handleRowDoubleClick = (account: Account) => {
+        // For now, just open the edit payment settings
+        handleEditPaymentSettings(account);
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} hesabı silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarıla bilməz.`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('superadmin.payments.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedAccounts: Account[]): BulkAction[] => {
+        // If only ONE account is selected, show individual actions
+        if (selectedIds.length === 1 && selectedAccounts.length === 1) {
+            const account = selectedAccounts[0];
+
+            const actions: BulkAction[] = [
+                {
+                    label: 'Redaktə',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => handleEditPaymentSettings(account)
+                }
+            ];
+
+            // Add payment-specific actions if payment settings exist
+            if (account.monthly_payment_amount) {
+                if (account.payment_status !== 'paid') {
+                    actions.unshift({
+                        label: 'Ödənilmiş qeyd et',
+                        icon: <EyeIcon className="w-4 h-4" />,
+                        variant: 'view' as const,
+                        onClick: () => handleMarkAsPaid(account.id, account.company_name)
+                    });
+                } else {
+                    actions.unshift({
+                        label: 'Ödənilməmiş qeyd et',
+                        icon: <EyeIcon className="w-4 h-4" />,
+                        variant: 'secondary' as const,
+                        onClick: () => handleMarkAsUnpaid(account.id, account.company_name)
+                    });
+                }
+            }
+
+            // Add toggle status action
+            actions.push({
+                label: account.is_active ? 'Dayandır' : 'Aktivləşdir',
+                icon: <PencilIcon className="w-4 h-4" />,
+                variant: account.is_active ? 'danger' as const : 'view' as const,
+                onClick: () => handleToggleAccountStatus(account.id, account.is_active, account.company_name)
+            });
+
+            actions.push({
+                label: 'Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: () => {
+                    if (confirm(`${account.company_name} hesabını silmək istədiyinizə əminsiniz?`)) {
+                        router.delete(route('superadmin.payments.destroy', account.id));
+                    }
+                }
+            });
+
+            return actions;
+        }
+
+        // Multiple accounts selected - show bulk actions
+        return [
+            {
+                label: 'Toplu Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
 
     const getStatusBadge = (status: string) => {
         const badges = {
@@ -128,6 +229,89 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
             </span>
         );
     };
+
+    // Define table columns
+    const tableColumns = [
+        {
+            key: 'company_name',
+            label: 'Şirkət',
+            sortable: true,
+            render: (account: Account) => (
+                <div>
+                    <div className="text-sm font-medium text-gray-900">
+                        {account.company_name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                        {account.email}
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: 'monthly_payment_amount',
+            label: 'Aylıq Məbləğ',
+            sortable: true,
+            render: (account: Account) => (
+                account.monthly_payment_amount ? (
+                    <div className="text-sm text-gray-900">
+                        {account.monthly_payment_amount} ₼
+                    </div>
+                ) : (
+                    <span className="text-sm text-gray-400">-</span>
+                )
+            )
+        },
+        {
+            key: 'next_due_date',
+            label: 'Növbəti Ödəniş',
+            sortable: true,
+            render: (account: Account) => (
+                account.next_due_date ? (
+                    <div className="text-sm text-gray-900">
+                        {new Date(account.next_due_date).toLocaleDateString('az-AZ')}
+                    </div>
+                ) : (
+                    <span className="text-sm text-gray-400">-</span>
+                )
+            )
+        },
+        {
+            key: 'payment_status',
+            label: 'Status',
+            sortable: true,
+            render: (account: Account) => getStatusBadge(account.payment_status)
+        },
+        {
+            key: 'is_active',
+            label: 'Hesab',
+            sortable: true,
+            render: (account: Account) => (
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    account.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                }`}>
+                    {account.is_active ? 'Aktiv' : 'Dayandırılıb'}
+                </span>
+            )
+        }
+    ];
+
+    const tableFilters = [
+        {
+            key: 'status',
+            type: 'dropdown' as const,
+            label: 'Status',
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+                { value: '', label: 'Bütün statuslar' },
+                { value: 'paid', label: 'Ödənilib' },
+                { value: 'pending', label: 'Gözləyir' },
+                { value: 'overdue', label: 'Gecikmiş' }
+            ]
+        }
+    ];
 
     return (
         <>
@@ -171,30 +355,6 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
                     )}
 
                     <SuperAdminNav />
-
-                    {/* Search and Filter */}
-                    <div className="mb-6">
-                        <form onSubmit={handleSearch} className="flex items-center space-x-2">
-                            <TextInput
-                                type="text"
-                                placeholder="Hesab axtar..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-64"
-                            />
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                            >
-                                <option value="">Bütün statuslar</option>
-                                <option value="paid">Ödənilib</option>
-                                <option value="pending">Gözləyir</option>
-                                <option value="overdue">Gecikmiş</option>
-                            </select>
-                            <SecondaryButton type="submit">Axtar</SecondaryButton>
-                        </form>
-                    </div>
 
                     {/* Edit Payment Settings Modal */}
                     {editingPaymentSettings && (
@@ -255,148 +415,35 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
                     )}
 
                     {/* Payments Table */}
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                        <div className="px-4 py-5 sm:px-6">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                Hesablar ({accounts.total})
-                            </h3>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Şirkət
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Aylıq Məbləğ
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Növbəti Ödəniş
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Hesab
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Əməliyyatlar
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {accounts.data.map((account) => (
-                                        <tr key={account.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {account.company_name}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {account.email}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {account.monthly_payment_amount ? (
-                                                    <div className="text-sm text-gray-900">
-                                                        {account.monthly_payment_amount} ₼
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-sm text-gray-400">-</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {account.next_due_date ? (
-                                                    <div className="text-sm text-gray-900">
-                                                        {new Date(account.next_due_date).toLocaleDateString('az-AZ')}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-sm text-gray-400">-</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {getStatusBadge(account.payment_status)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                    account.is_active
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {account.is_active ? 'Aktiv' : 'Dayandırılıb'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex justify-end space-x-2">
-                                                    {account.monthly_payment_amount && account.payment_status !== 'paid' && (
-                                                        <button
-                                                            onClick={() => handleMarkAsPaid(account.id, account.company_name)}
-                                                            className="text-green-600 hover:text-green-900 font-medium"
-                                                        >
-                                                            Ödə
-                                                        </button>
-                                                    )}
-                                                    {account.monthly_payment_amount && account.payment_status === 'paid' && (
-                                                        <button
-                                                            onClick={() => handleMarkAsUnpaid(account.id, account.company_name)}
-                                                            className="text-yellow-600 hover:text-yellow-900"
-                                                        >
-                                                            Ödənilməmiş
-                                                        </button>
-                                                    )}
-                                                    {account.monthly_payment_amount && (
-                                                        <button
-                                                            onClick={() => handleEditPaymentSettings(account)}
-                                                            className="text-indigo-600 hover:text-indigo-900"
-                                                        >
-                                                            Redaktə
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => handleToggleAccountStatus(account.id, account.is_active, account.company_name)}
-                                                        className={account.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
-                                                    >
-                                                        {account.is_active ? 'Dayandır' : 'Aktivləşdir'}
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination */}
-                        {accounts.last_page > 1 && (
-                            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                                <div className="flex-1 flex justify-between sm:hidden">
-                                    {accounts.current_page > 1 && (
-                                        <a
-                                            href={`/admin/payments?page=${accounts.current_page - 1}`}
-                                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                        >
-                                            Əvvəlki
-                                        </a>
-                                    )}
-                                    {accounts.current_page < accounts.last_page && (
-                                        <a
-                                            href={`/admin/payments?page=${accounts.current_page + 1}`}
-                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                        >
-                                            Növbəti
-                                        </a>
-                                    )}
-                                </div>
-                                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-700">
-                                            <span className="font-medium">{accounts.current_page}</span> / <span className="font-medium">{accounts.last_page}</span> səhifə
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <SharedDataTable
+                        data={{
+                            ...accounts,
+                            links: [],
+                            from: (accounts.current_page - 1) * accounts.per_page + 1,
+                            to: Math.min(accounts.current_page * accounts.per_page, accounts.total)
+                        }}
+                        columns={tableColumns as any}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        searchValue={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        searchPlaceholder="Hesab axtar..."
+                        filters={tableFilters}
+                        onSearch={handleSearch}
+                        onReset={handleReset}
+                        title="Hesablar"
+                        subtitle={`Cəmi ${accounts.total} hesab`}
+                        emptyState={{
+                            icon: <EyeIcon className="w-12 h-12" />,
+                            title: 'Hesab tapılmadı',
+                            description: 'Heç bir hesab qeydə alınmayıb'
+                        }}
+                        fullWidth={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(account: Account) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                        }
+                    />
                 </div>
             </div>
         </>

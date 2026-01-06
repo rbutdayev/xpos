@@ -7,6 +7,7 @@ use App\Models\SaleReturn;
 use App\Services\ReturnService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ReturnController extends Controller
@@ -220,5 +221,87 @@ class ReturnController extends Controller
             'success' => true,
             'sale' => $sale,
         ]);
+    }
+
+    /**
+     * Bulk delete sale returns
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = auth()->user();
+        $accountId = $user->account_id;
+        $deletedCount = 0;
+        $failedReturns = [];
+
+        DB::beginTransaction();
+
+        try {
+            $returns = SaleReturn::whereIn('return_id', $request->ids)
+                ->where('account_id', $accountId)
+                ->get();
+
+            foreach ($returns as $return) {
+                try {
+                    // Check if return can be deleted based on status
+                    // Typically, we should not delete completed returns that have fiscal receipts
+                    // But allow deletion of pending or cancelled returns
+                    if ($return->status === 'completed' && $return->fiscal_number) {
+                        $failedReturns[] = "#{$return->return_number} (Fiskal qəbz mövcuddur)";
+                        continue;
+                    }
+
+                    // Delete related data
+                    // Delete return items
+                    if ($return->items) {
+                        $return->items()->delete();
+                    }
+
+                    // Delete refunds if any
+                    if ($return->refunds) {
+                        $return->refunds()->delete();
+                    }
+
+                    // Delete the return
+                    $return->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    \Log::error('Failed to delete return during bulk deletion: ' . $e->getMessage(), [
+                        'return_id' => $return->return_id,
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    $failedReturns[] = "#{$return->return_number}";
+                }
+            }
+
+            DB::commit();
+
+            if (count($failedReturns) > 0) {
+                $failedList = implode(', ', $failedReturns);
+                $message = $deletedCount > 0
+                    ? "{$deletedCount} qaytarma silindi. Bu qaytarmalar silinə bilmədi: {$failedList}"
+                    : "Heç bir qaytarma silinmədi. Bu qaytarmalar silinə bilməz: {$failedList}";
+
+                return redirect()->route('returns.index')
+                    ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+            }
+
+            return redirect()->route('returns.index')
+                ->with('success', "{$deletedCount} qaytarma uğurla silindi.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk delete failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('returns.index')
+                ->with('error', 'Toplu silmə əməliyyatı uğursuz oldu.');
+        }
     }
 }

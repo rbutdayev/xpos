@@ -397,4 +397,69 @@ class CustomerItemController extends Controller
             'templates' => $templates,
         ]);
     }
+
+    /**
+     * Bulk delete customer items
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $accountId = $this->getAccountId();
+        $deletedCount = 0;
+        $failedItems = [];
+
+        \DB::beginTransaction();
+        try {
+            $items = CustomerItem::forAccount($accountId)
+                ->whereIn('id', $request->ids)
+                ->with('tailorServices')
+                ->get();
+
+            foreach ($items as $item) {
+                try {
+                    // Check if item has associated tailor services
+                    $servicesCount = $item->tailorServices()->count();
+                    if ($servicesCount > 0) {
+                        $failedItems[] = $item->reference_number ?? "ID: {$item->id}";
+                        continue;
+                    }
+
+                    $item->delete(); // Soft delete
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    \Log::error('Bulk customer item deletion failed', [
+                        'item_id' => $item->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedItems[] = $item->reference_number ?? "ID: {$item->id}";
+                }
+            }
+
+            \DB::commit();
+
+            if (count($failedItems) > 0) {
+                $failedList = implode(', ', $failedItems);
+                $message = $deletedCount > 0
+                    ? "{$deletedCount} məhsul silindi. Bu məhsullar silinə bilmədi (xidmət tarixçəsi var): {$failedList}"
+                    : "Heç bir məhsul silinmədi. Bu məhsulların xidmət tarixçəsi var: {$failedList}";
+
+                return redirect()->back()->with($deletedCount > 0 ? 'success' : 'error', $message);
+            }
+
+            return redirect()->back()->with('success', "{$deletedCount} məhsul uğurla silindi");
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Bulk customer item deletion transaction failed', [
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Toplu silmə zamanı xəta baş verdi');
+        }
+    }
 }

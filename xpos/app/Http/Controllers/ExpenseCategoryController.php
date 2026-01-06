@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -52,7 +53,7 @@ class ExpenseCategoryController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:maaş,xərclər,ödənişlər,kommunal,nəqliyyat,digər',
+            'type' => 'required|in:salary,expenses,payments,utilities,transport,other',
             'parent_id' => 'nullable|exists:expense_categories,category_id',
             'description' => 'nullable|string',
         ]);
@@ -107,7 +108,7 @@ class ExpenseCategoryController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:maaş,xərclər,ödənişlər,kommunal,nəqliyyat,digər',
+            'type' => 'required|in:salary,expenses,payments,utilities,transport,other',
             'parent_id' => 'nullable|exists:expense_categories,category_id',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
@@ -134,12 +135,12 @@ class ExpenseCategoryController extends Controller
     {
         Gate::authorize('manage-expenses');
         Gate::authorize('access-account-data', $expenseCategory);
-        
+
         // Check if category has children or expenses
         if ($expenseCategory->children()->count() > 0) {
             return back()->withErrors(['category' => 'Alt kateqoriyaları olan kateqoriya silinə bilməz.']);
         }
-        
+
         if ($expenseCategory->expenses()->count() > 0) {
             return back()->withErrors(['category' => 'Xərcləri olan kateqoriya silinə bilməz.']);
         }
@@ -148,6 +149,68 @@ class ExpenseCategoryController extends Controller
 
         return redirect()->route('expense-categories.index')
                         ->with('success', __('app.deleted_successfully'));
+    }
+
+    /**
+     * Bulk delete expense categories
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('manage-expenses');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:expense_categories,category_id',
+        ]);
+
+        $user = auth()->user();
+        $deletedCount = 0;
+        $failedCategories = [];
+
+        DB::transaction(function () use ($request, $user, &$deletedCount, &$failedCategories) {
+            $categories = ExpenseCategory::whereIn('category_id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($categories as $category) {
+                // Check if category has children
+                if ($category->children()->count() > 0) {
+                    $failedCategories[] = [
+                        'name' => $category->name,
+                        'reason' => 'Alt kateqoriyaları var'
+                    ];
+                    continue;
+                }
+
+                // Check if category has expenses
+                if ($category->expenses()->count() > 0) {
+                    $failedCategories[] = [
+                        'name' => $category->name,
+                        'reason' => 'Xərcləri var'
+                    ];
+                    continue;
+                }
+
+                $category->delete();
+                $deletedCount++;
+            }
+        });
+
+        if (count($failedCategories) > 0) {
+            $failedList = implode(', ', array_map(function($cat) {
+                return $cat['name'] . ' (' . $cat['reason'] . ')';
+            }, $failedCategories));
+
+            $message = $deletedCount > 0
+                ? "{$deletedCount} kateqoriya silindi. Bu kateqoriyalar silinə bilmədi: {$failedList}"
+                : "Heç bir kateqoriya silinmədi. Bu kateqoriyalar silinə bilməz: {$failedList}";
+
+            return redirect()->route('expense-categories.index')
+                ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('expense-categories.index')
+            ->with('success', "{$deletedCount} kateqoriya uğurla silindi");
     }
 
     public function search(Request $request)

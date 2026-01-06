@@ -26,6 +26,7 @@ class KioskSyncService
             ->map(function ($product) {
                 $data = [
                     'id' => $product->id,
+                    'account_id' => $product->account_id,
                     'name' => $product->name,
                     'sku' => $product->sku,
                     'barcode' => $product->barcode,
@@ -75,6 +76,7 @@ class KioskSyncService
             ->map(function ($customer) {
                 return [
                     'id' => $customer->id,
+                    'account_id' => $customer->account_id,
                     'name' => $customer->name,
                     'phone' => $customer->phone,
                     'email' => $customer->email,
@@ -115,6 +117,7 @@ class KioskSyncService
         }
 
         return [
+            'account_id' => $config->account_id,
             'provider' => $config->provider,
             'ip_address' => $config->ip_address,
             'port' => $config->port,

@@ -19,6 +19,7 @@ interface User {
     hire_date?: string;
     hourly_rate?: number;
     notes?: string;
+    kiosk_enabled?: boolean;
 }
 
 interface Branch {
@@ -45,6 +46,9 @@ interface FormData {
     hire_date?: string;
     hourly_rate?: number;
     notes?: string;
+    kiosk_enabled?: boolean;
+    kiosk_pin?: string;
+    kiosk_pin_confirmation?: string;
 }
 
 export default function Edit({ user, roleOptions, branches }: Props) {
@@ -62,6 +66,9 @@ export default function Edit({ user, roleOptions, branches }: Props) {
         hire_date: user.hire_date || '',
         hourly_rate: user.hourly_rate || undefined,
         notes: user.notes || '',
+        kiosk_enabled: user.kiosk_enabled || false,
+        kiosk_pin: '',
+        kiosk_pin_confirmation: '',
     });
 
     const isAccountOwner = user.role === 'account_owner';
@@ -190,8 +197,8 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Show branch selection for sales_staff role */}
-                                {data.role === 'sales_staff' && (
+                                {/* Show branch selection for branch-specific roles */}
+                                {['sales_staff', 'branch_manager', 'cashier', 'tailor'].includes(data.role) && (
                                     <div className="mt-6">
                                         <InputLabel htmlFor="branch_id" value={`${t('form.branch')} *`} />
                                         <select
@@ -200,7 +207,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             value={data.branch_id || ''}
                                             onChange={(e) => setData('branch_id', e.target.value ? parseInt(e.target.value) : undefined)}
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                            required={data.role === 'sales_staff'}
+                                            required={['sales_staff', 'branch_manager', 'cashier', 'tailor'].includes(data.role)}
                                         >
                                             <option value="">{t('form.branchPlaceholder')}</option>
                                             {(branches || []).map((branch) => (
@@ -210,6 +217,12 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             ))}
                                         </select>
                                         <InputError message={errors.branch_id} className="mt-2" />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            {data.role === 'branch_manager' && t('form.branchManagerHint')}
+                                            {data.role === 'sales_staff' && t('form.salesStaffHint')}
+                                            {data.role === 'cashier' && t('form.cashierHint')}
+                                            {data.role === 'tailor' && t('form.tailorHint')}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -316,6 +329,84 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                         />
                                         <InputError message={errors.password_confirmation} className="mt-2" />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Kiosk Settings */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                    {t('form.kioskSettings')}
+                                </h3>
+
+                                <div className="space-y-6">
+                                    {/* Enable Kiosk Access */}
+                                    <div className="flex items-center">
+                                        <input
+                                            id="kiosk_enabled"
+                                            type="checkbox"
+                                            checked={data.kiosk_enabled || false}
+                                            onChange={(e) => setData('kiosk_enabled', e.target.checked)}
+                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        />
+                                        <label htmlFor="kiosk_enabled" className="ml-2 block text-sm text-gray-900">
+                                            {t('form.kioskEnabled')}
+                                        </label>
+                                    </div>
+                                    <p className="text-xs text-gray-500 -mt-4 ml-6">
+                                        {t('form.kioskEnabledHint')}
+                                    </p>
+
+                                    {/* PIN Fields - Only shown when kiosk is enabled */}
+                                    {data.kiosk_enabled && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ml-6">
+                                            <div>
+                                                <InputLabel htmlFor="kiosk_pin" value={t('form.kioskPin')} />
+                                                <TextInput
+                                                    id="kiosk_pin"
+                                                    type="password"
+                                                    name="kiosk_pin"
+                                                    value={data.kiosk_pin}
+                                                    className="mt-1 block w-full"
+                                                    onChange={(e) => setData('kiosk_pin', e.target.value)}
+                                                    placeholder={t('form.kioskPinPlaceholder')}
+                                                    maxLength={6}
+                                                />
+                                                <InputError message={errors.kiosk_pin} className="mt-2" />
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    {t('form.kioskPinHint')}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <InputLabel htmlFor="kiosk_pin_confirmation" value={t('form.kioskPinConfirmation')} />
+                                                <TextInput
+                                                    id="kiosk_pin_confirmation"
+                                                    type="password"
+                                                    name="kiosk_pin_confirmation"
+                                                    value={data.kiosk_pin_confirmation}
+                                                    className="mt-1 block w-full"
+                                                    onChange={(e) => setData('kiosk_pin_confirmation', e.target.value)}
+                                                    placeholder={t('form.kioskPinRepeatPlaceholder')}
+                                                    maxLength={6}
+                                                />
+                                                <InputError message={errors.kiosk_pin_confirmation} className="mt-2" />
+                                            </div>
+
+                                            <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <div className="flex items-start">
+                                                    <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <div className="ml-3 text-sm text-blue-700">
+                                                        <p className="font-medium">{t('form.kioskUserIdInfo')}</p>
+                                                        <p className="mt-1">
+                                                            {t('form.kioskUserIdValue')}: <span className="font-mono font-bold">{user.id}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

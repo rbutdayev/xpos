@@ -160,8 +160,8 @@ export default function Create({ roleOptions, branches }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Show branch selection for sales_staff role */}
-                                {data.role === 'sales_staff' && (
+                                {/* Show branch selection for branch-specific roles */}
+                                {['sales_staff', 'branch_manager', 'cashier', 'tailor'].includes(data.role) && (
                                     <div className="mt-6">
                                         <InputLabel htmlFor="branch_id" value={`${t('form.branch')} *`} />
                                         <select
@@ -170,7 +170,7 @@ export default function Create({ roleOptions, branches }: Props) {
                                             value={data.branch_id || ''}
                                             onChange={(e) => setData('branch_id', e.target.value ? parseInt(e.target.value) : undefined)}
                                             className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                            required={data.role === 'sales_staff'}
+                                            required={['sales_staff', 'branch_manager', 'cashier', 'tailor'].includes(data.role)}
                                         >
                                             <option value="">{t('form.branchPlaceholder')}</option>
                                             {(branches || []).map((branch) => (
@@ -180,6 +180,12 @@ export default function Create({ roleOptions, branches }: Props) {
                                             ))}
                                         </select>
                                         <InputError message={errors.branch_id} className="mt-2" />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            {data.role === 'branch_manager' && t('form.branchManagerHint')}
+                                            {data.role === 'sales_staff' && t('form.salesStaffHint')}
+                                            {data.role === 'cashier' && t('form.cashierHint')}
+                                            {data.role === 'tailor' && t('form.tailorHint')}
+                                        </p>
                                     </div>
                                 )}
                             </div>

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SalesNavigation from '@/Components/SalesNavigation';
-import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
+import SharedDataTable, { Filter, Column, Action, BulkAction } from '@/Components/SharedDataTable';
 import { Customer, PageProps } from '@/types';
-import { PlusCircleIcon } from '@heroicons/react/24/outline';
+import { PlusCircleIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 interface CustomersIndexProps extends PageProps {
@@ -258,73 +257,114 @@ export default function Index({ auth, customers, filters, discountsEnabled, gift
         },
     ];
 
-    const actions: Action[] = [
-        {
-            label: t('actions.view'),
-            href: (customer: Customer) => route('customers.show', customer.id),
-            variant: 'primary',
-        },
-        {
-            label: t('actions.edit'),
-            href: (customer: Customer) => route('customers.edit', customer.id),
-            variant: 'secondary',
-        },
-        {
-            label: t('actions.delete'),
-            onClick: (customer: Customer) => {
-                if (confirm(t('messages.confirmDelete'))) {
-                    router.delete(route('customers.destroy', customer.id));
-                }
+    // Handle double-click to view customer
+    const handleRowDoubleClick = (customer: Customer) => {
+        router.visit(route('customers.show', customer.id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} müştərini silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('customers.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
             },
-            variant: 'danger',
-        },
-    ];
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedCustomers: Customer[]): BulkAction[] => {
+        // If only ONE customer is selected, show individual actions
+        if (selectedIds.length === 1 && selectedCustomers.length === 1) {
+            const customer = selectedCustomers[0];
+
+            return [
+                {
+                    label: t('actions.view'),
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('customers.show', customer.id))
+                },
+                {
+                    label: t('actions.edit'),
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('customers.edit', customer.id))
+                },
+                {
+                    label: t('actions.delete'),
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm(t('messages.confirmDelete'))) {
+                            router.delete(route('customers.destroy', customer.id));
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple customers selected - show bulk actions
+        return [
+            {
+                label: t('actions.bulkDelete' as any),
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title={t('title')} />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="customers" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
-                    <Link
-                        href={route('customers.create')}
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                    >
-                        <PlusCircleIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">{t('addCustomer')}</span>
-                    </Link>
-                </SalesNavigation>
-            </div>
             <div className="py-12">
                 <div className="w-full">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <SharedDataTable
-                            data={{
-                                data: customers.data,
-                                links: customers.links,
-                                current_page: customers.current_page,
-                                last_page: customers.last_page,
-                                total: customers.total,
-                                per_page: customers.per_page,
-                                from: customers.from,
-                                to: customers.to
-                            }}
-                            columns={columns}
-                            filters={filters_config}
-                            actions={actions}
-                            searchValue={localFilters.search || ''}
-                            searchPlaceholder={t('placeholders.search')}
-                            emptyState={{
-                                title: t('emptyState.title'),
-                                description: t('emptyState.description')
-                            }}
-                            onSearchChange={(search: string) => handleSearch(search)}
-                            onSort={(field: string) => handleSort(field, 'asc')}
-                            onPerPageChange={handlePerPageChange}
-                            fullWidth={true}
-                            mobileClickable={true}
-                            hideMobileActions={true}
-                        />
-                    </div>
+                    <SharedDataTable
+                        data={{
+                            data: customers.data,
+                            links: customers.links,
+                            current_page: customers.current_page,
+                            last_page: customers.last_page,
+                            total: customers.total,
+                            per_page: customers.per_page,
+                            from: customers.from,
+                            to: customers.to
+                        }}
+                        columns={columns}
+                        filters={filters_config}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        createButton={{
+                            label: 'Yeni Müştəri',
+                            href: route('customers.create')
+                        }}
+                        searchValue={localFilters.search || ''}
+                        searchPlaceholder={t('placeholders.search')}
+                        emptyState={{
+                            title: t('emptyState.title'),
+                            description: t('emptyState.description')
+                        }}
+                        onSearchChange={(search: string) => handleSearch(search)}
+                        onSort={(field: string) => handleSort(field, 'asc')}
+                        onPerPageChange={handlePerPageChange}
+                        fullWidth={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(customer: Customer) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                        }
+                    />
                 </div>
             </div>
         </AuthenticatedLayout>

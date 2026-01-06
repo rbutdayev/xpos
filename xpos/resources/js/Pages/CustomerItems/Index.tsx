@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
+import SharedDataTable, { Filter, Column, Action, BulkAction } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { CustomerItem, PageProps } from '@/types';
 import { SERVICE_TYPES, ServiceType, getCurrentServiceType, getServiceConfig } from '@/config/serviceTypes';
+import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface CustomerItemsIndexProps extends PageProps {
     items: {
@@ -224,9 +225,78 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
         },
     ];
 
+    // Handle double-click to view item
+    const handleRowDoubleClick = (item: CustomerItem) => {
+        router.visit(route('customer-items.show', item.id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} məhsulu silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('customer-items.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedItems: CustomerItem[]): BulkAction[] => {
+        // If only ONE item is selected, show individual actions
+        if (selectedIds.length === 1 && selectedItems.length === 1) {
+            const item = selectedItems[0];
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('customer-items.show', item.id))
+                },
+                {
+                    label: 'Düzəliş et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('customer-items.edit', item.id))
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm('Bu məhsulu silmək istədiyinizə əminsiniz?')) {
+                            router.delete(route('customer-items.destroy', item.id));
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple items selected - show bulk actions
+        return [
+            {
+                label: 'Seçilmişləri Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
     return (
         <AuthenticatedLayout>
-            <Head title="Müştəri Məhsulları" />
+            <Head title="Xidmətə qəbul" />
 
             <div className="py-12">
                 <div className="w-full">
@@ -245,6 +315,12 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
                             columns={columns}
                             filters={filters_config}
                             actions={actions}
+                            selectable={true}
+                            bulkActions={getBulkActions}
+                            createButton={{
+                                label: 'Yeni Məhsul',
+                                href: route('customer-items.create')
+                            }}
                             searchValue={localFilters.search || ''}
                             searchPlaceholder="Məhsul, müştəri və ya referans nömrəsi ilə axtar..."
                             emptyState={{
@@ -253,6 +329,10 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
                             onSort={(field: string) => handleSort(field, 'asc')}
+                            onRowDoubleClick={handleRowDoubleClick}
+                            rowClassName={(item: CustomerItem) =>
+                                `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                            }
                             fullWidth={true}
                             mobileClickable={true}
                             hideMobileActions={true}

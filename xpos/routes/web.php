@@ -48,6 +48,7 @@ use App\Http\Controllers\IntegrationsController;
 use App\Http\Controllers\RentalTemplateController;
 use App\Http\Controllers\ProductActivityController;
 use App\Http\Controllers\KioskTokenController;
+use App\Http\Controllers\ExpeditorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -99,6 +100,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::post('/accounts', [SuperAdminController::class, 'createAccount'])->name('accounts.store');
     Route::put('/accounts/{account}', [SuperAdminController::class, 'updateAccount'])->name('accounts.update');
     Route::delete('/accounts/{account}', [SuperAdminController::class, 'deleteAccount'])->name('accounts.destroy');
+    Route::post('/accounts/{account}/clear-data', [SuperAdminController::class, 'clearAccountData'])->name('accounts.clear-data');
     Route::patch('/accounts/{account}/toggle-status', [SuperAdminController::class, 'toggleAccountStatus'])->name('accounts.toggle-status');
 
     // Account Payments Management
@@ -107,6 +109,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::post('/payments/{account}/mark-unpaid', [App\Http\Controllers\AccountPaymentsController::class, 'markAsUnpaid'])->name('payments.mark-unpaid');
     Route::put('/payments/{account}/settings', [App\Http\Controllers\AccountPaymentsController::class, 'updatePaymentSettings'])->name('payments.update-settings');
     Route::patch('/payments/{account}/toggle-status', [App\Http\Controllers\AccountPaymentsController::class, 'toggleAccountStatus'])->name('payments.toggle-status');
+    Route::delete('/payments/{account}', [App\Http\Controllers\AccountPaymentsController::class, 'destroy'])->name('payments.destroy');
+    Route::post('/payments/bulk-delete', [App\Http\Controllers\AccountPaymentsController::class, 'bulkDelete'])->name('payments.bulk-delete');
 
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::delete('/users/{user}', [SuperAdminController::class, 'deleteUser'])->name('users.destroy');
@@ -157,6 +161,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::prefix('loyalty-cards')->name('loyalty-cards.')->group(function () {
         Route::get('/', [AdminLoyaltyCardController::class, 'index'])->name('index');
         Route::post('/generate', [AdminLoyaltyCardController::class, 'generate'])->name('generate');
+        Route::delete('/bulk-delete', [AdminLoyaltyCardController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/{card}/deactivate', [AdminLoyaltyCardController::class, 'deactivate'])->name('deactivate');
         Route::post('/{card}/activate', [AdminLoyaltyCardController::class, 'activate'])->name('activate');
         Route::post('/{card}/unassign', [AdminLoyaltyCardController::class, 'unassign'])->name('unassign');
@@ -263,12 +268,26 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::patch('/companies/{company}', [CompanyController::class, 'update']);
     
     // Branch Management
+    Route::post('/branches/bulk-delete', [BranchController::class, 'bulkDelete'])->name('branches.bulk-delete');
     Route::resource('branches', BranchController::class);
     
     // Warehouse Management
     Route::resource('warehouses', WarehouseController::class);
+    Route::post('/warehouses/bulk-delete', [WarehouseController::class, 'bulkDelete'])->name('warehouses.bulk-delete');
     Route::patch('/warehouses/{warehouse}/access', [WarehouseController::class, 'updateBranchAccess'])
          ->name('warehouses.access.update');
+
+    // Quick Scan (Sürətli Sayım)
+    Route::get('/warehouses/{warehouse}/quick-scan', [WarehouseController::class, 'showQuickScan'])
+         ->name('warehouses.quick-scan-page');
+    Route::post('/warehouses/{warehouse}/quick-scan', [WarehouseController::class, 'quickScan'])
+         ->name('warehouses.quick-scan');
+    Route::get('/warehouses/{warehouse}/quick-scan-session', [WarehouseController::class, 'getQuickScanSession'])
+         ->name('warehouses.quick-scan-session');
+    Route::delete('/warehouses/{warehouse}/quick-scan-session', [WarehouseController::class, 'clearQuickScanSession'])
+         ->name('warehouses.clear-quick-scan-session');
+    Route::post('/warehouses/{warehouse}/quick-scan-export', [WarehouseController::class, 'exportQuickScan'])
+         ->name('warehouses.quick-scan-export');
     
     // Warehouse Context Selection
     Route::post('/set-warehouse', function(\Illuminate\Http\Request $request) {
@@ -316,6 +335,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     })->name('set-warehouse');
     
     // Product Catalog Management
+    Route::delete('/categories/bulk-delete', [CategoryController::class, 'bulkDelete'])->name('categories.bulk-delete');
     Route::resource('categories', CategoryController::class);
     Route::get('/categories/tree', [CategoryController::class, 'tree'])->name('categories.tree');
     
@@ -326,9 +346,12 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/products/bulk-create', [ProductController::class, 'bulkCreate'])->name('products.bulk-create');
     Route::post('/products/bulk-store', [ProductController::class, 'bulkStore'])->name('products.bulk-store');
     Route::get('/products/discounts', [ProductController::class, 'discounts'])->name('products.discounts');
+    Route::delete('/products/discounts/bulk-delete', [ProductController::class, 'bulkDeleteDiscounts'])->name('products.discounts.bulk-delete');
     Route::get('/products/import/template', [ProductController::class, 'downloadTemplate'])->name('products.import.template');
     Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
     Route::get('/products/import/status/{importJobId}', [ProductController::class, 'importStatus'])->name('products.import.status');
+    Route::delete('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
+    Route::patch('/products/bulk-status', [ProductController::class, 'bulkUpdateStatus'])->name('products.bulk-status');
     Route::resource('products', ProductController::class);
 
     // Product Variants
@@ -495,6 +518,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     // Supplier Management
     Route::get('/suppliers/search', [SupplierController::class, 'search'])->name('suppliers.search');
+    Route::post('/suppliers/bulk-delete', [SupplierController::class, 'bulkDelete'])->name('suppliers.bulk-delete');
+    Route::post('/suppliers/manual-credit', [SupplierController::class, 'createManualCredit'])->name('suppliers.create-manual-credit');
     Route::resource('suppliers', SupplierController::class);
     Route::get('/suppliers/{supplier}/products', [SupplierController::class, 'products'])->name('suppliers.products');
     Route::post('/suppliers/{supplier}/products', [SupplierController::class, 'linkProduct'])->name('suppliers.link-product');
@@ -506,6 +531,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/customers/{id}/get', [CustomerController::class, 'getById'])->name('customers.get-by-id');
     Route::post('/customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quick-store');
     Route::post('/customers/validate-loyalty-card', [CustomerController::class, 'validateLoyaltyCard'])->name('customers.validate-loyalty-card');
+    Route::post('/customers/bulk-delete', [CustomerController::class, 'bulkDelete'])->name('customers.bulk-delete');
     Route::resource('customers', CustomerController::class);
 
     // Customer Items Management (clothing, fabrics for tailor services)
@@ -514,6 +540,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/customer-items/{customer_item}/print-options', [CustomerItemController::class, 'getPrintOptions'])->name('customer-items.print-options');
     Route::post('/customer-items/{customer_item}/print', [CustomerItemController::class, 'print'])->name('customer-items.print');
     Route::post('/customer-items/{customer_item}/send-to-printer', [CustomerItemController::class, 'sendToPrinter'])->name('customer-items.send-to-printer');
+    Route::post('/customer-items/bulk-delete', [CustomerItemController::class, 'bulkDelete'])->name('customer-items.bulk-delete');
     Route::resource('customer-items', CustomerItemController::class);
 
     // Dynamic Service Routes (multi-service support)
@@ -521,6 +548,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/', [TailorServiceController::class, 'index'])->name('services.index');
         Route::get('/create', [TailorServiceController::class, 'create'])->name('services.create');
         Route::post('/', [TailorServiceController::class, 'store'])->name('services.store');
+        Route::delete('/bulk-delete', [TailorServiceController::class, 'bulkDelete'])->name('services.bulk-delete');
         Route::get('/{tailorService}', [TailorServiceController::class, 'show'])->name('services.show');
         Route::get('/{tailorService}/edit', [TailorServiceController::class, 'edit'])->name('services.edit');
         Route::put('/{tailorService}', [TailorServiceController::class, 'update'])->name('services.update');
@@ -579,21 +607,27 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Note: Employee management merged into User management
     
     // User Management (Authentication)
+    Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulk-delete');
     Route::resource('users', UserController::class);
     
     // Stock Management
     Route::get('/stock-movements/search', [StockMovementController::class, 'search'])->name('stock-movements.search');
+    Route::delete('/stock-movements/bulk-delete', [StockMovementController::class, 'bulkDelete'])->name('stock-movements.bulk-delete');
     Route::resource('stock-movements', StockMovementController::class);
     
     Route::get('/product-stock/search', [ProductStockController::class, 'search'])->name('product-stock.search');
     Route::get('/product-stock', [ProductStockController::class, 'index'])->name('product-stock.index');
     Route::get('/product-stock/{productStock}/edit', [ProductStockController::class, 'edit'])->name('product-stock.edit');
     Route::patch('/product-stock/{productStock}', [ProductStockController::class, 'update'])->name('product-stock.update');
-    
+    Route::get('/product-stock/import/template', [ProductStockController::class, 'downloadTemplate'])->name('product-stock.import.template');
+    Route::post('/product-stock/import', [ProductStockController::class, 'import'])->name('product-stock.import');
+    Route::get('/product-stock/import/status/{importJobId}', [ProductStockController::class, 'importStatus'])->name('product-stock.import.status');
+
     // Goods Receipt Management
     Route::post('/goods-receipts/search-barcode', [GoodsReceiptController::class, 'searchProductByBarcode'])->name('goods-receipts.search-barcode');
     Route::post('/goods-receipts/store-async', [GoodsReceiptController::class, 'storeAsync'])->name('goods-receipts.store-async');
     Route::get('/goods-receipts/job-status/{jobId}', [GoodsReceiptController::class, 'jobStatus'])->name('goods-receipts.job-status');
+    Route::post('/goods-receipts/bulk-delete', [GoodsReceiptController::class, 'bulkDelete'])->name('goods-receipts.bulk-delete');
     Route::post('/goods-receipts/{goodsReceipt}/complete', [GoodsReceiptController::class, 'complete'])->name('goods-receipts.complete');
     Route::get('/goods-receipts/{goodsReceipt}/view-document', [GoodsReceiptController::class, 'viewDocument'])->name('goods-receipts.view-document');
     Route::get('/goods-receipts/{goodsReceipt}/download-document', [GoodsReceiptController::class, 'downloadDocument'])->name('goods-receipts.download-document');
@@ -602,6 +636,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     Route::get('/warehouse-transfers/search', [WarehouseTransferController::class, 'search'])->name('warehouse-transfers.search');
     Route::get('/warehouse-transfers/warehouse-products', [WarehouseTransferController::class, 'getWarehouseProducts'])->name('warehouse-transfers.warehouse-products');
+    Route::post('/warehouse-transfers/bulk-delete', [WarehouseTransferController::class, 'bulkDelete'])->name('warehouse-transfers.bulk-delete');
     Route::resource('warehouse-transfers', WarehouseTransferController::class);
     
     // Inventory Management
@@ -610,6 +645,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     
     Route::get('/product-returns/search', [ProductReturnController::class, 'search'])->name('product-returns.search');
     Route::post('/product-returns/products-by-supplier', [ProductReturnController::class, 'getProductsBySupplier'])->name('product-returns.products-by-supplier');
+    Route::post('/product-returns/bulk-delete', [ProductReturnController::class, 'bulkDelete'])->name('product-returns.bulk-delete');
     Route::get('/product-returns/{productReturn}/print', [ProductReturnController::class, 'print'])->name('product-returns.print');
     Route::patch('/product-returns/{productReturn}/approve', [ProductReturnController::class, 'approve'])->name('product-returns.approve');
     Route::patch('/product-returns/{productReturn}/send', [ProductReturnController::class, 'send'])->name('product-returns.send');
@@ -619,6 +655,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/alerts/search', [MinMaxAlertController::class, 'search'])->name('alerts.search');
     Route::patch('/alerts/{alert}/view', [MinMaxAlertController::class, 'markAsViewed'])->name('alerts.view');
     Route::patch('/alerts/{alert}/resolve', [MinMaxAlertController::class, 'markAsResolved'])->name('alerts.resolve');
+    Route::delete('/alerts/bulk-delete', [MinMaxAlertController::class, 'bulkDelete'])->name('alerts.bulk-delete');
+    Route::post('/alerts/bulk-resolve', [MinMaxAlertController::class, 'bulkResolve'])->name('alerts.bulk-resolve');
     Route::resource('alerts', MinMaxAlertController::class, ['except' => ['create', 'store', 'edit', 'update']]);
 
     // Product Activity & Discrepancy Investigation
@@ -637,6 +675,15 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/pos/gift-card/lookup', [\App\Http\Controllers\POSController::class, 'lookupGiftCard'])->name('pos.gift-card.lookup');
     Route::post('/pos/gift-card/sell', [\App\Http\Controllers\POSController::class, 'sellGiftCard'])->name('pos.gift-card.sell');
 
+    // Expeditor (Field Sales)
+    Route::get('/expeditor', [ExpeditorController::class, 'index'])->name('expeditor.index');
+    Route::get('/expeditor/products', [ExpeditorController::class, 'loadProducts'])->name('expeditor.products.load');
+    Route::get('/expeditor/customers/search', [ExpeditorController::class, 'searchCustomers'])->name('expeditor.customers.search');
+    Route::get('/expeditor/customers/{customer}/orders', [ExpeditorController::class, 'getCustomerOrders'])->name('expeditor.customers.orders');
+    Route::post('/expeditor/customers', [ExpeditorController::class, 'createCustomer'])->name('expeditor.customers.create');
+    // Expeditor uses existing POS sale endpoint for completing sales
+    // POST /pos/sale
+
     // Shift Management
     Route::get('/shift-management', [\App\Http\Controllers\FiscalShiftController::class, 'index'])->name('shift-management.index');
 
@@ -646,6 +693,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     })->name('sales.create.redirect');
     
     Route::get('/sales/search', [SaleController::class, 'search'])->name('sales.search');
+    Route::post('/sales/bulk-delete', [SaleController::class, 'bulkDelete'])->name('sales.bulk-delete');
+    Route::post('/sales/bulk-restore', [SaleController::class, 'bulkRestore'])->name('sales.bulk-restore');
     Route::resource('sales', SaleController::class)->except(['create']);
     Route::post('/sales/{id}/restore', [SaleController::class, 'restore'])->name('sales.restore');
     Route::patch('/sales/{sale}/make-credit', [SaleController::class, 'makeCredit'])->name('sales.make-credit');
@@ -659,6 +708,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
     Route::get('/returns/create', [\App\Http\Controllers\ReturnController::class, 'create'])->name('returns.create');
     Route::post('/returns', [\App\Http\Controllers\ReturnController::class, 'store'])->name('returns.store');
+    Route::post('/returns/bulk-delete', [\App\Http\Controllers\ReturnController::class, 'bulkDelete'])->name('returns.bulk-delete');
     Route::get('/returns/{id}', [\App\Http\Controllers\ReturnController::class, 'show'])->name('returns.show');
     Route::post('/returns/{id}/cancel', [\App\Http\Controllers\ReturnController::class, 'cancel'])->name('returns.cancel');
     Route::get('/api/sales/{saleId}/for-return', [\App\Http\Controllers\ReturnController::class, 'getSaleForReturn'])->name('api.sales.for-return');
@@ -667,10 +717,13 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/online-orders', [OnlineOrderController::class, 'index'])->name('online-orders.index');
     Route::patch('/online-orders/{sale}/status', [OnlineOrderController::class, 'updateStatus'])->name('online-orders.update-status');
     Route::delete('/online-orders/{sale}/cancel', [OnlineOrderController::class, 'cancel'])->name('online-orders.cancel');
+    Route::patch('/online-orders/bulk-status', [OnlineOrderController::class, 'bulkUpdateStatus'])->name('online-orders.bulk-status');
+    Route::delete('/online-orders/bulk-cancel', [OnlineOrderController::class, 'bulkCancel'])->name('online-orders.bulk-cancel');
 
     // Gift Cards Management (Tenant)
     Route::prefix('gift-cards')->name('gift-cards.')->group(function () {
         Route::get('/', [\App\Http\Controllers\GiftCardController::class, 'index'])->name('index');
+        Route::delete('/bulk-delete', [\App\Http\Controllers\GiftCardController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/configure', [\App\Http\Controllers\GiftCardConfigurationController::class, 'index'])->name('configure');
         Route::post('/bulk-configure', [\App\Http\Controllers\GiftCardConfigurationController::class, 'bulkConfigure'])->name('bulk-configure');
         Route::post('/update-denomination', [\App\Http\Controllers\GiftCardConfigurationController::class, 'updateDenomination'])->name('update-denomination');
@@ -698,6 +751,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::post('/receipt-templates/{receiptTemplate}/preview', [ReceiptTemplateController::class, 'preview'])->name('receipt-templates.preview');
     Route::post('/receipt-templates/{receiptTemplate}/duplicate', [ReceiptTemplateController::class, 'duplicate'])->name('receipt-templates.duplicate');
     Route::post('/receipt-templates/create-default', [ReceiptTemplateController::class, 'createDefault'])->name('receipt-templates.create-default');
+    Route::post('/receipt-templates/bulk-delete', [ReceiptTemplateController::class, 'bulkDelete'])->name('receipt-templates.bulk-delete');
     Route::resource('receipt-templates', ReceiptTemplateController::class);
     
     // Settings (POS only - Shop moved to dedicated page)
@@ -715,10 +769,12 @@ Route::middleware(['auth', 'account.access'])->group(function () {
 
     // Expense Management
     Route::get('/expense-categories/search', [ExpenseCategoryController::class, 'search'])->name('expense-categories.search');
+    Route::delete('/expense-categories/bulk-delete', [ExpenseCategoryController::class, 'bulkDelete'])->name('expense-categories.bulk-delete');
     Route::resource('expense-categories', ExpenseCategoryController::class);
     
     Route::get('/expenses/search', [ExpenseController::class, 'search'])->name('expenses.search');
     Route::post('/expenses/pay-goods-receipt', [ExpenseController::class, 'payGoodsReceipt'])->name('expenses.pay-goods-receipt');
+    Route::post('/expenses/bulk-delete', [ExpenseController::class, 'bulkDelete'])->name('expenses.bulk-delete');
     Route::get('/expenses/{expense}/view-receipt', [ExpenseController::class, 'viewReceipt'])->name('expenses.view-receipt');
     Route::get('/expenses/{expense}/download-receipt', [ExpenseController::class, 'downloadReceipt'])->name('expenses.download-receipt');
     Route::resource('expenses', ExpenseController::class);
@@ -726,6 +782,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Employee Salaries
     Route::get('/employee-salaries/search', [EmployeeSalaryController::class, 'search'])->name('employee-salaries.search');
     Route::patch('/employee-salaries/{employee_salary}/mark-as-paid', [EmployeeSalaryController::class, 'markAsPaid'])->name('employee-salaries.mark-as-paid');
+    Route::post('/employee-salaries/bulk-delete', [EmployeeSalaryController::class, 'bulkDelete'])->name('employee-salaries.bulk-delete');
     Route::resource('employee-salaries', EmployeeSalaryController::class);
     
     // Credit Management
@@ -738,7 +795,9 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/credits/supplier/create', [CreditController::class, 'createSupplierCredit'])->name('credits.supplier.create');
     Route::post('/credits/supplier', [CreditController::class, 'storeSupplierCredit'])->name('credits.supplier.store');
     Route::patch('/credits/supplier/{credit}/pay', [CreditController::class, 'paySupplierCredit'])->name('credits.supplier.pay');
-    
+    Route::delete('/credits/supplier/{credit}', [CreditController::class, 'destroySupplierCredit'])->name('credits.supplier.destroy');
+    Route::post('/credits/supplier/bulk-delete', [CreditController::class, 'bulkDeleteSupplierCredits'])->name('credits.supplier.bulk-delete');
+
     Route::get('/api/customer-credits', [CreditController::class, 'getCustomerCreditsForDropdown'])->name('api.customer-credits');
     Route::get('/api/supplier-credits', [CreditController::class, 'getSupplierCreditsForDropdown'])->name('api.supplier-credits');
     
@@ -749,6 +808,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
 
     // Audit Logs
+    Route::delete('/audit-logs/bulk-delete', [AuditLogController::class, 'bulkDelete'])->name('audit-logs.bulk-delete');
     Route::resource('audit-logs', AuditLogController::class, ['only' => ['index', 'show']]);
 
     // Fiscal Printer Job Queue
@@ -764,6 +824,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/', [IntegrationsController::class, 'index'])->name('index');
         Route::get('/sms', [IntegrationsController::class, 'sms'])->name('sms');
         Route::get('/telegram', [IntegrationsController::class, 'telegram'])->name('telegram');
+        Route::post('/bulk-disable', [IntegrationsController::class, 'bulkDisable'])->name('bulk-disable');
+        Route::post('/bulk-activate', [IntegrationsController::class, 'bulkActivate'])->name('bulk-activate');
     });
 
     // Shop Settings (Dedicated Page)
@@ -781,6 +843,8 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/send-bulk', [SmsController::class, 'sendBulk'])->name('send-bulk');
         Route::post('/send-all', [SmsController::class, 'sendAll'])->name('send-all');
         Route::get('/logs', [SmsController::class, 'logs'])->name('logs');
+        Route::delete('/{id}', [SmsController::class, 'destroy'])->name('destroy');
+        Route::delete('/bulk-delete', [SmsController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/test', [SmsController::class, 'test'])->name('test');
     });
 
@@ -857,6 +921,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/checklist/{category}', [\App\Http\Controllers\RentalController::class, 'getDefaultChecklist'])->name('checklist');
         Route::post('/search-barcode', [\App\Http\Controllers\RentalController::class, 'searchByBarcode'])->name('search-barcode');
         Route::post('/check-availability', [\App\Http\Controllers\RentalController::class, 'checkAvailability'])->name('check-availability');
+        Route::post('/bulk-delete', [\App\Http\Controllers\RentalController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/{rental}/edit', [\App\Http\Controllers\RentalController::class, 'edit'])->name('edit');
         Route::get('/{rental}', [\App\Http\Controllers\RentalController::class, 'show'])->name('show');
         Route::put('/{rental}', [\App\Http\Controllers\RentalController::class, 'update'])->name('update');
@@ -872,6 +937,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     // Rental Inventory Management
     Route::prefix('rental-inventory')->name('rental-inventory.')->group(function () {
         Route::get('/', [\App\Http\Controllers\RentalInventoryController::class, 'index'])->name('index');
+        Route::post('/bulk-delete', [\App\Http\Controllers\RentalInventoryController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/create', [\App\Http\Controllers\RentalInventoryController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\RentalInventoryController::class, 'store'])->name('store');
         Route::get('/available', [\App\Http\Controllers\RentalInventoryController::class, 'getAvailable'])->name('available');
@@ -905,6 +971,7 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::get('/', [\App\Http\Controllers\RentalTemplateController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\RentalTemplateController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\RentalTemplateController::class, 'store'])->name('store');
+        Route::delete('/bulk-delete', [\App\Http\Controllers\RentalTemplateController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/{rentalTemplate}', [\App\Http\Controllers\RentalTemplateController::class, 'show'])->name('show');
         Route::get('/{rentalTemplate}/edit', [\App\Http\Controllers\RentalTemplateController::class, 'edit'])->name('edit');
         Route::put('/{rentalTemplate}', [\App\Http\Controllers\RentalTemplateController::class, 'update'])->name('update');

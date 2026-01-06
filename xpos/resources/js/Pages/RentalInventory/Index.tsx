@@ -1,7 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { CubeIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon, CheckCircleIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface Product {
@@ -140,6 +140,80 @@ export default function Index({ inventory, filters }: Props) {
         if (confirm(`${item.inventory_number} inventar elementini silmək istədiyinizə əminsiniz?`)) {
             router.delete(route('rental-inventory.destroy', item.id));
         }
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} inventar elementini silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('rental-inventory.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Handle double-click to view item
+    const handleRowDoubleClick = (item: InventoryItem) => {
+        router.visit(route('rental-inventory.show', item.id));
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedItems: InventoryItem[]): BulkAction[] => {
+        // If only ONE item is selected, show individual actions
+        if (selectedIds.length === 1 && selectedItems.length === 1) {
+            const item = selectedItems[0];
+            const userRole = auth?.user?.role;
+            const canDelete = (userRole === 'admin' || userRole === 'account_owner') && item.status !== 'rented';
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('rental-inventory.show', item.id))
+                },
+                {
+                    label: 'Düzəlt',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('rental-inventory.edit', item.id))
+                },
+                ...(canDelete ? [{
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDelete(item)
+                }] : [])
+            ];
+        }
+
+        // Multiple items selected - show bulk delete only
+        const userRole = auth?.user?.role;
+        const canBulkDelete = userRole === 'admin' || userRole === 'account_owner';
+
+        if (!canBulkDelete) {
+            return [];
+        }
+
+        return [
+            {
+                label: 'Seçilmişləri Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: () => handleBulkDelete(selectedIds)
+            }
+        ];
     };
 
     const getStatusBadgeClass = (status: string) => {
@@ -438,10 +512,18 @@ export default function Index({ inventory, filters }: Props) {
                     }}
                     className="space-y-6"
                     fullWidth={true}
-
                     mobileClickable={true}
-
                     hideMobileActions={true}
+                    selectable={true}
+                    bulkActions={getBulkActions}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(item: InventoryItem) => {
+                        // Highlight rented items differently
+                        if (item.status === 'rented') {
+                            return 'bg-blue-50';
+                        }
+                        return '';
+                    }}
                 />
             </div>
         </AuthenticatedLayout>

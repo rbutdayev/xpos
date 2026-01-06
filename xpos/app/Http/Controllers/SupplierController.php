@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Models\SupplierCredit;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -50,8 +52,15 @@ class SupplierController extends Controller
                 return $supplier->append(['active_products_count', 'formatted_phone']);
             });
 
+        // Get branches for manual credit modal
+        $branches = Branch::where('account_id', Auth::user()->account_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('Suppliers/Index', [
             'suppliers' => $suppliers,
+            'branches' => $branches,
             'filters' => $request->only(['search', 'status'])
         ]);
     }
@@ -110,11 +119,25 @@ class SupplierController extends Controller
             }
         ]);
 
+        // Get supplier credits
+        $credits = SupplierCredit::where('supplier_id', $supplier->id)
+            ->where('account_id', Auth::user()->account_id)
+            ->latest('credit_date')
+            ->get();
+
+        // Get branches for manual credit modal
+        $branches = Branch::where('account_id', Auth::user()->account_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         // Get recent activity/orders (would be implemented when order module is ready)
         $recentActivity = [];
 
         return Inertia::render('Suppliers/Show', [
             'supplier' => $supplier,
+            'credits' => $credits,
+            'branches' => $branches,
             'recentActivity' => $recentActivity
         ]);
     }
@@ -243,6 +266,137 @@ class SupplierController extends Controller
         });
 
         return response()->json($products);
+    }
+
+    /**
+     * Bulk delete suppliers
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('manage-suppliers');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:suppliers,id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedSuppliers = [];
+
+        DB::beginTransaction();
+
+        try {
+            $suppliers = Supplier::whereIn('id', $validated['ids'])
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($suppliers as $supplier) {
+                // Check if supplier has products
+                if ($supplier->products()->count() > 0) {
+                    $failedSuppliers[] = $supplier->name;
+                    continue;
+                }
+
+                $supplier->delete();
+                $deletedCount++;
+            }
+
+            DB::commit();
+
+            // Prepare response message
+            $message = '';
+            if ($deletedCount > 0) {
+                $message = __('app.suppliers_deleted_successfully', ['count' => $deletedCount]);
+            }
+
+            if (!empty($failedSuppliers)) {
+                $failedList = implode(', ', $failedSuppliers);
+                $failedMessage = __('app.cannot_delete_suppliers_with_products', ['suppliers' => $failedList]);
+                $message = $message ? $message . ' ' . $failedMessage : $failedMessage;
+            }
+
+            if ($deletedCount > 0) {
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', $message);
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', __('app.bulk_delete_failed'));
+        }
+    }
+
+    /**
+     * Create a manual supplier credit (for migration or manual entries)
+     */
+    public function createManualCredit(Request $request)
+    {
+        Gate::authorize('manage-suppliers');
+
+        $validated = $request->validate([
+            'supplier_id' => [
+                'required',
+                'integer',
+                Rule::exists('suppliers', 'id')->where(function ($query) {
+                    $query->where('account_id', Auth::user()->account_id);
+                })
+            ],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where(function ($query) {
+                    $query->where('account_id', Auth::user()->account_id);
+                })
+            ],
+            'amount' => 'required|numeric|min:0.01',
+            'description' => 'required|string|max:500',
+            'entry_type' => 'required|in:manual,migration',
+            'old_system_reference' => 'nullable|string|max:100',
+            'credit_date' => 'required|date',
+            'due_date' => 'nullable|date|after_or_equal:credit_date',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Create the manual supplier credit
+            $credit = SupplierCredit::create([
+                'account_id' => Auth::user()->account_id,
+                'supplier_id' => $validated['supplier_id'],
+                'branch_id' => $validated['branch_id'],
+                'type' => 'credit',
+                'entry_type' => $validated['entry_type'],
+                'amount' => $validated['amount'],
+                'remaining_amount' => $validated['amount'],
+                'description' => $validated['description'],
+                'old_system_reference' => $validated['old_system_reference'] ?? null,
+                'credit_date' => $validated['credit_date'],
+                'due_date' => $validated['due_date'] ?? null,
+                'status' => 'pending',
+                'user_id' => Auth::id(),
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            // Clear dashboard cache
+            if (class_exists('App\Services\DashboardService')) {
+                $dashboardService = app('App\Services\DashboardService');
+                $dashboardService->clearCache(Auth::user()->account);
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Əl ilə borc uğurla yaradıldı');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Failed to create manual supplier credit: ' . $e->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Əl ilə borc yaradılması uğursuz oldu: ' . $e->getMessage()])
+                ->with('error', 'Əl ilə borc yaradılması uğursuz oldu');
+        }
     }
 
 }

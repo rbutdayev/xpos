@@ -1,17 +1,16 @@
 import { Link } from '@inertiajs/react';
 import {
     FolderIcon,
-    ArrowUpTrayIcon,
+    CubeIcon,
     DocumentPlusIcon,
     PlusCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface ProductsNavigationProps {
     currentRoute?: string;
-    onImportClick?: () => void;
 }
 
-export default function ProductsNavigation({ currentRoute, onImportClick }: ProductsNavigationProps) {
+export default function ProductsNavigation({ currentRoute }: ProductsNavigationProps) {
     const isActive = (routeName: string) => {
         const cr: string = currentRoute ?? (route().current() ?? '');
         return cr.includes(routeName);
@@ -49,15 +48,25 @@ export default function ProductsNavigation({ currentRoute, onImportClick }: Prod
                     )}
                 </Link>
 
-                {/* Import Button */}
-                <button
-                    type="button"
-                    onClick={onImportClick}
-                    className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                {/* Products Link */}
+                <Link
+                    href={route('products.index')}
+                    className={`
+                        relative flex items-center gap-2.5 px-4 py-3 rounded-md
+                        font-medium text-sm transition-all duration-200 ease-in-out
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                        ${isActive('products') && !isActive('categories')
+                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
+                            : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100'
+                        }
+                    `}
                 >
-                    <ArrowUpTrayIcon className="w-5 h-5 text-gray-400" />
-                    <span className="font-semibold">Import</span>
-                </button>
+                    <CubeIcon className={`w-5 h-5 ${isActive('products') && !isActive('categories') ? 'text-white' : 'text-gray-400'}`} />
+                    <span className="font-semibold">Məhsullar</span>
+                    {isActive('products') && !isActive('categories') && (
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                    )}
+                </Link>
 
                 {/* Bulk Create Button */}
                 <Link

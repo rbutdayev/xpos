@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
+import SharedDataTable, { Filter, Column, Action, BulkAction } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
-import { EyeIcon, ArrowUturnLeftIcon, XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, ArrowUturnLeftIcon, XCircleIcon, PlusCircleIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { PageProps } from '@/types';
-import SalesNavigation from '@/Components/SalesNavigation';
 import ReturnModal from '@/Components/ReturnModal';
 import { useTranslation } from 'react-i18next';
 
@@ -222,20 +221,69 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
         },
     ];
 
+    // Handle double-click to view return
+    const handleRowDoubleClick = (returnItem: SaleReturn) => {
+        router.visit(route('returns.show', returnItem.return_id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} qaytarmanı silmək istədiyinizə əminsiniz?\n\nQaytarmalar və onlarla əlaqəli məlumatlar silinəcək.`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('returns.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message will be shown via flash message
+            },
+            onError: (errors: any) => {
+                console.error('Bulk delete error:', errors);
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - these work on multiple selected rows
+    const getBulkActions = (selectedIds: (string | number)[], selectedReturns: SaleReturn[]): BulkAction[] => {
+        // If only ONE return is selected, show individual actions
+        if (selectedIds.length === 1 && selectedReturns.length === 1) {
+            const returnItem = selectedReturns[0];
+            const individualActions: BulkAction[] = [
+                {
+                    label: t('view') as any,
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('returns.show', returnItem.return_id))
+                },
+                {
+                    label: t('delete') as any,
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleBulkDelete([returnItem.return_id])
+                }
+            ];
+
+            return individualActions;
+        }
+
+        // Multiple items selected - show bulk delete
+        return [
+            {
+                label: t('bulkDelete') as any,
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title={t('returns.title')} />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="returns" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
-                    <button
-                        onClick={() => setReturnModalOpen(true)}
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                    >
-                        <ArrowUturnLeftIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">{t('returns.newReturn')}</span>
-                    </button>
-                </SalesNavigation>
-            </div>
             <div className="py-6">
                 <div className="px-4 sm:px-6 lg:px-8">
                     {/* Statistics Cards */}
@@ -300,11 +348,18 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                             }}
                             filters={tableFilters}
                             actions={actions}
+                            selectable={true}
+                            bulkActions={getBulkActions}
+                            onRowDoubleClick={handleRowDoubleClick}
                             searchValue={searchInput}
                             onSearch={() => {}}
                             onSearchChange={handleSearchInput}
                             searchPlaceholder={t('returns.searchPlaceholder')}
                             fullWidth={true}
+                            rowClassName={(returnItem: SaleReturn) =>
+                                'cursor-pointer hover:bg-blue-50 transition-all duration-200'
+                            }
+                            idField="return_id"
                         />
                     </div>
                 </div>

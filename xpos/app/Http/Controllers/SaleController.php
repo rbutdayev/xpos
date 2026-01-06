@@ -60,8 +60,9 @@ class SaleController extends Controller
                   });
             });
 
-        // Filter by sales_staff's branch if user is sales_staff
-        if (Auth::user()->role === 'sales_staff') {
+        // Filter by user's branch for branch-restricted roles
+        $branchRestrictedRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+        if (in_array(Auth::user()->role, $branchRestrictedRoles) && Auth::user()->branch_id) {
             $query->where('branch_id', Auth::user()->branch_id);
         }
 
@@ -115,8 +116,9 @@ class SaleController extends Controller
             $query->countable(); // Only include POS sales + completed online orders
         }
 
-        // Filter by sales_staff's branch if user is sales_staff
-        if (Auth::user()->role === 'sales_staff') {
+        // Filter by user's branch for branch-restricted roles
+        $branchRestrictedRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+        if (in_array(Auth::user()->role, $branchRestrictedRoles) && Auth::user()->branch_id) {
             $query->where('branch_id', Auth::user()->branch_id);
         }
 
@@ -552,6 +554,121 @@ class SaleController extends Controller
             return redirect()->route('sales.index')
                 ->with('error', 'Satış bərpa edilərkən xəta baş verdi: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Bulk delete sales
+     */
+    public function bulkDelete(Request $request, SaleDeletionService $deletionService)
+    {
+        // Only account owner can delete sales
+        Gate::authorize('delete-sales');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedSales = [];
+
+        foreach ($request->ids as $saleId) {
+            try {
+                $sale = Sale::where('sale_id', $saleId)
+                    ->where('account_id', $user->account_id)
+                    ->first();
+
+                if (!$sale) {
+                    continue; // Skip if sale not found or doesn't belong to account
+                }
+
+                if ($sale->trashed()) {
+                    $failedSales[] = $sale->sale_number . ' (artıq silinib)';
+                    continue;
+                }
+
+                $deletionService->deleteSale($sale, $user->id);
+                $deletedCount++;
+            } catch (\Exception $e) {
+                \Log::error('Bulk sale deletion failed', [
+                    'sale_id' => $saleId,
+                    'error' => $e->getMessage(),
+                ]);
+                $failedSales[] = $sale->sale_number ?? "ID: $saleId";
+            }
+        }
+
+        if (count($failedSales) > 0) {
+            $failedList = implode(', ', $failedSales);
+            $message = $deletedCount > 0
+                ? "{$deletedCount} satış silindi. Bu satışlar silinə bilmədi: {$failedList}"
+                : "Heç bir satış silinmədi. Xəta: {$failedList}";
+
+            return redirect()->route('sales.index')
+                ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('sales.index')
+            ->with('success', "{$deletedCount} satış uğurla silindi. Stoklar bərpa edildi.");
+    }
+
+    /**
+     * Bulk restore soft-deleted sales
+     */
+    public function bulkRestore(Request $request, \App\Services\SaleRestorationService $restorationService)
+    {
+        // Only account owner can restore sales
+        Gate::authorize('delete-sales');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = Auth::user();
+        $restoredCount = 0;
+        $failedSales = [];
+
+        foreach ($request->ids as $saleId) {
+            try {
+                $sale = Sale::withTrashed()
+                    ->where('sale_id', $saleId)
+                    ->where('account_id', $user->account_id)
+                    ->first();
+
+                if (!$sale) {
+                    continue; // Skip if sale not found or doesn't belong to account
+                }
+
+                if (!$sale->trashed()) {
+                    $failedSales[] = $sale->sale_number . ' (silinməyib)';
+                    continue;
+                }
+
+                $restorationService->restoreSale($sale, $user->id);
+                $restoredCount++;
+            } catch (\Exception $e) {
+                \Log::error('Bulk sale restoration failed', [
+                    'sale_id' => $saleId,
+                    'error' => $e->getMessage(),
+                ]);
+                $failedSales[] = $sale->sale_number ?? "ID: $saleId";
+            }
+        }
+
+        if (count($failedSales) > 0) {
+            $failedList = implode(', ', $failedSales);
+            $message = $restoredCount > 0
+                ? "{$restoredCount} satış bərpa edildi. Bu satışlar bərpa edilə bilmədi: {$failedList}"
+                : "Heç bir satış bərpa edilmədi. Xəta: {$failedList}";
+
+            return redirect()->route('sales.index')
+                ->with($restoredCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('sales.index')
+            ->with('success', "{$restoredCount} satış uğurla bərpa edildi.");
     }
 
     private function updateProductStock(int $productId, float $quantity, Sale $sale): void

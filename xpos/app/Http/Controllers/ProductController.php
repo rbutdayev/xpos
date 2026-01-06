@@ -750,6 +750,97 @@ class ProductController extends Controller
                         ->with('success', __('app.updated_successfully'));
     }
 
+    /**
+     * Bulk delete products
+     */
+    public function bulkDelete(Request $request)
+    {
+        // Salesmen cannot delete products
+        if (Auth::user()->role === 'sales_staff') {
+            abort(403, 'Satış əməkdaşları məhsulu silə bilməz.');
+        }
+
+        Gate::authorize('manage-products');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:products,id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedProducts = [];
+
+        DB::transaction(function () use ($request, $user, &$deletedCount, &$failedProducts) {
+            $products = Product::whereIn('id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($products as $product) {
+                // Check if product has been used in any transactions
+                if ($product->stockHistory()->count() > 0) {
+                    $failedProducts[] = $product->name;
+                    continue;
+                }
+
+                // Delete all product photos
+                try {
+                    $this->photoService->deleteAllProductPhotos($product);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to delete product photos during bulk deletion: ' . $e->getMessage());
+                    // Continue with product deletion even if photo deletion fails
+                }
+
+                $product->delete();
+                $deletedCount++;
+            }
+        });
+
+        if (count($failedProducts) > 0) {
+            $failedList = implode(', ', $failedProducts);
+            $message = $deletedCount > 0
+                ? "{$deletedCount} məhsul silindi. Bu məhsullar istifadə edildiyi üçün silinə bilmədi: {$failedList}"
+                : "Heç bir məhsul silinmədi. Bu məhsullar istifadə edildiyi üçün silinə bilməz: {$failedList}";
+
+            return redirect()->route('products.index')
+                ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('products.index')
+            ->with('success', "{$deletedCount} məhsul uğurla silindi");
+    }
+
+    /**
+     * Bulk update product status
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        // Salesmen cannot update products
+        if (Auth::user()->role === 'sales_staff') {
+            abort(403, 'Satış əməkdaşları məhsul statusunu dəyişə bilməz.');
+        }
+
+        Gate::authorize('manage-products');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:products,id',
+            'is_active' => 'required|boolean',
+        ]);
+
+        $user = Auth::user();
+
+        $updatedCount = DB::transaction(function () use ($request, $user) {
+            return Product::whereIn('id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->update(['is_active' => $request->boolean('is_active')]);
+        });
+
+        $status = $request->boolean('is_active') ? 'aktiv' : 'deaktiv';
+        return redirect()->route('products.index')
+            ->with('success', "{$updatedCount} məhsul {$status} edildi");
+    }
+
     public function destroy(Product $product)
     {
         // Salesmen cannot delete products
@@ -1015,6 +1106,71 @@ class ProductController extends Controller
                 'tab' => $tab,
             ],
         ]);
+    }
+
+    /**
+     * Bulk delete discounts (product prices with discount_percentage > 0)
+     */
+    public function bulkDeleteDiscounts(Request $request)
+    {
+        Gate::authorize('manage-products');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:products,id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedProducts = [];
+
+        DB::beginTransaction();
+        try {
+            $products = Product::whereIn('id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($products as $product) {
+                try {
+                    // Delete product prices that have discounts
+                    $pricesDeleted = $product->prices()
+                        ->where('discount_percentage', '>', 0)
+                        ->delete();
+
+                    if ($pricesDeleted > 0) {
+                        $deletedCount++;
+                    } else {
+                        $failedProducts[] = $product->name . ' (endirim tapılmadı)';
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to delete discount for product: ' . $e->getMessage(), [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                    ]);
+                    $failedProducts[] = $product->name;
+                }
+            }
+
+            DB::commit();
+
+            if (count($failedProducts) > 0) {
+                $failedList = implode(', ', $failedProducts);
+                $message = $deletedCount > 0
+                    ? "{$deletedCount} məhsulun endirimi silindi. Bu məhsulların endirimi silinə bilmədi: {$failedList}"
+                    : "Heç bir endirim silinmədi. Xəta: {$failedList}";
+
+                return redirect()->route('products.discounts')
+                    ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+            }
+
+            return redirect()->route('products.discounts')
+                ->with('success', "{$deletedCount} məhsulun endirimi uğurla silindi");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk discount deletion failed: ' . $e->getMessage());
+            return redirect()->route('products.discounts')
+                ->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+        }
     }
 
     /**

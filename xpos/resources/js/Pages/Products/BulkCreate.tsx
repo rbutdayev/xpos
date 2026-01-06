@@ -1,7 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import ProductsNavigation from '@/Components/ProductsNavigation';
 import { Category, Warehouse } from '@/types';
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -161,10 +160,6 @@ export default function BulkCreate({ categories, warehouses }: Props) {
   return (
     <AuthenticatedLayout>
       <Head title={t('bulk.title')} />
-
-      <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-        <ProductsNavigation currentRoute="products.bulk-create" />
-      </div>
 
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">

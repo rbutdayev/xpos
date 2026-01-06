@@ -1,11 +1,10 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { WarehouseTransfer } from '@/types';
 // Using hardcoded Azerbaijani strings like other pages in the application
-import { EyeIcon } from '@heroicons/react/24/outline';
-import InventoryNavigation from '@/Components/InventoryNavigation';
+import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     transfers: {
@@ -84,21 +83,78 @@ export default function Index({ transfers }: Props) {
         }
     ];
 
-    const actions = [
-        {
-            label: 'Bax',
-            href: (transfer: WarehouseTransfer) => route('warehouse-transfers.show', transfer.transfer_id),
-            icon: <EyeIcon className="w-4 h-4" />,
-            variant: 'view' as const
+    // Handle double-click to view transfer
+    const handleRowDoubleClick = (transfer: WarehouseTransfer) => {
+        router.visit(route('warehouse-transfers.show', transfer.transfer_id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} transferi silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
         }
-    ];
+
+        router.post(route('warehouse-transfers.bulk-delete') as any, {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedTransfers: WarehouseTransfer[]): BulkAction[] => {
+        // If only ONE transfer is selected, show individual actions
+        if (selectedIds.length === 1 && selectedTransfers.length === 1) {
+            const transfer = selectedTransfers[0];
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('warehouse-transfers.show', transfer.transfer_id))
+                },
+                {
+                    label: 'Redaktə et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('warehouse-transfers.edit', transfer.transfer_id))
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm('Bu transferi silmək istədiyinizə əminsiniz?')) {
+                            router.delete(route('warehouse-transfers.destroy', transfer.transfer_id));
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple transfers selected - show bulk actions
+        return [
+            {
+                label: 'Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title="Anbar Transferləri" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <InventoryNavigation currentRoute="warehouse-transfers" />
-            </div>
             <div className="w-full">
                 <div className="md:flex md:items-center md:justify-between mb-6">
                     <div className="flex-1 min-w-0">
@@ -123,17 +179,18 @@ export default function Index({ transfers }: Props) {
                     <SharedDataTable
                         data={transfers}
                         columns={columns}
-                        actions={actions}
+                        selectable={true}
+                        bulkActions={getBulkActions}
                         searchPlaceholder="Transferləri axtar"
                         emptyState={{
                             title: 'Transfer tapılmadı',
                             description: 'Hələ heç bir transfer yoxdur'
                         }}
                         fullWidth={true}
-
-                        mobileClickable={true}
-
-                        hideMobileActions={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(transfer: WarehouseTransfer) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                        }
                     />
                 </div>
             </div>

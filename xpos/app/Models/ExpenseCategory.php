@@ -83,12 +83,12 @@ class ExpenseCategory extends Model
     public static function getTypes(): array
     {
         return [
-            'maaş' => 'Maaş',
-            'xərclər' => 'Xərclər',
-            'ödənişlər' => 'Ödənişlər',
-            'kommunal' => 'Kommunal',
-            'nəqliyyat' => 'Nəqliyyat',
-            'digər' => 'Digər'
+            'salary' => 'Maaş',
+            'expenses' => 'Xərclər',
+            'payments' => 'Ödənişlər',
+            'utilities' => 'Kommunal',
+            'transport' => 'Nəqliyyat',
+            'other' => 'Digər'
         ];
     }
 }

@@ -46,6 +46,7 @@
     "view": "Bax",
     "edit": "Düzəlt",
     "delete": "Sil",
+    "bulkDelete": "Seçilmişləri Sil",
     "products": "Məhsullar",
     "cancel": "Ləğv et",
     "createSupplier": "Təchizatçını Yarad",

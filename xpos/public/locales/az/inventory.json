@@ -160,7 +160,10 @@
     "save": "Yadda saxla",
     "deleteConfirm": "Bu qəbulu silmək istədiyinizdən əminsiniz?",
     "deleteSuccess": "Mal qəbulu uğurla silindi",
-    "pay": "Ödə"
+    "pay": "Ödə",
+    "bulkDelete": "Toplu Silinmə",
+    "confirmBulkDelete": "{{count}} mal qəbulunu silmək istədiyinizdən əminsiniz?",
+    "bulkDeleteSuccess": "{{count}} mal qəbulu uğurla silindi"
   },
   "returns": {
     "title": "Qaytarmalar",

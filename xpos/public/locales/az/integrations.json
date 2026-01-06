@@ -75,6 +75,17 @@
     "saveSuccess": "Parametrlər uğurla yadda saxlanıldı",
     "saveError": "Parametrləri yadda saxlayarkən xəta",
     "testSuccess": "Test uğurlu",
-    "testError": "Test uğursuz"
+    "testError": "Test uğursuz",
+    "confirmBulkDisable": "{{count}} inteqrasiyanı deaktiv etmək istədiyinizə əminsiniz?",
+    "bulkDisableSuccess": "{{count}} inteqrasiya uğurla deaktiv edildi",
+    "bulkDisableError": "İnteqrasiyaları deaktiv etmə zamanı xəta baş verdi"
+  },
+
+  "bulkActions": {
+    "view": "Bax",
+    "configure": "Parametrlər",
+    "setup": "Quraşdır",
+    "disable": "Deaktiv et",
+    "bulkDisable": "Seçilmişləri deaktiv et"
   }
 }

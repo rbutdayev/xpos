@@ -31,6 +31,8 @@ class User extends Authenticatable
         'notes',
         'last_login_at',
         'language',
+        'kiosk_pin',
+        'kiosk_enabled',
     ];
 
     /**
@@ -56,6 +58,16 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'kiosk_pin',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'has_kiosk_pin',
     ];
 
     /**
@@ -68,11 +80,21 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'kiosk_pin' => 'hashed',
             'permissions' => 'array',
             'last_login_at' => 'datetime',
             'hire_date' => 'date',
             'hourly_rate' => 'decimal:2',
+            'kiosk_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if kiosk PIN is configured (without exposing the PIN itself)
+     */
+    public function getHasKioskPinAttribute(): bool
+    {
+        return !is_null($this->getAttributeValue('kiosk_pin')) && $this->getAttributeValue('kiosk_pin') !== '';
     }
 
     public function account(): BelongsTo

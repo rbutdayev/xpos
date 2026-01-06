@@ -598,6 +598,67 @@ class TailorServiceController extends Controller
             ->with('success', 'Xidmət qeydi silindi və stok geri qaytarıldı.');
     }
 
+    public function bulkDelete(Request $request, $serviceType)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:tailor_services,id',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+
+        try {
+            DB::transaction(function () use ($validated, $accountId) {
+                // Get all services to delete with account_id filtering
+                $services = TailorService::whereIn('id', $validated['ids'])
+                    ->where('account_id', $accountId)
+                    ->with(['items.product', 'branch.warehouses'])
+                    ->get();
+
+                // Verify all services belong to user's account
+                if ($services->count() !== count($validated['ids'])) {
+                    throw new \Exception('Bəzi xidmətlər sizin hesabınıza aid deyil.');
+                }
+
+                foreach ($services as $service) {
+                    // Return stock for all product items
+                    foreach ($service->items as $item) {
+                        if ($item->item_type === 'product' && $item->product_id) {
+                            $this->returnStock($item->product_id, $item->quantity, $service);
+                        }
+                    }
+
+                    // Update customer item status
+                    if ($service->customer_item_id) {
+                        CustomerItem::where('id', $service->customer_item_id)
+                            ->update(['status' => 'received']);
+                    }
+
+                    // Delete items
+                    $service->items()->delete();
+                }
+
+                // Delete all services
+                TailorService::whereIn('id', $validated['ids'])
+                    ->where('account_id', $accountId)
+                    ->delete();
+            });
+
+            return redirect()->back()
+                ->with('success', count($validated['ids']) . ' xidmət silindi və stoklar geri qaytarıldı.');
+        } catch (\Exception $e) {
+            \Log::error('Bulk delete failed', [
+                'error' => $e->getMessage(),
+                'ids' => $validated['ids'],
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Xidmətləri silməkdə xəta: ' . $e->getMessage());
+        }
+    }
+
     private function deductStock(int $productId, float $quantity, TailorService $service): void
     {
         // Get branch's main warehouse

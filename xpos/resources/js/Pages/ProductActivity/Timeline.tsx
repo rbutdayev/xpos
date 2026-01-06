@@ -3,7 +3,6 @@ import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProductSelect from '@/Components/ProductSelect';
 import { ArrowDownCircleIcon, ArrowUpCircleIcon, ArrowRightCircleIcon, ArrowLeftCircleIcon, AdjustmentsHorizontalIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
-import InventoryNavigation from '@/Components/InventoryNavigation';
 
 interface Activity {
     id: number;
@@ -125,9 +124,6 @@ export default function Timeline({ products, warehouses, activities, productInfo
     return (
         <AuthenticatedLayout>
             <Head title="Məhsul Fəaliyyət Tarixçəsi" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <InventoryNavigation currentRoute="product-activity.timeline" />
-            </div>
             <div className="py-6 px-4 sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6">

@@ -3,7 +3,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Warehouse } from '@/types';
 import WarehouseSelector from './Components/WarehouseSelector';
 import InventoryDashboard from './Components/InventoryDashboard';
-import InventoryNavigation from '@/Components/InventoryNavigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,8 +21,6 @@ export default function Index({ warehouses, selectedWarehouse }: Props) {
         <AuthenticatedLayout>
             <Head title={t('title')} />
             <div className="mx-auto sm:px-6 lg:px-8 space-y-6">
-                {/* Enterprise Navigation Menu */}
-                <InventoryNavigation currentRoute="inventory" />
                 <WarehouseSelector warehouses={warehouses} value={warehouseId} onChange={(v) => { setWarehouseId(v); goToWarehouse(v); }} />
                 <InventoryDashboard selectedWarehouse={warehouses.find(w => String(w.id) === warehouseId) || null} />
             </div>

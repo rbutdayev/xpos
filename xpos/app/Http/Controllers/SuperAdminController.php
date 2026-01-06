@@ -453,22 +453,34 @@ class SuperAdminController extends Controller
             // 6. Delete customer and supplier related data
             \DB::table('customer_credits')->where('account_id', $accountId)->delete();
             \DB::table('supplier_credits')->where('account_id', $accountId)->delete();
-            \DB::table('supplier_payments')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('supplier_payments')) {
+                \DB::table('supplier_payments')->where('account_id', $accountId)->delete();
+            }
             \DB::table('customer_items')->whereIn('customer_id', function($query) use ($accountId) {
                 $query->select('id')->from('customers')->where('account_id', $accountId);
             })->delete();
 
             // 7. Delete rental system data
-            \DB::table('rental_items')->whereIn('rental_id', function($query) use ($accountId) {
-                $query->select('id')->from('rentals')->where('account_id', $accountId);
-            })->delete();
+            if (\Schema::hasTable('rental_items')) {
+                \DB::table('rental_items')->whereIn('rental_id', function($query) use ($accountId) {
+                    $query->select('id')->from('rentals')->where('account_id', $accountId);
+                })->delete();
+            }
             if (\Schema::hasTable('rental_agreements')) {
                 \DB::table('rental_agreements')->where('account_id', $accountId)->delete();
             }
-            \DB::table('rentals')->where('account_id', $accountId)->delete();
-            \DB::table('rental_categories')->where('account_id', $accountId)->delete();
-            \DB::table('rental_inventory')->where('account_id', $accountId)->delete();
-            \DB::table('rental_agreement_templates')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('rentals')) {
+                \DB::table('rentals')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('rental_categories')) {
+                \DB::table('rental_categories')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('rental_inventory')) {
+                \DB::table('rental_inventory')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('rental_agreement_templates')) {
+                \DB::table('rental_agreement_templates')->where('account_id', $accountId)->delete();
+            }
 
             // 8. Delete tailor services
             if (\Schema::hasTable('tailor_service_items')) {
@@ -494,27 +506,49 @@ class SuperAdminController extends Controller
             \DB::table('suppliers')->where('account_id', $accountId)->delete();
 
             // 12. Delete categories
-            \DB::table('expense_categories')->where('account_id', $accountId)->delete();
-            \DB::table('categories')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('expense_categories')) {
+                \DB::table('expense_categories')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('categories')) {
+                \DB::table('categories')->where('account_id', $accountId)->delete();
+            }
 
             // 13. Delete organizational structure
-            \DB::table('warehouses')->where('account_id', $accountId)->delete();
-            \DB::table('branches')->where('account_id', $accountId)->delete();
-            \DB::table('companies')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('warehouses')) {
+                \DB::table('warehouses')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('branches')) {
+                \DB::table('branches')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('companies')) {
+                \DB::table('companies')->where('account_id', $accountId)->delete();
+            }
 
             // 14. Delete notification and SMS credentials
-            \DB::table('sms_credentials')->where('account_id', $accountId)->delete();
-            \DB::table('telegram_credentials')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('sms_credentials')) {
+                \DB::table('sms_credentials')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('telegram_credentials')) {
+                \DB::table('telegram_credentials')->where('account_id', $accountId)->delete();
+            }
 
             // 15. Delete printer configs
-            \DB::table('printer_configs')->where('account_id', $accountId)->delete();
-            \DB::table('fiscal_printer_configs')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('printer_configs')) {
+                \DB::table('printer_configs')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('fiscal_printer_configs')) {
+                \DB::table('fiscal_printer_configs')->where('account_id', $accountId)->delete();
+            }
 
             // 16. Delete audit logs
-            \DB::table('audit_logs')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('audit_logs')) {
+                \DB::table('audit_logs')->where('account_id', $accountId)->delete();
+            }
 
             // 17. Delete subscriptions
-            \DB::table('subscriptions')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('subscriptions')) {
+                \DB::table('subscriptions')->where('account_id', $accountId)->delete();
+            }
 
             // 18. Delete ALL users belonging to this account (after all dependencies)
             // Note: We delete all users including super_admin IF they belong to this account
@@ -583,14 +617,231 @@ class SuperAdminController extends Controller
         }
 
         $newStatus = $user->status === 'active' ? 'inactive' : 'active';
-        
+
         $user->update(['status' => $newStatus]);
 
-        return redirect()->back()->with('success', 
-            $newStatus === 'active' 
-                ? 'İstifadəçi aktivləşdirildi.' 
+        return redirect()->back()->with('success',
+            $newStatus === 'active'
+                ? 'İstifadəçi aktivləşdirildi.'
                 : 'İstifadəçi deaktivləşdirildi.'
         );
+    }
+
+    /**
+     * Clear all account data (reset to fresh state)
+     * Keeps: Account, Users, Companies, Branches, Warehouses, Categories
+     * Deletes: All transactional data (sales, products, customers, inventory, etc.)
+     */
+    public function clearAccountData(Account $account)
+    {
+        $companyName = $account->company_name;
+        $accountId = $account->id;
+
+        try {
+            DB::beginTransaction();
+
+            // Log the data clearing attempt
+            \Log::info("Starting data clearing for account", [
+                'account_id' => $accountId,
+                'company_name' => $companyName,
+            ]);
+
+            // Get counts before clearing for logging
+            $stats = [
+                'sales' => \DB::table('sales')->where('account_id', $accountId)->count(),
+                'products' => \DB::table('products')->where('account_id', $accountId)->count(),
+                'customers' => \DB::table('customers')->where('account_id', $accountId)->count(),
+                'suppliers' => \DB::table('suppliers')->where('account_id', $accountId)->count(),
+                'expenses' => \DB::table('expenses')->where('account_id', $accountId)->count(),
+            ];
+
+            // 1. Delete all sales and related records
+            \DB::table('sale_items')->whereIn('sale_id', function($query) use ($accountId) {
+                $query->select('sale_id')->from('sales')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('payments')->whereIn('sale_id', function($query) use ($accountId) {
+                $query->select('sale_id')->from('sales')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('sales')->where('account_id', $accountId)->delete();
+
+            // 2. Delete purchases and related records (if tables exist)
+            if (\Schema::hasTable('purchase_items') && \Schema::hasTable('purchases')) {
+                \DB::table('purchase_items')->whereIn('purchase_id', function($query) use ($accountId) {
+                    $query->select('id')->from('purchases')->where('account_id', $accountId);
+                })->delete();
+                \DB::table('purchases')->where('account_id', $accountId)->delete();
+            }
+
+            // 3. Delete goods receipts
+            if (\Schema::hasTable('goods_receipt_items')) {
+                \DB::table('goods_receipt_items')->where('account_id', $accountId)->delete();
+            }
+            \DB::table('goods_receipts')->where('account_id', $accountId)->delete();
+
+            // 4. Delete product returns
+            if (\Schema::hasTable('product_return_items')) {
+                \DB::table('product_return_items')->where('account_id', $accountId)->delete();
+            }
+            \DB::table('product_returns')->where('account_id', $accountId)->delete();
+
+            // 5. Delete all inventory-related data
+            \DB::table('stock_movements')->where('account_id', $accountId)->delete();
+            \DB::table('warehouse_transfers')->where('account_id', $accountId)->delete();
+            \DB::table('min_max_alerts')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('stock_history')) {
+                \DB::table('stock_history')->whereIn('warehouse_id', function($query) use ($accountId) {
+                    $query->select('id')->from('warehouses')->where('account_id', $accountId);
+                })->delete();
+            }
+
+            // 6. Delete all expenses
+            \DB::table('expenses')->where('account_id', $accountId)->delete();
+
+            // 7. Delete tailor services and customer items
+            if (\Schema::hasTable('tailor_service_items')) {
+                \DB::table('tailor_service_items')->where('account_id', $accountId)->delete();
+            }
+            \DB::table('tailor_services')->where('account_id', $accountId)->delete();
+            \DB::table('customer_items')->whereIn('customer_id', function($query) use ($accountId) {
+                $query->select('id')->from('customers')->where('account_id', $accountId);
+            })->delete();
+
+            // 8. Delete rental system data
+            if (\Schema::hasTable('rental_items')) {
+                \DB::table('rental_items')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('rental_agreements')) {
+                \DB::table('rental_agreements')->where('account_id', $accountId)->delete();
+            }
+            \DB::table('rentals')->where('account_id', $accountId)->delete();
+            \DB::table('rental_categories')->where('account_id', $accountId)->delete();
+            \DB::table('rental_inventory')->where('account_id', $accountId)->delete();
+            \DB::table('rental_agreement_templates')->where('account_id', $accountId)->delete();
+
+            // 9. Delete loyalty and gift card transactions
+            if (\Schema::hasTable('customer_points')) {
+                \DB::table('customer_points')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('gift_card_transactions')) {
+                \DB::table('gift_card_transactions')->whereIn('gift_card_id', function($query) use ($accountId) {
+                    $query->select('id')->from('gift_cards')->where('account_id', $accountId);
+                })->delete();
+            }
+            // Unassign loyalty cards (reset to free/unused state)
+            \DB::table('loyalty_cards')->where('account_id', $accountId)->update([
+                'customer_id' => null,
+                'assigned_at' => null,
+                'status' => 'free'
+            ]);
+            // Deactivate gift cards
+            \DB::table('gift_cards')->where('account_id', $accountId)->update([
+                'status' => 'inactive',
+                'current_balance' => 0,
+                'initial_balance' => 0
+            ]);
+
+            // 10. Delete customer credits and supplier credits
+            \DB::table('customer_credits')->where('account_id', $accountId)->delete();
+            \DB::table('supplier_credits')->where('account_id', $accountId)->delete();
+            if (\Schema::hasTable('supplier_payments')) {
+                \DB::table('supplier_payments')->where('account_id', $accountId)->delete();
+            }
+
+            // 11. Delete all product-related data
+            \DB::table('product_photos')->where('account_id', $accountId)->delete();
+            \DB::table('product_documents')->whereIn('product_id', function($query) use ($accountId) {
+                $query->select('id')->from('products')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('product_prices')->whereIn('product_id', function($query) use ($accountId) {
+                $query->select('id')->from('products')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('product_stock')->where('account_id', $accountId)->delete();
+            \DB::table('product_variants')->whereIn('product_id', function($query) use ($accountId) {
+                $query->select('id')->from('products')->where('account_id', $accountId);
+            })->delete();
+            \DB::table('products')->where('account_id', $accountId)->delete();
+
+            // 12. Delete all customers and suppliers
+            \DB::table('customers')->where('account_id', $accountId)->delete();
+            \DB::table('suppliers')->where('account_id', $accountId)->delete();
+
+            // 13. Delete daily summaries and reports
+            if (\Schema::hasTable('daily_summaries')) {
+                \DB::table('daily_summaries')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('generated_reports')) {
+                \DB::table('generated_reports')->where('account_id', $accountId)->delete();
+            }
+
+            // 14. Delete SMS and Telegram logs (keep credentials)
+            if (\Schema::hasTable('sms_logs')) {
+                \DB::table('sms_logs')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('telegram_logs')) {
+                \DB::table('telegram_logs')->where('account_id', $accountId)->delete();
+            }
+
+            // 15. Delete fiscal printer logs and jobs (keep configs)
+            if (\Schema::hasTable('fiscal_printer_jobs')) {
+                \DB::table('fiscal_printer_jobs')->where('account_id', $accountId)->delete();
+            }
+            if (\Schema::hasTable('fiscal_printer_logs')) {
+                \DB::table('fiscal_printer_logs')->where('account_id', $accountId)->delete();
+            }
+
+            // 16. Delete kiosk sync logs (keep device tokens)
+            if (\Schema::hasTable('kiosk_sync_logs')) {
+                \DB::table('kiosk_sync_logs')->where('account_id', $accountId)->delete();
+            }
+
+            // 17. Delete audit logs
+            \DB::table('audit_logs')->where('account_id', $accountId)->delete();
+
+            // 18. Delete import jobs
+            if (\Schema::hasTable('import_jobs')) {
+                \DB::table('import_jobs')->where('account_id', $accountId)->delete();
+            }
+
+            // 19. Reset barcode sequences
+            if (\Schema::hasTable('barcode_sequences')) {
+                \DB::table('barcode_sequences')->where('account_id', $accountId)->delete();
+            }
+
+            // 20. Delete async jobs
+            if (\Schema::hasTable('async_jobs')) {
+                \DB::table('async_jobs')->where('account_id', $accountId)->delete();
+            }
+
+            DB::commit();
+
+            // Log successful data clearing
+            \Log::info("Account data clearing completed successfully", [
+                'account_id' => $accountId,
+                'company_name' => $companyName,
+                'cleared_stats' => $stats,
+            ]);
+
+            return redirect()->back()->with('success',
+                "Hesab '{$companyName}' üçün bütün məlumatlar təmizləndi. " .
+                "Hesab, istifadəçilər və əsas konfiqurasiya saxlanıldı. " .
+                "Silinən: {$stats['sales']} satış, {$stats['products']} məhsul, " .
+                "{$stats['customers']} müştəri, {$stats['suppliers']} təchizatçı, {$stats['expenses']} xərc."
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::error("Account data clearing failed", [
+                'account_id' => $accountId,
+                'company_name' => $companyName,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->with('error',
+                "Hesab məlumatları təmizlənərkən xəta baş verdi: " . $e->getMessage()
+            );
+        }
     }
 
     /**

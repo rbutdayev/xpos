@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
+import SharedDataTable, { Filter, Column, BulkAction } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { PageProps } from '@/types';
 import { EyeIcon, PencilIcon, TrashIcon, CheckIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
@@ -196,43 +196,84 @@ export default function Index({ services, filters, branches, stats, serviceType 
         },
     ];
 
-    const actions: Action[] = [
-        {
-            label: 'Bax',
-            href: (service: TailorService) => route('services.show', { serviceType: routeParam, tailorService: service.id }),
-            variant: 'primary',
-            icon: <EyeIcon className="w-4 h-4" />,
-        },
-        {
-            label: 'Düzəliş et',
-            href: (service: TailorService) => route('services.edit', { serviceType: routeParam, tailorService: service.id }),
-            variant: 'secondary',
-            icon: <PencilIcon className="w-4 h-4" />,
-        },
-        {
-            label: 'Təhvil verildi',
-            onClick: (service: TailorService) => {
-                if (confirm('Bu xidməti təhvil verildi olaraq işarələmək istədiyinizə əminsiniz?')) {
-                    router.patch(route('services.update-status', { serviceType: routeParam, tailorService: service.id }), {
-                        status: 'delivered'
-                    });
+    // Handle double-click to view service
+    const handleRowDoubleClick = (service: TailorService) => {
+        router.visit(route('services.show', { serviceType: routeParam, tailorService: service.id }));
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        if (confirm(`${selectedIds.length} xidməti silmək istədiyinizə əminsiniz? Bu əməliyyat geri alına bilməz və stoklar geri qaytarılacaq.`)) {
+            router.delete(route('services.bulk-delete', { serviceType: routeParam }), {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert('Xidmətləri silməkdə xəta baş verdi.');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedServices: TailorService[]): BulkAction[] => {
+        // If only ONE service is selected, show individual actions
+        if (selectedIds.length === 1 && selectedServices.length === 1) {
+            const service = selectedServices[0];
+
+            const actions: BulkAction[] = [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('services.show', { serviceType: routeParam, tailorService: service.id }))
+                },
+                {
+                    label: 'Düzəliş et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('services.edit', { serviceType: routeParam, tailorService: service.id }))
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm('Bu xidməti silmək istədiyinizə əminsiniz?')) {
+                            router.delete(route('services.destroy', { serviceType: routeParam, tailorService: service.id }));
+                        }
+                    }
                 }
-            },
-            variant: 'success',
-            icon: <CheckIcon className="w-4 h-4" />,
-            condition: (service: TailorService) => service.status !== 'delivered' && service.status !== 'cancelled',
-        },
-        {
-            label: 'Sil',
-            onClick: (service: TailorService) => {
-                if (confirm('Bu xidməti silmək istədiyinizə əminsiniz?')) {
-                    router.delete(route('services.destroy', { serviceType: routeParam, tailorService: service.id }));
-                }
-            },
-            variant: 'danger',
-            icon: <TrashIcon className="w-4 h-4" />,
-        },
-    ];
+            ];
+
+            // Add "Mark as Delivered" action if applicable
+            if (service.status !== 'delivered' && service.status !== 'cancelled') {
+                actions.splice(2, 0, {
+                    label: 'Təhvil verildi',
+                    icon: <CheckIcon className="w-4 h-4" />,
+                    variant: 'success' as const,
+                    onClick: () => {
+                        if (confirm('Bu xidməti təhvil verildi olaraq işarələmək istədiyinizə əminsiniz?')) {
+                            router.patch(route('services.update-status', { serviceType: routeParam, tailorService: service.id }), {
+                                status: 'delivered'
+                            });
+                        }
+                    }
+                });
+            }
+
+            return actions;
+        }
+
+        // Multiple services selected - show bulk delete
+        return [
+            {
+                label: 'Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     const tableFilters: Filter[] = [
         {
@@ -348,7 +389,8 @@ export default function Index({ services, filters, branches, stats, serviceType 
                             }}
                             columns={columns}
                             filters={tableFilters}
-                            actions={actions}
+                            selectable={true}
+                            bulkActions={getBulkActions}
                             searchValue={localFilters.search || ''}
                             searchPlaceholder="Servis №, müştəri və ya xidmət axtarın..."
                             emptyState={{
@@ -356,10 +398,9 @@ export default function Index({ services, filters, branches, stats, serviceType 
                                 description: serviceConfig.emptyStateDesc
                             }}
                             onSearchChange={(search: string) => handleSearch(search)}
+                            onRowDoubleClick={handleRowDoubleClick}
                             fullWidth={true}
-
                             mobileClickable={true}
-
                             hideMobileActions={true}
                         />
                     </div>

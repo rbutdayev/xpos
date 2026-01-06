@@ -562,4 +562,80 @@ class ProductReturnController extends Controller
             'notes' => "Təchizatçıya qaytarma: {$return->reason}",
         ]);
     }
+
+    /**
+     * Bulk delete product returns
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:product_returns,return_id',
+        ]);
+
+        $user = auth()->user();
+        $deletedCount = 0;
+        $failedReturns = [];
+
+        DB::transaction(function () use ($request, $user, &$deletedCount, &$failedReturns) {
+            $returns = ProductReturn::whereIn('return_id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($returns as $productReturn) {
+                try {
+                    // Only allow deletion if status is completed and we need to reverse the stock
+                    if ($productReturn->status === 'tamamlanib') {
+                        // Check if this is a multi-item return
+                        $productReturn->load('items');
+
+                        if ($productReturn->items && $productReturn->items->count() > 0) {
+                            // Multi-item return - restore stock for each item
+                            foreach ($productReturn->items as $item) {
+                                $this->restoreStockForItem($item, $productReturn);
+                            }
+
+                            // Delete all items
+                            $productReturn->items()->delete();
+                        } else {
+                            // Legacy single-item return - restore stock for the single product
+                            if ($productReturn->product_id) {
+                                $this->restoreSingleProductStock($productReturn);
+                            }
+                        }
+
+                        // Delete the return
+                        $productReturn->delete();
+                    } else {
+                        // If not completed, just delete without reversing stock
+                        // Delete items first if they exist
+                        if ($productReturn->items) {
+                            $productReturn->items()->delete();
+                        }
+                        $productReturn->delete();
+                    }
+
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    \Log::error('Failed to delete product return during bulk deletion: ' . $e->getMessage());
+                    $failedReturns[] = "#{$productReturn->return_id}";
+                }
+            }
+        });
+
+        if (count($failedReturns) > 0) {
+            $failedList = implode(', ', $failedReturns);
+            $message = $deletedCount > 0
+                ? "{$deletedCount} qaytarma silindi. Bu qaytarmalar silinə bilmədi: {$failedList}"
+                : "Heç bir qaytarma silinmədi. Bu qaytarmalar silinə bilməz: {$failedList}";
+
+            return redirect()->route('product-returns.index')
+                ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('product-returns.index')
+            ->with('success', "{$deletedCount} qaytarma uğurla silindi və stok bərpa edildi.");
+    }
 }

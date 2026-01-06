@@ -224,6 +224,12 @@
     "createdAt": "Tarix",
     "searchPlaceholder": "Hərəkətləri axtar..."
   },
+  "view": "Bax",
+  "edit": "Redaktə et",
+  "delete": "Sil",
+  "bulkDelete": "Toplu Silmə",
+  "confirmBulkDelete": "{{count}} stok hərəkətini silmək istədiyinizə əminsiniz?",
+  "deleteError": "Stok hərəkəti silinmədi",
   "additionalInfo": "Əlavə Məlumat",
   "anonymous": "Anonim",
   "average": "Orta",

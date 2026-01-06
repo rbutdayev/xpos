@@ -46,6 +46,8 @@
     "stockOut": "Out of stock",
     "confirmDelete": "Are you sure you want to delete {{name}}?\n\nNote: Products with stock movements cannot be deleted. If the product has been used, you can only deactivate it.",
     "confirmStatusChange": "Are you sure you want to {{action}} {{name}}?",
+    "confirmBulkDelete": "Are you sure you want to delete {{count}} selected products?\n\nNote: Products with stock movements cannot be deleted.",
+    "confirmBulkStatusChange": "Are you sure you want to {{action}} {{count}} selected products?",
     "warehousesCount": "warehouses"
   },
   "filters": {

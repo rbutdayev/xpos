@@ -1,14 +1,18 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Warehouse } from '@/types';
-import { 
+import { useState } from 'react';
+import QuickScan from './QuickScan';
+import {
     BuildingStorefrontIcon,
     MapPinIcon,
     PencilIcon,
     CheckBadgeIcon,
     ExclamationTriangleIcon,
     UserGroupIcon,
-    CogIcon
+    CogIcon,
+    QrCodeIcon,
+    InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface Props {
@@ -16,6 +20,8 @@ interface Props {
 }
 
 export default function Show({ warehouse }: Props) {
+    const [activeTab, setActiveTab] = useState<'details' | 'quick-scan'>('details');
+
     const getWarehouseTypeText = (type: string) => {
         const types: Record<string, string> = {
             'main': 'Əsas Anbar',
@@ -33,6 +39,11 @@ export default function Show({ warehouse }: Props) {
         };
         return colors[type] || 'bg-gray-100 text-gray-800';
     };
+
+    const tabs = [
+        { id: 'details' as const, name: 'Məlumatlar', icon: InformationCircleIcon },
+        { id: 'quick-scan' as const, name: 'Sürətli Sayım', icon: QrCodeIcon },
+    ];
 
     return (
         <AuthenticatedLayout>
@@ -74,8 +85,43 @@ export default function Show({ warehouse }: Props) {
                     </div>
                 </div>
 
-                {/* Warehouse Details */}
-                <div className="bg-white shadow-sm sm:rounded-lg">
+                {/* Tabs */}
+                <div className="mb-6">
+                    <div className="border-b border-gray-200">
+                        <nav className="-mb-px flex space-x-8">
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`
+                                            group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm
+                                            ${activeTab === tab.id
+                                                ? 'border-blue-500 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }
+                                        `}
+                                    >
+                                        <Icon
+                                            className={`
+                                                -ml-0.5 mr-2 h-5 w-5
+                                                ${activeTab === tab.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'}
+                                            `}
+                                        />
+                                        {tab.name}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </div>
+
+                {/* Tab Content */}
+                {activeTab === 'details' && (
+                    <>
+                        {/* Warehouse Details */}
+                        <div className="bg-white shadow-sm sm:rounded-lg">
                     <div className="px-6 py-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Basic Information */}
@@ -250,24 +296,33 @@ export default function Show({ warehouse }: Props) {
                     </div>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="mt-6 bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Əlaqəli Əməliyyatlar</h3>
-                    <div className="flex space-x-3">
-                        <Link
-                            href={route('warehouses.index')}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            Bütün Anbarlar
-                        </Link>
-                        <Link
-                            href={route('warehouses.edit', warehouse.id)}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            Anbarı Düzəlt
-                        </Link>
+                        {/* Quick Actions */}
+                        <div className="mt-6 bg-gray-50 rounded-lg p-4">
+                            <h3 className="text-sm font-medium text-gray-900 mb-3">Əlaqəli Əməliyyatlar</h3>
+                            <div className="flex space-x-3">
+                                <Link
+                                    href={route('warehouses.index')}
+                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    Bütün Anbarlar
+                                </Link>
+                                <Link
+                                    href={route('warehouses.edit', warehouse.id)}
+                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    Anbarı Düzəlt
+                                </Link>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Quick Scan Tab */}
+                {activeTab === 'quick-scan' && (
+                    <div className="bg-white shadow-sm sm:rounded-lg">
+                        <QuickScan warehouse={warehouse} />
                     </div>
-                </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

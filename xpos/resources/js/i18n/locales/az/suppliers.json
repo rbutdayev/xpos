@@ -19,7 +19,13 @@
     "notes": "Qeydlər",
     "companyName": "Şirkət Adı",
     "status": "Status",
-    "supplier": "Təchizatçı"
+    "supplier": "Təchizatçı",
+    "amount": "Məbləğ",
+    "description": "Təsvir",
+    "entryType": "Giriş Növü",
+    "oldSystemReference": "Köhnə Sistem Referansı",
+    "creditDate": "Borc Tarixi",
+    "dueDate": "Son Ödəmə Tarixi"
   },
   "sections": {
     "basicInfo": "Əsas Məlumatlar",
@@ -51,7 +57,8 @@
     "createSupplier": "Təchizatçını Yarad",
     "saveChanges": "Dəyişiklikləri Yadda Saxla",
     "saving": "Yadda saxlanır...",
-    "close": "Bağla"
+    "close": "Bağla",
+    "addManualCredit": "Borc Əlavə Et"
   },
   "products": {
     "title": "{{name}} - Məhsullar",
@@ -64,11 +71,22 @@
     "times": "{{count}} dəfə",
     "deliveryDays": "Təslim: {{days}} gün"
   },
+  "entryTypes": {
+    "manual": "Əl ilə",
+    "migration": "Köçürmə"
+  },
   "placeholders": {
     "search": "Təchizatçı adı, əlaqə şəxsi və ya email axtarın...",
     "phone": "+994 XX XXX XX XX",
     "notes": "Təchizatçı haqqında əlavə qeydlər...",
-    "paymentTermsHint": "0 = nağd ödəniş, digər rəqəmlər kredit günləri"
+    "paymentTermsHint": "0 = nağd ödəniş, digər rəqəmlər kredit günləri",
+    "creditDescription": "Borc haqqında məlumat",
+    "oldReference": "Məs: KÖHNƏ-KR-12345"
+  },
+  "help": {
+    "manualEntry": "Əl ilə yaradılan borc qeydi",
+    "migrationEntry": "Köhnə sistemdən köçürülmüş borc qeydi",
+    "oldReference": "Köhnə sistemdəki borc nömrəsi (ixtiyari)"
   },
   "emptyState": {
     "title": "Təchizatçı yoxdur",
@@ -80,7 +98,9 @@
     "confirmDelete": "{{name}} təchizatçısını silmək istədiyinizə əminsiniz?",
     "created": "Təchizatçı uğurla yaradıldı",
     "updated": "Təchizatçı uğurla yeniləndi",
-    "deleted": "Təchizatçı uğurla silindi"
+    "deleted": "Təchizatçı uğurla silindi",
+    "manual_credit_created_successfully": "Əl ilə borc uğurla yaradıldı",
+    "manual_credit_creation_failed": "Əl ilə borc yaradılması uğursuz oldu"
   },
   "stats": {
     "registered": "Qeydiyyat",

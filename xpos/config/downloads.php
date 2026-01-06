@@ -68,7 +68,7 @@ return [
             'windows' => [
                 'name' => 'Windows x64',
                 'platform' => 'Windows',
-                'url' => '/downloads/kiosk/XPOS-Kiosk-Setup-1.0.0.exe',
+                'url' => 'https://www.dropbox.com/scl/fi/ogjke6kq6ik0x8hlte2fw/xPOS-Kiosk-Setup-1.0.0.exe?rlkey=1cu5gifr8e36gub58af3zi3ni&st=mhkio45k&dl=0',
                 'size' => '120 MB',
                 'icon' => '🪟',
             ],
@@ -82,7 +82,7 @@ return [
             'macos_arm' => [
                 'name' => 'macOS ARM',
                 'platform' => 'macOS (M1/M2/M3)',
-                'url' => '/downloads/kiosk/XPOS-Kiosk-1.0.0-arm64.dmg',
+                'url' => 'https://www.dropbox.com/scl/fi/3yha8khd462p4j8qea5lc/xPOS-Kiosk-1.0.0-arm64.dmg?rlkey=6470ed6xxuzlp17swcyok5wxv&st=a422ppnk&dl=0',
                 'size' => '150 MB',
                 'icon' => '🍎',
             ],

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\RentalAgreementTemplate;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -280,6 +282,59 @@ class RentalTemplateController extends Controller
 
         return redirect()->route('rental-templates.edit', $newTemplate)
             ->with('success', 'Şablon kopyalandı. İndi düzənləyə bilərsiniz.');
+    }
+
+    /**
+     * Bulk delete templates.
+     */
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $accountId = auth()->user()->account_id;
+        $deletedCount = 0;
+        $failedTemplates = [];
+
+        DB::transaction(function () use ($request, $accountId, &$deletedCount, &$failedTemplates) {
+            $templates = RentalAgreementTemplate::whereIn('id', $request->ids)
+                ->where('account_id', $accountId)
+                ->get();
+
+            foreach ($templates as $template) {
+                // Do not delete default templates
+                if ($template->is_default) {
+                    $failedTemplates[] = $template->name . ' (default şablon silinə bilməz)';
+                    continue;
+                }
+
+                // Check if template is being used
+                if ($template->agreements()->count() > 0) {
+                    $failedTemplates[] = $template->name . ' (istifadədə olduğu üçün silinə bilməz)';
+                    continue;
+                }
+
+                $template->delete();
+                $deletedCount++;
+            }
+        });
+
+        if (count($failedTemplates) > 0) {
+            $failedList = implode(', ', $failedTemplates);
+            $message = $deletedCount > 0
+                ? "{$deletedCount} şablon silindi. Bu şablonlar silinə bilmədi: {$failedList}"
+                : "Heç bir şablon silinmədi. {$failedList}";
+
+            return redirect()->route('rental-templates.index')
+                ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('rental-templates.index')
+            ->with('success', "{$deletedCount} şablon uğurla silindi");
     }
 
     /**

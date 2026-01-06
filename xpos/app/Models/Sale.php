@@ -83,6 +83,11 @@ class Sale extends Model
         'delivery_fee',
         'platform_commission',
         'deleted_by',
+        // Expeditor visit location fields
+        'visit_latitude',
+        'visit_longitude',
+        'visit_address',
+        'visit_timestamp',
     ];
 
     protected function casts(): array
@@ -98,6 +103,9 @@ class Sale extends Model
             'use_fiscal_printer' => 'boolean',
             'sale_date' => 'datetime',
             'credit_due_date' => 'date',
+            'visit_latitude' => 'decimal:8',
+            'visit_longitude' => 'decimal:8',
+            'visit_timestamp' => 'datetime',
             'is_online_order' => 'boolean',
             // Delivery platform casts
             'platform_order_data' => 'array',

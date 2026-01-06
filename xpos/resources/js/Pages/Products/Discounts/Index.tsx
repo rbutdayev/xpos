@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SalesNavigation from '@/Components/SalesNavigation';
 import { PageProps } from '@/types';
-import { TagIcon } from '@heroicons/react/24/outline';
+import { TagIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import SharedDataTable, { BulkAction, Column } from '@/Components/SharedDataTable';
 
 interface DiscountedProduct {
     id: number;
@@ -27,9 +27,13 @@ interface Branch {
 interface Props extends PageProps {
     products: {
         data: DiscountedProduct[];
-        links: any;
+        links: any[];
         current_page: number;
         last_page: number;
+        total: number;
+        per_page: number;
+        from: number;
+        to: number;
     };
     branches: Branch[];
     filters: {
@@ -64,10 +68,6 @@ export default function Index({ auth, products, branches, filters, discountsEnab
         });
     };
 
-    const handleReEnable = (productId: number) => {
-        router.visit(route('products.show', productId));
-    };
-
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('az-AZ', {
             day: '2-digit',
@@ -76,18 +76,170 @@ export default function Index({ auth, products, branches, filters, discountsEnab
         });
     };
 
+    // Handle double-click to view product
+    const handleRowDoubleClick = (product: DiscountedProduct) => {
+        router.visit(route('products.show', product.id));
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} məhsulun endirimini silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.delete(route('products.discounts.bulk-delete' as any), {
+            data: { ids: selectedIds },
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedProducts: DiscountedProduct[]): BulkAction[] => {
+        // If only ONE product is selected, show individual actions
+        if (selectedIds.length === 1 && selectedProducts.length === 1) {
+            const product = selectedProducts[0];
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('products.show', product.id))
+                },
+                {
+                    label: 'Redaktə et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('products.show', product.id))
+                },
+                {
+                    label: 'Endirimi sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm('Bu məhsulun endirimini silmək istədiyinizə əminsiniz?')) {
+                            router.delete(route('products.discounts.bulk-delete' as any), {
+                                data: { ids: [product.id] },
+                            });
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple products selected - show bulk actions
+        return [
+            {
+                label: 'Endirimi toplu sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
+    // Table columns configuration
+    const columns: Column[] = [
+        {
+            key: 'name',
+            label: 'Məhsul',
+            sortable: false,
+            render: (product: DiscountedProduct) => (
+                <div>
+                    <div className="font-medium text-gray-900">{product.name}</div>
+                    {product.sku && (
+                        <div className="text-sm text-gray-500">SKU: {product.sku}</div>
+                    )}
+                    {product.category && (
+                        <div className="text-xs text-gray-400">{product.category}</div>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: 'discount',
+            label: 'Endirim',
+            sortable: false,
+            render: (product: DiscountedProduct) => (
+                <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full">
+                        <TagIcon className="w-5 h-5 text-red-600" />
+                        <span className="text-lg font-bold text-red-600">
+                            -{product.discount_percentage}%
+                        </span>
+                    </div>
+                    {activeTab === 'history' && (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-orange-600 text-white rounded-full">
+                            Vaxtı keçib
+                        </span>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: 'pricing',
+            label: 'Qiymət',
+            sortable: false,
+            render: (product: DiscountedProduct) => (
+                <div className="space-y-1">
+                    <div className="text-sm text-gray-500">
+                        <span className="line-through">{Number(product.original_price).toFixed(2)} AZN</span>
+                    </div>
+                    <div className="text-lg font-bold text-green-600">
+                        {Number(product.discounted_price).toFixed(2)} AZN
+                    </div>
+                    <div className="text-xs text-green-600">
+                        Qənaət: {Number(product.savings).toFixed(2)} AZN
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: 'dates',
+            label: 'Tarixlər',
+            hideOnMobile: true,
+            sortable: false,
+            render: (product: DiscountedProduct) => (
+                <div className="text-sm space-y-1">
+                    <div>
+                        <span className="text-gray-600">Başlanğıc: </span>
+                        <span className="text-gray-900">{formatDate(product.effective_from)}</span>
+                    </div>
+                    {product.effective_until ? (
+                        <div>
+                            <span className="text-gray-600">Bitmə: </span>
+                            <span className="text-gray-900">{formatDate(product.effective_until)}</span>
+                        </div>
+                    ) : (
+                        <div className="text-blue-600 font-medium">Müddətsiz</div>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: 'branch',
+            label: 'Filial',
+            hideOnMobile: true,
+            sortable: false,
+            render: (product: DiscountedProduct) => (
+                <span className="text-sm text-gray-900">{product.branch_name}</span>
+            ),
+        },
+    ];
+
     return (
         <AuthenticatedLayout>
             <Head title="Endirimlər" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation
-                    currentRoute="products.discounts"
-                    showDiscounts={discountsEnabled}
-                />
-            </div>
-
-            <div className="py-12 px-4 sm:px-6 lg:px-8">
-
+            <div className="py-12">
+                <div className="w-full">
                     {/* Filter Section */}
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                         <div className="p-6">
@@ -135,161 +287,28 @@ export default function Index({ auth, products, branches, filters, discountsEnab
                         </div>
                     </div>
 
-                    {/* Products Grid */}
-                    {products.data.length === 0 ? (
-                        <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                            <div className="p-12 text-center">
-                                <TagIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                    {activeTab === 'active' ? 'Endirimli məhsul yoxdur' : 'Tarixçə yoxdur'}
-                                </h3>
-                                <p className="text-gray-600">
-                                    {activeTab === 'active'
-                                        ? 'Seçilmiş filial üçün hal-hazırda aktiv endirim yoxdur.'
-                                        : 'Seçilmiş filial üçün bitmiş endirim yoxdur.'
-                                    }
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {products.data.map((product) => (
-                                    <div
-                                        key={product.id}
-                                        className="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow"
-                                    >
-                                        <div className="p-6">
-                                            {/* Product Info */}
-                                            <div className="mb-4">
-                                                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                    {product.name}
-                                                </h3>
-                                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                    {product.sku && (
-                                                        <span className="px-2 py-0.5 bg-gray-100 rounded">
-                                                            {product.sku}
-                                                        </span>
-                                                    )}
-                                                    {product.category && (
-                                                        <span className="text-gray-500">
-                                                            {product.category}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Discount Badge */}
-                                            <div className="mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full">
-                                                        <TagIcon className="w-5 h-5 text-red-600" />
-                                                        <span className="text-lg font-bold text-red-600">
-                                                            -{product.discount_percentage}%
-                                                        </span>
-                                                    </div>
-                                                    {activeTab === 'history' && (
-                                                        <span className="px-2 py-0.5 text-xs font-medium bg-orange-600 text-white rounded-full">
-                                                            Vaxtı keçib
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Pricing */}
-                                            <div className="space-y-2 mb-4">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-gray-600">Orijinal qiymət:</span>
-                                                    <span className="text-sm text-gray-500 line-through">
-                                                        {Number(product.original_price).toFixed(2)} AZN
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm font-medium text-gray-700">Endirimli qiymət:</span>
-                                                    <span className="text-xl font-bold text-green-600">
-                                                        {Number(product.discounted_price).toFixed(2)} AZN
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                                                    <span className="text-sm text-gray-600">Qənaət:</span>
-                                                    <span className="text-sm font-semibold text-green-600">
-                                                        {Number(product.savings).toFixed(2)} AZN
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* Date & Branch Info */}
-                                            <div className="space-y-1 text-xs text-gray-500 border-t border-gray-200 pt-3">
-                                                <div className="flex items-center justify-between">
-                                                    <span>Filial:</span>
-                                                    <span className="font-medium text-gray-700">
-                                                        {product.branch_name}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <span>Başlanğıc:</span>
-                                                    <span>{formatDate(product.effective_from)}</span>
-                                                </div>
-                                                {product.effective_until && (
-                                                    <div className="flex items-center justify-between">
-                                                        <span>Bitmə:</span>
-                                                        <span>{formatDate(product.effective_until)}</span>
-                                                    </div>
-                                                )}
-                                                {!product.effective_until && (
-                                                    <div className="text-center text-blue-600 font-medium">
-                                                        Müddətsiz
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Action */}
-                                            <div className="mt-4">
-                                                <a
-                                                    href={route('products.show', product.id)}
-                                                    className={`block w-full text-center px-4 py-2 rounded-md transition-colors ${
-                                                        activeTab === 'history'
-                                                            ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                                            : 'bg-green-600 text-white hover:bg-green-700'
-                                                    }`}
-                                                >
-                                                    {activeTab === 'history' ? 'Yenidən aktivləşdir' : 'Məhsula bax'}
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Pagination */}
-                            {products.last_page > 1 && (
-                                <div className="mt-6 flex justify-center">
-                                    <div className="flex gap-2">
-                                        {products.links.map((link: any, index: number) => (
-                                            <button
-                                                key={index}
-                                                onClick={() => {
-                                                    if (link.url) {
-                                                        router.get(link.url);
-                                                    }
-                                                }}
-                                                disabled={!link.url}
-                                                className={`px-4 py-2 rounded-md ${
-                                                    link.active
-                                                        ? 'bg-green-600 text-white'
-                                                        : link.url
-                                                        ? 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
+                    {/* Data Table */}
+                    <SharedDataTable
+                        data={products as any}
+                        columns={columns}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        emptyState={{
+                            icon: <TagIcon className="w-12 h-12" />,
+                            title: activeTab === 'active' ? 'Endirimli məhsul yoxdur' : 'Tarixçə yoxdur',
+                            description: activeTab === 'active'
+                                ? 'Seçilmiş filial üçün hal-hazırda aktiv endirim yoxdur.'
+                                : 'Seçilmiş filial üçün bitmiş endirim yoxdur.'
+                        }}
+                        fullWidth={true}
+                        dense={false}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(product: DiscountedProduct) =>
+                            'cursor-pointer hover:bg-blue-50 transition-all duration-200'
+                        }
+                    />
                 </div>
+            </div>
         </AuthenticatedLayout>
     );
 }

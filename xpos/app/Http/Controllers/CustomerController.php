@@ -417,6 +417,69 @@ class CustomerController extends Controller
         }
     }
 
+    /**
+     * Bulk delete customers
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:customers,id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedCustomers = [];
+
+        DB::beginTransaction();
+        try {
+            $customers = Customer::whereIn('id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($customers as $customer) {
+                try {
+                    if ($customer->loyalty_card_id) {
+                        $card = LoyaltyCard::find($customer->loyalty_card_id);
+                        if ($card) {
+                            $card->markAsFree();
+                        }
+                    }
+
+                    $customer->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    \Log::error('Bulk customer deletion failed', [
+                        'customer_id' => $customer->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedCustomers[] = $customer->name ?? "ID: {$customer->id}";
+                }
+            }
+
+            DB::commit();
+
+            if (count($failedCustomers) > 0) {
+                $failedList = implode(', ', $failedCustomers);
+                $message = $deletedCount > 0
+                    ? "{$deletedCount} müştəri silindi. Bu müştərilər silinə bilmədi: {$failedList}"
+                    : "Heç bir müştəri silinmədi. Xəta: {$failedList}";
+
+                return redirect()->route('customers.index')
+                    ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+            }
+
+            return redirect()->route('customers.index')
+                ->with('success', "{$deletedCount} müştəri uğurla silindi");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('customers.index')
+                ->with('error', 'Toplu silmə əməliyyatında xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
     public function validateLoyaltyCard(Request $request)
     {
         Gate::authorize('assign-loyalty-cards');

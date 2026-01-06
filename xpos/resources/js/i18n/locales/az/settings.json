@@ -403,5 +403,59 @@
   "messages": {
     "settingsSaved": "Parametrlər uğurla saxlanıldı",
     "settingsError": "Parametrlər saxlanarkən xəta"
+  },
+
+  "status": {
+    "configured": "Konfiqurasiya edilib",
+    "active": "Aktiv",
+    "setupRequired": "Quraşdırma tələb olunur"
+  },
+
+  "categories": {
+    "general": "Ümumi Parametrlər",
+    "hardware": "Avadanlıq və Cihazlar",
+    "integrations": "İnteqrasiyalar",
+    "monitoring": "Monitorinq və Loglar",
+    "advanced": "Qabaqcıl"
+  },
+
+  "search": {
+    "placeholder": "Parametrlərdə axtar...",
+    "noResults": "Heç bir parametr tapılmadı",
+    "tryAdjusting": "Axtarış terminlərini dəyişməyə çalışın"
+  },
+
+  "quickAccess": {
+    "title": "Sürətli Giriş"
+  },
+
+  "settings": {
+    "shop": {
+      "title": "Mağaza Parametrləri",
+      "description": "Mağaza detallarını və biznes məlumatlarını konfigurasiya edin"
+    },
+    "fiscalPrinter": {
+      "description": "Fiskal printer inteqrasiyasını konfigurasiya edin"
+    },
+    "kioskTokens": {
+      "title": "Kiosk Tokenlər",
+      "description": "Kiosk cihazları üçün giriş tokenlərini idarə edin"
+    },
+    "auditLogs": {
+      "description": "Sistem audit jurnalı və istifadəçi fəaliyyətlərini görüntüləyin"
+    },
+    "smsLogs": {
+      "description": "SMS bildiriş loglarını və çatdırılma statusunu görüntüləyin"
+    },
+    "telegramLogs": {
+      "description": "Telegram bildiriş loglarını və statusunu görüntüləyin"
+    },
+    "fiscalQueue": {
+      "description": "Fiskal printer iş növbəsini monitorinq edin"
+    },
+    "loyaltyProgram": {
+      "title": "Sadiqlik Proqramı",
+      "description": "Müştəri sadiqlik və mükafat proqramını konfigurasiya edin"
+    }
   }
 }

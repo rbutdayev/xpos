@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MinMaxAlert;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -107,5 +108,94 @@ class MinMaxAlertController extends Controller
 
         return redirect()->route('alerts.index')
             ->with('success', __('app.alert_deleted'));
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = auth()->user();
+        $deletedCount = 0;
+        $failedAlerts = [];
+
+        DB::transaction(function () use ($request, $user, &$deletedCount, &$failedAlerts) {
+            $alerts = MinMaxAlert::whereIn('alert_id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($alerts as $alert) {
+                try {
+                    $alert->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $failedAlerts[] = "Xəbərdarlıq #{$alert->alert_id}";
+                }
+            }
+        });
+
+        if (count($failedAlerts) > 0) {
+            $failedList = implode(', ', $failedAlerts);
+            $message = $deletedCount > 0
+                ? "{$deletedCount} xəbərdarlıq silindi. Bu xəbərdarlıqlar silinə bilmədi: {$failedList}"
+                : "Heç bir xəbərdarlıq silinmədi. {$failedList}";
+
+            return redirect()->route('alerts.index')
+                ->with($deletedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('alerts.index')
+            ->with('success', "{$deletedCount} xəbərdarlıq uğurla silindi");
+    }
+
+    public function bulkResolve(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+            'resolution_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $user = auth()->user();
+        $resolvedCount = 0;
+        $failedAlerts = [];
+
+        DB::transaction(function () use ($request, $user, &$resolvedCount, &$failedAlerts) {
+            $alerts = MinMaxAlert::whereIn('alert_id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->where('status', '!=', 'resolved')
+                ->get();
+
+            foreach ($alerts as $alert) {
+                try {
+                    $alert->markAsResolved(
+                        $user->employee_id ?? null,
+                        $request->resolution_notes
+                    );
+                    $resolvedCount++;
+                } catch (\Exception $e) {
+                    $failedAlerts[] = "Xəbərdarlıq #{$alert->alert_id}";
+                }
+            }
+        });
+
+        if (count($failedAlerts) > 0) {
+            $failedList = implode(', ', $failedAlerts);
+            $message = $resolvedCount > 0
+                ? "{$resolvedCount} xəbərdarlıq həll edildi. Bu xəbərdarlıqlar həll edilə bilmədi: {$failedList}"
+                : "Heç bir xəbərdarlıq həll edilmədi. {$failedList}";
+
+            return redirect()->route('alerts.index')
+                ->with($resolvedCount > 0 ? 'warning' : 'error', $message);
+        }
+
+        return redirect()->route('alerts.index')
+            ->with('success', "{$resolvedCount} xəbərdarlıq uğurla həll edildi");
     }
 }

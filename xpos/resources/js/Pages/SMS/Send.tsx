@@ -2,7 +2,6 @@ import { FormEventHandler, useState, useEffect } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PlusCircleIcon } from '@heroicons/react/24/outline';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SalesNavigation from '@/Components/SalesNavigation';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -91,10 +90,6 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
             <AuthenticatedLayout
             >
                 <Head title="SMS Göndər" />
-                <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                    <SalesNavigation currentRoute="sms" showDiscounts={discountsEnabled} />
-                </div>
-
                 <div className="py-12 px-4 sm:px-6 lg:px-8">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                             <h3 className="text-lg font-medium text-yellow-900 mb-2">
@@ -118,18 +113,6 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
     return (
         <AuthenticatedLayout>
             <Head title="SMS Göndər" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="sms" showDiscounts={discountsEnabled}>
-                    <Link
-                        href={route('pos.index')}
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                    >
-                        <PlusCircleIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">Satış et</span>
-                    </Link>
-                </SalesNavigation>
-            </div>
-
             <div className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">

@@ -20,17 +20,32 @@ class BranchAccess
             return redirect()->route('login');
         }
 
-        // If user is sales_staff, ensure they have branch_id and can only access their branch data
-        if ($user->role === 'sales_staff') {
+        // Define roles that require branch assignment and should have branch-level access
+        $branchRestrictedRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+
+        // If user has a branch-restricted role, ensure they have branch_id
+        if (in_array($user->role, $branchRestrictedRoles)) {
             if (!$user->branch_id) {
-                abort(403, 'Satış əməkdaşı filialı təyin edilməyib.');
+                $roleNames = [
+                    'sales_staff' => 'Satış işçisi',
+                    'branch_manager' => 'Filial müdiri',
+                    'cashier' => 'Kassir',
+                    'tailor' => 'Dərzi'
+                ];
+                $roleName = $roleNames[$user->role] ?? $user->role;
+                abort(403, "{$roleName} üçün filial təyin edilməyib.");
             }
-            
+
             // Store branch context in session for queries
-            session(['sales_staff_branch_id' => $user->branch_id]);
+            // Different session keys for different roles to allow more granular control if needed
+            session([
+                'user_branch_id' => $user->branch_id,
+                'user_role' => $user->role
+            ]);
         }
 
-        // For other roles (admin, manager, etc.), no branch restriction needed
+        // For other roles (account_owner, admin, warehouse_manager, accountant), no branch restriction
+        // They can access all branches
         return $next($request);
     }
 }

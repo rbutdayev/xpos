@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { productStockTableConfig } from '@/Components/TableConfigurations';
 import useInventoryUpdate from '@/Pages/GoodsReceipts/Hooks/useInventoryUpdate';
-import InventoryNavigation from '@/Components/InventoryNavigation';
+import StockImportModal from '@/Components/StockImportModal';
+import StockImportProgressModal from '@/Components/StockImportProgressModal';
+import { ArrowUpTrayIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     stocks: {
@@ -25,7 +27,15 @@ export default function Index({ stocks, warehouses, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [warehouseId, setWarehouseId] = useState(filters.warehouse_id || '');
     const [lowStock, setLowStock] = useState(filters.low_stock || '');
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [showProgressModal, setShowProgressModal] = useState(false);
+    const [currentImportJobId, setCurrentImportJobId] = useState<number | null>(null);
     const { subscribe } = useInventoryUpdate();
+
+    const handleImportStarted = (importJobId: number) => {
+        setCurrentImportJobId(importJobId);
+        setShowProgressModal(true);
+    };
 
     const handleSearch = () => {
         router.get(route('product-stock.index'), {
@@ -70,27 +80,89 @@ export default function Index({ stocks, warehouses, filters }: Props) {
         return unsubscribe;
     }, []);
 
+    // Handle row double-click to edit
+    const handleRowDoubleClick = (stock: any) => {
+        router.visit(route('product-stock.edit', stock.id));
+    };
+
+    // Get bulk actions based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedStocks: any[]): BulkAction[] => {
+        // Only show actions when exactly ONE item is selected
+        if (selectedIds.length === 1 && selectedStocks.length === 1) {
+            const stock = selectedStocks[0];
+
+            return [
+                {
+                    label: 'Tarixçə',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('stock-movements.index', {
+                        product_id: stock.product_id,
+                        warehouse_id: stock.warehouse_id
+                    }))
+                },
+                {
+                    label: 'Düzəliş et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('product-stock.edit', stock.id))
+                }
+            ];
+        }
+
+        // No bulk actions for multiple selections
+        return [];
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Məhsul Stoku" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <InventoryNavigation currentRoute="product-stock" />
+            <div className="w-full">
+                {/* Import Button */}
+                <div className="mb-4 flex justify-end">
+                    <button
+                        type="button"
+                        onClick={() => setShowImportModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        <ArrowUpTrayIcon className="w-5 h-5" />
+                        <span>Başlanğıc Qalıq İmport</span>
+                    </button>
+                </div>
+
+                <SharedDataTable
+                    title="Məhsul Stoku"
+                    data={stocks}
+                    columns={productStockTableConfig.columns}
+                    selectable={true}
+                    bulkActions={getBulkActions}
+                    searchValue={search}
+                    onSearchChange={setSearch}
+                    searchPlaceholder={productStockTableConfig.searchPlaceholder}
+                    filters={filtersUI}
+                    onSearch={handleSearch}
+                    onReset={handleReset}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={() => 'cursor-pointer hover:bg-blue-50 transition-all duration-200'}
+                    fullWidth={true}
+                    mobileClickable={true}
+                    hideMobileActions={true}
+                />
+
+                {/* Stock Import Modal */}
+                <StockImportModal
+                    isOpen={showImportModal}
+                    onClose={() => setShowImportModal(false)}
+                    onImportStarted={handleImportStarted}
+                />
+
+                {/* Stock Import Progress Modal */}
+                <StockImportProgressModal
+                    isOpen={showProgressModal}
+                    onClose={() => setShowProgressModal(false)}
+                    importJobId={currentImportJobId}
+                />
             </div>
-            <SharedDataTable
-                title="Məhsul Stoku"
-                data={stocks}
-                columns={productStockTableConfig.columns}
-                actions={productStockTableConfig.actions}
-                searchValue={search}
-                onSearchChange={setSearch}
-                searchPlaceholder={productStockTableConfig.searchPlaceholder}
-                filters={filtersUI}
-                onSearch={handleSearch}
-                onReset={handleReset}
-                fullWidth={true}
-                mobileClickable={true}
-                hideMobileActions={true}
-            />
         </AuthenticatedLayout>
     );
 }

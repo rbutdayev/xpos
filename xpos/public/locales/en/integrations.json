@@ -75,6 +75,17 @@
     "saveSuccess": "Settings saved successfully",
     "saveError": "Error saving settings",
     "testSuccess": "Test successful",
-    "testError": "Test failed"
+    "testError": "Test failed",
+    "confirmBulkDisable": "Are you sure you want to disable {{count}} integrations?",
+    "bulkDisableSuccess": "{{count}} integrations disabled successfully",
+    "bulkDisableError": "Error disabling integrations"
+  },
+
+  "bulkActions": {
+    "view": "View",
+    "configure": "Configure",
+    "setup": "Setup",
+    "disable": "Disable",
+    "bulkDisable": "Disable Selected"
   }
 }

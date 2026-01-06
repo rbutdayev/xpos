@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Filter, Column, Action } from '@/Components/SharedDataTable';
+import SharedDataTable, { Filter, Column, Action, BulkAction } from '@/Components/SharedDataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DailySalesSummary from '@/Components/DailySalesSummary';
-import { EyeIcon, PencilIcon, PlusCircleIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilIcon, PlusCircleIcon, PrinterIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Sale, PageProps } from '@/types';
-import SalesNavigation from '@/Components/SalesNavigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -202,15 +201,6 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
             ),
         },
         {
-            key: 'has_negative_stock',
-            label: t('stockLabel'),
-            render: (sale: Sale) => sale.has_negative_stock ? (
-                <span className="text-red-600 text-xs">{t('stock.negative')}</span>
-            ) : (
-                <span className="text-green-600 text-xs">{t('stock.normal')}</span>
-            ),
-        },
-        {
             key: 'sale_date',
             label: t('saleDate'),
             sortable: true,
@@ -261,18 +251,6 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
             type: 'date',
             value: localFilters.date_to || '',
             onChange: (value: string) => handleFilter('date_to', value),
-        },
-        {
-            key: 'has_negative_stock',
-            label: t('filters.negativeStock'),
-            type: 'dropdown',
-            options: [
-                { value: '', label: t('filters.all') },
-                { value: 'true', label: t('stock.withNegative') },
-                { value: 'false', label: t('stock.withNormal') },
-            ],
-            value: localFilters.has_negative_stock?.toString() || '',
-            onChange: (value: string) => handleFilter('has_negative_stock', value),
         },
     ];
 
@@ -342,55 +320,132 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
         });
     };
 
-    const actions: Action[] = [
-        {
-            label: t('actions.view'),
-            href: (sale: Sale) => route('sales.show', sale.sale_id),
-            variant: 'view',
-            icon: <EyeIcon className="w-4 h-4" />,
-        },
-        {
-            label: t('actions.edit'),
-            href: (sale: Sale) => route('sales.edit', sale.sale_id),
-            variant: 'edit',
-            icon: <PencilIcon className="w-4 h-4" />,
-            condition: (sale: Sale) => sale.status !== 'refunded' && !sale.deleted_at, // Allow edit for all except refunded and deleted
-        },
-        {
-            label: t('fiscalPrint'),
-            onClick: (sale: Sale) => handleReprintFiscal(sale),
-            variant: 'secondary',
-            icon: <PrinterIcon className="w-4 h-4" />,
-            condition: (sale: Sale) => !!sale.fiscal_number && !sale.deleted_at, // Only show if sale has fiscal number and not deleted
-        },
-        {
-            label: 'Sil',
-            onClick: (sale: Sale) => handleDeleteSale(sale),
-            variant: 'danger',
-            condition: (sale: Sale) => !sale.deleted_at && canDeleteSales, // Only show for active sales and account owner
-        },
-        {
-            label: 'Bərpa et',
-            onClick: (sale: Sale) => handleRestoreSale(sale),
-            variant: 'secondary',
-            condition: (sale: Sale) => !!sale.deleted_at && canDeleteSales, // Only show for deleted sales and account owner
-        },
-    ];
+    // Handle double-click to view sale
+    const handleRowDoubleClick = (sale: Sale) => {
+        router.visit(route('sales.show', sale.sale_id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} satışı silmək istədiyinizə əminsiniz?\n\nStoklar bərpa ediləcək və məbləğlər sistemdən çıxarılacaq.`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('sales.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                toast.success('Seçilmiş satışlar uğurla silindi');
+            },
+            onError: (errors: any) => {
+                toast.error('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Bulk restore handler
+    const handleBulkRestore = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} satışı bərpa etmək istədiyinizə əminsiniz?\n\nDİQQƏT: Stoklar avtomatik çıxarılmayacaq!`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.post(route('sales.bulk-restore'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                toast.success('Seçilmiş satışlar bərpa edildi');
+            },
+            onError: (errors: any) => {
+                toast.error('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Determine which bulk actions to show based on the current filter
+    const showingDeletedSales = localFilters.show_deleted === 'true' || localFilters.show_deleted === true;
+
+    // Get bulk actions - these work on multiple selected rows
+    const getBulkActions = (selectedIds: (string | number)[], selectedSales: Sale[]): BulkAction[] => {
+        if (!canDeleteSales) return [];
+
+        // If only ONE sale is selected, show individual actions
+        if (selectedIds.length === 1 && selectedSales.length === 1) {
+            const sale = selectedSales[0];
+            const individualActions: BulkAction[] = [
+                {
+                    label: t('actions.view'),
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('sales.show', sale.sale_id))
+                },
+                {
+                    label: t('actions.edit'),
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('sales.edit', sale.sale_id)),
+                    condition: () => sale.status !== 'refunded' && !sale.deleted_at
+                },
+            ];
+
+            // Add fiscal print if available
+            if (sale.fiscal_number && !sale.deleted_at) {
+                individualActions.push({
+                    label: t('fiscalPrint'),
+                    icon: <PrinterIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => handleReprintFiscal(sale)
+                });
+            }
+
+            // Add delete or restore based on sale status
+            if (sale.deleted_at) {
+                individualActions.push({
+                    label: 'Bərpa et',
+                    icon: <ArrowPathIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => handleRestoreSale(sale)
+                });
+            } else {
+                individualActions.push({
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDeleteSale(sale)
+                });
+            }
+
+            return individualActions.filter(action => !action.condition || action.condition());
+        }
+
+        // Multiple sales selected - show bulk actions
+        return showingDeletedSales
+            ? [
+                {
+                    label: 'Bərpa et',
+                    icon: <ArrowPathIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: handleBulkRestore
+                }
+            ]
+            : [
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: handleBulkDelete
+                }
+            ];
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title={t('title')} />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="sales" showDiscounts={discountsEnabled} showGiftCards={giftCardsEnabled}>
-                    <Link
-                        href={route('pos.index')}
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-                    >
-                        <PlusCircleIcon className="w-5 h-5 text-white" />
-                        <span className="font-semibold">{t('makeSale')}</span>
-                    </Link>
-                </SalesNavigation>
-            </div>
             <div className="py-12">
                 <div className="w-full">
                     {/* Daily Summary Widget */}
@@ -459,7 +514,8 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                         }}
                         columns={columns}
                         filters={filters_config}
-                        actions={actions}
+                        selectable={canDeleteSales}
+                        bulkActions={getBulkActions}
                         searchValue={searchInput}
                         searchPlaceholder={t('searchPlaceholder')}
                         emptyState={{
@@ -470,10 +526,13 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                         onSearch={handleSearch}
                         onSort={(field: string) => handleSort(field, 'asc')}
                         fullWidth={true}
-
-                        mobileClickable={true}
-
-                        hideMobileActions={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(sale: Sale) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                                sale.deleted_at ? 'opacity-60 bg-red-50' : ''
+                            }`
+                        }
+                        idField="sale_id"
                     />
                 </div>
             </div>

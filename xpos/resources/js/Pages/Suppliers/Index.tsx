@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Supplier, Product } from '@/types';
+import { Supplier, Product, Branch } from '@/types';
 import {
     PlusIcon,
     EyeIcon,
     PencilIcon,
     TrashIcon,
     TruckIcon,
-    ShoppingBagIcon
+    ShoppingBagIcon,
+    BanknotesIcon,
+    CheckCircleIcon,
+    XCircleIcon
 } from '@heroicons/react/24/outline';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { supplierTableConfig } from '@/Components/TableConfigurations';
 import SupplierProductSelector from '@/Components/SupplierProductSelector';
+import CreateManualSupplierCreditModal from '@/Components/Modals/CreateManualSupplierCreditModal';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -26,19 +30,26 @@ interface Props {
         from: number;
         to: number;
     };
+    branches: Branch[];
     filters: {
         search?: string;
         status?: string;
     };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
 }
 
-export default function Index({ suppliers, filters }: Props) {
+export default function Index({ suppliers, branches, filters, flash, errors }: Props) {
     const { t } = useTranslation(['suppliers', 'common']);
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
     const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
     const [showProducts, setShowProducts] = useState(false);
+    const [showManualCreditModal, setShowManualCreditModal] = useState(false);
 
     const handleSearch = () => {
         router.get(route('suppliers.index'), { search, status }, {
@@ -89,42 +100,127 @@ export default function Index({ suppliers, filters }: Props) {
         }
     ];
 
-    const tableActions = [
-        {
-            label: t('actions.view'),
-            href: (supplier: Supplier) => route('suppliers.show', supplier.id),
-            icon: <EyeIcon className="w-4 h-4" />,
-            variant: 'view' as const
-        },
-        {
-            label: t('actions.products'),
-            icon: <ShoppingBagIcon className="w-4 h-4" />,
-            variant: 'secondary' as const,
-            onClick: viewSupplierProducts
-        },
-        {
-            label: t('actions.edit'),
-            href: (supplier: Supplier) => route('suppliers.edit', supplier.id),
-            icon: <PencilIcon className="w-4 h-4" />,
-            variant: 'edit' as const
-        },
-        {
-            label: t('actions.delete'),
-            icon: <TrashIcon className="w-4 h-4" />,
-            variant: 'delete' as const,
-            onClick: deleteSupplier
+    // Handle double-click to view supplier
+    const handleRowDoubleClick = (supplier: Supplier) => {
+        router.visit(route('suppliers.show', supplier.id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} tədarükçünü silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
         }
-    ];
+
+        router.post(route('suppliers.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedSuppliers: Supplier[]): BulkAction[] => {
+        // If only ONE supplier is selected, show individual actions
+        if (selectedIds.length === 1 && selectedSuppliers.length === 1) {
+            const supplier = selectedSuppliers[0];
+
+            return [
+                {
+                    label: t('actions.view'),
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('suppliers.show', supplier.id))
+                },
+                {
+                    label: t('actions.products'),
+                    icon: <ShoppingBagIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => viewSupplierProducts(supplier)
+                },
+                {
+                    label: t('actions.addManualCredit', 'Əl ilə Borc Əlavə Et'),
+                    icon: <BanknotesIcon className="w-4 h-4" />,
+                    variant: 'primary' as const,
+                    onClick: () => {
+                        setSelectedSupplier(supplier);
+                        setShowManualCreditModal(true);
+                    }
+                },
+                {
+                    label: t('actions.edit'),
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('suppliers.edit', supplier.id))
+                },
+                {
+                    label: t('actions.delete'),
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm(t('messages.confirmDelete', { name: supplier.name }))) {
+                            router.delete(route('suppliers.destroy', supplier.id));
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple suppliers selected - show bulk actions
+        return [
+            {
+                label: t('actions.bulkDelete' as any),
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title={t('title')} />
 
             <div className="w-full">
+                {/* Flash Messages */}
+                {flash?.success && (
+                    <div className="mb-4 bg-green-50 border border-green-200 rounded-md p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <CheckCircleIcon className="h-5 w-5 text-green-400" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-green-800">{flash.success}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {(flash?.error || errors?.error) && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <XCircleIcon className="h-5 w-5 text-red-400" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm font-medium text-red-800">{flash?.error || errors?.error}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <SharedDataTable
                     data={suppliers}
                     columns={supplierTableConfig.columns}
-                    actions={tableActions}
+                    selectable={true}
+                    bulkActions={getBulkActions}
                     searchValue={search}
                     onSearchChange={setSearch}
                     searchPlaceholder={t('placeholders.search')}
@@ -143,10 +239,10 @@ export default function Index({ suppliers, filters }: Props) {
                         description: t('emptyState.description')
                     }}
                     fullWidth={true}
-
-                    mobileClickable={true}
-
-                    hideMobileActions={true}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(supplier: Supplier) =>
+                        `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                    }
                 />
             </div>
 
@@ -279,6 +375,18 @@ export default function Index({ suppliers, filters }: Props) {
                     </div>
                 </div>
             )}
+
+            {/* Manual Credit Modal */}
+            <CreateManualSupplierCreditModal
+                show={showManualCreditModal}
+                onClose={() => {
+                    setShowManualCreditModal(false);
+                    setSelectedSupplier(null);
+                }}
+                suppliers={suppliers.data}
+                branches={branches}
+                preselectedSupplierId={selectedSupplier?.id}
+            />
         </AuthenticatedLayout>
     );
 }

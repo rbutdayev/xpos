@@ -180,6 +180,11 @@ class POSController extends Controller
             'gift_card_amount' => 'nullable|numeric|min:0',
             // Gift card sale fields
             'gift_card_expiry_months' => 'nullable|integer|min:1|max:60', // 1-60 months validity
+            // Location fields for expeditor/field sales
+            'visit_latitude' => 'nullable|numeric|between:-90,90',
+            'visit_longitude' => 'nullable|numeric|between:-180,180',
+            'visit_address' => 'nullable|string|max:500',
+            'visit_timestamp' => 'nullable|date',
         ];
 
         // For credit or partial payment, customer is required
@@ -247,6 +252,11 @@ class POSController extends Controller
                     'paid_amount' => $validated['paid_amount'] ?? 0,
                     'credit_due_date' => $validated['credit_due_date'] ?? null,
                     'use_fiscal_printer' => $validated['use_fiscal_printer'] ?? true,
+                    // Location data for expeditor/field sales
+                    'visit_latitude' => $validated['visit_latitude'] ?? null,
+                    'visit_longitude' => $validated['visit_longitude'] ?? null,
+                    'visit_address' => $validated['visit_address'] ?? null,
+                    'visit_timestamp' => $validated['visit_timestamp'] ?? null,
                 ]);
 
                 \Log::info('Sale created successfully', ['sale_id' => $sale->sale_id, 'sale_number' => $sale->sale_number]);

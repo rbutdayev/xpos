@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable, { Column, Filter, Action } from '@/Components/SharedDataTable';
-import ExpensesNavigation from '@/Components/ExpensesNavigation';
+import SharedDataTable, { Column, Filter, BulkAction } from '@/Components/SharedDataTable';
 import {
     TagIcon,
     FolderIcon,
@@ -163,27 +162,44 @@ export default function Index({ categories, types }: Props) {
         }
     ];
 
-    // Define actions
-    const actions: Action[] = [
-        {
-            label: t('actions.view'),
-            href: (category: ExpenseCategory) => `/expense-categories/${category.category_id}`,
-            icon: <EyeIcon className="w-4 h-4" />,
-            variant: 'primary'
-        },
-        {
-            label: t('actions.edit'),
-            href: (category: ExpenseCategory) => `/expense-categories/${category.category_id}/edit`,
-            icon: <PencilIcon className="w-4 h-4" />,
-            variant: 'secondary'
-        },
-        {
-            label: t('actions.delete'),
-            onClick: (category: ExpenseCategory) => handleDelete(category),
-            icon: <TrashIcon className="w-4 h-4" />,
-            variant: 'danger'
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedCategories: ExpenseCategory[]): BulkAction[] => {
+        // If only ONE category is selected, show individual actions
+        if (selectedIds.length === 1 && selectedCategories.length === 1) {
+            const category = selectedCategories[0];
+
+            return [
+                {
+                    label: t('actions.view') as string,
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/expense-categories/${category.category_id}`)
+                },
+                {
+                    label: t('actions.edit') as string,
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(`/expense-categories/${category.category_id}/edit`)
+                },
+                {
+                    label: t('actions.delete') as string,
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDelete(category)
+                }
+            ];
         }
-    ];
+
+        // Multiple categories selected - show bulk delete
+        return [
+            {
+                label: t('actions.delete') as string,
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     // Event handlers
     const handleSearch = () => {
@@ -215,6 +231,26 @@ export default function Index({ categories, types }: Props) {
 
         if (confirm(t('categories.messages.confirmDelete'))) {
             router.delete(`/expense-categories/${category.category_id}`);
+        }
+    };
+
+    // Handle double-click to view category
+    const handleRowDoubleClick = (category: ExpenseCategory) => {
+        router.visit(`/expense-categories/${category.category_id}`);
+    };
+
+    // Handle bulk delete for selected categories
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = t('categories.messages.confirmBulkDelete', { count: selectedIds.length });
+
+        if (confirm(String(confirmMessage))) {
+            router.delete('/expense-categories/bulk-delete', {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert(t('categories.messages.deleteError') as string);
+                },
+                preserveScroll: true
+            });
         }
     };
 
@@ -255,26 +291,34 @@ export default function Index({ categories, types }: Props) {
 
             <div className="py-6">
                 <div className="px-4 sm:px-6 lg:px-8">
-                    {/* Expense Navigation */}
-                    <ExpensesNavigation currentRoute={route().current()} />
-
                     <div className="w-full">
                         <SharedDataTable
                         data={tableData}
                         columns={columns}
-                        actions={actions}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        createButton={{
+                            label: 'Yeni Kateqoriya',
+                            href: route('expense-categories.create')
+                        }}
                         filters={tableFilters}
                         searchValue={search}
                         onSearchChange={setSearch}
                         searchPlaceholder={t('categories.placeholders.searchCategories')}
                         onSearch={handleSearch}
                         onReset={handleReset}
+                        onRowDoubleClick={handleRowDoubleClick}
                         emptyState={{
                             title: t('categories.messages.noCategoriesFound'),
                             description: t('categories.messages.startAddingCategories'),
                             icon: <TagIcon className="w-12 h-12 text-gray-400" />
                         }}
                         fullWidth={true}
+                        rowClassName={(category: ExpenseCategory) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                                category.is_active ? '' : 'opacity-60'
+                            }`
+                        }
                     />
                     </div>
                 </div>

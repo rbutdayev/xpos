@@ -531,15 +531,22 @@ export const productTableConfig = {
                         <div className="text-sm text-gray-500">
                             SKU: {product.sku}
                         </div>
-                        {product.barcode && (
-                            <div className="text-xs text-gray-400">
-                                {product.barcode}
-                            </div>
-                        )}
                     </div>
                 </div>
             ),
             className: 'min-w-0'
+        },
+        {
+            key: 'barcode',
+            label: 'Barkod',
+            mobileLabel: 'Barkod',
+            hideOnMobile: true,
+            render: (product: Product) => (
+                <div className="text-sm text-gray-900">
+                    {product.barcode || '-'}
+                </div>
+            ),
+            width: '140px'
         },
         {
             key: 'category',
@@ -589,22 +596,6 @@ export const productTableConfig = {
             ),
             width: '140px'
         },
-        {
-            key: 'type',
-            label: 'Növ',
-            mobileLabel: 'Növ',
-            align: 'center',
-            render: (product: Product) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    product.type === 'service' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                }`}>
-                    {product.type === 'service' ? 'Xidmət' : 'Məhsul'}
-                </span>
-            ),
-            width: '100px'
-        }
     ] as Column[]
 };
 
@@ -1728,7 +1719,7 @@ export const supplierPaymentTableConfig = {
 export const employeeSalaryTableConfig = {
     columns: [
         {
-            key: 'employee_info',
+            key: 'employee_name',
             label: 'İşçi',
             sortable: true,
             render: (salary: any) => (
@@ -1736,10 +1727,10 @@ export const employeeSalaryTableConfig = {
                     <UserIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
                     <div className="min-w-0">
                         <div className="font-medium text-gray-900 truncate">
-                            {salary.employee?.first_name} {salary.employee?.last_name}
+                            {salary.employee_name}
                         </div>
                         <div className="text-sm text-gray-500">
-                            {salary.period_display}
+                            {salary.salary_month ? new Date(salary.salary_month + '-01').toLocaleDateString('az-AZ', { year: 'numeric', month: 'long' }) : '-'}
                         </div>
                     </div>
                 </div>
@@ -1747,60 +1738,57 @@ export const employeeSalaryTableConfig = {
             width: '280px'
         },
         {
-            key: 'amount',
-            label: 'Məbləğ',
+            key: 'base_salary',
+            label: 'Əsas məbləğ',
             align: 'right',
             sortable: true,
             render: (salary: any) => (
                 <div className="text-right">
                     <div className="font-medium text-gray-900">
-                        {salary.amount.toLocaleString('az-AZ')} ₼
+                        {(salary.base_salary || 0).toLocaleString('az-AZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₼
                     </div>
-                    {(salary.bonus_amount > 0 || salary.deduction_amount > 0) && (
+                    {((salary.bonuses || 0) > 0 || (salary.deductions || 0) > 0) && (
                         <div className="text-xs text-gray-500">
-                            {salary.bonus_amount > 0 && `+${salary.bonus_amount.toLocaleString('az-AZ')} ₼`}
-                            {salary.deduction_amount > 0 && ` -${salary.deduction_amount.toLocaleString('az-AZ')} ₼`}
+                            {(salary.bonuses || 0) > 0 && `+${(salary.bonuses || 0).toLocaleString('az-AZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₼`}
+                            {(salary.deductions || 0) > 0 && ` -${(salary.deductions || 0).toLocaleString('az-AZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₼`}
                         </div>
                     )}
+                </div>
+            ),
+            width: '150px'
+        },
+        {
+            key: 'net_salary',
+            label: 'Xalis məbləğ',
+            align: 'right',
+            render: (salary: any) => (
+                <div className="text-right font-semibold text-gray-900">
+                    {(salary.net_salary || 0).toLocaleString('az-AZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₼
                 </div>
             ),
             width: '120px'
         },
         {
-            key: 'total_amount',
-            label: 'Cəmi',
-            align: 'right',
-            render: (salary: any) => (
-                <div className="text-right font-semibold text-gray-900">
-                    {salary.total_amount.toLocaleString('az-AZ')} ₼
-                </div>
-            ),
-            width: '100px'
-        },
-        {
-            key: 'status',
+            key: 'paid',
             label: 'Status',
             align: 'center',
             render: (salary: any) => (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    salary.status === 'ödənilib' ? 'bg-green-100 text-green-800' :
-                    salary.status === 'gecikib' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
+                    salary.paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                    {salary.status === 'ödənilib' ? 'Ödənilib' :
-                     salary.status === 'gecikib' ? 'Gecikib' : 'Hazırlanıb'}
+                    {salary.paid ? 'Ödənilib' : 'Ödənilməmiş'}
                 </span>
             ),
-            width: '100px'
+            width: '120px'
         },
         {
-            key: 'payment_date',
-            label: 'Ödəniş Tarixi',
+            key: 'paid_date',
+            label: 'Ödəniş tarixi',
             align: 'center',
             render: (salary: any) => (
                 <div className="text-sm text-gray-900">
-                    {salary.payment_date 
-                        ? new Date(salary.payment_date).toLocaleDateString('az-AZ')
+                    {salary.paid_date
+                        ? new Date(salary.paid_date).toLocaleDateString('az-AZ')
                         : '-'
                     }
                 </div>

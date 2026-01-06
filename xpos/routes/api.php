@@ -55,6 +55,7 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
 Route::prefix('kiosk')->name('kiosk.')->middleware('kiosk.auth')->group(function () {
     // Authentication & Device Management
     Route::post('/register', [\App\Http\Controllers\Kiosk\KioskAuthController::class, 'register'])->name('register');
+    Route::post('/login', [\App\Http\Controllers\Kiosk\KioskAuthController::class, 'loginWithPin'])->name('login');
     Route::get('/heartbeat', [\App\Http\Controllers\Kiosk\KioskAuthController::class, 'heartbeat'])->name('heartbeat');
     Route::post('/disconnect', [\App\Http\Controllers\Kiosk\KioskAuthController::class, 'disconnect'])->name('disconnect');
 
@@ -62,6 +63,7 @@ Route::prefix('kiosk')->name('kiosk.')->middleware('kiosk.auth')->group(function
     Route::prefix('sync')->name('sync.')->middleware('kiosk.rate_limit:sync')->group(function () {
         Route::get('/products/delta', [\App\Http\Controllers\Kiosk\KioskSyncController::class, 'syncProductsDelta'])->name('products.delta');
         Route::get('/customers/delta', [\App\Http\Controllers\Kiosk\KioskSyncController::class, 'syncCustomersDelta'])->name('customers.delta');
+        Route::get('/users', [\App\Http\Controllers\Kiosk\KioskAuthController::class, 'getKioskUsers'])->name('users');
         Route::get('/config', [\App\Http\Controllers\Kiosk\KioskSyncController::class, 'getConfig'])->name('config');
     });
 

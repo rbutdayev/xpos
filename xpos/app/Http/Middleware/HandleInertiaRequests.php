@@ -62,6 +62,7 @@ class HandleInertiaRequests extends Middleware
             'rentEnabled' => $user && $user->account ? ($user->account->rent_module_enabled ?? false) : false,
             'discountsEnabled' => $user && $user->account ? ($user->account->discounts_module_enabled ?? false) : false,
             'giftCardsEnabled' => $user && $user->account ? ($user->account->gift_cards_module_enabled ?? false) : false,
+            'expeditorEnabled' => $user && $user->account ? ($user->account->expeditor_module_enabled ?? false) : false,
             'woltEnabled' => $user && $user->account ? ($user->account->wolt_enabled ?? false) : false,
             'yangoEnabled' => $user && $user->account ? ($user->account->yango_enabled ?? false) : false,
             'boltEnabled' => $user && $user->account ? ($user->account->bolt_enabled ?? false) : false,

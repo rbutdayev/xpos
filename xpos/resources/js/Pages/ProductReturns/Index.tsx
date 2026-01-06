@@ -1,8 +1,9 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { ProductReturn } from '@/types';
+import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 
 interface Props {
@@ -22,6 +23,27 @@ export default function Index({ returns }: Props) {
     const handleDelete = (productReturn: ProductReturn) => {
         if (confirm('Silmək istədiyinizdən əminsiniz?')) {
             router.delete(route('product-returns.destroy', productReturn.return_id));
+        }
+    };
+
+    // Handle double-click to view product return
+    const handleRowDoubleClick = (productReturn: ProductReturn) => {
+        router.visit(route('product-returns.show', productReturn.return_id));
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} qaytarmanı silmək istədiyinizdən əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.post(route('product-returns.bulk-delete'), {
+                ids: selectedIds
+            }, {
+                onError: (errors) => {
+                    alert('Silinmə zamanı xəta baş verdi');
+                },
+                preserveScroll: true
+            });
         }
     };
 
@@ -113,18 +135,38 @@ export default function Index({ returns }: Props) {
         }
     ];
 
-    const actions = [
-        {
-            label: 'Bax',
-            href: (productReturn: ProductReturn) => route('product-returns.show', productReturn.return_id),
-            variant: 'view' as const
-        },
-        {
-            label: 'Sil',
-            onClick: handleDelete,
-            variant: 'delete' as const
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedReturns: ProductReturn[]): BulkAction[] => {
+        // If only ONE return is selected, show individual actions
+        if (selectedIds.length === 1 && selectedReturns.length === 1) {
+            const productReturn = selectedReturns[0];
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('product-returns.show', productReturn.return_id))
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDelete(productReturn)
+                }
+            ];
         }
-    ];
+
+        // Multiple returns selected - show bulk actions
+        return [
+            {
+                label: 'Toplu Silmə',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     return (
         <AuthenticatedLayout>
@@ -154,17 +196,16 @@ export default function Index({ returns }: Props) {
                     <SharedDataTable
                         data={returns}
                         columns={columns}
-                        actions={actions}
+                        selectable={true}
+                        bulkActions={getBulkActions}
                         searchPlaceholder="Axtarış..."
                         emptyState={{
-                            title: "Heç bir xəbərdarlıq tapılmadı",
-                            description: "Hal-hazırda aktiv xəbərdarlıq yoxdur"
+                            title: "Heç bir qaytarma tapılmadı",
+                            description: "Hal-hazırda aktiv qaytarma yoxdur"
                         }}
                         fullWidth={true}
-
-                        mobileClickable={true}
-
-                        hideMobileActions={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={() => 'cursor-pointer hover:bg-blue-50 transition-all duration-200'}
                     />
                 </div>
             </div>

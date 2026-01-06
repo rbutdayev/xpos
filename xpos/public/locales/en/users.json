@@ -52,6 +52,17 @@
     "passwordRepeat": "Repeat Password",
     "passwordRepeatPlaceholder": "Repeat new password",
 
+    "kioskSettings": "Kiosk Settings",
+    "kioskEnabled": "Enable Kiosk Access",
+    "kioskEnabledHint": "Allow this user to log in to kiosk devices using their PIN",
+    "kioskPin": "Kiosk PIN",
+    "kioskPinPlaceholder": "4-6 digit PIN",
+    "kioskPinConfirmation": "Confirm PIN",
+    "kioskPinRepeatPlaceholder": "Repeat PIN",
+    "kioskPinHint": "Leave blank to keep current PIN",
+    "kioskUserIdInfo": "User will log in to kiosk using this ID and PIN",
+    "kioskUserIdValue": "User ID",
+
     "accountOwnerNote": "Account owner role cannot be changed",
     "accountOwnerWarning": "⚠️ Cannot change account owner's role"
   },
@@ -72,7 +83,11 @@
     "creating": "Creating...",
     "save": "Save Changes",
     "saving": "Saving...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "bulkDelete": "Delete Selected"
   },
 
   "messages": {
@@ -128,6 +143,21 @@
     "systemInfo": "System Information",
     "lastLogin": "Last Login",
     "createdAt": "Created Date",
-    "accountOwnerDisplay": "Account Owner (account_owner)"
+    "accountOwnerDisplay": "Account Owner (account_owner)",
+    "activityStats": "Activity Statistics",
+    "totalSales": "Total Sales",
+    "salesAmount": "Sales Amount",
+    "kioskAccess": "Kiosk Access",
+    "kioskStatus": "Status",
+    "kioskEnabled": "Enabled",
+    "kioskDisabled": "Disabled",
+    "kioskActive": "Active",
+    "kioskInactive": "Inactive",
+    "kioskLoginId": "Kiosk Login ID",
+    "kioskPinConfigured": "PIN configured",
+    "kioskPinNotSet": "PIN not set",
+    "quickActions": "Quick Actions",
+    "editUser": "Edit User",
+    "language": "Language"
   }
 }

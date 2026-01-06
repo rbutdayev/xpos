@@ -1,11 +1,11 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
 import { User } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { UserIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { UserIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -80,24 +80,6 @@ export default function Index({ users, filters }: Props) {
         });
     };
 
-    const handleDeleteAction = (user: User) => {
-        if ((user as any).is_system_user) {
-            alert(t('messages.cannotDeleteSystem'));
-            return;
-        }
-        if (user.role === 'account_owner') {
-            alert(t('messages.cannotDeleteOwner'));
-            return;
-        }
-        if (user.id === auth.user.id) {
-            alert(t('messages.cannotDeleteSelf'));
-            return;
-        }
-        if (confirm(t('messages.confirmDelete', { name: user.name }))) {
-            router.delete(route('users.destroy', user.id));
-        }
-    };
-
     // Add current user indicator to data
     const enrichedUsers = {
         ...users,
@@ -107,23 +89,91 @@ export default function Index({ users, filters }: Props) {
         }))
     };
 
-    // Configure actions with delete handler and conditional visibility
-    const actionsWithHandlers = tableConfig.users.actions.map(action => {
-        if (action.label === 'Sil') {
-            return {
-                ...action,
-                onClick: handleDeleteAction,
-                condition: (user: any) => !user.is_system_user && user.role !== 'account_owner' && user.id !== auth.user.id
-            };
+    // Handle double-click to view user
+    const handleRowDoubleClick = (user: User) => {
+        // Don't allow viewing system users
+        if ((user as any).is_system_user) {
+            return;
         }
-        if (action.label === 'Düzəliş et' || action.label === 'Görüntülə') {
-            return {
-                ...action,
-                condition: (user: any) => !user.is_system_user
-            };
+        router.visit(route('users.show', user.id));
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} istifadəçini silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
         }
-        return action;
-    });
+
+        router.post(route('users.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedUsers: User[]): BulkAction[] => {
+        // If only ONE user is selected, show individual actions
+        if (selectedIds.length === 1 && selectedUsers.length === 1) {
+            const user = selectedUsers[0];
+            const isSystemUser = (user as any).is_system_user;
+
+            // Don't show any actions for system users
+            if (isSystemUser) {
+                return [];
+            }
+
+            const actions: BulkAction[] = [
+                {
+                    label: t('actions.view' as any),
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('users.show', user.id))
+                },
+                {
+                    label: t('actions.edit' as any),
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('users.edit', user.id))
+                }
+            ];
+
+            // Add delete button only if conditions are met
+            const canDelete = !isSystemUser && user.role !== 'account_owner' && user.id !== auth.user.id;
+            if (canDelete) {
+                actions.push({
+                    label: t('actions.delete' as any),
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm(t('messages.confirmDelete', { name: user.name }))) {
+                            router.delete(route('users.destroy', user.id));
+                        }
+                    }
+                });
+            }
+
+            return actions;
+        }
+
+        // Multiple users selected - show bulk actions
+        return [
+            {
+                label: t('actions.bulkDelete' as any),
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     // Configure filters with values and handlers
     const filtersWithHandlers = tableConfig.users.filters.map(filter => {
@@ -156,7 +206,8 @@ export default function Index({ users, filters }: Props) {
                 <SharedDataTable
                     data={enrichedUsers}
                     columns={tableConfig.users.columns}
-                    actions={actionsWithHandlers}
+                    selectable={true}
+                    bulkActions={getBulkActions}
 
                     searchValue={searchValue}
                     onSearchChange={setSearchValue}
@@ -195,16 +246,13 @@ export default function Index({ users, filters }: Props) {
                     }}
 
                     rowClassName={(user) => {
-                        if ((user as any).is_system_user) return 'bg-gray-100 opacity-60';
-                        if (user.is_current_user) return 'bg-blue-50';
-                        return '';
+                        if ((user as any).is_system_user) return 'bg-gray-100 opacity-60 cursor-not-allowed';
+                        if (user.is_current_user) return 'bg-blue-50 cursor-pointer hover:bg-blue-100 transition-all duration-200';
+                        return 'cursor-pointer hover:bg-blue-50 transition-all duration-200';
                     }}
                     className="space-y-6"
                     fullWidth={true}
-
-                    mobileClickable={true}
-
-                    hideMobileActions={true}
+                    onRowDoubleClick={handleRowDoubleClick}
                 />
             </div>
         </AuthenticatedLayout>

@@ -46,6 +46,8 @@
     "stockOut": "Ehtiyat bitib",
     "confirmDelete": "{{name}} məhsulunu silmək istədiyinizə əminsiniz?\n\nQeyd: Stok hərəkəti olan məhsullar silinə bilməz. Əgər məhsul istifadə edilmişsə, yalnız deaktiv edə bilərsiniz.",
     "confirmStatusChange": "{{name}} məhsulunu {{action}} etmək istədiyinizə əminsiniz?",
+    "confirmBulkDelete": "Seçilmiş {{count}} məhsulu silmək istədiyinizə əminsiniz?\n\nQeyd: Stok hərəkəti olan məhsullar silinə bilməz.",
+    "confirmBulkStatusChange": "Seçilmiş {{count}} məhsulu {{action}} etmək istədiyinizə əminsiniz?",
     "warehousesCount": "anbar"
   },
   "filters": {

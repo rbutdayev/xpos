@@ -13,7 +13,7 @@ import {
     StarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 
 interface RentalTemplate {
     id: number;
@@ -128,6 +128,81 @@ export default function Index({ templates, filters, categories }: Props) {
 
     const duplicateTemplate = (template: RentalTemplate) => {
         router.post(`/rental-templates/${template.id}/duplicate`);
+    };
+
+    // Handle double-click to view template
+    const handleRowDoubleClick = (template: RentalTemplate) => {
+        router.visit(`/rental-templates/${template.id}`);
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        if (confirm(`Seçilmiş ${selectedIds.length} şablonu silmək istədiyinizdən əminsiniz?`)) {
+            router.delete('/rental-templates/bulk-delete', {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert('Xəta baş verdi. Bəzi şablonlar istifadədə ola bilər və ya default şablonlar silinə bilməz.');
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedTemplates: RentalTemplate[]): BulkAction[] => {
+        // If only ONE template is selected, show individual actions
+        if (selectedIds.length === 1 && selectedTemplates.length === 1) {
+            const template = selectedTemplates[0];
+
+            const actions: BulkAction[] = [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/rental-templates/${template.id}`)
+                },
+                {
+                    label: 'Düzəlt',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(`/rental-templates/${template.id}/edit`)
+                },
+                {
+                    label: 'Kopyala',
+                    icon: <DocumentDuplicateIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => duplicateTemplate(template)
+                }
+            ];
+
+            // Only show delete for non-default templates
+            if (!template.is_default) {
+                actions.push({
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => deleteTemplate(template)
+                });
+            }
+
+            return actions;
+        }
+
+        // Multiple templates selected - show bulk delete (only for non-default templates)
+        const hasDefaultTemplate = selectedTemplates.some(t => t.is_default);
+
+        if (hasDefaultTemplate) {
+            return [];
+        }
+
+        return [
+            {
+                label: 'Toplu Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
     };
 
     const tableFilters = [
@@ -290,9 +365,13 @@ export default function Index({ templates, filters, categories }: Props) {
                         description: 'Başlamaq üçün yeni şablon əlavə edin.',
                     }}
                     fullWidth={true}
-
+                    selectable={true}
+                    bulkActions={getBulkActions}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(template: RentalTemplate) =>
+                        template.is_default ? 'bg-yellow-50' : ''
+                    }
                     mobileClickable={true}
-
                     hideMobileActions={true}
                 />
             </div>

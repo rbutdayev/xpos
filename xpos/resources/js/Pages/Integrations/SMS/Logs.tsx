@@ -1,7 +1,10 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
+import SharedDataTable, { Column, BulkAction } from '@/Components/SharedDataTable';
+import { EyeIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface SmsLog {
     id: number;
@@ -16,23 +19,34 @@ interface SmsLog {
 }
 
 interface SmsLogsProps extends PageProps {
-    logs: SmsLog[];
+    logs: {
+        data: SmsLog[];
+        links: any[];
+        current_page: number;
+        last_page: number;
+        total: number;
+        per_page: number;
+        from: number;
+        to: number;
+    };
 }
 
 export default function Logs({ auth, logs }: SmsLogsProps) {
+    const { t } = useTranslation(['integrations', 'common']);
+
     const getStatusBadge = (status: string) => {
         const statusConfig = {
             sent: {
                 class: 'bg-green-100 text-green-800',
-                text: 'Göndərildi'
+                text: (t as any)('common:status.sent') || 'Göndərildi'
             },
             failed: {
                 class: 'bg-red-100 text-red-800',
-                text: 'Uğursuz'
+                text: (t as any)('common:status.failed') || 'Uğursuz'
             },
             pending: {
                 class: 'bg-yellow-100 text-yellow-800',
-                text: 'Gözləyir'
+                text: (t as any)('common:status.pending') || 'Gözləyir'
             }
         };
 
@@ -57,119 +71,199 @@ export default function Logs({ auth, logs }: SmsLogsProps) {
         });
     };
 
+    const columns: Column[] = [
+        {
+            key: 'created_at',
+            label: 'Tarix',
+            sortable: true,
+            render: (log: SmsLog) => (
+                <div className="text-sm text-gray-900">
+                    {formatDate(log.created_at)}
+                </div>
+            ),
+        },
+        {
+            key: 'phone_number',
+            label: 'Telefon',
+            render: (log: SmsLog) => (
+                <div className="text-sm text-gray-900">
+                    {log.phone_number}
+                </div>
+            ),
+        },
+        {
+            key: 'message',
+            label: 'Mesaj',
+            render: (log: SmsLog) => (
+                <div className="max-w-xs truncate text-sm text-gray-900" title={log.message}>
+                    {log.message}
+                </div>
+            ),
+        },
+        {
+            key: 'sender_name',
+            label: 'Göndərən',
+            hideOnMobile: true,
+            render: (log: SmsLog) => (
+                <div className="text-sm text-gray-900">
+                    {log.sender_name}
+                </div>
+            ),
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            sortable: true,
+            render: (log: SmsLog) => getStatusBadge(log.status),
+        },
+        {
+            key: 'details',
+            label: 'Detallar',
+            hideOnMobile: true,
+            render: (log: SmsLog) => (
+                <div className="text-sm">
+                    {log.status === 'sent' && log.sent_at && (
+                        <div className="text-green-600">
+                            Göndərildi: {formatDate(log.sent_at)}
+                        </div>
+                    )}
+                    {log.status === 'failed' && log.error_message && (
+                        <div className="text-red-600 max-w-xs truncate" title={log.error_message}>
+                            Xəta: {log.error_message}
+                        </div>
+                    )}
+                    {log.status === 'pending' && (
+                        <div className="text-yellow-600">
+                            Göndərilir...
+                        </div>
+                    )}
+                </div>
+            ),
+        },
+    ];
+
+    // Handle double-click to view log details
+    const handleRowDoubleClick = (log: SmsLog) => {
+        // Show details modal or alert
+        const details = `
+SMS Log Details:
+-----------------
+Phone: ${log.phone_number}
+Message: ${log.message}
+Sender: ${log.sender_name}
+Status: ${log.status}
+Created: ${formatDate(log.created_at)}
+${log.sent_at ? `Sent: ${formatDate(log.sent_at)}` : ''}
+${log.error_message ? `Error: ${log.error_message}` : ''}
+${log.response ? `Response: ${log.response}` : ''}
+        `.trim();
+        alert(details);
+    };
+
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} SMS loqu silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.delete('/sms/bulk-delete', {
+            data: { ids: selectedIds },
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedLogs: SmsLog[]): BulkAction[] => {
+        // If only ONE log is selected, show individual actions
+        if (selectedIds.length === 1 && selectedLogs.length === 1) {
+            const log = selectedLogs[0];
+
+            return [
+                {
+                    label: 'Baxış',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => handleRowDoubleClick(log)
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm('SMS loqunu silmək istədiyinizə əminsiniz?')) {
+                            router.delete(`/sms/${log.id}`);
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple logs selected - show bulk actions
+        return [
+            {
+                label: 'Toplu Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
     return (
-        <AuthenticatedLayout
-        >
+        <AuthenticatedLayout>
             <Head title="SMS Logları" />
 
             <div className="py-12 px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6">
-                            {logs.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <svg
-                                        className="mx-auto h-12 w-12 text-gray-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                                        />
-                                    </svg>
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                                        Heç bir SMS loqu yoxdur
-                                    </h3>
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        Göndərdiyiniz SMS-lər burada görünəcək.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Tarix
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Telefon
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Mesaj
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Göndərən
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Status
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Detallar
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {logs.map((log) => (
-                                                <tr key={log.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {formatDate(log.created_at)}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {log.phone_number}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-900">
-                                                        <div className="max-w-xs truncate" title={log.message}>
-                                                            {log.message}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {log.sender_name}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                        {getStatusBadge(log.status)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                                        {log.status === 'sent' && log.sent_at && (
-                                                            <div className="text-green-600">
-                                                                Göndərildi: {formatDate(log.sent_at)}
-                                                            </div>
-                                                        )}
-                                                        {log.status === 'failed' && log.error_message && (
-                                                            <div className="text-red-600 max-w-xs truncate" title={log.error_message}>
-                                                                Xəta: {log.error_message}
-                                                            </div>
-                                                        )}
-                                                        {log.status === 'pending' && (
-                                                            <div className="text-yellow-600">
-                                                                Göndərilir...
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Info Box */}
-                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-blue-900 mb-2">
-                            Məlumat
-                        </h4>
-                        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                            <li>Son 50 SMS loqu göstərilir</li>
-                            <li>Loglar son göndərilənlərdən əvvəlkilərə doğru sıralanır</li>
-                            <li>Hər log mesajın statusunu və detallarını göstərir</li>
-                        </ul>
-                    </div>
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-2">
+                        Məlumat
+                    </h4>
+                    <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                        <li>SMS logları göstərilir</li>
+                        <li>Loglar son göndərilənlərdən əvvəlkilərə doğru sıralanır</li>
+                        <li>Hər log mesajın statusunu və detallarını göstərir</li>
+                        <li>Bir loqa iki dəfə klikləyərək detalları görə bilərsiniz</li>
+                    </ul>
                 </div>
+
+                <SharedDataTable
+                    data={logs}
+                    columns={columns}
+                    selectable={true}
+                    bulkActions={getBulkActions}
+                    emptyState={{
+                        icon: (
+                            <svg
+                                className="w-12 h-12 text-gray-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                                />
+                            </svg>
+                        ),
+                        title: 'Heç bir SMS loqu yoxdur',
+                        description: 'Göndərdiyiniz SMS-lər burada görünəcək.',
+                    }}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={() => 'cursor-pointer hover:bg-blue-50 transition-all duration-200'}
+                    fullWidth={true}
+                    dense={true}
+                />
+            </div>
         </AuthenticatedLayout>
     );
 }

@@ -182,6 +182,70 @@ class ReceiptTemplateController extends Controller
             ->with('success', __('app.receipt_template_deleted'));
     }
 
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $deletedCount = 0;
+        $failedTemplates = [];
+
+        \DB::beginTransaction();
+
+        try {
+            $templates = ReceiptTemplate::where('account_id', auth()->user()->account_id)
+                ->whereIn('template_id', $validated['ids'])
+                ->get();
+
+            foreach ($templates as $template) {
+                // Do not delete default templates
+                if ($template->is_default) {
+                    $failedTemplates[] = $template->name . ' (əsas şablon)';
+                    continue;
+                }
+
+                // Do not delete active templates that are currently in use
+                if ($template->is_active) {
+                    // Check if this is the only active template of this type
+                    $activeCount = ReceiptTemplate::where('account_id', auth()->user()->account_id)
+                        ->where('type', $template->type)
+                        ->where('is_active', true)
+                        ->count();
+
+                    if ($activeCount <= 1) {
+                        $failedTemplates[] = $template->name . ' (tək aktiv şablon)';
+                        continue;
+                    }
+                }
+
+                $template->delete();
+                $deletedCount++;
+            }
+
+            \DB::commit();
+
+            if ($deletedCount > 0 && count($failedTemplates) > 0) {
+                return redirect()->route('receipt-templates.index')
+                    ->with('success', "{$deletedCount} şablon silindi. " . count($failedTemplates) . " şablon silinə bilmədi: " . implode(', ', $failedTemplates));
+            } elseif ($deletedCount > 0) {
+                return redirect()->route('receipt-templates.index')
+                    ->with('success', "{$deletedCount} şablon uğurla silindi.");
+            } else {
+                return redirect()->route('receipt-templates.index')
+                    ->with('error', 'Heç bir şablon silinə bilmədi: ' . implode(', ', $failedTemplates));
+            }
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->route('receipt-templates.index')
+                ->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
     public function preview(Request $request, ReceiptTemplate $receiptTemplate)
     {
         Gate::authorize('view', $receiptTemplate);

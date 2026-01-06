@@ -14,6 +14,8 @@ use App\Http\Resources\RentalResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -496,6 +498,72 @@ class RentalController extends Controller
         return redirect()
             ->route('rentals.index')
             ->with('success', 'Kirayə uğurla silindi.');
+    }
+
+    /**
+     * Bulk delete rentals
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:rentals,id',
+        ]);
+
+        $accountId = auth()->user()->account_id;
+        $deletedCount = 0;
+        $failedRentals = [];
+
+        DB::beginTransaction();
+
+        try {
+            $rentals = Rental::whereIn('id', $validated['ids'])
+                ->where('account_id', $accountId)
+                ->get();
+
+            foreach ($rentals as $rental) {
+                // Only allow deletion of cancelled rentals
+                if (!$rental->isCancelled()) {
+                    $failedRentals[] = $rental->rental_number;
+                    continue;
+                }
+
+                $rental->delete();
+                $deletedCount++;
+            }
+
+            DB::commit();
+
+            // Prepare response message
+            $message = '';
+            if ($deletedCount > 0) {
+                $message = "{$deletedCount} kirayə uğurla silindi.";
+            }
+
+            if (!empty($failedRentals)) {
+                $failedList = implode(', ', $failedRentals);
+                $failedMessage = "Bu kirayələr silinə bilməz (yalnız ləğv edilmiş kirayələr silinə bilər): {$failedList}";
+                $message = $message ? $message . ' ' . $failedMessage : $failedMessage;
+            }
+
+            if ($deletedCount === 0 && !empty($failedRentals)) {
+                return redirect()
+                    ->back()
+                    ->with('error', $message);
+            }
+
+            return redirect()
+                ->route('rentals.index')
+                ->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()
+                ->back()
+                ->with('error', 'Kirayələr silinərkən xəta baş verdi: ' . $e->getMessage());
+        }
     }
 
     /**

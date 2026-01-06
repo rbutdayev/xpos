@@ -251,4 +251,66 @@ class GiftCardController extends Controller
             return redirect()->back()->with('error', 'Xəta: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Bulk delete gift cards
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('use-gift-cards');
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:gift_cards,id',
+        ]);
+
+        $user = auth()->user();
+        $deletedCount = 0;
+        $failedCards = [];
+
+        DB::beginTransaction();
+        try {
+            $cards = GiftCard::whereIn('id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($cards as $card) {
+                try {
+                    // Delete related transactions first
+                    GiftCardTransaction::where('gift_card_id', $card->id)->delete();
+
+                    // Delete the card
+                    $card->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    \Log::error('Bulk gift card deletion failed', [
+                        'card_id' => $card->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedCards[] = $card->card_number ?? "ID: {$card->id}";
+                }
+            }
+
+            DB::commit();
+
+            if (count($failedCards) > 0) {
+                $failedList = implode(', ', $failedCards);
+                $message = $deletedCount > 0
+                    ? "{$deletedCount} hədiyyə kartı silindi. Bu kartlar silinə bilmədi: {$failedList}"
+                    : "Heç bir hədiyyə kartı silinmədi. Xəta: {$failedList}";
+
+                return redirect()->back()->with('warning', $message);
+            }
+
+            return redirect()->back()->with('success', "{$deletedCount} hədiyyə kartı uğurla silindi.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk gift card deletion failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+        }
+    }
 }

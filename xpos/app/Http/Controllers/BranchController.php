@@ -198,7 +198,7 @@ class BranchController extends Controller
     {
         Gate::authorize('access-account-data', $branch);
         Gate::authorize('manage-branch-operations');
-        
+
         // Prevent deletion of main branch if it's the only branch
         if ($branch->is_main && Auth::user()->account->branches()->count() === 1) {
             return redirect()->back()
@@ -211,15 +211,113 @@ class BranchController extends Controller
                                 ->where('id', '!=', $branch->id)
                                 ->where('is_active', true)
                                 ->first();
-            
+
             if ($newMainBranch) {
                 $newMainBranch->update(['is_main' => true]);
             }
         }
 
         $branch->delete();
-        
+
         return redirect()->route('branches.index')
                         ->with('success', __('app.branch') . ' ' . __('app.deleted_successfully'));
+    }
+
+    /**
+     * Bulk delete branches
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('manage-branch-operations');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:branches,id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedBranches = [];
+
+        \DB::beginTransaction();
+
+        try {
+            $branches = Branch::whereIn('id', $validated['ids'])
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            $totalBranches = $user->account->branches()->count();
+            $deletingMainBranch = false;
+            $mainBranchToDelete = null;
+
+            // Check if trying to delete all branches
+            if ($branches->count() >= $totalBranches) {
+                \DB::rollBack();
+                return redirect()->back()->with('error', 'Bütün filialları silə bilməzsiniz. Ən azı bir filial qalmalıdır.');
+            }
+
+            // Check if trying to delete the only main branch
+            foreach ($branches as $branch) {
+                if ($branch->is_main) {
+                    $deletingMainBranch = true;
+                    $mainBranchToDelete = $branch;
+                    break;
+                }
+            }
+
+            // If deleting main branch, set another branch as main first
+            if ($deletingMainBranch && $mainBranchToDelete) {
+                $newMainBranch = $user->account->branches()
+                    ->whereNotIn('id', $validated['ids'])
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($newMainBranch) {
+                    $newMainBranch->update(['is_main' => true]);
+                } else {
+                    \DB::rollBack();
+                    return redirect()->back()->with('error', 'Əsas filialı silmək üçün başqa aktiv filial olmalıdır.');
+                }
+            }
+
+            // Delete branches
+            foreach ($branches as $branch) {
+                try {
+                    $branch->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $failedBranches[] = $branch->name;
+                    \Log::error('Error deleting branch: ' . $e->getMessage(), [
+                        'branch_id' => $branch->id,
+                        'branch_name' => $branch->name,
+                    ]);
+                }
+            }
+
+            \DB::commit();
+
+            // Prepare response message
+            $message = '';
+            if ($deletedCount > 0) {
+                $message = "{$deletedCount} filial uğurla silindi";
+            }
+
+            if (!empty($failedBranches)) {
+                $failedList = implode(', ', $failedBranches);
+                $failedMessage = "Bu filiallar silinə bilmədi: {$failedList}";
+                $message = $message ? $message . '. ' . $failedMessage : $failedMessage;
+            }
+
+            if ($deletedCount > 0) {
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', $message);
+            }
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Bulk delete branches failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Filiallar silinərkən xəta baş verdi');
+        }
     }
 }

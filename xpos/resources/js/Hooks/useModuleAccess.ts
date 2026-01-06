@@ -21,6 +21,7 @@ interface ModuleFlags {
     servicesEnabled?: boolean;
     rentEnabled?: boolean;
     discountsEnabled?: boolean;
+    expeditorEnabled?: boolean;
     smsConfigured?: boolean;
     woltEnabled?: boolean;
     yangoEnabled?: boolean;
@@ -82,6 +83,7 @@ export function useModuleAccess(): UseModuleAccessReturn {
         servicesEnabled: page.props.servicesEnabled as boolean | undefined,
         rentEnabled: page.props.rentEnabled as boolean | undefined,
         discountsEnabled: page.props.discountsEnabled as boolean | undefined,
+        expeditorEnabled: page.props.expeditorEnabled as boolean | undefined,
         smsConfigured: page.props.smsConfigured as boolean | undefined,
         woltEnabled: page.props.woltEnabled as boolean | undefined,
         yangoEnabled: page.props.yangoEnabled as boolean | undefined,
@@ -115,6 +117,7 @@ export function useModuleAccess(): UseModuleAccessReturn {
             shop_enabled: flags.shopEnabled,
             loyalty_module_enabled: flags.loyaltyEnabled,
             discounts_module_enabled: flags.discountsEnabled,
+            expeditor_module_enabled: flags.expeditorEnabled,
         };
 
         return flagMap[module.flagKey] === true;

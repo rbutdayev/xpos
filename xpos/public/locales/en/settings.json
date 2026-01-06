@@ -403,5 +403,59 @@
   "messages": {
     "settingsSaved": "Settings saved successfully",
     "settingsError": "Error saving settings"
+  },
+
+  "status": {
+    "configured": "Configured",
+    "active": "Active",
+    "setupRequired": "Setup Required"
+  },
+
+  "categories": {
+    "general": "General Settings",
+    "hardware": "Hardware & Devices",
+    "integrations": "Integrations",
+    "monitoring": "Monitoring & Logs",
+    "advanced": "Advanced"
+  },
+
+  "search": {
+    "placeholder": "Search settings...",
+    "noResults": "No settings found",
+    "tryAdjusting": "Try adjusting your search terms"
+  },
+
+  "quickAccess": {
+    "title": "Quick Access"
+  },
+
+  "settings": {
+    "shop": {
+      "title": "Shop Settings",
+      "description": "Configure shop details and business information"
+    },
+    "fiscalPrinter": {
+      "description": "Configure fiscal printer integration"
+    },
+    "kioskTokens": {
+      "title": "Kiosk Tokens",
+      "description": "Manage kiosk device access tokens"
+    },
+    "auditLogs": {
+      "description": "View system audit trail and user activities"
+    },
+    "smsLogs": {
+      "description": "View SMS notification logs and delivery status"
+    },
+    "telegramLogs": {
+      "description": "View Telegram notification logs and status"
+    },
+    "fiscalQueue": {
+      "description": "Monitor fiscal printer job queue"
+    },
+    "loyaltyProgram": {
+      "title": "Loyalty Program",
+      "description": "Configure customer loyalty and rewards program"
+    }
   }
 }

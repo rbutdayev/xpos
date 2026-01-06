@@ -293,4 +293,70 @@ class EmployeeSalaryController extends Controller
 
         return response()->json($salaries);
     }
+
+    /**
+     * Bulk delete employee salaries
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:employee_salaries,salary_id',
+        ]);
+
+        $currentUser = Auth::user();
+        $deletedCount = 0;
+        $failedSalaries = [];
+
+        \DB::beginTransaction();
+
+        try {
+            $salaries = EmployeeSalary::with('employee')
+                ->whereIn('salary_id', $validated['ids'])
+                ->where('account_id', $currentUser->account_id)
+                ->get();
+
+            foreach ($salaries as $salary) {
+                try {
+                    $salary->delete();
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $employeeName = $salary->employee ? $salary->employee->name : 'Məlum deyil';
+                    $period = $salary->year . '-' . str_pad($salary->month, 2, '0', STR_PAD_LEFT);
+                    $failedSalaries[] = $employeeName . ' (' . $period . ')';
+                    \Log::error('Error deleting employee salary: ' . $e->getMessage(), [
+                        'salary_id' => $salary->salary_id,
+                        'employee_id' => $salary->employee_id,
+                    ]);
+                }
+            }
+
+            \DB::commit();
+
+            // Prepare response message
+            $message = '';
+            if ($deletedCount > 0) {
+                $message = "{$deletedCount} maaş qeydi uğurla silindi";
+            }
+
+            if (!empty($failedSalaries)) {
+                $failedList = implode(', ', $failedSalaries);
+                $failedMessage = "Bu maaş qeydləri silinə bilmədi: {$failedList}";
+                $message = $message ? $message . '. ' . $failedMessage : $failedMessage;
+            }
+
+            if ($deletedCount > 0) {
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', $message ?: 'Heç bir maaş qeydi silinmədi');
+            }
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Bulk delete employee salaries failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Maaş qeydləri silinərkən xəta baş verdi');
+        }
+    }
 }

@@ -63,6 +63,13 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
 
     const handleCreateToken = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate branch is selected
+        if (!selectedBranch) {
+            toast.error('Zəhmət olmasa filial seçin');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -74,7 +81,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                 },
                 body: JSON.stringify({
                     device_name: newTokenName,
-                    branch_id: selectedBranch || null,
+                    branch_id: selectedBranch,
                 }),
             });
 
@@ -162,7 +169,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                     Kiosk Tokenlər
                                 </h3>
                                 <p className="text-sm text-gray-600">
-                                    Hər kiosk cihazı üçün ayrı token yaradın. Token ilə kiosk proqramı serverə qoşulur və satış əməliyyatlarını icra edir.
+                                    Hər kiosk cihazı üçün ayrı token yaradın və filial seçin. Token ilə kiosk proqramı serverə qoşulur və seçilmiş filialda satış əməliyyatlarını icra edir.
                                 </p>
                             </div>
                             {tokens.length > 0 && (
@@ -246,7 +253,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                 <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
                                     <li>Yuxarıdan öz platformanız üçün installer-i yükləyin</li>
                                     <li>Proqramı quraşdırın və açın</li>
-                                    <li>Aşağıdan yeni token yaradın və filialı seçin</li>
+                                    <li>Aşağıdan yeni token yaradın (filial seçimi mütləqdir)</li>
                                     <li>Tokeni kopyalayın və kiosk proqramına yapışdırın</li>
                                     <li>Proqramı başladın - məhsullar və parametrlər avtomatik yüklənəcək</li>
                                 </ol>
@@ -384,13 +391,14 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Filial (İstəyə bağlı)
+                                    Filial <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={selectedBranch}
                                     onChange={(e) => setSelectedBranch(e.target.value ? parseInt(e.target.value) : '')}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
                                     disabled={isSubmitting}
+                                    required
                                 >
                                     <option value="">Filial seçin</option>
                                     {branches.map((branch) => (
@@ -400,7 +408,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                     ))}
                                 </select>
                                 <p className="mt-1 text-xs text-gray-500">
-                                    Kiosk hansı filialda yerləşəcək?
+                                    Hər kiosk mütləq bir filialda yerləşməlidir
                                 </p>
                             </div>
                             <div className="flex justify-end space-x-3">

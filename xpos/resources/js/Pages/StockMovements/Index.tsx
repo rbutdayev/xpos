@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
-import { CubeIcon } from '@heroicons/react/24/outline';
+import { CubeIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 
@@ -139,20 +139,73 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
         }
     ];
 
-    const tableActions = [
-        {
-            ...tableConfig.stockMovements.actions[0], // View action
-            href: (movement: StockMovement) => `/stock-movements/${movement.movement_id}`
-        },
-        {
-            ...tableConfig.stockMovements.actions[1], // Delete action
-            onClick: (movement: StockMovement) => {
-                if (confirm(t('confirmDelete'))) {
-                    router.delete(`/stock-movements/${movement.movement_id}`);
-                }
-            }
+    // Handle double-click to view movement
+    const handleRowDoubleClick = (movement: StockMovement) => {
+        router.visit(`/stock-movements/${movement.movement_id}`);
+    };
+
+    // Handle delete for a single movement
+    const deleteMovement = (movement: StockMovement) => {
+        if (confirm(t('confirmDelete'))) {
+            router.delete(`/stock-movements/${movement.movement_id}`, {
+                preserveScroll: true
+            });
         }
-    ];
+    };
+
+    // Handle bulk delete for selected movements
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = t('confirmBulkDelete', { count: selectedIds.length });
+
+        if (confirm(String(confirmMessage))) {
+            router.delete('/stock-movements/bulk-delete', {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert(t('deleteError') as string);
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedMovements: StockMovement[]): BulkAction[] => {
+        // If only ONE movement is selected, show individual actions
+        if (selectedIds.length === 1 && selectedMovements.length === 1) {
+            const movement = selectedMovements[0];
+
+            return [
+                {
+                    label: t('view') as string,
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/stock-movements/${movement.movement_id}`)
+                },
+                {
+                    label: t('edit') as string,
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(`/stock-movements/${movement.movement_id}/edit`)
+                },
+                {
+                    label: t('delete') as string,
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => deleteMovement(movement)
+                }
+            ];
+        }
+
+        // Multiple movements selected - show bulk actions
+        return [
+            {
+                label: t('bulkDelete') as string,
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     return (
         <AuthenticatedLayout>
@@ -163,7 +216,8 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
                     <SharedDataTable
                         data={movements}
                         columns={tableConfig.stockMovements.columns}
-                        actions={tableActions}
+                        selectable={true}
+                        bulkActions={getBulkActions}
                         searchValue={searchValue}
                         onSearchChange={setSearchValue}
                         searchPlaceholder={t('stockMovements.searchPlaceholder')}
@@ -181,10 +235,8 @@ export default function Index({ movements, warehouses, movementTypes, filters }:
                         }}
                         idField="movement_id"
                         fullWidth={true}
-
-                        mobileClickable={true}
-
-                        hideMobileActions={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={() => 'cursor-pointer hover:bg-blue-50 transition-all duration-200'}
                     />
                 </div>
             </div>

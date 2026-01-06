@@ -63,7 +63,8 @@ export interface BulkAction {
     onClick: (selectedIds: (string | number)[]) => void;
     className?: string;
     icon?: ReactNode;
-    variant?: 'primary' | 'secondary' | 'danger' | 'success';
+    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'view' | 'edit';
+    condition?: () => boolean;
 }
 
 interface SharedDataTableProps {
@@ -82,7 +83,7 @@ interface SharedDataTableProps {
     // Configuration
     columns: Column[];
     actions?: ActionsConfig;
-    bulkActions?: BulkAction[];
+    bulkActions?: BulkAction[] | ((selectedIds: (string | number)[], selectedItems: any[]) => BulkAction[]);
     
     // Search & Filter
     searchValue?: string;
@@ -151,6 +152,10 @@ interface SharedDataTableProps {
     mobileClickable?: boolean; // Make rows clickable on mobile
     onMobileRowClick?: (item: any) => void; // Handler for mobile row clicks
     hideMobileActions?: boolean; // Hide action buttons on mobile (default: true)
+
+    // Row interaction
+    onRowDoubleClick?: (item: any) => void; // Handler for double-click on row
+    onRowClick?: (item: any) => void; // Handler for single click on row
 }
 
 export default function SharedDataTable({
@@ -203,7 +208,10 @@ export default function SharedDataTable({
 
     mobileClickable = false,
     onMobileRowClick,
-    hideMobileActions = true
+    hideMobileActions = true,
+
+    onRowDoubleClick,
+    onRowClick
 }: SharedDataTableProps) {
     const { t } = useTranslation('common');
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
@@ -214,6 +222,15 @@ export default function SharedDataTable({
 
     // Get translated placeholder if not provided
     const effectiveSearchPlaceholder = searchPlaceholder || t('dataTable.searchPlaceholder');
+
+    // Compute actual bulk actions based on selection
+    const getSelectedItems = () => {
+        return data.data.filter((item) => selectedIds.includes(item[idField]));
+    };
+
+    const effectiveBulkActions = typeof bulkActions === 'function'
+        ? bulkActions(selectedIds, getSelectedItems())
+        : (bulkActions || []);
 
     // Detect mobile screen size
     React.useEffect(() => {
@@ -476,35 +493,66 @@ export default function SharedDataTable({
                 </div>
             )}
 
-            {/* Bulk Actions */}
-            {selectable && selectedIds.length > 0 && bulkActions.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-blue-700">
-                            {t('dataTable.selected', { count: selectedIds.length })}
-                        </span>
-                        <div className="flex items-center gap-2">
-                            {bulkActions.map((action, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => action.onClick(selectedIds)}
-                                    className={`px-3 py-1 text-sm font-medium rounded ${
-                                        action.variant === 'danger' 
-                                            ? 'text-red-700 bg-red-100 hover:bg-red-200' 
-                                            : 'text-blue-700 bg-blue-100 hover:bg-blue-200'
-                                    } ${action.className || ''}`}
-                                >
-                                    {action.icon && <span className="mr-1">{action.icon}</span>}
-                                    {action.label}
-                                </button>
-                            ))}
+            {/* Bulk Actions - Sticky Top Toolbar */}
+            {selectable && selectedIds.length > 0 && effectiveBulkActions.length > 0 && (
+                <div className="sticky top-0 z-20 mb-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-2xl rounded-xl p-4 border-2 border-blue-400">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-white/20 rounded-lg px-3 py-2">
+                                        <span className="text-lg font-bold text-white">
+                                            {selectedIds.length}
+                                        </span>
+                                    </div>
+                                    <span className="text-sm font-medium text-white">
+                                        {t('dataTable.selected', { count: selectedIds.length })}
+                                    </span>
+                                    <button
+                                        onClick={() => setSelectedIds([])}
+                                        className="ml-2 text-white/80 hover:text-white transition-colors"
+                                        title={t('dataTable.clearSelection')}
+                                    >
+                                        <XMarkIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {effectiveBulkActions.map((action, index) => {
+                                        const getVariantClasses = () => {
+                                            switch (action.variant) {
+                                                case 'danger':
+                                                    return 'bg-red-500 hover:bg-red-600 text-white border-red-400';
+                                                case 'success':
+                                                    return 'bg-green-500 hover:bg-green-600 text-white border-green-400';
+                                                case 'secondary':
+                                                    return 'bg-gray-500 hover:bg-gray-600 text-white border-gray-400';
+                                                case 'view':
+                                                    return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400';
+                                                case 'edit':
+                                                    return 'bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-400';
+                                                default:
+                                                    return 'bg-white hover:bg-gray-50 text-blue-700 border-white';
+                                            }
+                                        };
+
+                                        return (
+                                            <button
+                                                key={index}
+                                                onClick={() => action.onClick(selectedIds)}
+                                                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${getVariantClasses()} ${action.className || ''}`}
+                                            >
+                                                {action.icon && <span>{action.icon}</span>}
+                                                {action.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
-                    </div>
                 </div>
             )}
 
-            {/* Data Table */}
-            <div className="bg-white shadow-sm sm:rounded-lg w-full max-w-full overflow-hidden">
+            {/* Data Table - Scrollable Container */}
+            <div className="bg-white shadow-sm sm:rounded-lg w-full max-w-full overflow-hidden max-h-[calc(100vh-300px)] overflow-y-auto">
                 {loading && (
                     <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                         <div className="text-center">
@@ -522,7 +570,7 @@ export default function SharedDataTable({
                                     <tr>
                                         {/* Selection Column */}
                                         {selectable && !isMobile && (
-                                            <th className="px-8 py-6 w-4">
+                                            <th className="px-3 py-2 w-4">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedIds.length === data.data.length && data.data.length > 0}
@@ -534,14 +582,14 @@ export default function SharedDataTable({
 
                                         {/* Expand Column */}
                                         {expandable && !isMobile && (
-                                            <th className="px-8 py-6 w-4"></th>
+                                            <th className="px-3 py-2 w-4"></th>
                                         )}
 
                                         {/* Data Columns */}
                                         {visibleColumns.map((column) => (
-                                            <th 
+                                            <th
                                                 key={column.key}
-                                                className={`px-3 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider ${getAlignmentClass(column.align)} ${column.headerClassName || ''} border-r border-gray-200 last:border-r-0`}
+                                                className={`px-3 py-2 text-xs font-semibold text-gray-600 uppercase tracking-wider ${getAlignmentClass(column.align)} ${column.headerClassName || ''} border-r border-gray-200 last:border-r-0`}
                                                 style={column.width ? { width: column.width } : {}}
                                             >
                                                 {column.sortable && onSort ? (
@@ -570,7 +618,7 @@ export default function SharedDataTable({
 
                                         {/* Actions Column */}
                                         {actions && (Array.isArray(actions) ? actions.length > 0 : true) && !(isMobile && effectiveHideMobileActions) && (
-                                            <th className="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                                            <th className="px-3 py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                                                 {t('dataTable.operations')}
                                             </th>
                                         )}
@@ -581,17 +629,47 @@ export default function SharedDataTable({
                                     {data.data.map((item, index) => {
                                         const itemId = item[idField];
                                         const isExpanded = expandedRows.has(itemId);
+                                        const isSelected = selectedIds.includes(itemId);
                                         const customRowClass = rowClassName ? rowClassName(item) : '';
-                                        
+
                                         return (
                                             <React.Fragment key={itemId || index}>
                                                 <tr
-                                                    className={`hover:bg-blue-50 transition-colors duration-150 ${customRowClass} ${isMobile && effectiveMobileClickable ? 'cursor-pointer' : ''}`}
-                                                    onClick={() => handleMobileRowClick(item)}
+                                                    className={`transition-all duration-200 ${customRowClass} ${isMobile && effectiveMobileClickable ? 'cursor-pointer' : ''} ${onRowDoubleClick || onRowClick ? 'cursor-pointer' : ''} ${
+                                                        isSelected
+                                                            ? 'bg-blue-100 hover:bg-blue-200 ring-2 ring-blue-300 ring-inset'
+                                                            : 'hover:bg-blue-50'
+                                                    }`}
+                                                    onClick={(e) => {
+                                                        // Prevent click when clicking on checkbox or action buttons
+                                                        if ((e.target as HTMLElement).closest('input[type="checkbox"]') ||
+                                                            (e.target as HTMLElement).closest('button') ||
+                                                            (e.target as HTMLElement).closest('a')) {
+                                                            return;
+                                                        }
+
+                                                        if (isMobile) {
+                                                            handleMobileRowClick(item);
+                                                        } else if (onRowClick) {
+                                                            onRowClick(item);
+                                                        }
+                                                    }}
+                                                    onDoubleClick={(e) => {
+                                                        // Prevent double-click when clicking on checkbox or action buttons
+                                                        if ((e.target as HTMLElement).closest('input[type="checkbox"]') ||
+                                                            (e.target as HTMLElement).closest('button') ||
+                                                            (e.target as HTMLElement).closest('a')) {
+                                                            return;
+                                                        }
+
+                                                        if (!isMobile && onRowDoubleClick) {
+                                                            onRowDoubleClick(item);
+                                                        }
+                                                    }}
                                                 >
                                                     {/* Selection */}
                                                      {selectable && !isMobile && (
-                                                        <td className="px-3 py-3 whitespace-nowrap w-12 border-r border-gray-100">
+                                                        <td className="px-3 py-2 whitespace-nowrap w-12 border-r border-gray-100">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={selectedIds.includes(itemId)}
@@ -603,7 +681,7 @@ export default function SharedDataTable({
 
                                                     {/* Expand */}
                                                      {expandable && !isMobile && (
-                                                        <td className="px-3 py-3 whitespace-nowrap w-10 border-r border-gray-100">
+                                                        <td className="px-3 py-2 whitespace-nowrap w-10 border-r border-gray-100">
                                                             <button
                                                                 onClick={() => handleToggleExpand(itemId)}
                                                                 className="text-gray-400 hover:text-gray-600"
@@ -619,13 +697,13 @@ export default function SharedDataTable({
 
                                                     {/* Data */}
                                                     {visibleColumns.map((column) => (
-                                                         <td 
+                                                         <td
                                                             key={column.key}
-                                                            className={`px-3 ${dense ? 'py-2' : 'py-3'} text-sm ${getAlignmentClass(column.align)} ${column.className || ''} border-r border-gray-100 last:border-r-0`}
+                                                            className={`px-3 py-2 text-sm ${getAlignmentClass(column.align)} ${column.className || ''} border-r border-gray-100 last:border-r-0`}
                                                             style={column.width ? { width: column.width } : {}}
                                                         >
                                                             {column.render ? column.render(item) : (
-                                                                <span className="text-base text-gray-900 font-medium">
+                                                                <span className="text-sm text-gray-900 font-medium">
                                                                     {item[column.key] || '-'}
                                                                 </span>
                                                             )}
@@ -636,7 +714,7 @@ export default function SharedDataTable({
                                                      {(() => {
                                                         const itemActions = typeof actions === 'function' ? actions(item) : actions;
                                                         return Array.isArray(itemActions) && itemActions.length > 0 && !(isMobile && effectiveHideMobileActions) && (
-                                                        <td className="px-3 py-3 whitespace-nowrap text-center text-sm font-medium w-32">
+                                                        <td className="px-3 py-2 whitespace-nowrap text-center text-sm font-medium w-32">
                                                             <div className="flex justify-center items-center gap-2">
                                                                 {itemActions.map((action, actionIndex) => {
                                                                     if (action.condition && !action.condition(item)) {
@@ -696,7 +774,7 @@ export default function SharedDataTable({
                                                 {/* Expanded Content */}
                                                 {expandable && isExpanded && expandedContent && !isMobile && (
                                                     <tr>
-                                                         <td colSpan={visibleColumns.length + (selectable && !isMobile ? 1 : 0) + (expandable && !isMobile ? 1 : 0) + (actions && (Array.isArray(actions) ? actions.length > 0 : true) && !(isMobile && effectiveHideMobileActions) ? 1 : 0)} className="px-8 py-7 bg-gray-50">
+                                                         <td colSpan={visibleColumns.length + (selectable && !isMobile ? 1 : 0) + (expandable && !isMobile ? 1 : 0) + (actions && (Array.isArray(actions) ? actions.length > 0 : true) && !(isMobile && effectiveHideMobileActions) ? 1 : 0)} className="px-4 py-3 bg-gray-50">
                                                             {expandedContent(item)}
                                                         </td>
                                                     </tr>

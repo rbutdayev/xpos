@@ -1,8 +1,8 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
-import { PlusIcon, ClockIcon } from '@heroicons/react/24/outline';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
+import { PlusIcon, ClockIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 interface Rental {
@@ -125,6 +125,30 @@ export default function Index({ rentals, filters }: Props) {
     const handleDeleteAction = (rental: Rental) => {
         if (confirm(`"${rental.rental_number}" kirayəsini silmək istədiyinizə əminsiniz?`)) {
             router.delete(route('rentals.destroy', rental.id));
+        }
+    };
+
+    // Handle double-click to view rental
+    const handleRowDoubleClick = (rental: Rental) => {
+        router.visit(route('rentals.show', rental.id));
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `${selectedIds.length} kirayəni silmək istədiyinizə əminsiniz?`;
+
+        if (confirm(confirmMessage)) {
+            router.post(route('rentals.bulk-delete'), {
+                ids: selectedIds
+            }, {
+                onError: (errors) => {
+                    toast.error('Kirayələr silinərkən xəta baş verdi.');
+                },
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Kirayələr uğurla silindi.');
+                }
+            });
         }
     };
 
@@ -263,25 +287,54 @@ export default function Index({ rentals, filters }: Props) {
         }
     ];
 
-    const actions = [
-        {
-            label: 'Bax',
-            href: (rental: Rental) => route('rentals.show', rental.id),
-            className: 'text-blue-600 hover:text-blue-900'
-        },
-        {
-            label: 'Redaktə et',
-            href: (rental: Rental) => route('rentals.edit', rental.id),
-            className: 'text-indigo-600 hover:text-indigo-900',
-            condition: (rental: Rental) => ['reserved', 'active', 'overdue'].includes(rental.status)
-        },
-        {
-            label: 'Sil',
-            onClick: handleDeleteAction,
-            className: 'text-red-600 hover:text-red-900',
-            condition: (rental: Rental) => rental.status === 'cancelled'
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedRentals: Rental[]): BulkAction[] => {
+        // If only ONE rental is selected, show individual actions
+        if (selectedIds.length === 1 && selectedRentals.length === 1) {
+            const rental = selectedRentals[0];
+
+            const actions: BulkAction[] = [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('rentals.show', rental.id))
+                }
+            ];
+
+            // Add edit action only for reserved, active, or overdue rentals
+            if (['reserved', 'active', 'overdue'].includes(rental.status)) {
+                actions.push({
+                    label: 'Redaktə et',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('rentals.edit', rental.id))
+                });
+            }
+
+            // Add delete action only for cancelled rentals
+            if (rental.status === 'cancelled') {
+                actions.push({
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => handleDeleteAction(rental)
+                });
+            }
+
+            return actions;
         }
-    ];
+
+        // Multiple rentals selected - show bulk delete only
+        return [
+            {
+                label: 'Toplu Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     const filtersConfig = [
         {
@@ -322,7 +375,8 @@ export default function Index({ rentals, filters }: Props) {
                 <SharedDataTable
                     data={rentals}
                     columns={columns}
-                    actions={actions}
+                    selectable={true}
+                    bulkActions={getBulkActions}
 
                     searchValue={searchValue}
                     onSearchChange={setSearchValue}
@@ -362,6 +416,8 @@ export default function Index({ rentals, filters }: Props) {
 
                     className="space-y-6"
                     fullWidth={true}
+
+                    onRowDoubleClick={handleRowDoubleClick}
 
                     mobileClickable={true}
 

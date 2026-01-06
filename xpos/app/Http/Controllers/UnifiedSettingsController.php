@@ -299,7 +299,7 @@ class UnifiedSettingsController extends Controller
         }
 
         $request->validate([
-            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards,wolt,yango,bolt',
+            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards,expeditor,wolt,yango,bolt',
         ]);
 
         $account = $request->user()->account;
@@ -313,6 +313,7 @@ class UnifiedSettingsController extends Controller
             'shop' => 'shop_enabled',
             'discounts' => 'discounts_module_enabled',
             'gift_cards' => 'gift_cards_module_enabled',
+            'expeditor' => 'expeditor_module_enabled',
             'wolt' => 'wolt_enabled',
             'yango' => 'yango_enabled',
             'bolt' => 'bolt_enabled',
@@ -326,6 +327,7 @@ class UnifiedSettingsController extends Controller
             'shop' => ['sms'], // Shop requires SMS to be configured
             'discounts' => [],
             'gift_cards' => [],
+            'expeditor' => [], // Expeditor has no dependencies
             'wolt' => [], // Delivery platforms don't require SMS
             'yango' => [],
             'bolt' => [],
@@ -358,6 +360,7 @@ class UnifiedSettingsController extends Controller
             'shop' => 'Online Mağaza',
             'discounts' => 'Endirimlər',
             'gift_cards' => 'Hədiyyə Kartları',
+            'expeditor' => 'Ekspeditor (Sahə Satışı)',
             'wolt' => 'Wolt',
             'yango' => 'Yango',
             'bolt' => 'Bolt Food',

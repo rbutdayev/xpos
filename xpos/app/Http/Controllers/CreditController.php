@@ -181,4 +181,43 @@ class CreditController extends Controller
 
         return response()->json($credits);
     }
+
+    public function bulkDeleteSupplierCredits(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:supplier_credits,id',
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            // Delete only credits belonging to the user's account
+            $deletedCount = SupplierCredit::where('account_id', auth()->user()->account_id)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
+
+            \DB::commit();
+
+            return redirect()->back()->with('success', "{$deletedCount} təchizatçı borcu silindi");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()->with('error', 'Silmə zamanı xəta baş verdi');
+        }
+    }
+
+    public function destroySupplierCredit(SupplierCredit $credit)
+    {
+        // Ensure the credit belongs to the user's account
+        if ($credit->account_id !== auth()->user()->account_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $credit->delete();
+            return redirect()->back()->with('success', 'Təchizatçı borcu silindi');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Silmə zamanı xəta baş verdi');
+        }
+    }
 }

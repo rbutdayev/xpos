@@ -118,6 +118,8 @@
     },
     "messages": {
       "confirmDelete": "Are you sure you want to delete this category?",
+      "confirmBulkDelete": "Are you sure you want to delete {{count}} categories?",
+      "deleteError": "Failed to delete category",
       "cannotDeleteWithChildren": "Cannot delete category with subcategories.",
       "cannotDeleteWithExpenses": "Cannot delete category with expenses.",
       "noCategoriesFound": "No categories found",

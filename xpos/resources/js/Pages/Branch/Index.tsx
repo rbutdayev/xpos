@@ -1,10 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { tableConfig } from '@/Components/TableConfigurations';
 import { Branch } from '@/types';
-import { BuildingOffice2Icon, PlusIcon } from '@heroicons/react/24/outline';
+import { BuildingOffice2Icon, PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface Props {
     branches: {
@@ -72,22 +72,74 @@ export default function Index({ branches, filters }: Props) {
         });
     };
 
-    const handleDeleteAction = (branch: Branch) => {
-        if (confirm(`"${branch.name}" filialını silmək istədiyinizə əminsiniz?`)) {
-            router.delete(route('branches.destroy', branch.id));
-        }
+    // Handle double-click to view branch
+    const handleRowDoubleClick = (branch: Branch) => {
+        router.visit(route('branches.show', branch.id));
     };
 
-    // Configure actions with delete handler
-    const actionsWithHandlers = tableConfig.branches.actions.map(action => {
-        if (action.label === 'Sil') {
-            return {
-                ...action,
-                onClick: handleDeleteAction
-            };
+    // Bulk delete handler
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} filialı silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
         }
-        return action;
-    });
+
+        router.post(route('branches.bulk-delete'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                // Success message handled by backend
+            },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedBranches: Branch[]): BulkAction[] => {
+        // If only ONE branch is selected, show individual actions
+        if (selectedIds.length === 1 && selectedBranches.length === 1) {
+            const branch = selectedBranches[0];
+
+            return [
+                {
+                    label: 'Bax',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('branches.show', branch.id))
+                },
+                {
+                    label: 'Düzəlt',
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(route('branches.edit', branch.id))
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm(`"${branch.name}" filialını silmək istədiyinizə əminsiniz?`)) {
+                            router.delete(route('branches.destroy', branch.id));
+                        }
+                    }
+                }
+            ];
+        }
+
+        // Multiple branches selected - show bulk actions
+        return [
+            {
+                label: 'Seçilmişləri Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
 
     // Configure filters with values and handlers
     const filtersWithHandlers = tableConfig.branches.filters.map(filter => {
@@ -113,7 +165,8 @@ export default function Index({ branches, filters }: Props) {
                 <SharedDataTable
                     data={branches}
                     columns={tableConfig.branches.columns}
-                    actions={actionsWithHandlers}
+                    selectable={true}
+                    bulkActions={getBulkActions}
 
                     searchValue={searchValue}
                     onSearchChange={setSearchValue}
@@ -153,8 +206,10 @@ export default function Index({ branches, filters }: Props) {
 
                     className="space-y-6"
                     fullWidth={true}
-                    mobileClickable={true}
-                    hideMobileActions={true}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(branch: Branch) =>
+                        `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                    }
                 />
             </div>
         </AuthenticatedLayout>

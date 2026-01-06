@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -359,6 +360,82 @@ class RentalInventoryController extends Controller
 
         return redirect()->route('rental-inventory.index')
             ->with('success', 'Inventar elementi uğurla silindi və stoka qaytarıldı.');
+    }
+
+    /**
+     * Bulk delete rental inventory items
+     * CRITICAL: Do not allow deletion of items that are currently rented or have active rentals
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = auth()->user();
+        $accountId = $user->account_id;
+        $deletedCount = 0;
+        $failedItems = [];
+
+        DB::beginTransaction();
+
+        try {
+            $inventoryItems = RentalInventory::whereIn('id', $validated['ids'])
+                ->where('account_id', $accountId)
+                ->get();
+
+            foreach ($inventoryItems as $item) {
+                // CRITICAL: Check if item is currently rented
+                if ($item->status === 'rented' || $item->isRented()) {
+                    $failedItems[] = $item->inventory_number . ' (hazırda kirayədə)';
+                    continue;
+                }
+
+                // Check if item has any rental history (active or reserved rentals)
+                $hasActiveRentals = \App\Models\RentalItem::where('rental_inventory_id', $item->id)
+                    ->whereHas('rental', function ($query) use ($accountId) {
+                        $query->where('account_id', $accountId)
+                              ->whereIn('status', ['active', 'reserved', 'overdue']);
+                    })
+                    ->exists();
+
+                if ($hasActiveRentals) {
+                    $failedItems[] = $item->inventory_number . ' (aktiv kirayə var)';
+                    continue;
+                }
+
+                // Use transaction to ensure stock restoration and deletion happen together
+                $this->restoreStockForRentalInventory($item);
+                $item->delete();
+                $deletedCount++;
+            }
+
+            DB::commit();
+
+            // Prepare response message
+            $message = '';
+            if ($deletedCount > 0) {
+                $message = "{$deletedCount} inventar elementi uğurla silindi və stoka qaytarıldı.";
+            }
+
+            if (!empty($failedItems)) {
+                $failedList = implode(', ', $failedItems);
+                $failedMessage = "Aşağıdakı elementlər silinə bilmədi: {$failedList}";
+                $message = $message ? $message . ' ' . $failedMessage : $failedMessage;
+            }
+
+            if ($deletedCount > 0) {
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', $message ?: 'Heç bir element silinə bilmədi.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+        }
     }
 
     /**

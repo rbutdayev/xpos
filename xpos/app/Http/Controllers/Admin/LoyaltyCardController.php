@@ -134,6 +134,46 @@ class LoyaltyCardController extends Controller
         }
     }
 
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('manage-loyalty-cards');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:loyalty_cards,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Note: This is a super admin function, so we don't filter by account_id
+            // But we still ensure proper cleanup of related data
+            $deletedCount = 0;
+
+            foreach ($request->ids as $id) {
+                $card = LoyaltyCard::find($id);
+
+                if ($card) {
+                    // If card is assigned, unassign it first
+                    if ($card->customer_id) {
+                        DB::table('customers')
+                            ->where('id', $card->customer_id)
+                            ->update(['loyalty_card_id' => null]);
+                    }
+
+                    $card->delete();
+                    $deletedCount++;
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "{$deletedCount} loaylıq kartı uğurla silindi.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Kartlar silinərkən xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
     public function reports(Request $request)
     {
         Gate::authorize('manage-loyalty-cards');

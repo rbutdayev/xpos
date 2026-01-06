@@ -52,6 +52,17 @@
     "passwordRepeat": "Şifrə təkrarı",
     "passwordRepeatPlaceholder": "Yeni şifrəni təkrarlayın",
 
+    "kioskSettings": "Kiosk Ayarları",
+    "kioskEnabled": "Kiosk girişinə icazə ver",
+    "kioskEnabledHint": "Bu istifadəçinin PIN kodu ilə kiosk cihazlarına daxil olmasına icazə verin",
+    "kioskPin": "Kiosk PIN",
+    "kioskPinPlaceholder": "4-6 rəqəmli PIN",
+    "kioskPinConfirmation": "PIN təkrarı",
+    "kioskPinRepeatPlaceholder": "PIN-i təkrarlayın",
+    "kioskPinHint": "Mövcud PIN-i saxlamaq üçün boş buraxın",
+    "kioskUserIdInfo": "İstifadəçi bu ID və PIN ilə kioska daxil olacaq",
+    "kioskUserIdValue": "İstifadəçi ID",
+
     "accountOwnerNote": "Hesab sahibinin rolunu dəyişdirmək mümkün deyil",
     "accountOwnerWarning": "⚠️ Hesab sahibinin rolunu dəyişdirmək mümkün deyil"
   },
@@ -72,7 +83,11 @@
     "creating": "Yaradılır...",
     "save": "Dəyişiklikləri yadda saxla",
     "saving": "Yadda saxlanır...",
-    "cancel": "Ləğv et"
+    "cancel": "Ləğv et",
+    "view": "Bax",
+    "edit": "Düzəlt",
+    "delete": "Sil",
+    "bulkDelete": "Seçilmişləri Sil"
   },
 
   "messages": {
@@ -128,6 +143,21 @@
     "systemInfo": "Sistem məlumatları",
     "lastLogin": "Son giriş",
     "createdAt": "Yaradılma tarixi",
-    "accountOwnerDisplay": "Hesab Sahibi (account_owner)"
+    "accountOwnerDisplay": "Hesab Sahibi (account_owner)",
+    "activityStats": "Fəaliyyət Statistikası",
+    "totalSales": "Ümumi Satışlar",
+    "salesAmount": "Satış Məbləği",
+    "kioskAccess": "Kiosk Girişi",
+    "kioskStatus": "Status",
+    "kioskEnabled": "Aktiv",
+    "kioskDisabled": "Qeyri-aktiv",
+    "kioskActive": "Aktiv",
+    "kioskInactive": "Qeyri-aktiv",
+    "kioskLoginId": "Kiosk Giriş ID",
+    "kioskPinConfigured": "PIN təyin olunub",
+    "kioskPinNotSet": "PIN təyin olunmayıb",
+    "quickActions": "Sürətli Əməliyyatlar",
+    "editUser": "İstifadəçini Düzəliş Et",
+    "language": "Dil"
   }
 }

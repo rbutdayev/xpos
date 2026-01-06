@@ -80,6 +80,7 @@
     "dashboard": "Dashboard",
     "pos_sales": "POS Sales",
     "touch_pos": "TouchPOS",
+    "expeditor": "Expeditor (Field Sales)",
     "products": "Products",
     "product_list": "Product List",
     "categories": "Categories",
@@ -141,7 +142,27 @@
     "home": "Home",
     "expand": "Expand",
     "collapse": "Collapse",
-    "reports": "Reports"
+    "reports": "Reports",
+    "warehouse": "Warehouse",
+    "finance": "Finance",
+    "administration": "Administration",
+    "rentals": "Rentals",
+    "pos": "POS",
+    "returns": "Returns",
+    "new_sale": "New Sale",
+    "new_product": "New Product",
+    "new_expense": "New Expense",
+    "bulk_create": "Bulk Create",
+    "discounts": "Discounts",
+    "send_sms": "Send SMS",
+    "product_stock": "Product Stock",
+    "transfers": "Transfers",
+    "alerts": "Alerts",
+    "product_history": "Product History",
+    "expense_categories": "Expense Categories",
+    "printer_configs": "Printer Configs",
+    "search": "Search",
+    "products_list": "Products List"
   },
   "pagination": {
     "previous": "Previous",
@@ -221,6 +242,7 @@
     "operations": "Operations",
     "loading": "Loading...",
     "selected": "{{count}} items selected",
+    "clearSelection": "Clear selection",
     "detailsTitle": "Details",
     "close": "Close",
     "selectPlaceholder": "Select"
@@ -228,5 +250,42 @@
   "footer": {
     "version": "Version",
     "support": "Support"
+  },
+  "command_palette": {
+    "search_placeholder": "Search pages, actions...",
+    "no_results": "No results found",
+    "action": "Action",
+    "navigate": "Navigate",
+    "select": "Select"
+  },
+  "expeditor": {
+    "title": "Expeditor - Field Sales",
+    "selectCustomer": "Select customer...",
+    "locationPlaceholder": "Location (e.g., Nizami St. 5)",
+    "searchProducts": "Search products...",
+    "startTyping": "Start typing to search products...",
+    "noResults": "No products found",
+    "quickReorder": "Quick reorder from previous order",
+    "newCustomer": "New Customer",
+    "previousOrders": "Previous Orders",
+    "completeSale": "Complete Sale",
+    "addToCart": "Add to Cart",
+    "cart": "Cart",
+    "selectVariant": "Select variant...",
+    "captureGPS": "Capture GPS location",
+    "viewGrid": "Grid View",
+    "viewList": "List View",
+    "saleCompleted": "Sale completed successfully!",
+    "saleCompletedMessage": "Sale has been recorded. You can now print the receipt.",
+    "printReceipt": "Print Receipt"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of",
+    "perPage": "Per page",
+    "results": "results",
+    "showing": "Showing {{from}} - {{to}} of {{total}} results"
   }
 }

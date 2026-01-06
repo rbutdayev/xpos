@@ -89,6 +89,7 @@ class KioskSalesController extends Controller
             $validated = $request->validate([
                 'sales' => 'required|array|min:1|max:100', // Max 100 sales per batch
                 'sales.*.local_id' => 'required|integer',
+                'sales.*.user_id' => 'required|exists:users,id', // Kiosk user who made the sale
                 'sales.*.branch_id' => 'required|exists:branches,id',
                 'sales.*.customer_id' => 'nullable|exists:customers,id',
                 'sales.*.items' => 'required|array|min:1',
@@ -197,6 +198,7 @@ class KioskSalesController extends Controller
     {
         $rules = [
             'local_id' => 'nullable|integer', // For idempotency tracking
+            'user_id' => 'required|exists:users,id', // Kiosk user who made the sale
             'customer_id' => 'nullable|exists:customers,id',
             'branch_id' => 'required|exists:branches,id',
             'items' => 'required|array|min:1',

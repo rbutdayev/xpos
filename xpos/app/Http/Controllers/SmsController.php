@@ -198,13 +198,64 @@ class SmsController extends Controller
         Gate::authorize('view-reports');
 
         $accountId = Auth::user()->account_id;
-        $limit = $request->input('limit', 50);
+        $perPage = $request->input('per_page', 20);
 
-        $logs = $this->smsService->getLogs($accountId, $limit);
+        // Get paginated logs
+        $logs = \App\Models\SmsLog::where('account_id', $accountId)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
         return Inertia::render('SMS/Logs', [
             'logs' => $logs,
         ]);
+    }
+
+    /**
+     * Delete a single SMS log
+     */
+    public function destroy($id)
+    {
+        Gate::authorize('delete-account-data');
+
+        $accountId = Auth::user()->account_id;
+
+        $log = \App\Models\SmsLog::where('account_id', $accountId)
+            ->findOrFail($id);
+
+        $log->delete();
+
+        return back()->with('success', 'SMS loqu uğurla silindi');
+    }
+
+    /**
+     * Bulk delete SMS logs
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $accountId = Auth::user()->account_id;
+
+        try {
+            \DB::beginTransaction();
+
+            // Only delete logs that belong to the current account
+            $deletedCount = \App\Models\SmsLog::where('account_id', $accountId)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
+
+            \DB::commit();
+
+            return back()->with('success', "{$deletedCount} SMS loqu uğurla silindi");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withErrors(['error' => 'SMS loglarını silmək mümkün olmadı']);
+        }
     }
 
     /**

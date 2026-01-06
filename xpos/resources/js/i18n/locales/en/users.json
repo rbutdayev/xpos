@@ -33,6 +33,10 @@
     "branch": "Branch",
     "branchPlaceholder": "Select branch...",
     "branchRequired": "Branch assignment is required for sales staff",
+    "branchManagerHint": "Select the branch this manager will oversee",
+    "salesStaffHint": "Select the branch where this employee will work",
+    "cashierHint": "Select the branch where this cashier will operate",
+    "tailorHint": "Select the branch where this tailor will provide services",
 
     "position": "Position (Job Title)",
     "positionPlaceholder": "E.g.: Chief Mechanic, Sales Manager",
@@ -52,6 +56,17 @@
     "passwordRepeat": "Repeat Password",
     "passwordRepeatPlaceholder": "Repeat new password",
 
+    "kioskSettings": "Kiosk Settings",
+    "kioskEnabled": "Enable Kiosk Access",
+    "kioskEnabledHint": "Allow this user to log in to kiosk devices using their PIN",
+    "kioskPin": "Kiosk PIN",
+    "kioskPinPlaceholder": "4-6 digit PIN",
+    "kioskPinConfirmation": "Confirm PIN",
+    "kioskPinRepeatPlaceholder": "Repeat PIN",
+    "kioskPinHint": "Leave blank to keep current PIN",
+    "kioskUserIdInfo": "User will log in to kiosk using this ID and PIN",
+    "kioskUserIdValue": "User ID",
+
     "accountOwnerNote": "Account owner role cannot be changed",
     "accountOwnerWarning": "⚠️ Cannot change account owner's role"
   },
@@ -61,7 +76,7 @@
     "roleInfo": "System Role: Determines user's access permissions in the system (e.g.: Admin, Cashier)",
     "positionInfo": "Position: Employee's specific job title (e.g.: Chief Mechanic, Sales Manager)",
     "passwordInfo": "Password must be at least 8 characters",
-    "branchInfo": "Branch assignment is required when selecting sales staff role",
+    "branchInfo": "Branch assignment is required for sales staff, branch manager, cashier, and tailor roles",
     "inactiveInfo": "Inactive users cannot log into the system",
     "emailInfo": "Email address must be unique",
     "passwordChangeInfo": "If you leave the password field empty, the current password will not be changed"
@@ -128,6 +143,21 @@
     "systemInfo": "System Information",
     "lastLogin": "Last Login",
     "createdAt": "Created Date",
-    "accountOwnerDisplay": "Account Owner (account_owner)"
+    "accountOwnerDisplay": "Account Owner (account_owner)",
+    "activityStats": "Activity Statistics",
+    "totalSales": "Total Sales",
+    "salesAmount": "Sales Amount",
+    "kioskAccess": "Kiosk Access",
+    "kioskStatus": "Status",
+    "kioskEnabled": "Enabled",
+    "kioskDisabled": "Disabled",
+    "kioskActive": "Active",
+    "kioskInactive": "Inactive",
+    "kioskLoginId": "Kiosk Login ID",
+    "kioskPinConfigured": "PIN configured",
+    "kioskPinNotSet": "PIN not set",
+    "quickActions": "Quick Actions",
+    "editUser": "Edit User",
+    "language": "Language"
   }
 }

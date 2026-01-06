@@ -1,7 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import ProductsNavigation from '@/Components/ProductsNavigation';
 import { Category, Warehouse } from '@/types';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import ProductForm from './Components/ProductForm';
@@ -18,10 +17,6 @@ export default function Create({ categories, warehouses }: Props) {
   return (
     <AuthenticatedLayout>
       <Head title={t('newProduct')} />
-
-      <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-        <ProductsNavigation currentRoute="products.create" />
-      </div>
 
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">

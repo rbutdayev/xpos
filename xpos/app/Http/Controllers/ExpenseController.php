@@ -43,195 +43,156 @@ class ExpenseController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
-        $query = Expense::with(['category', 'branch', 'user', 'supplier'])
-            ->where('account_id', Auth::user()->account_id);
-
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('description', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('reference_number', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('category', function ($subQ) use ($searchTerm) {
-                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
-                  });
-            });
-        }
-
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
-        }
-
-        if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
-
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('expense_date', [$request->date_from, $request->date_to]);
-        }
-
-        $expenses = $query->latest('expense_date')->get();
-
-        // Get supplier credits (unpaid goods receipts) to show in expenses list
-        $supplierCreditsQuery = \App\Models\SupplierCredit::with(['supplier', 'goodsReceipt'])
-            ->where('account_id', Auth::user()->account_id)
-            ->where('status', '!=', 'paid'); // Show pending and partial
-
-        // Apply same filters to supplier credits
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $supplierCreditsQuery->where(function ($q) use ($searchTerm) {
-                $q->where('description', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('reference_number', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('supplier', function ($subQ) use ($searchTerm) {
-                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
-                  });
-            });
-        }
-
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $supplierCreditsQuery->whereBetween('credit_date', [$request->date_from, $request->date_to]);
-        }
-
-        $supplierCredits = $supplierCreditsQuery->latest('credit_date')->get();
-
-        // Transform supplier credits to match expense structure for display
-        $supplierCreditsAsExpenses = $supplierCredits->map(function ($credit) {
-            return (object) [
-                'expense_id' => null, // No expense_id for supplier credits
-                'reference_number' => $credit->reference_number,
-                'description' => $credit->description,
-                'amount' => $credit->amount,
-                'remaining_amount' => $credit->remaining_amount,
-                'expense_date' => $credit->credit_date,
-                'due_date' => $credit->due_date,
-                'payment_method' => 'borc', // Credit
-                'status' => $credit->status, // pending/partial/paid
-                'type' => 'supplier_credit', // Mark as supplier credit
-                'supplier' => $credit->supplier,
-                'supplier_id' => $credit->supplier_id,
-                'supplier_credit_id' => $credit->id,
-                'goods_receipt_id' => $credit->goodsReceipt ? $credit->goodsReceipt->id : null, // Link to goods receipt for view button
-                'created_at' => $credit->created_at,
-            ];
-        });
-
-        // Get unpaid goods receipts to show in expenses list
-        // Only show goods receipts that DON'T have a supplier credit (to avoid duplication)
-        $unpaidGoodsReceiptsQuery = GoodsReceipt::with(['supplier', 'items.product', 'supplierCredit'])
-            ->where('account_id', auth()->user()->account_id)
-            ->whereIn('payment_status', ['unpaid', 'partial'])
-            ->whereNull('supplier_credit_id'); // Don't show receipts that already have a supplier credit
-
-        // Apply same filters to goods receipts
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $unpaidGoodsReceiptsQuery->where(function ($q) use ($searchTerm) {
-                $q->where('receipt_number', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('invoice_number', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('supplier', function ($subQ) use ($searchTerm) {
-                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
-                  })
-                  ->orWhereHas('items.product', function ($subQ) use ($searchTerm) {
-                      $subQ->where('name', 'like', '%' . $searchTerm . '%');
-                  });
-            });
-        }
-
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $unpaidGoodsReceiptsQuery->whereBetween('created_at', [$request->date_from, $request->date_to]);
-        }
-
-        $unpaidGoodsReceiptsForList = $unpaidGoodsReceiptsQuery->latest('created_at')->get();
-
-        // Transform goods receipts to match expense structure for display
-        $goodsReceiptsAsExpenses = $unpaidGoodsReceiptsForList->map(function ($receipt) {
-            $remainingAmount = $receipt->supplierCredit
-                ? $receipt->supplierCredit->remaining_amount
-                : $receipt->total_cost;
-
-            // Build description from items
-            $itemCount = $receipt->items->count();
-            $description = 'Mal Qəbulu';
-            if ($itemCount === 1 && $receipt->items->first()->product) {
-                $description .= ' - ' . $receipt->items->first()->product->name;
-            } elseif ($itemCount > 1) {
-                $description .= ' - ' . $itemCount . ' məhsul';
-            }
-
-            return (object) [
-                'expense_id' => null,
-                'reference_number' => $receipt->receipt_number,
-                'description' => $description,
-                'amount' => $receipt->total_cost,
-                'remaining_amount' => $remainingAmount,
-                'expense_date' => $receipt->created_at,
-                'due_date' => $receipt->due_date,
-                'payment_method' => 'borc', // Unpaid
-                'payment_status' => $receipt->payment_status,
-                'status' => $receipt->payment_status === 'paid' ? 'paid' : 'pending',
-                'type' => 'goods_receipt', // Mark as goods receipt
-                'supplier' => $receipt->supplier,
-                'supplier_id' => $receipt->supplier_id,
-                'goods_receipt_id' => $receipt->id,
-                'goods_receipt_data' => $receipt, // Keep full data for payment modal
-                'created_at' => $receipt->created_at,
-            ];
-        });
-
-        // Merge expenses, supplier credits, and goods receipts
-        $allExpenses = $expenses
-            ->concat($supplierCreditsAsExpenses)
-            ->concat($goodsReceiptsAsExpenses)
-            ->sortByDesc('expense_date')
-            ->values();
-
-        // Paginate manually
+        $accountId = Auth::user()->account_id;
         $perPage = 25;
-        $currentPage = $request->input('page', 1);
-        $offset = ($currentPage - 1) * $perPage;
 
+        // Build unified query using UNION to merge all 3 sources efficiently
+        // This allows the database to handle sorting and pagination
+        $unifiedQuery = $this->buildUnifiedExpensesQuery($request, $accountId);
+
+        // Paginate the unified query
+        $paginatedResults = DB::table(DB::raw("({$unifiedQuery->toSql()}) as unified_expenses"))
+            ->mergeBindings($unifiedQuery)
+            ->orderByDesc('expense_date')
+            ->orderByDesc('id')
+            ->paginate($perPage, ['*'], 'page', $request->input('page', 1))
+            ->withQueryString();
+
+        // Now load the full models for the paginated results
+        $expenseIds = [];
+        $supplierCreditIds = [];
+        $goodsReceiptIds = [];
+
+        foreach ($paginatedResults->items() as $item) {
+            if ($item->type === 'expense') {
+                $expenseIds[] = $item->id;
+            } elseif ($item->type === 'supplier_credit') {
+                $supplierCreditIds[] = $item->id;
+            } elseif ($item->type === 'goods_receipt') {
+                $goodsReceiptIds[] = $item->id;
+            }
+        }
+
+        // Load full models with relationships
+        $expenses = collect();
+        $supplierCredits = collect();
+        $goodsReceipts = collect();
+
+        if (!empty($expenseIds)) {
+            $expenses = Expense::with(['category', 'branch', 'user', 'supplier'])
+                ->whereIn('expense_id', $expenseIds)
+                ->get()
+                ->keyBy('expense_id');
+        }
+
+        if (!empty($supplierCreditIds)) {
+            $supplierCredits = SupplierCredit::with(['supplier', 'goodsReceipt'])
+                ->whereIn('id', $supplierCreditIds)
+                ->get()
+                ->keyBy('id');
+        }
+
+        if (!empty($goodsReceiptIds)) {
+            $goodsReceipts = GoodsReceipt::with(['supplier', 'items.product', 'supplierCredit'])
+                ->whereIn('id', $goodsReceiptIds)
+                ->get()
+                ->keyBy('id');
+        }
+
+        // Transform paginated results to include full model data
+        $transformedItems = collect($paginatedResults->items())->map(function ($item) use ($expenses, $supplierCredits, $goodsReceipts) {
+            if ($item->type === 'expense' && isset($expenses[$item->id])) {
+                return $expenses[$item->id];
+            } elseif ($item->type === 'supplier_credit' && isset($supplierCredits[$item->id])) {
+                $credit = $supplierCredits[$item->id];
+                return (object) [
+                    'expense_id' => null,
+                    'reference_number' => $credit->reference_number,
+                    'description' => $credit->description,
+                    'amount' => $credit->amount,
+                    'remaining_amount' => $credit->remaining_amount,
+                    'expense_date' => $credit->credit_date,
+                    'due_date' => $credit->due_date,
+                    'payment_method' => 'borc',
+                    'status' => $credit->status,
+                    'type' => 'supplier_credit',
+                    'entry_type' => $credit->entry_type ?? 'automatic',
+                    'old_system_reference' => $credit->old_system_reference,
+                    'supplier' => $credit->supplier,
+                    'supplier_id' => $credit->supplier_id,
+                    'supplier_credit_id' => $credit->id,
+                    'goods_receipt_id' => $credit->goodsReceipt ? $credit->goodsReceipt->id : null,
+                    'created_at' => $credit->created_at,
+                ];
+            } elseif ($item->type === 'goods_receipt' && isset($goodsReceipts[$item->id])) {
+                $receipt = $goodsReceipts[$item->id];
+                $remainingAmount = $receipt->supplierCredit
+                    ? $receipt->supplierCredit->remaining_amount
+                    : $receipt->total_cost;
+
+                $itemCount = $receipt->items->count();
+                $description = 'Mal Qəbulu';
+                if ($itemCount === 1 && $receipt->items->first()->product) {
+                    $description .= ' - ' . $receipt->items->first()->product->name;
+                } elseif ($itemCount > 1) {
+                    $description .= ' - ' . $itemCount . ' məhsul';
+                }
+
+                return (object) [
+                    'expense_id' => null,
+                    'reference_number' => $receipt->receipt_number,
+                    'description' => $description,
+                    'amount' => $receipt->total_cost,
+                    'remaining_amount' => $remainingAmount,
+                    'expense_date' => $receipt->created_at,
+                    'due_date' => $receipt->due_date,
+                    'payment_method' => 'borc',
+                    'payment_status' => $receipt->payment_status,
+                    'status' => $receipt->payment_status === 'paid' ? 'paid' : 'pending',
+                    'type' => 'goods_receipt',
+                    'supplier' => $receipt->supplier,
+                    'supplier_id' => $receipt->supplier_id,
+                    'goods_receipt_id' => $receipt->id,
+                    'goods_receipt_data' => $receipt,
+                    'created_at' => $receipt->created_at,
+                ];
+            }
+            return null;
+        })->filter();
+
+        // Create new paginator with transformed items
         $paginatedExpenses = new \Illuminate\Pagination\LengthAwarePaginator(
-            $allExpenses->slice($offset, $perPage)->values(),
-            $allExpenses->count(),
+            $transformedItems->values(),
+            $paginatedResults->total(),
             $perPage,
-            $currentPage,
+            $paginatedResults->currentPage(),
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $categories = ExpenseCategory::byAccount(auth()->user()->account_id)
+        $categories = ExpenseCategory::byAccount($accountId)
             ->active()
             ->with('parent')
             ->get();
 
-        $branches = Branch::byAccount(auth()->user()->account_id)->get();
+        $branches = Branch::byAccount($accountId)->get();
 
-        // Get suppliers for the supplier payment modal
-        $suppliers = Supplier::byAccount(auth()->user()->account_id)
+        $suppliers = Supplier::byAccount($accountId)
             ->active()
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
 
-        // Get unpaid and partially paid goods receipts for the supplier payment modal
-        $unpaidGoodsReceipts = GoodsReceipt::where('account_id', auth()->user()->account_id)
+        $unpaidGoodsReceipts = GoodsReceipt::where('account_id', $accountId)
             ->whereIn('payment_status', ['unpaid', 'partial'])
             ->with(['supplier:id,name', 'items.product:id,name', 'supplierCredit'])
             ->orderBy('due_date')
             ->orderBy('created_at')
             ->get()
             ->map(function ($receipt) {
-                // Ensure numeric values are properly set
                 $receipt->total_cost = $receipt->total_cost ?? 0;
-
-                // Ensure supplier_credit has remaining_amount
                 if ($receipt->supplierCredit) {
                     $receipt->supplierCredit->remaining_amount = $receipt->supplierCredit->remaining_amount ?? 0;
                 }
-
                 return $receipt;
             });
 
@@ -244,6 +205,118 @@ class ExpenseController extends Controller
             'unpaidGoodsReceipts' => $unpaidGoodsReceipts,
             'filters' => $request->only(['search', 'category_id', 'branch_id', 'payment_method', 'date_from', 'date_to']),
         ]);
+    }
+
+    /**
+     * Build unified query that merges expenses, supplier credits, and goods receipts
+     * Uses UNION to let database handle sorting and pagination efficiently
+     */
+    private function buildUnifiedExpensesQuery(Request $request, int $accountId)
+    {
+        $searchTerm = $request->filled('search') ? '%' . $request->search . '%' : null;
+        $dateFrom = $request->date_from;
+        $dateTo = $request->date_to;
+        $categoryId = $request->category_id;
+        $branchId = $request->branch_id;
+        $paymentMethod = $request->payment_method;
+
+        // Query 1: Expenses
+        $expensesQuery = DB::table('expenses')
+            ->select(
+                'expense_id as id',
+                'expense_date',
+                DB::raw("'expense' as type")
+            )
+            ->where('account_id', $accountId);
+
+        if ($searchTerm) {
+            $expensesQuery->where(function ($q) use ($searchTerm, $accountId) {
+                $q->where('description', 'like', $searchTerm)
+                  ->orWhere('reference_number', 'like', $searchTerm)
+                  ->orWhereIn('category_id', function ($subQ) use ($searchTerm, $accountId) {
+                      $subQ->select('category_id')
+                          ->from('expense_categories')
+                          ->where('account_id', $accountId)
+                          ->where('name', 'like', $searchTerm);
+                  });
+            });
+        }
+
+        if ($categoryId) {
+            $expensesQuery->where('category_id', $categoryId);
+        }
+
+        if ($branchId) {
+            $expensesQuery->where('branch_id', $branchId);
+        }
+
+        if ($paymentMethod) {
+            $expensesQuery->where('payment_method', $paymentMethod);
+        }
+
+        if ($dateFrom && $dateTo) {
+            $expensesQuery->whereBetween('expense_date', [$dateFrom, $dateTo]);
+        }
+
+        // Query 2: Supplier Credits
+        $supplierCreditsQuery = DB::table('supplier_credits')
+            ->select(
+                'id',
+                'credit_date as expense_date',
+                DB::raw("'supplier_credit' as type")
+            )
+            ->where('account_id', $accountId)
+            ->where('status', '!=', 'paid');
+
+        if ($searchTerm) {
+            $supplierCreditsQuery->where(function ($q) use ($searchTerm, $accountId) {
+                $q->where('description', 'like', $searchTerm)
+                  ->orWhere('reference_number', 'like', $searchTerm)
+                  ->orWhereIn('supplier_id', function ($subQ) use ($searchTerm, $accountId) {
+                      $subQ->select('id')
+                          ->from('suppliers')
+                          ->where('account_id', $accountId)
+                          ->where('name', 'like', $searchTerm);
+                  });
+            });
+        }
+
+        if ($dateFrom && $dateTo) {
+            $supplierCreditsQuery->whereBetween('credit_date', [$dateFrom, $dateTo]);
+        }
+
+        // Query 3: Goods Receipts (unpaid/partial, without supplier credit)
+        $goodsReceiptsQuery = DB::table('goods_receipts')
+            ->select(
+                'id',
+                'created_at as expense_date',
+                DB::raw("'goods_receipt' as type")
+            )
+            ->where('account_id', $accountId)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->whereNull('supplier_credit_id');
+
+        if ($searchTerm) {
+            $goodsReceiptsQuery->where(function ($q) use ($searchTerm, $accountId) {
+                $q->where('receipt_number', 'like', $searchTerm)
+                  ->orWhere('invoice_number', 'like', $searchTerm)
+                  ->orWhereIn('supplier_id', function ($subQ) use ($searchTerm, $accountId) {
+                      $subQ->select('id')
+                          ->from('suppliers')
+                          ->where('account_id', $accountId)
+                          ->where('name', 'like', $searchTerm);
+                  });
+            });
+        }
+
+        if ($dateFrom && $dateTo) {
+            $goodsReceiptsQuery->whereBetween('created_at', [$dateFrom, $dateTo]);
+        }
+
+        // Combine all queries with UNION
+        return $expensesQuery
+            ->union($supplierCreditsQuery)
+            ->union($goodsReceiptsQuery);
     }
 
     public function create(Request $request)
@@ -797,6 +870,116 @@ class ExpenseController extends Controller
             return back()->withErrors([
                 'message' => 'Ödəniş zamanı xəta baş verdi: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:expenses,expense_id',
+        ]);
+
+        $user = Auth::user();
+        $deletedCount = 0;
+        $failedExpenses = [];
+
+        DB::beginTransaction();
+
+        try {
+            $expenses = Expense::whereIn('expense_id', $validated['ids'])
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($expenses as $expense) {
+                try {
+                    // Check if this expense is linked to a goods receipt (instant payment)
+                    // Only admin or account_owner can delete these expenses
+                    if ($expense->goods_receipt_id) {
+                        if (!$user->isAdmin() && !$user->isOwner()) {
+                            $failedExpenses[] = $expense->reference_number . ' (yalnız administrator və ya hesab sahibi mal qəbulu ödəməsi xərclərini silə bilər)';
+                            continue;
+                        }
+                    }
+
+                    // Check if this expense is a vendor/supplier payment (credit payment)
+                    // Only admin or account_owner can delete vendor payment expenses
+                    if ($expense->supplier_credit_id && $expense->credit_payment_amount > 0) {
+                        if (!$user->isAdmin() && !$user->isOwner()) {
+                            $failedExpenses[] = $expense->reference_number . ' (yalnız administrator və ya hesab sahibi təchizatçı ödəməsi xərclərini silə bilər)';
+                            continue;
+                        }
+                    }
+
+                    // For goods receipt instant payments, we need to handle the reversal
+                    if ($expense->goods_receipt_id) {
+                        $goodsReceipt = GoodsReceipt::find($expense->goods_receipt_id);
+
+                        if (!$goodsReceipt) {
+                            $failedExpenses[] = $expense->reference_number . ' (mal qəbulu tapılmadı)';
+                            continue;
+                        }
+
+                        // Update goods receipt status to unpaid
+                        $goodsReceipt->update([
+                            'payment_status' => 'unpaid',
+                            'payment_method' => 'credit',
+                        ]);
+
+                        // Create or update supplier credit for this goods receipt
+                        if ($goodsReceipt->supplier_credit_id) {
+                            $supplierCredit = SupplierCredit::find($goodsReceipt->supplier_credit_id);
+                            if ($supplierCredit) {
+                                // Restore credit amount
+                                $supplierCredit->remaining_amount = $supplierCredit->amount;
+                                $supplierCredit->status = 'pending';
+                                $supplierCredit->save();
+                            }
+                        } else {
+                            // Create new supplier credit
+                            $goodsReceipt->createSupplierCredit();
+                        }
+                    }
+
+                    // Delete associated receipt file
+                    if ($expense->receipt_file_path && Storage::disk('documents')->exists($expense->receipt_file_path)) {
+                        Storage::disk('documents')->delete($expense->receipt_file_path);
+                    }
+
+                    // Delete expense
+                    $expense->delete();
+                    $deletedCount++;
+
+                } catch (\Exception $e) {
+                    \Log::error('Error deleting expense in bulk: ' . $e->getMessage(), [
+                        'expense_id' => $expense->expense_id,
+                    ]);
+                    $failedExpenses[] = $expense->reference_number . ' (xəta baş verdi)';
+                }
+            }
+
+            DB::commit();
+
+            // Clear dashboard cache to reflect deleted expenses
+            $this->dashboardService->clearCache($user->account);
+
+            // Build response message
+            if ($deletedCount > 0 && count($failedExpenses) === 0) {
+                return redirect()->back()->with('success', "{$deletedCount} xerc uğurla silindi");
+            } elseif ($deletedCount > 0 && count($failedExpenses) > 0) {
+                $failedList = implode(', ', $failedExpenses);
+                return redirect()->back()->with('success', "{$deletedCount} xerc silindi. Silinməyənlər: {$failedList}");
+            } else {
+                $failedList = implode(', ', $failedExpenses);
+                return redirect()->back()->with('error', "Heç bir xerc silinmədi. Səbəblər: {$failedList}");
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk expense deletion failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Xərcləri silmək zamanı xəta baş verdi: ' . $e->getMessage());
         }
     }
 

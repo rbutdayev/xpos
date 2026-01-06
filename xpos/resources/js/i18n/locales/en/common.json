@@ -26,7 +26,13 @@
     "remove": "Remove",
     "addPayment": "Add Payment",
     "scanBarcode": "Scan Barcode",
-    "logout": "Logout"
+    "logout": "Logout",
+    "pay": "Pay",
+    "bulkDelete": "Bulk Delete",
+    "create_sale": "Create New Sale",
+    "create_product": "Add New Product",
+    "create_customer": "Add New Customer",
+    "create_expense": "Add New Expense"
   },
   "labels": {
     "name": "Name",
@@ -74,7 +80,8 @@
     "searching": "Searching...",
     "notFound": "Not found",
     "resultsFound": "{{count}} results found",
-    "tryDifferentSearch": "Try changing the search criteria."
+    "tryDifferentSearch": "Try changing the search criteria.",
+    "confirmBulkDelete": "Are you sure you want to delete {{count}} selected item(s)?"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -141,7 +148,27 @@
     "home": "Home",
     "expand": "Expand",
     "collapse": "Collapse",
-    "reports": "Reports"
+    "warehouse": "Warehouse",
+    "finance": "Finance",
+    "administration": "Administration",
+    "rentals": "Rentals",
+    "pos": "POS",
+    "returns": "Returns",
+    "new_sale": "New Sale",
+    "new_product": "New Product",
+    "new_expense": "New Expense",
+    "bulk_create": "Bulk Create",
+    "discounts": "Discounts",
+    "send_sms": "Send SMS",
+    "product_stock": "Product Stock",
+    "transfers": "Transfers",
+    "alerts": "Alerts",
+    "product_history": "Product History",
+    "expense_categories": "Expense Categories",
+    "reports": "Reports",
+    "printer_configs": "Printer Configs",
+    "search": "Search",
+    "products_list": "Products List"
   },
   "pagination": {
     "previous": "Previous",
@@ -208,7 +235,26 @@
     "cancelled": "Cancelled",
     "refunded": "Refunded",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "sent": "Sent",
+    "failed": "Failed",
+    "partial": "Partial",
+    "paid": "Paid",
+    "all": "All"
+  },
+  "fields": {
+    "referenceNumber": "Reference Number",
+    "reference": "Ref",
+    "creditDate": "Credit Date",
+    "dueDate": "Due Date",
+    "remaining": "Remaining",
+    "dates": "Dates",
+    "date": "Date",
+    "branch": "Branch",
+    "amount": "Amount"
+  },
+  "placeholders": {
+    "search": "Search..."
   },
   "dataTable": {
     "emptyTitle": "No data found",
@@ -221,6 +267,7 @@
     "operations": "Operations",
     "loading": "Loading...",
     "selected": "{{count}} items selected",
+    "clearSelection": "Clear selection",
     "detailsTitle": "Details",
     "close": "Close",
     "selectPlaceholder": "Select"
@@ -228,5 +275,12 @@
   "footer": {
     "version": "Version",
     "support": "Support"
+  },
+  "command_palette": {
+    "search_placeholder": "Search pages, actions...",
+    "no_results": "No results found",
+    "action": "Action",
+    "navigate": "Navigate",
+    "select": "Select"
   }
 }

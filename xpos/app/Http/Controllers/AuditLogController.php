@@ -93,7 +93,7 @@ class AuditLogController extends Controller
     public function show(AuditLog $auditLog)
     {
         Gate::authorize('view-reports');
-        
+
         if ($auditLog->account_id !== auth()->user()->account_id) {
             abort(403);
         }
@@ -103,5 +103,30 @@ class AuditLogController extends Controller
         return Inertia::render('AuditLogs/Show', [
             'auditLog' => $auditLog,
         ]);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('delete-account-data');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer'
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            $deleted = AuditLog::whereIn('log_id', $request->ids)
+                ->where('account_id', auth()->user()->account_id)
+                ->delete();
+
+            \DB::commit();
+
+            return redirect()->back()->with('success', "{$deleted} audit log silindi.");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()->with('error', 'Audit logları silərkən xəta baş verdi: ' . $e->getMessage());
+        }
     }
 }

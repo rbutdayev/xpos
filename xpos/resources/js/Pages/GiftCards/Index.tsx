@@ -1,7 +1,6 @@
 import React, { useState, Fragment } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SalesNavigation from '@/Components/SalesNavigation';
 import { PageProps } from '@/types';
 import {
     GiftIcon,
@@ -11,6 +10,7 @@ import {
     EllipsisVerticalIcon,
     EyeIcon,
     PencilIcon,
+    TrashIcon,
     ArrowPathIcon,
     XMarkIcon,
     ClockIcon,
@@ -18,6 +18,7 @@ import {
     BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { Menu, Transition, Dialog } from '@headlessui/react';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 
 interface GiftCardTransaction {
     id: number;
@@ -81,8 +82,12 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
     const [quickViewCard, setQuickViewCard] = useState<GiftCard | null>(null);
     const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        handleSearch();
+    };
+
+    const handleSearch = () => {
         router.get('/gift-cards', { search, status }, { preserveState: true });
     };
 
@@ -158,20 +163,149 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
         );
     };
 
+    // Handle double-click to view gift card
+    const handleRowDoubleClick = (card: GiftCard) => {
+        router.visit(`/gift-cards/${card.id}`);
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = `Seçilmiş ${selectedIds.length} hədiyyə kartını silmək istədiyinizə əminsiniz?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        router.delete('/gift-cards/bulk-delete', {
+            data: { ids: selectedIds },
+            onError: (errors: any) => {
+                alert('Xəta baş verdi');
+            },
+            preserveScroll: true
+        });
+    };
+
+    // Define columns for SharedDataTable
+    const columns = [
+        {
+            key: 'card_number',
+            label: 'Kart Nömrəsi',
+            sortable: true,
+            render: (card: GiftCard) => (
+                <div className="text-sm font-mono font-medium text-gray-900">
+                    {card.card_number}
+                </div>
+            )
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            sortable: true,
+            render: (card: GiftCard) => getStatusBadge(card)
+        },
+        {
+            key: 'denomination',
+            label: 'Nominal',
+            render: (card: GiftCard) => (
+                <div className="text-sm text-gray-900">
+                    {card.denomination ? `₼${card.denomination}` : '-'}
+                </div>
+            )
+        },
+        {
+            key: 'current_balance',
+            label: 'Cari Balans',
+            render: (card: GiftCard) => (
+                <div className="text-sm font-semibold text-gray-900">
+                    {card.current_balance !== null ? `₼${Number(card.current_balance).toFixed(2)}` : '-'}
+                </div>
+            )
+        },
+        {
+            key: 'customer',
+            label: 'Müştəri',
+            hideOnMobile: true,
+            render: (card: GiftCard) => (
+                <div>
+                    <div className="text-sm text-gray-900">
+                        {card.customer?.name || '-'}
+                    </div>
+                    {card.customer?.phone && (
+                        <div className="text-xs text-gray-500">
+                            {card.customer.phone}
+                        </div>
+                    )}
+                </div>
+            )
+        },
+        {
+            key: 'expiry_date',
+            label: 'Bitmə tarixi',
+            hideOnMobile: true,
+            render: (card: GiftCard) => (
+                <div className="text-sm text-gray-900">
+                    {card.expiry_date
+                        ? new Date(card.expiry_date).toLocaleDateString('az-AZ')
+                        : '-'}
+                </div>
+            )
+        }
+    ];
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedCards: GiftCard[]): BulkAction[] => {
+        // If only ONE card is selected, show individual actions
+        if (selectedIds.length === 1 && selectedCards.length === 1) {
+            const card = selectedCards[0];
+
+            const actions: BulkAction[] = [
+                {
+                    label: 'Baxış',
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/gift-cards/${card.id}`)
+                },
+                {
+                    label: 'Sil',
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => {
+                        if (confirm(`${card.card_number} kartını silmək istədiyinizə əminsiniz?`)) {
+                            router.delete(`/gift-cards/${card.id}`, {
+                                preserveScroll: true
+                            });
+                        }
+                    }
+                }
+            ];
+
+            // Add reactivate option for depleted/expired cards
+            if (card.status === 'depleted' || card.status === 'expired') {
+                actions.splice(1, 0, {
+                    label: 'Yenidən Aktivləşdir',
+                    icon: <ArrowPathIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => handleReactivate(card.id)
+                });
+            }
+
+            return actions;
+        }
+
+        // Multiple cards selected - show bulk delete
+        return [
+            {
+                label: 'Kütləvi Sil',
+                icon: <TrashIcon className="w-4 h-4" />,
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
+            }
+        ];
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Hədiyyə Kartları" />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <SalesNavigation currentRoute="gift-cards" showGiftCards={giftCardsEnabled} showDiscounts={discountsEnabled}>
-                    <Link
-                        href="/gift-cards/configure"
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md shadow-pink-500/30 hover:from-pink-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-1"
-                    >
-                        <Cog6ToothIcon className="w-5 h-5" />
-                        <span className="font-semibold">Konfiqurasiya</span>
-                    </Link>
-                </SalesNavigation>
-            </div>
             <div className="py-12">
                 <div className="w-full">
                     {/* Header */}
@@ -237,7 +371,7 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
 
                     {/* Filters */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-                        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+                        <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
                                 <div className="relative">
                                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -285,243 +419,47 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                         </form>
                     </div>
 
-                    {/* Cards Table */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        {cards.data.length > 0 ? (
-                            <>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Kart Nömrəsi
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Status
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nominal
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Cari Balans
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Müştəri
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Bitmə tarixi
-                                                </th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Əməliyyatlar
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {cards.data.map((card) => (
-                                                <tr key={card.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-mono font-medium text-gray-900">
-                                                            {card.card_number}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        {getStatusBadge(card)}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900">
-                                                            {card.denomination ? `₼${card.denomination}` : '-'}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-semibold text-gray-900">
-                                                            {card.current_balance !== null ? `₼${Number(card.current_balance).toFixed(2)}` : '-'}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900">
-                                                            {card.customer?.name || '-'}
-                                                        </div>
-                                                        {card.customer?.phone && (
-                                                            <div className="text-xs text-gray-500">
-                                                                {card.customer.phone}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900">
-                                                            {card.expiry_date
-                                                                ? new Date(card.expiry_date).toLocaleDateString('az-AZ')
-                                                                : '-'}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <button
-                                                                onClick={() => handleQuickView(card.id)}
-                                                                className="text-blue-600 hover:text-blue-900 p-1"
-                                                                title="Tez baxış"
-                                                            >
-                                                                <EyeIcon className="w-5 h-5" />
-                                                            </button>
-                                                            <Menu as="div" className="relative inline-block text-left">
-                                                                <Menu.Button className="p-1 text-gray-600 hover:text-gray-900">
-                                                                    <EllipsisVerticalIcon className="w-5 h-5" />
-                                                                </Menu.Button>
-                                                                <Transition
-                                                                    as={Fragment}
-                                                                    enter="transition ease-out duration-100"
-                                                                    enterFrom="transform opacity-0 scale-95"
-                                                                    enterTo="transform opacity-100 scale-100"
-                                                                    leave="transition ease-in duration-75"
-                                                                    leaveFrom="transform opacity-100 scale-100"
-                                                                    leaveTo="transform opacity-0 scale-95"
-                                                                >
-                                                                    <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                                        <div className="py-1">
-                                                                            <Menu.Item>
-                                                                                {({ active }) => (
-                                                                                    <Link
-                                                                                        href={`/gift-cards/${card.id}`}
-                                                                                        className={`${
-                                                                                            active ? 'bg-gray-100' : ''
-                                                                                        } flex items-center gap-2 px-4 py-2 text-sm text-gray-700`}
-                                                                                    >
-                                                                                        <EyeIcon className="w-4 h-4" />
-                                                                                        Tam Detallar
-                                                                                    </Link>
-                                                                                )}
-                                                                            </Menu.Item>
-                                                                            {(card.status === 'depleted' || card.status === 'expired') && (
-                                                                                <Menu.Item>
-                                                                                    {({ active }) => (
-                                                                                        <button
-                                                                                            onClick={() => handleReactivate(card.id)}
-                                                                                            className={`${
-                                                                                                active ? 'bg-gray-100' : ''
-                                                                                            } flex items-center gap-2 px-4 py-2 text-sm text-gray-700 w-full text-left`}
-                                                                                        >
-                                                                                            <ArrowPathIcon className="w-4 h-4" />
-                                                                                            Yenidən Aktivləşdir
-                                                                                        </button>
-                                                                                    )}
-                                                                                </Menu.Item>
-                                                                            )}
-                                                                        </div>
-                                                                    </Menu.Items>
-                                                                </Transition>
-                                                            </Menu>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Pagination */}
-                                {cards.last_page > 1 && (
-                                    <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                                        <div className="flex-1 flex justify-between sm:hidden">
-                                            {cards.current_page > 1 && (
-                                                <Link
-                                                    href={`/gift-cards?page=${cards.current_page - 1}`}
-                                                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                                >
-                                                    Əvvəlki
-                                                </Link>
-                                            )}
-                                            {cards.current_page < cards.last_page && (
-                                                <Link
-                                                    href={`/gift-cards?page=${cards.current_page + 1}`}
-                                                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                                >
-                                                    Növbəti
-                                                </Link>
-                                            )}
-                                        </div>
-                                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div>
-                                                <p className="text-sm text-gray-700">
-                                                    <span className="font-medium">{cards.total}</span> nəticədən{' '}
-                                                    <span className="font-medium">
-                                                        {(cards.current_page - 1) * cards.per_page + 1}
-                                                    </span>{' '}
-                                                    -{' '}
-                                                    <span className="font-medium">
-                                                        {Math.min(cards.current_page * cards.per_page, cards.total)}
-                                                    </span>{' '}
-                                                    arası göstərilir
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                                    {cards.current_page > 1 && (
-                                                        <Link
-                                                            href={`/gift-cards?page=${cards.current_page - 1}`}
-                                                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                                                        >
-                                                            Əvvəlki
-                                                        </Link>
-                                                    )}
-                                                    {Array.from({ length: cards.last_page }, (_, i) => i + 1)
-                                                        .filter(
-                                                            (page) =>
-                                                                page === 1 ||
-                                                                page === cards.last_page ||
-                                                                Math.abs(page - cards.current_page) <= 2
-                                                        )
-                                                        .map((page, index, array) => (
-                                                            <React.Fragment key={page}>
-                                                                {index > 0 && array[index - 1] !== page - 1 && (
-                                                                    <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                                                        ...
-                                                                    </span>
-                                                                )}
-                                                                <Link
-                                                                    href={`/gift-cards?page=${page}`}
-                                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                                        page === cards.current_page
-                                                                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                                    }`}
-                                                                >
-                                                                    {page}
-                                                                </Link>
-                                                            </React.Fragment>
-                                                        ))}
-                                                    {cards.current_page < cards.last_page && (
-                                                        <Link
-                                                            href={`/gift-cards?page=${cards.current_page + 1}`}
-                                                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                                                        >
-                                                            Növbəti
-                                                        </Link>
-                                                    )}
-                                                </nav>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="text-center py-12">
-                                <GiftIcon className="mx-auto h-12 w-12 text-gray-400" />
-                                <h3 className="mt-2 text-sm font-semibold text-gray-900">Hədiyyə kartı tapılmadı</h3>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    Axtarış kriteriyalarınızı dəyişdirin və ya yeni kart konfiqurasiya edin
-                                </p>
-                                <div className="mt-6">
-                                    <Link
-                                        href="/gift-cards/configure"
-                                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-                                    >
-                                        <Cog6ToothIcon className="w-5 h-5 mr-2" />
-                                        Konfiqurasiya
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {/* Cards Table - Using SharedDataTable */}
+                    <SharedDataTable
+                        data={cards as any}
+                        columns={columns as any}
+                        selectable={true}
+                        bulkActions={getBulkActions}
+                        searchValue={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Kart nömrəsi ilə axtar..."
+                        filters={[
+                            {
+                                key: 'status',
+                                type: 'dropdown' as const,
+                                label: 'Status',
+                                value: status,
+                                onChange: setStatus,
+                                options: [
+                                    { value: '', label: 'Bütün statuslar' },
+                                    { value: 'free', label: 'Boş' },
+                                    { value: 'configured', label: 'Konfiqurasiya olunub' },
+                                    { value: 'active', label: 'Aktiv' },
+                                    { value: 'depleted', label: 'İstifadə olunub' },
+                                    { value: 'expired', label: 'Vaxtı keçib' },
+                                    { value: 'inactive', label: 'Qeyri-aktiv' }
+                                ]
+                            }
+                        ]}
+                        onSearch={handleSearch}
+                        onReset={handleClearFilters}
+                        emptyState={{
+                            icon: <GiftIcon className="w-12 h-12" />,
+                            title: 'Hədiyyə kartı tapılmadı',
+                            description: 'Axtarış kriteriyalarınızı dəyişdirin və ya yeni kart konfiqurasiya edin'
+                        }}
+                        fullWidth={true}
+                        dense={true}
+                        onRowDoubleClick={handleRowDoubleClick}
+                        rowClassName={(card: GiftCard) =>
+                            `cursor-pointer hover:bg-blue-50 transition-all duration-200`
+                        }
+                    />
                 </div>
             </div>
 

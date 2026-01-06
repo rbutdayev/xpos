@@ -1,7 +1,6 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import SalesNavigation from '@/Components/SalesNavigation';
 import { PageProps } from '@/types';
 import {
     ArrowLeftIcon,
@@ -118,17 +117,6 @@ export default function Show({ auth, card, giftCardsEnabled = true, discountsEna
 
             <div className="py-6">
                 <div className="w-full px-4 sm:px-6 lg:px-8">
-                    {/* Sales Navigation */}
-                    <SalesNavigation currentRoute="gift-cards" showGiftCards={giftCardsEnabled} showDiscounts={discountsEnabled}>
-                        <Link
-                            href="/gift-cards"
-                            className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md shadow-pink-500/30 hover:from-pink-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-1"
-                        >
-                            <ListBulletIcon className="w-5 h-5" />
-                            <span className="font-semibold">Kartların Siyahısı</span>
-                        </Link>
-                    </SalesNavigation>
-
                     {/* Back Button */}
                     <div className="mb-6">
                         <Link

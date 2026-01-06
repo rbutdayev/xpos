@@ -200,6 +200,37 @@ class AccountPaymentsController extends Controller
         return redirect()->back()->with('success', 'Ödəniş təyinatları yeniləndi');
     }
 
+    public function destroy(Account $account)
+    {
+        try {
+            $account->delete();
+            return redirect()->route('superadmin.payments')->with('success', 'Hesab uğurla silindi');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Hesabı silməkdə xəta baş verdi');
+        }
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:accounts,id'
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            $deletedCount = Account::whereIn('id', $validated['ids'])->delete();
+
+            \DB::commit();
+
+            return redirect()->back()->with('success', "{$deletedCount} hesab uğurla silindi");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->back()->with('error', 'Hesabları silməkdə xəta baş verdi: ' . $e->getMessage());
+        }
+    }
+
     private function updateOverduePayments()
     {
         AccountPayment::where('status', 'pending')

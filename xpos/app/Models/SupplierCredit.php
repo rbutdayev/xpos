@@ -17,10 +17,12 @@ class SupplierCredit extends Model
         'supplier_id',
         'branch_id',
         'type',
+        'entry_type',
         'amount',
         'remaining_amount',
         'description',
         'reference_number',
+        'old_system_reference',
         'credit_date',
         'due_date',
         'status',
@@ -83,6 +85,21 @@ class SupplierCredit extends Model
     public function scopePending(Builder $query): Builder
     {
         return $query->whereIn('status', ['pending', 'partial']);
+    }
+
+    public function scopeManualEntries(Builder $query): Builder
+    {
+        return $query->whereIn('entry_type', ['manual', 'migration']);
+    }
+
+    public function scopeAutomatic(Builder $query): Builder
+    {
+        return $query->where('entry_type', 'automatic');
+    }
+
+    public function scopeByEntryType(Builder $query, string $entryType): Builder
+    {
+        return $query->where('entry_type', $entryType);
     }
 
     public function generateReferenceNumber(): string
@@ -150,6 +167,21 @@ class SupplierCredit extends Model
             'payment' => 'Ödəmə',
             default => $this->type,
         };
+    }
+
+    public function getEntryTypeTextAttribute(): string
+    {
+        return match($this->entry_type) {
+            'automatic' => 'Avtomatik',
+            'manual' => 'Əl ilə',
+            'migration' => 'Köçürmə',
+            default => $this->entry_type,
+        };
+    }
+
+    public function isManualEntry(): bool
+    {
+        return in_array($this->entry_type, ['manual', 'migration']);
     }
 
     protected static function boot()

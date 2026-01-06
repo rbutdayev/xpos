@@ -260,6 +260,67 @@ class WarehouseTransferController extends Controller
             ->with('error', 'Tamamlanmış transferlər silinə bilməz');
     }
 
+    /**
+     * Bulk delete warehouse transfers
+     */
+    public function bulkDelete(Request $request)
+    {
+        Gate::authorize('viewAny', WarehouseTransfer::class);
+
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:warehouse_transfers,transfer_id',
+        ]);
+
+        $user = auth()->user();
+        $deletedCount = 0;
+        $failedTransfers = [];
+
+        DB::beginTransaction();
+        try {
+            $transfers = WarehouseTransfer::whereIn('transfer_id', $request->ids)
+                ->where('account_id', $user->account_id)
+                ->get();
+
+            foreach ($transfers as $transfer) {
+                try {
+                    // For now, we don't allow deletion of completed transfers
+                    // You can implement reversal logic here if needed
+                    $failedTransfers[] = "Transfer #{$transfer->transfer_id}";
+                } catch (\Exception $e) {
+                    \Log::error('Bulk transfer deletion failed', [
+                        'transfer_id' => $transfer->transfer_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedTransfers[] = "Transfer #{$transfer->transfer_id}";
+                }
+            }
+
+            DB::commit();
+
+            if (count($failedTransfers) > 0) {
+                $failedList = implode(', ', $failedTransfers);
+                $message = $deletedCount > 0
+                    ? "{$deletedCount} transfer silindi. Bu transferlər silinə bilmədi: {$failedList}"
+                    : "Tamamlanmış transferlər silinə bilməz";
+
+                return redirect()->route('warehouse-transfers.index')
+                    ->with('warning', $message);
+            }
+
+            return redirect()->route('warehouse-transfers.index')
+                ->with('success', "{$deletedCount} transfer uğurla silindi.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk transfer deletion failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('warehouse-transfers.index')
+                ->with('error', 'Transferləri silərkən xəta baş verdi.');
+        }
+    }
+
 
 
     private function updateWarehouseStock(int $productId, ?int $variantId, int $warehouseId, float $quantityChange, WarehouseTransfer $transfer, string $direction): void

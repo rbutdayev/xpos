@@ -69,26 +69,24 @@ class KioskTokenController extends Controller
 
         $validated = $request->validate([
             'device_name' => 'required|string|max:255',
-            'branch_id' => 'nullable|integer|exists:branches,id',
+            'branch_id' => 'required|integer|exists:branches,id',
         ]);
 
-        // Verify branch belongs to user's account if provided
-        if (isset($validated['branch_id'])) {
-            $branch = Branch::where('id', $validated['branch_id'])
-                ->where('account_id', Auth::user()->account_id)
-                ->first();
+        // Verify branch belongs to user's account
+        $branch = Branch::where('id', $validated['branch_id'])
+            ->where('account_id', Auth::user()->account_id)
+            ->first();
 
-            if (!$branch) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Filial tapılmadı və ya sizə aid deyil.',
-                ], 403);
-            }
+        if (!$branch) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Filial tapılmadı və ya sizə aid deyil.',
+            ], 403);
         }
 
         $token = KioskDeviceToken::create([
             'account_id' => Auth::user()->account_id,
-            'branch_id' => $validated['branch_id'] ?? null,
+            'branch_id' => $validated['branch_id'],
             'token' => KioskDeviceToken::generateToken(),
             'device_name' => $validated['device_name'],
             'status' => 'active',

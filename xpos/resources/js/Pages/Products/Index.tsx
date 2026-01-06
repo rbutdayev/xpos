@@ -3,7 +3,6 @@ import { Head, router, usePage, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Product, Category } from '@/types';
-import ProductsNavigation from '@/Components/ProductsNavigation';
 import {
     PlusIcon,
     EyeIcon,
@@ -19,7 +18,7 @@ import {
     ArrowUpTrayIcon,
     ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
-import SharedDataTable from '@/Components/SharedDataTable';
+import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { productTableConfig } from '@/Components/TableConfigurations';
 import { formatQuantityWithUnit } from '@/utils/formatters';
 import StockDetailsModal from '@/Components/StockDetailsModal';
@@ -301,9 +300,6 @@ export default function Index({ products, categories, warehouses, filters, selec
                                         )}
                                     </>
                                 )}
-                                {isLowStock && (
-                                    <div className="text-xs text-red-500">{t('products:messages.lowStock')}</div>
-                                )}
                             </div>
                         );
                     }
@@ -329,51 +325,111 @@ export default function Index({ products, categories, warehouses, filters, selec
         })
     };
 
-    const tableActions = [
-        {
-            label: t('products:actions.view'),
-            href: (product: Product) => `/products/${product.id}`,
-            icon: <EyeIcon className="w-4 h-4" />,
-            variant: 'view' as const
-        },
-        {
-            label: t('products:actions.stockDetails'),
-            icon: <HomeModernIcon className="w-4 h-4" />,
-            variant: 'secondary' as const,
-            onClick: (product: Product) => setStockModalProduct(product)
-        },
-        // Only show edit/delete actions for non-salesmen
-        ...(currentUser.role !== 'sales_staff' ? [
+    // Handle double-click to view product
+    const handleRowDoubleClick = (product: Product) => {
+        router.visit(`/products/${product.id}`);
+    };
+
+    // Handle bulk actions for selected products
+    const handleBulkDelete = (selectedIds: (string | number)[]) => {
+        const confirmMessage = t('products:messages.confirmBulkDelete', { count: selectedIds.length });
+
+        if (confirm(String(confirmMessage))) {
+            router.delete('/products/bulk-delete', {
+                data: { ids: selectedIds },
+                onError: (errors) => {
+                    alert(t('products:messages.deleteError') as string);
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    const handleBulkStatusChange = (selectedIds: (string | number)[], status: boolean) => {
+        const action = status ? t('products:status.activate') : t('products:status.deactivate');
+        const confirmMessage = t('products:messages.confirmBulkStatusChange', { count: selectedIds.length, action: String(action) });
+
+        if (confirm(String(confirmMessage))) {
+            router.patch('/products/bulk-status', {
+                ids: selectedIds,
+                is_active: status
+            }, {
+                onError: (errors) => {
+                    alert(t('products:messages.statusChangeError') as string);
+                },
+                preserveScroll: true
+            });
+        }
+    };
+
+    // Get bulk actions - dynamic based on selection
+    const getBulkActions = (selectedIds: (string | number)[], selectedProducts: Product[]): BulkAction[] => {
+        if (currentUser.role === 'sales_staff') return [];
+
+        // If only ONE product is selected, show individual actions
+        if (selectedIds.length === 1 && selectedProducts.length === 1) {
+            const product = selectedProducts[0];
+
+            return [
+                {
+                    label: t('products:actions.view') as string,
+                    icon: <EyeIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(`/products/${product.id}`)
+                },
+                {
+                    label: t('products:actions.edit') as string,
+                    icon: <PencilIcon className="w-4 h-4" />,
+                    variant: 'edit' as const,
+                    onClick: () => router.visit(`/products/${product.id}/edit`)
+                },
+                {
+                    label: t('products:actions.stockDetails') as string,
+                    icon: <HomeModernIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => setStockModalProduct(product)
+                },
+                {
+                    label: product.is_active ? t('products:status.deactivate') as string : t('products:status.activate') as string,
+                    icon: <TagIcon className="w-4 h-4" />,
+                    variant: 'secondary' as const,
+                    onClick: () => toggleProductStatus(product)
+                },
+                {
+                    label: t('products:actions.delete') as string,
+                    icon: <TrashIcon className="w-4 h-4" />,
+                    variant: 'danger' as const,
+                    onClick: () => deleteProduct(product)
+                }
+            ];
+        }
+
+        // Multiple products selected - show bulk actions
+        return [
             {
-                label: t('products:actions.edit'),
-                href: (product: Product) => `/products/${product.id}/edit`,
-                icon: <PencilIcon className="w-4 h-4" />,
-                variant: 'edit' as const
+                label: t('products:status.activate') as string,
+                icon: <CheckCircleIcon className="w-4 h-4" />,
+                variant: 'success' as const,
+                onClick: (selectedIds: (string | number)[]) => handleBulkStatusChange(selectedIds, true)
             },
             {
-                label: t('products:actions.changeStatus'),
-                icon: <TagIcon className="w-4 h-4" />,
+                label: t('products:status.deactivate') as string,
+                icon: <ExclamationTriangleIcon className="w-4 h-4" />,
                 variant: 'secondary' as const,
-                onClick: toggleProductStatus
+                onClick: (selectedIds: (string | number)[]) => handleBulkStatusChange(selectedIds, false)
             },
             {
-                label: t('products:actions.delete'),
+                label: t('products:actions.delete') as string,
                 icon: <TrashIcon className="w-4 h-4" />,
-                variant: 'delete' as const,
-                onClick: deleteProduct
+                variant: 'danger' as const,
+                onClick: handleBulkDelete
             }
-        ] : [])
-    ];
+        ];
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title={t('products:productCatalog')} />
-            <div className="mx-auto sm:px-6 lg:px-8 mb-6">
-                <ProductsNavigation
-                    currentRoute="products"
-                    onImportClick={() => setShowImportModal(true)}
-                />
-            </div>
             <div className="w-full">
                 {/* Flash Messages */}
                 {flash?.success && (
@@ -458,10 +514,23 @@ export default function Index({ products, categories, warehouses, filters, selec
                     </div>
                 )}
 
+                {/* Import Button */}
+                <div className="mb-4 flex justify-end">
+                    <button
+                        type="button"
+                        onClick={() => setShowImportModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        <ArrowUpTrayIcon className="w-5 h-5" />
+                        <span>Import</span>
+                    </button>
+                </div>
+
                 <SharedDataTable
                     data={products}
                     columns={customTableConfig.columns}
-                    actions={tableActions}
+                    selectable={true}
+                    bulkActions={getBulkActions}
                     searchValue={search}
                     onSearchChange={setSearch}
                     searchPlaceholder={t('products:searchPlaceholder')}
@@ -474,10 +543,13 @@ export default function Index({ products, categories, warehouses, filters, selec
                         description: t('products:emptyState.description')
                     }}
                     fullWidth={true}
-
-                    mobileClickable={true}
-
-                    hideMobileActions={true}
+                    dense={true}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    rowClassName={(product: Product) =>
+                        `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                            product.is_active ? '' : 'opacity-60'
+                        }`
+                    }
                 />
 
                 {/* Stock Details Modal */}
