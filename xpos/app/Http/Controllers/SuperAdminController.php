@@ -167,7 +167,7 @@ class SuperAdminController extends Controller
         ]);
 
         $search = $validated['search'] ?? null;
-        
+
         $users = User::query()
             ->with(['account:id,company_name'])
             ->when($search, function ($query, $search) {
@@ -183,6 +183,104 @@ class SuperAdminController extends Controller
         return Inertia::render('SuperAdmin/Users', [
             'users' => $users,
             'search' => $search,
+        ]);
+    }
+
+    /**
+     * Get online users (active in last 5 minutes)
+     * Returns users with their company name and username
+     */
+    public function onlineUsers()
+    {
+        try {
+            $sessionDriver = config('session.driver');
+
+            // If using database sessions, query the sessions table
+            if ($sessionDriver === 'database') {
+                return $this->getOnlineUsersFromDatabase();
+            }
+
+            // For other session drivers (Redis, etc.), use last_login_at as fallback
+            // This shows users who logged in within last 5 minutes
+            $threshold = now()->subMinutes(5);
+
+            $onlineUsers = User::query()
+                ->join('accounts', 'users.account_id', '=', 'accounts.id')
+                ->where('users.last_login_at', '>', $threshold)
+                ->whereNotNull('users.last_login_at')
+                ->select(
+                    'users.id',
+                    'users.name as username',
+                    'accounts.company_name',
+                    'users.last_login_at as last_activity',
+                    'users.role'
+                )
+                ->orderBy('users.last_login_at', 'desc')
+                ->get()
+                ->map(function ($user) {
+                    // Convert string to Carbon instance before calling diffForHumans()
+                    $user->last_activity_human = \Carbon\Carbon::parse($user->last_activity)->diffForHumans();
+                    return $user;
+                });
+
+            return response()->json([
+                'success' => true,
+                'count' => $onlineUsers->count(),
+                'time_window' => '5 minutes',
+                'session_driver' => $sessionDriver,
+                'note' => $sessionDriver !== 'database'
+                    ? 'Using last_login_at as fallback (session driver: ' . $sessionDriver . ')'
+                    : null,
+                'users' => $onlineUsers,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Online users query failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Online istifadəçilər sorğulanarkən xəta baş verdi: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get online users from database sessions table
+     */
+    private function getOnlineUsersFromDatabase()
+    {
+        // Calculate threshold: 5 minutes ago in Unix timestamp
+        $threshold = now()->subMinutes(5)->timestamp;
+
+        // Query sessions table to find active users
+        $onlineUsers = DB::table('sessions')
+            ->join('users', 'sessions.user_id', '=', 'users.id')
+            ->join('accounts', 'users.account_id', '=', 'accounts.id')
+            ->where('sessions.last_activity', '>', $threshold)
+            ->whereNotNull('sessions.user_id')
+            ->select(
+                'users.id',
+                'users.name as username',
+                'accounts.company_name',
+                'sessions.last_activity',
+                'sessions.ip_address',
+                'users.role'
+            )
+            ->distinct()
+            ->orderBy('sessions.last_activity', 'desc')
+            ->get()
+            ->map(function ($user) {
+                // Convert Unix timestamp to human-readable format
+                $user->last_activity_human = \Carbon\Carbon::createFromTimestamp($user->last_activity)->diffForHumans();
+                return $user;
+            });
+
+        return response()->json([
+            'success' => true,
+            'count' => $onlineUsers->count(),
+            'time_window' => '5 minutes',
+            'session_driver' => 'database',
+            'users' => $onlineUsers,
         ]);
     }
 

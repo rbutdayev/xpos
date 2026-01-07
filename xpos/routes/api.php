@@ -90,3 +90,15 @@ Route::prefix('kiosk')->name('kiosk.')->middleware('kiosk.auth')->group(function
     Route::post('/loyalty/validate', [\App\Http\Controllers\Kiosk\KioskQuickActionsController::class, 'validateLoyaltyCard'])->name('loyalty.validate');
     Route::post('/gift-card/lookup', [\App\Http\Controllers\Kiosk\KioskQuickActionsController::class, 'lookupGiftCard'])->name('gift-card.lookup');
 });
+
+// SuperAdmin API Routes (uses Sanctum bearer token authentication)
+Route::prefix('admin')->name('admin.')->group(function () {
+    // Public route - Login to get bearer token
+    Route::post('/login', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'login'])->name('login');
+
+    // Protected routes - Require Sanctum authentication
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'logout'])->name('logout');
+        Route::get('/online-users', [\App\Http\Controllers\Api\SuperAdminApiController::class, 'onlineUsers'])->name('online-users');
+    });
+});

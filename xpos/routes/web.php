@@ -115,6 +115,7 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::delete('/users/{user}', [SuperAdminController::class, 'deleteUser'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-status', [SuperAdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+    Route::get('/online-users', [SuperAdminController::class, 'onlineUsers'])->name('online-users');
     Route::get('/system-stats', [SuperAdminController::class, 'systemStats'])->name('system-stats');
     
     // Storage Settings
