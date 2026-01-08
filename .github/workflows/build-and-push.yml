@@ -193,10 +193,7 @@ jobs:
             --set image.tag=${{ steps.version.outputs.version }} \
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
-            --wait \
-            --timeout 4m \
-            --atomic \
-            --cleanup-on-fail
+            --timeout 5m
 
       - name: Verify Deployment
         run: |

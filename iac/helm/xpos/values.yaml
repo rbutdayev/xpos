@@ -249,19 +249,19 @@ serviceAccount:
 # Pod annotations
 podAnnotations: {}
 
-# SECURITY: Pod security context
-podSecurityContext:
-  fsGroup: 2000
-  runAsNonRoot: true
-  runAsUser: 1000
+# SECURITY: Pod security context - DISABLED for supervisord compatibility
+podSecurityContext: {}
+  # fsGroup: 2000
+  # runAsNonRoot: true
+  # runAsUser: 1000
 
-# SECURITY: Container security context
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-  readOnlyRootFilesystem: false  # Laravel needs write access to storage
-  allowPrivilegeEscalation: false
+# SECURITY: Container security context - DISABLED for supervisord compatibility
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: false
+  # allowPrivilegeEscalation: false
 
 # Node selector
 nodeSelector: {}
