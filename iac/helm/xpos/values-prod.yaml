@@ -28,9 +28,11 @@ imagePullSecret:
 # 3. Pass via --set during deployment
 # 4. Store in separate values file (not committed)
 secrets:
-  appKey: ""  # Set via --set or external secret manager
-  databasePassword: ""  # Set via --set or external secret manager
-  redisPassword: ""  # Set via --set or external secret manager
+  # Use existing Kubernetes secret created manually
+  existingSecret: "xpos-secrets"
+  appKey: ""  # Not used when existingSecret is set
+  databasePassword: ""  # Not used when existingSecret is set
+  redisPassword: ""  # Not used when existingSecret is set
 
 web:
   replicaCount: 3
@@ -92,7 +94,7 @@ redis:
   # SECURITY FIX: Enable authentication
   auth:
     enabled: true  # CRITICAL: Enable password protection
-    password: ""   # Set via external secret or --set
+    password: "Xk6MzkxW4IViYdOai/ijbw2JbYBh+JW71KXfLNE647U="  # Redis password (matches K8s secret)
 
   master:
     persistence:

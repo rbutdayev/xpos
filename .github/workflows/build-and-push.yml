@@ -185,16 +185,11 @@ jobs:
           helm get values xpos -n xpos-prod > /tmp/current-values.yaml || true
           echo "Backup created"
 
-      - name: Create secrets file from secret
-        run: |
-          echo "${{ secrets.HELM_SECRETS_PROD }}" | base64 -d > ./iac/helm/xpos/values-prod-secrets.yaml
-
       - name: Deploy with Helm
         run: |
           helm upgrade --install xpos ./iac/helm/xpos \
             --namespace xpos-prod \
             --values ./iac/helm/xpos/values-prod.yaml \
-            --values ./iac/helm/xpos/values-prod-secrets.yaml \
             --set image.tag=${{ steps.version.outputs.version }} \
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
