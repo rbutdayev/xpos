@@ -51,6 +51,21 @@ web:
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
 
+# Increase health check delays for production
+healthCheck:
+  enabled: true
+  path: /health
+  liveness:
+    initialDelaySeconds: 60  # Give app more time to start
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 5  # More tolerant
+  readiness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+
 worker:
   replicaCount: 5
 

@@ -118,6 +118,10 @@ jobs:
             --set image.tag=develop \
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
+            --set secrets.appKey="${{ secrets.APP_KEY }}" \
+            --set secrets.databasePassword="${{ secrets.DB_PASSWORD }}" \
+            --set secrets.redisPassword="${{ secrets.REDIS_PASSWORD }}" \
+            --set redis.auth.password="${{ secrets.REDIS_PASSWORD }}" \
             --wait \
             --timeout 3m
 
@@ -193,6 +197,10 @@ jobs:
             --set image.tag=${{ steps.version.outputs.version }} \
             --set image.repository=${{ env.IMAGE_PREFIX }} \
             --set image.registry=${{ env.REGISTRY }} \
+            --set secrets.appKey="${{ secrets.APP_KEY }}" \
+            --set secrets.databasePassword="${{ secrets.DB_PASSWORD }}" \
+            --set secrets.redisPassword="${{ secrets.REDIS_PASSWORD }}" \
+            --set redis.auth.password="${{ secrets.REDIS_PASSWORD }}" \
             --wait \
             --timeout 4m \
             --atomic \
