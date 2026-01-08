@@ -19,6 +19,7 @@ import type services from '../i18n/locales/en/services.json';
 import type integrations from '../i18n/locales/en/integrations.json';
 import type giftcards from '../i18n/locales/en/giftcards.json';
 import type orders from '../i18n/locales/en/orders.json';
+import type knowledge from '../i18n/locales/en/knowledge.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -42,6 +43,7 @@ declare module 'i18next' {
       integrations: typeof integrations;
       giftcards: typeof giftcards;
       orders: typeof orders;
+      knowledge: typeof knowledge;
     };
   }
 }

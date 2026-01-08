@@ -26,7 +26,13 @@
     "remove": "Remove",
     "addPayment": "Add Payment",
     "scanBarcode": "Scan Barcode",
-    "logout": "Logout"
+    "logout": "Logout",
+    "pay": "Pay",
+    "bulkDelete": "Bulk Delete",
+    "create_sale": "Create New Sale",
+    "create_product": "Add New Product",
+    "create_customer": "Add New Customer",
+    "create_expense": "Add New Expense"
   },
   "labels": {
     "name": "Name",
@@ -74,13 +80,13 @@
     "searching": "Searching...",
     "notFound": "Not found",
     "resultsFound": "{{count}} results found",
-    "tryDifferentSearch": "Try changing the search criteria."
+    "tryDifferentSearch": "Try changing the search criteria.",
+    "confirmBulkDelete": "Are you sure you want to delete {{count}} selected item(s)?"
   },
   "navigation": {
     "dashboard": "Dashboard",
     "pos_sales": "POS Sales",
     "touch_pos": "TouchPOS",
-    "expeditor": "Expeditor (Field Sales)",
     "products": "Products",
     "product_list": "Product List",
     "categories": "Categories",
@@ -142,7 +148,6 @@
     "home": "Home",
     "expand": "Expand",
     "collapse": "Collapse",
-    "reports": "Reports",
     "warehouse": "Warehouse",
     "finance": "Finance",
     "administration": "Administration",
@@ -160,6 +165,7 @@
     "alerts": "Alerts",
     "product_history": "Product History",
     "expense_categories": "Expense Categories",
+    "reports": "Reports",
     "printer_configs": "Printer Configs",
     "search": "Search",
     "products_list": "Products List"
@@ -229,7 +235,26 @@
     "cancelled": "Cancelled",
     "refunded": "Refunded",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "sent": "Sent",
+    "failed": "Failed",
+    "partial": "Partial",
+    "paid": "Paid",
+    "all": "All"
+  },
+  "fields": {
+    "referenceNumber": "Reference Number",
+    "reference": "Ref",
+    "creditDate": "Credit Date",
+    "dueDate": "Due Date",
+    "remaining": "Remaining",
+    "dates": "Dates",
+    "date": "Date",
+    "branch": "Branch",
+    "amount": "Amount"
+  },
+  "placeholders": {
+    "search": "Search..."
   },
   "dataTable": {
     "emptyTitle": "No data found",
@@ -249,7 +274,8 @@
   },
   "footer": {
     "version": "Version",
-    "support": "Support"
+    "support": "Support",
+    "knowledge_base": "Knowledge Base"
   },
   "command_palette": {
     "search_placeholder": "Search pages, actions...",
@@ -257,35 +283,5 @@
     "action": "Action",
     "navigate": "Navigate",
     "select": "Select"
-  },
-  "expeditor": {
-    "title": "Expeditor - Field Sales",
-    "selectCustomer": "Select customer...",
-    "locationPlaceholder": "Location (e.g., Nizami St. 5)",
-    "searchProducts": "Search products...",
-    "startTyping": "Start typing to search products...",
-    "noResults": "No products found",
-    "quickReorder": "Quick reorder from previous order",
-    "newCustomer": "New Customer",
-    "previousOrders": "Previous Orders",
-    "completeSale": "Complete Sale",
-    "addToCart": "Add to Cart",
-    "cart": "Cart",
-    "selectVariant": "Select variant...",
-    "captureGPS": "Capture GPS location",
-    "viewGrid": "Grid View",
-    "viewList": "List View",
-    "saleCompleted": "Sale completed successfully!",
-    "saleCompletedMessage": "Sale has been recorded. You can now print the receipt.",
-    "printReceipt": "Print Receipt"
-  },
-  "pagination": {
-    "previous": "Previous",
-    "next": "Next",
-    "page": "Page",
-    "of": "of",
-    "perPage": "Per page",
-    "results": "results",
-    "showing": "Showing {{from}} - {{to}} of {{total}} results"
   }
 }

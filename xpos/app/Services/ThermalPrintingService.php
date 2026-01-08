@@ -66,6 +66,13 @@ class ThermalPrintingService
     {
         $sale->load(['customer', 'branch', 'branch.company', 'saleItems.product', 'payments']);
 
+        // Get payment methods and convert enums to labels
+        $paymentMethods = $sale->payments->map(function ($payment) {
+            return $payment->method instanceof \App\Enums\PaymentMethod
+                ? $payment->method->labelAz()
+                : $payment->method;
+        })->join(', ');
+
         return [
             'company_name' => $sale->branch->company->name,
             'company_address' => $sale->branch->company->address,
@@ -89,7 +96,7 @@ class ThermalPrintingService
             'tax_amount' => number_format($sale->tax_amount, 2),
             'discount_amount' => number_format($sale->discount_amount, 2),
             'total' => number_format($sale->total, 2),
-            'payment_method' => $sale->payments->pluck('method')->join(', '),
+            'payment_method' => $paymentMethods,
         ];
     }
 
@@ -135,16 +142,31 @@ class ThermalPrintingService
             if (is_array($value)) {
                 if ($key === 'items') {
                     $itemsText = '';
+                    $width = $template->width_chars ?? 48;
+
                     foreach ($value as $item) {
-                        $itemsText .= sprintf(
-                            "%-20s %2dx%8s %8s\n",
-                            substr($item['name'], 0, 20),
-                            $item['quantity'],
-                            $item['unit_price'],
-                            $item['total']
-                        );
+                        $name = $item['name'];
+                        $qty = $item['quantity'];
+                        $price = $item['unit_price'];
+                        $total = $item['total'];
+
+                        // Format: Name on one line, quantity x price = total on next line
+                        // For better readability on thermal printers
+                        if (strlen($name) > $width - 2) {
+                            // Name is too long, wrap it
+                            $itemsText .= substr($name, 0, $width - 2) . "\n";
+                        } else {
+                            $itemsText .= $name . "\n";
+                        }
+
+                        // Quantity x Price aligned right with total
+                        $qtyLine = "  {$qty} x {$price}";
+                        $totalStr = "{$total} AZN";
+                        $spaces = max(1, $width - strlen($qtyLine) - strlen($totalStr));
+                        $itemsText .= $qtyLine . str_repeat(' ', $spaces) . $totalStr . "\n";
                     }
-                    $content = str_replace('{{' . $key . '}}', $itemsText, $content);
+
+                    $content = str_replace('{{' . $key . '}}', rtrim($itemsText), $content);
                 }
             } else {
                 $content = str_replace('{{' . $key . '}}', $value, $content);
@@ -152,7 +174,7 @@ class ThermalPrintingService
         }
 
         // Always add the standard footer
-        $footer = "\n{line}\n{line}\n{center}ONYX xPos\n{center}www.onyx.az\n{line}\n{line}";
+        $footer = "\n{line}\n{line}\n{center}xPOS\n{center}www.xpos.az\n{line}\n{line}";
         $content .= $footer;
 
         return $content;
@@ -264,11 +286,22 @@ class ThermalPrintingService
         $templates = [
             'sale' => $this->getDefaultSaleTemplate(),
             'service' => $this->getDefaultServiceTemplate(),
+            'customer_item' => $this->getDefaultCustomerItemTemplate(),
+            'return' => $this->getDefaultReturnTemplate(),
+            'payment' => $this->getDefaultPaymentTemplate(),
+        ];
+
+        $typeNames = [
+            'sale' => 'Satış',
+            'service' => 'Xidmət',
+            'customer_item' => 'Müştəri Məhsulu',
+            'return' => 'Qaytarma',
+            'payment' => 'Ödəniş',
         ];
 
         return ReceiptTemplate::create([
             'account_id' => $accountId,
-            'name' => 'Standart ' . ucfirst($type) . ' Şablonu',
+            'name' => 'Standart ' . ($typeNames[$type] ?? ucfirst($type)) . ' Şablonu',
             'type' => $type,
             'template_content' => $templates[$type] ?? $templates['sale'],
             'paper_size' => '80mm',
@@ -295,6 +328,7 @@ Müştəri: {{customer_name}}
 {right}Ara cəm: {{subtotal}} AZN
 {right}Endirim: {{discount_amount}} AZN
 {right}Vergi: {{tax_amount}} AZN
+{line}
 {right}{bold}CƏMİ: {{total}} AZN{/bold}
 {line}
 Ödəniş: {{payment_method}}
@@ -324,5 +358,100 @@ Texnik: {{employee_name}}
 {line}
 {center}Zəmanət müddəti: 30 gün
 {center}Təşəkkür edirik!";
+    }
+
+    private function getDefaultCustomerItemTemplate(): string
+    {
+        return "{center}{bold}{{company_name}}{/bold}
+{center}{{company_address}}
+{center}Tel: {{company_phone}}
+{line}
+{center}{bold}MÜŞTƏRİ MƏHSULU QƏBZİ{/bold}
+{line}
+Tarix: {{date}} {{time}}
+Referans No: {{reference_number}}
+{line}
+Müştəri: {{customer_name}}
+Tel: {{customer_phone}}
+{line}
+Məhsul növü: {{item_type}}
+Xidmət növü: {{service_type}}
+Təsvir: {{item_description}}
+Rəng: {{item_color}}
+Parça: {{fabric_type}}
+{line}
+Qəbul tarixi: {{received_date}}
+Status: {{status}}
+{line}
+{{measurements}}
+{line}
+Xidmətlər:
+{{services_summary}}
+{line}
+{right}Ümumi məbləğ: {{subtotal}} AZN
+{right}Ödənilmiş: {{paid_amount}} AZN
+{right}{bold}Qalıq: {{balance}} AZN{/bold}
+{line}
+Ödəniş statusu: {{payment_status}}
+{line}
+Qeydlər: {{notes}}
+{line}
+{center}Təşəkkür edirik!";
+    }
+
+    private function getDefaultReturnTemplate(): string
+    {
+        return "{center}{bold}{{company_name}}{/bold}
+{center}{{company_address}}
+{center}Tel: {{company_phone}}
+{line}
+{center}{bold}QAYTARMA QƏBZİ{/bold}
+{line}
+Tarix: {{date}} {{time}}
+Qaytarma No: {{receipt_number}}
+Orijinal satış: {{original_sale_number}}
+{line}
+Müştəri: {{customer_name}}
+Tel: {{customer_phone}}
+{line}
+Qaytarılan məhsullar:
+{{items}}
+{line}
+{right}Ara cəm: {{subtotal}} AZN
+{right}Vergi: {{tax_amount}} AZN
+{right}{bold}CƏMİ QAYTARMA: {{total}} AZN{/bold}
+{line}
+Qaytarma səbəbi: {{return_reason}}
+Qaytarma metodu: {{return_method}}
+{line}
+{center}Qeyd: Bu qaytarma qəbzidir
+{center}Təşəkkür edirik!";
+    }
+
+    private function getDefaultPaymentTemplate(): string
+    {
+        return "{center}{bold}{{company_name}}{/bold}
+{center}{{company_address}}
+{center}Tel: {{company_phone}}
+{line}
+{center}{bold}ÖDƏNİŞ QƏBZİ{/bold}
+{line}
+Tarix: {{date}} {{time}}
+Qəbz No: {{receipt_number}}
+{line}
+Müştəri: {{customer_name}}
+Tel: {{customer_phone}}
+{line}
+Ödəniş növü: {{payment_type}}
+Ödəniş metodu: {{payment_method}}
+{line}
+{right}Ödəniş məbləği: {{payment_amount}} AZN
+{right}Əvvəlki borc: {{previous_balance}} AZN
+{right}{bold}Yeni balans: {{new_balance}} AZN{/bold}
+{line}
+Qeyd: {{notes}}
+{line}
+{center}Təşəkkür edirik!
+{center}Xoş gələsiniz!";
     }
 }

@@ -49,6 +49,10 @@ use App\Http\Controllers\RentalTemplateController;
 use App\Http\Controllers\ProductActivityController;
 use App\Http\Controllers\KioskTokenController;
 use App\Http\Controllers\ExpeditorController;
+use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\SuperAdmin\KnowledgeCategoryController;
+use App\Http\Controllers\SuperAdmin\KnowledgeArticleController;
+use App\Http\Controllers\SuperAdmin\KnowledgeContextHelpController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -180,6 +184,23 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
         Route::post('/{card}/deactivate', [App\Http\Controllers\Admin\GiftCardController::class, 'deactivate'])->name('deactivate');
         Route::post('/{card}/activate', [App\Http\Controllers\Admin\GiftCardController::class, 'activate'])->name('activate');
     });
+
+    // Knowledge Base Management
+    Route::prefix('knowledge')->name('knowledge.')->group(function () {
+        // Redirect /admin/knowledge to /admin/knowledge/categories
+        Route::get('/', function () {
+            return redirect()->route('superadmin.knowledge.categories.index');
+        })->name('index');
+
+        Route::resource('categories', KnowledgeCategoryController::class);
+        Route::post('categories/reorder', [KnowledgeCategoryController::class, 'reorder'])->name('categories.reorder');
+
+        Route::resource('articles', KnowledgeArticleController::class);
+        Route::post('articles/{article}/publish', [KnowledgeArticleController::class, 'publish'])->name('articles.publish');
+        Route::post('articles/{article}/feature', [KnowledgeArticleController::class, 'feature'])->name('articles.feature');
+
+        Route::resource('context-help', KnowledgeContextHelpController::class, ['except' => 'show']);
+    });
 });
 
 // Main Dashboard
@@ -191,6 +212,18 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::get('/debug-translations', function () {
     return \Inertia\Inertia::render('DebugTranslations');
 })->middleware(['auth', 'verified'])->name('debug.translations');
+
+// Knowledge Base (Public)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/knowledge', [KnowledgeController::class, 'index'])
+        ->name('knowledge.index');
+    Route::get('/knowledge/categories/{slug}', [KnowledgeController::class, 'category'])
+        ->name('knowledge.category');
+    Route::get('/knowledge/articles/{slug}', [KnowledgeController::class, 'article'])
+        ->name('knowledge.article');
+    Route::get('/knowledge/search', [KnowledgeController::class, 'search'])
+        ->name('knowledge.search');
+});
 
 // Photo serving route (PUBLIC - for shop frontend and fallback when Azure temporaryUrl fails)
 Route::get('/photos/serve/{path}', function (Request $request, string $path) {

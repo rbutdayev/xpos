@@ -10,7 +10,7 @@ i18n
   .init({
     fallbackLng: 'az',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'products', 'sales', 'customers', 'inventory', 'reports', 'settings', 'dashboard', 'expenses', 'suppliers', 'users', 'rentals', 'services', 'integrations', 'giftcards', 'orders'],
+    ns: ['common', 'auth', 'products', 'sales', 'customers', 'inventory', 'reports', 'settings', 'dashboard', 'expenses', 'suppliers', 'users', 'rentals', 'services', 'integrations', 'giftcards', 'orders', 'knowledge'],
 
     backend: {
       // Load translations from public/locales directory

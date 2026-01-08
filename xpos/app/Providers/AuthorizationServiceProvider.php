@@ -265,5 +265,15 @@ class AuthorizationServiceProvider extends ServiceProvider
                    $user->account->isActive() &&
                    $user->account->isGiftCardsModuleEnabled();
         });
+
+        // View Knowledge Base (All authenticated users can view)
+        Gate::define('view-knowledge-base', function (User $user) {
+            return $user->isActive();
+        });
+
+        // Manage Knowledge Base (Super Admin only)
+        Gate::define('manage-knowledge-base', function (User $user) {
+            return $user->isSuperAdmin();
+        });
     }
 }

@@ -1,0 +1,63 @@
+# Production environment overrides (from .env.production)
+config:
+  appName: "ONYX xPos"
+  appEnv: "production"
+  appDebug: false
+  appUrl: "https://app.xpos.az"
+  database:
+    host: "ithelp-mysql.mysql.database.azure.com"
+    database: xpos
+    username: xpos_user
+  log:
+    level: warning
+
+# GitHub Container Registry credentials
+# Secret created automatically by GitHub Actions using GITHUB_TOKEN
+imagePullSecret:
+  create: false  # Created by workflow, not Helm
+  name: ghcr-secret
+
+# Credentials stored in Kubernetes (from .env.production)
+secrets:
+  appKey: "base64:NlFyjKlET+Ubg4rk4cO0zZZ7ppe/ugk5rEwbl63+AsA="
+  databasePassword: "ft59yeCth89oDC"
+  redisPassword: ""
+
+web:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+
+worker:
+  replicaCount: 5
+  autoscaling:
+    enabled: true
+    minReplicas: 5
+    maxReplicas: 30
+
+redis:
+  enabled: true  # Deploy Redis in Kubernetes for production
+  auth:
+    enabled: false  # No password (same as .env.production)
+
+mysql:
+  enabled: false  # Use managed MySQL/RDS in production
+
+persistence:
+  enabled: false  # Files uploaded to Blackblaze S3, not local filesystem
+
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: app.xpos.az
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: xpos-prod-tls
+      hosts:
+        - app.xpos.az

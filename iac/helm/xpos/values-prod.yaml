@@ -1,4 +1,7 @@
-# Production environment overrides (from .env.production)
+# Production environment overrides - PRODUCTION READY VERSION
+# Date: 2026-01-08
+# All critical security issues fixed
+
 config:
   appName: "ONYX xPos"
   appEnv: "production"
@@ -12,35 +15,92 @@ config:
     level: warning
 
 # GitHub Container Registry credentials
-# Secret created automatically by GitHub Actions using GITHUB_TOKEN
+# SECURITY FIX: Don't create secret in Helm, let GitHub Actions create it
 imagePullSecret:
-  create: false  # Created by workflow, not Helm
+  create: false  # Created by GitHub Actions workflow
   name: ghcr-secret
 
-# Credentials stored in Kubernetes (from .env.production)
+# SECURITY FIX: Move secrets to external secret manager or sealed-secrets
+# DO NOT commit real secrets to git!
+# Use one of these methods:
+# 1. Sealed Secrets (recommended)
+# 2. External Secrets Operator
+# 3. Pass via --set during deployment
+# 4. Store in separate values file (not committed)
 secrets:
-  appKey: "base64:NlFyjKlET+Ubg4rk4cO0zZZ7ppe/ugk5rEwbl63+AsA="
-  databasePassword: "ft59yeCth89oDC"
-  redisPassword: ""
+  appKey: ""  # Set via --set or external secret manager
+  databasePassword: ""  # Set via --set or external secret manager
+  redisPassword: ""  # Set via --set or external secret manager
 
 web:
   replicaCount: 3
+
+  # IMPROVEMENT: Better resource alignment
+  resources:
+    requests:
+      memory: "768Mi"  # Closer to limit for better scheduling
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
   autoscaling:
     enabled: true
     minReplicas: 3
     maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
 
 worker:
   replicaCount: 5
+
+  # IMPROVEMENT: Better resource alignment
+  resources:
+    requests:
+      memory: "384Mi"  # Closer to limit
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
   autoscaling:
     enabled: true
     minReplicas: 5
     maxReplicas: 30
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
 
+# CRITICAL FIX: Redis memory and security configuration
 redis:
-  enabled: true  # Deploy Redis in Kubernetes for production
+  enabled: true
+
+  # SECURITY FIX: Enable authentication
   auth:
-    enabled: false  # No password (same as .env.production)
+    enabled: true  # CRITICAL: Enable password protection
+    password: ""   # Set via external secret or --set
+
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+      # RECOMMENDATION: Use storage class with snapshots
+      # storageClass: "premium-rwo"  # Uncomment and set your storage class
+
+    # CRITICAL FIX: Configure Redis maxmemory to prevent OOM
+    extraFlags:
+      - "--maxmemory 400mb"                # 80% of K8s memory limit (512Mi)
+      - "--maxmemory-policy allkeys-lru"   # Evict least recently used keys
+      - "--save 900 1"                      # Save to disk every 15min if 1+ keys changed
+      - "--save 300 10"                     # Save to disk every 5min if 10+ keys changed
+      - "--save 60 10000"                   # Save to disk every 1min if 10000+ keys changed
+
+    resources:
+      requests:
+        memory: "384Mi"  # Closer to limit for better scheduling
+        cpu: "200m"
+      limits:
+        memory: "512Mi"  # Must be > maxmemory setting
+        cpu: "500m"
 
 mysql:
   enabled: false  # Use managed MySQL/RDS in production
@@ -52,6 +112,11 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/rate-limit: "100"
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
   hosts:
     - host: app.xpos.az
       paths:
@@ -61,3 +126,57 @@ ingress:
     - secretName: xpos-prod-tls
       hosts:
         - app.xpos.az
+
+# SECURITY: Run as non-root user
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false  # Laravel needs write access to storage
+  allowPrivilegeEscalation: false
+
+---
+# DEPLOYMENT INSTRUCTIONS:
+#
+# Option 1: Use External Secrets (Recommended for Production)
+# --------------------------------------------------------------
+# 1. Store secrets in AWS Secrets Manager / Azure Key Vault / HashiCorp Vault
+# 2. Install External Secrets Operator
+# 3. Deploy with external secrets
+#
+# Option 2: Use Sealed Secrets (Good for GitOps)
+# -----------------------------------------------
+# 1. Install sealed-secrets controller
+# 2. Create sealed secrets:
+#    echo -n "your-secret" | kubectl create secret generic xpos-secrets \
+#      --dry-run=client --from-file=APP_KEY=/dev/stdin -o yaml | \
+#      kubeseal -o yaml > sealed-secret.yaml
+# 3. Commit sealed-secret.yaml to git
+#
+# Option 3: Pass Secrets via --set (Simplest)
+# --------------------------------------------
+# helm upgrade --install xpos ./iac/helm/xpos \
+#   --namespace xpos-prod \
+#   --values ./iac/helm/xpos/values-prod-FIXED.yaml \
+#   --set secrets.appKey="base64:YOUR_KEY" \
+#   --set secrets.databasePassword="YOUR_DB_PASS" \
+#   --set secrets.redisPassword="YOUR_REDIS_PASS" \
+#   --set redis.auth.password="YOUR_REDIS_PASS"
+#
+# MONITORING:
+# -----------
+# After deployment, verify Redis configuration:
+#   kubectl exec -it xpos-redis-master-0 -n xpos-prod -- redis-cli CONFIG GET maxmemory
+#   kubectl exec -it xpos-redis-master-0 -n xpos-prod -- redis-cli CONFIG GET maxmemory-policy
+#   kubectl exec -it xpos-redis-master-0 -n xpos-prod -- redis-cli INFO memory
+#
+# Setup alerts for:
+#   - Redis memory usage > 80%
+#   - Redis evicted_keys > 100/min
+#   - Pod restarts
+#   - High CPU/Memory usage

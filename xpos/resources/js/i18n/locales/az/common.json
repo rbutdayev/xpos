@@ -171,7 +171,8 @@
   },
   "footer": {
     "version": "Versiya",
-    "support": "Dəstək"
+    "support": "Dəstək",
+    "knowledge_base": "Bilik Bazası"
   },
   "command_palette": {
     "search_placeholder": "Səhifələri, əməliyyatları axtar...",

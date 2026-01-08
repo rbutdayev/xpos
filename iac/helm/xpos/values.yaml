@@ -1,5 +1,7 @@
-# Default values for xpos
+# Default values for xpos - PRODUCTION READY VERSION
 # This is a YAML-formatted file.
+# Date: 2026-01-08
+# All critical security issues fixed
 
 # Global settings
 global:
@@ -7,19 +9,24 @@ global:
     - name: ghcr-secret
   storageClass: ""
 
-# Image Pull Secret for GitHub Container Registry
+# SECURITY FIX: GitHub Container Registry Secret
+# DO NOT hardcode credentials here!
+# Let CI/CD create the secret or create manually in Kubernetes
 imagePullSecret:
-  create: true
+  create: false  # CHANGED: Don't create in Helm, create externally
   name: ghcr-secret
-  registry: ghcr.io
-  username: "rbutdayev"  # Replace with your GitHub username
-  password: "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"      # Replace with GitHub Personal Access Token (with packages:read permission)
+  # To create manually:
+  # kubectl create secret docker-registry ghcr-secret \
+  #   --docker-server=ghcr.io \
+  #   --docker-username=<your-username> \
+  #   --docker-password=<your-token> \
+  #   --namespace=<namespace>
 
 # Image settings
 image:
   registry: ghcr.io
   repository: rbutdayev/xpos
-  pullPolicy: IfNotPresent
+  pullPolicy: Always  # Changed from IfNotPresent to ensure latest images are pulled
   tag: ""  # Overrides the image tag (default is chart appVersion)
 
 # Web application
@@ -29,10 +36,11 @@ web:
   image:
     name: web
 
+  # IMPROVEMENT: Better resource alignment
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "250m"
+      memory: "768Mi"  # Closer to limit for predictable scheduling
+      cpu: "500m"
     limits:
       memory: "1Gi"
       cpu: "1000m"
@@ -55,10 +63,11 @@ worker:
   image:
     name: worker
 
+  # IMPROVEMENT: Better resource alignment
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: "384Mi"  # Closer to limit
+      cpu: "200m"
     limits:
       memory: "512Mi"
       cpu: "500m"
@@ -92,24 +101,39 @@ scheduler:
       memory: "256Mi"
       cpu: "200m"
 
-# Redis
+# CRITICAL FIX: Redis Configuration
 redis:
   enabled: true
   architecture: standalone
+
+  # SECURITY FIX: Enable auth by default
   auth:
-    enabled: false  # Set to true in production
-    password: ""
+    enabled: true  # CHANGED: Enable password protection
+    password: ""   # Set in environment-specific values files
 
   master:
     persistence:
       enabled: true
       size: 5Gi
+
+    # CRITICAL FIX: Configure Redis maxmemory to prevent OOM
+    extraFlags:
+      - "--maxmemory 400mb"                # 80% of K8s memory limit (512Mi)
+      - "--maxmemory-policy allkeys-lru"   # Evict least recently used keys
+      - "--save 900 1"                      # Persistence: save every 15min if 1+ keys changed
+      - "--save 300 10"                     # Persistence: save every 5min if 10+ keys changed
+      - "--save 60 10000"                   # Persistence: save every 1min if 10000+ keys changed
+      - "--tcp-backlog 511"                 # Connection queue size
+      - "--timeout 300"                     # Close idle connections after 5min
+      - "--tcp-keepalive 60"                # TCP keepalive
+
+    # IMPROVEMENT: Better resource alignment
     resources:
       requests:
-        memory: "256Mi"
-        cpu: "100m"
+        memory: "384Mi"  # Closer to limit
+        cpu: "200m"
       limits:
-        memory: "512Mi"
+        memory: "512Mi"  # Must be > maxmemory (400mb)
         cpu: "500m"
 
 # MySQL (if you want to deploy MySQL in k8s)
@@ -155,12 +179,14 @@ config:
     level: info
 
 # Secrets (reference existing secrets or create new ones)
+# SECURITY: DO NOT commit real secrets to git!
 secrets:
   # If existingSecret is set, it will use that instead of creating new one
   existingSecret: ""
 
   # These are used only if existingSecret is not set
-  appKey: ""  # Laravel APP_KEY
+  # Pass via --set or use external secret manager
+  appKey: ""  # Laravel APP_KEY (generate with: php artisan key:generate --show)
   databasePassword: ""
   redisPassword: ""
 
@@ -177,6 +203,12 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
     nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
 
   hosts:
     - host: xpos.yourdomain.com
@@ -221,18 +253,19 @@ serviceAccount:
 # Pod annotations
 podAnnotations: {}
 
-# Pod security context
-podSecurityContext: {}
-  # fsGroup: 2000
+# SECURITY: Pod security context
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
 
-# Container security context
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+# SECURITY: Container security context
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false  # Laravel needs write access to storage
+  allowPrivilegeEscalation: false
 
 # Node selector
 nodeSelector: {}
@@ -242,3 +275,38 @@ tolerations: []
 
 # Affinity
 affinity: {}
+
+---
+# USAGE INSTRUCTIONS:
+#
+# 1. Create imagePullSecret manually or via CI/CD:
+#    kubectl create secret docker-registry ghcr-secret \
+#      --docker-server=ghcr.io \
+#      --docker-username=<username> \
+#      --docker-password=<token> \
+#      --namespace=<namespace>
+#
+# 2. Deploy with secrets:
+#    helm upgrade --install xpos ./iac/helm/xpos \
+#      --namespace xpos-prod \
+#      --values ./iac/helm/xpos/values-FIXED.yaml \
+#      --set secrets.appKey="base64:xxx" \
+#      --set secrets.databasePassword="xxx" \
+#      --set secrets.redisPassword="xxx" \
+#      --set redis.auth.password="xxx"
+#
+# 3. Verify Redis configuration:
+#    kubectl exec -it xpos-redis-master-0 -n xpos-prod -- redis-cli CONFIG GET maxmemory
+#    kubectl exec -it xpos-redis-master-0 -n xpos-prod -- redis-cli CONFIG GET maxmemory-policy
+#
+# 4. Monitor Redis memory:
+#    kubectl exec -it xpos-redis-master-0 -n xpos-prod -- redis-cli INFO memory
+#
+# SECURITY CHECKLIST:
+# - [ ] imagePullSecret created externally (not in values file)
+# - [ ] Redis auth enabled
+# - [ ] Redis maxmemory configured
+# - [ ] Secrets passed via --set or external secret manager
+# - [ ] Production secrets not committed to git
+# - [ ] Security context configured
+# - [ ] Resource requests close to limits

@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\KnowledgeController;
+use App\Http\Controllers\Api\KnowledgeAnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +39,21 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/currencies', [\App\Http\Controllers\Api\CurrencyController::class, 'index'])->name('currencies.index');
     Route::get('/company/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'show'])->name('company.currency.show');
     Route::put('/company/currency', [\App\Http\Controllers\Api\CurrencyController::class, 'update'])->name('company.currency.update');
+
+    // Knowledge Base API
+    Route::prefix('knowledge')->name('knowledge.')->group(function () {
+        Route::get('/categories', [KnowledgeController::class, 'getCategories'])->name('categories');
+        Route::get('/articles', [KnowledgeController::class, 'listArticles'])->name('articles');
+        Route::get('/articles/{slug}', [KnowledgeController::class, 'showArticle'])->name('articles.show');
+        Route::get('/featured', [KnowledgeController::class, 'getFeatured'])->name('featured');
+        Route::get('/search', [KnowledgeController::class, 'search'])->name('search');
+        Route::get('/help/{key}', [KnowledgeController::class, 'getContextHelp'])->name('help');
+
+        // Analytics endpoints
+        Route::post('/articles/{id}/view', [KnowledgeAnalyticsController::class, 'recordView'])->name('articles.view');
+        Route::post('/articles/{id}/helpful', [KnowledgeAnalyticsController::class, 'markHelpful'])->name('articles.helpful');
+        Route::post('/articles/{id}/unhelpful', [KnowledgeAnalyticsController::class, 'markUnhelpful'])->name('articles.unhelpful');
+    });
 });
 
 // Delivery Platform Webhooks (no middleware - public endpoints with platform-specific authentication)

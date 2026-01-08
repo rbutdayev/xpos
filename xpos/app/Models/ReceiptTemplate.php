@@ -62,6 +62,16 @@ class ReceiptTemplate extends Model
 
     public function getAvailableVariables(): array
     {
+        // Formatting commands (use single braces {})
+        $formattingCommands = [
+            '{center}' => 'Mərkəzə hizala',
+            '{left}' => 'Sola hizala',
+            '{right}' => 'Sağa hizala',
+            '{line}' => 'Ayırıcı xətt',
+            '{bold}...{/bold}' => 'Qalın yazı',
+            '{double}...{/double}' => 'İki qat böyük',
+        ];
+
         $baseVariables = [
             'company_name' => 'Şirkət adı',
             'company_address' => 'Şirkət ünvanı',
@@ -79,9 +89,12 @@ class ReceiptTemplate extends Model
             'divider' => 'Ayırıcı xətt (---)',
         ];
 
+        // Merge formatting commands with base variables
+        $allVariables = array_merge($formattingCommands, $baseVariables);
+
         switch ($this->type) {
             case 'sale':
-                return array_merge($baseVariables, [
+                return array_merge($allVariables, [
                     'customer_name' => 'Müştəri adı',
                     'customer_phone' => 'Müştəri telefonu',
                     'items' => 'Məhsullar',
@@ -91,9 +104,9 @@ class ReceiptTemplate extends Model
                     'total' => 'Ümumi məbləğ',
                     'payment_method' => 'Ödəniş üsulu',
                 ]);
-            
+
             case 'service':
-                return array_merge($baseVariables, [
+                return array_merge($allVariables, [
                     'customer_name' => 'Müştəri adı',
                     'vehicle_plate' => 'Avtomobil nömrəsi',
                     'vehicle_brand' => 'Avtomobil markası',
@@ -105,7 +118,7 @@ class ReceiptTemplate extends Model
                 ]);
 
             case 'customer_item':
-                return array_merge($baseVariables, [
+                return array_merge($allVariables, [
                     'customer_name' => 'Müştəri adı',
                     'customer_phone' => 'Müştəri telefonu',
                     'item_type' => 'Məhsul növü',
@@ -127,7 +140,7 @@ class ReceiptTemplate extends Model
                 ]);
 
             default:
-                return $baseVariables;
+                return $allVariables;
         }
     }
 }

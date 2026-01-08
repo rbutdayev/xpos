@@ -6,12 +6,56 @@ use App\Models\Account;
 use App\Models\ProductPhoto;
 use App\Models\ProductDocument;
 use App\Models\Expense;
+use App\Services\ThermalPrintingService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class AccountObserver
 {
+    /**
+     * Handle the Account "created" event.
+     * Create default receipt templates for the new account.
+     */
+    public function created(Account $account): void
+    {
+        try {
+            Log::info("Creating default receipt templates for new account", [
+                'account_id' => $account->id,
+                'account_name' => $account->company_name,
+            ]);
+
+            $printingService = new ThermalPrintingService();
+            $templateTypes = ['sale', 'service', 'customer_item', 'return', 'payment'];
+
+            foreach ($templateTypes as $type) {
+                try {
+                    $printingService->createDefaultTemplate($account->id, $type);
+                    Log::info("Created {$type} receipt template", [
+                        'account_id' => $account->id,
+                        'template_type' => $type,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Failed to create {$type} receipt template", [
+                        'account_id' => $account->id,
+                        'template_type' => $type,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            Log::info("Completed creating default receipt templates", [
+                'account_id' => $account->id,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Error creating default receipt templates for account", [
+                'account_id' => $account->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
     /**
      * Handle the Account "deleting" event.
      * Clean up all files associated with this account from blob storage.

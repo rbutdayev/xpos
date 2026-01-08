@@ -1,0 +1,31 @@
+{{- if gt (int .Values.web.replicaCount) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "xpos.fullname" . }}-web
+  labels:
+    {{- include "xpos.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "xpos.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+{{- end }}
+---
+{{- if gt (int .Values.worker.replicaCount) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "xpos.fullname" . }}-worker
+  labels:
+    {{- include "xpos.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      {{- include "xpos.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+{{- end }}

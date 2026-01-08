@@ -274,7 +274,8 @@
   },
   "footer": {
     "version": "Version",
-    "support": "Support"
+    "support": "Support",
+    "knowledge_base": "Knowledge Base"
   },
   "command_palette": {
     "search_placeholder": "Search pages, actions...",

@@ -297,11 +297,11 @@ class ReceiptTemplateController extends Controller
                  ?? Branch::where('account_id', $user->account_id)->first();
         
         $baseData = [
-            'company_name' => $company->name ?? 'ONYX xPos',
+            'company_name' => $company->name ?? 'xPOS',
             'company_address' => $company->address ?? 'Bakı şəhəri, Nizami rayonu',
             'company_phone' => $company->phone ?? '+994 12 123 45 67',
-            'company_email' => $company->email ?? 'info@onyx.az',
-            'company_website' => $company->website ?? 'www.onyx.az',
+            'company_email' => $company->email ?? 'info@xpos.az',
+            'company_website' => $company->website ?? 'www.xpos.az',
             'tax_number' => $company->tax_number ?? '1234567890',
             'branch_name' => $branch->name ?? 'Mərkəzi Filial',
             'branch_address' => $branch->address ?? 'Nizami küçəsi 123',
@@ -358,39 +358,97 @@ class ReceiptTemplateController extends Controller
     private function renderTemplatePreview(ReceiptTemplate $template, array $data): string
     {
         $content = $template->template_content;
+        $width = $template->width_chars ?? 48;
 
         foreach ($data as $key => $value) {
             if (is_array($value) && $key === 'items') {
                 $itemsText = '';
                 foreach ($value as $item) {
-                    // Format: "item_name quantity"
-                    // For services (unit = xidmət): "yag deyishme servisi 20"
-                    // For products: "yag filteri 5" or "motor yagl 4.5"
-                    
+                    $name = $item['name'];
+                    $qty = $item['quantity'];
+                    $price = $item['unit_price'];
+                    $total = $item['total'];
+
                     // Format quantity nicely - remove trailing zeros for decimals
-                    $quantity = $item['quantity'];
-                    if (is_float($quantity) && $quantity == intval($quantity)) {
-                        $quantity = intval($quantity);
+                    if (is_float($qty) && $qty == intval($qty)) {
+                        $qty = intval($qty);
                     }
-                    
-                    $itemName = $item['name'];
-                    $unitPrice = number_format($item['unit_price'], 2);
-                    $total = number_format($item['total'], 2);
-                    
-                    // Clean format: "name quantity"
-                    $itemsText .= sprintf("%-30s %s\n", $itemName . ' ' . $quantity, $total . ' AZN');
+
+                    // Format: Name on one line, quantity x price = total on next line
+                    // For better readability on thermal printers
+                    if (strlen($name) > $width - 2) {
+                        // Name is too long, wrap it
+                        $itemsText .= substr($name, 0, $width - 2) . "\n";
+                    } else {
+                        $itemsText .= $name . "\n";
+                    }
+
+                    // Quantity x Price aligned right with total
+                    $qtyLine = "  {$qty} x {$price}";
+                    $totalStr = "{$total} AZN";
+                    $spaces = max(1, $width - strlen($qtyLine) - strlen($totalStr));
+                    $itemsText .= $qtyLine . str_repeat(' ', $spaces) . $totalStr . "\n";
                 }
-                $content = str_replace('{{' . $key . '}}', trim($itemsText), $content);
+                $content = str_replace('{{' . $key . '}}', rtrim($itemsText), $content);
             } else {
                 $content = str_replace('{{' . $key . '}}', $value, $content);
             }
         }
 
+        // Process formatting commands
+        $content = $this->formatPreviewContent($content, $width);
+
         // Always add the standard footer
-        $footer = "\n================================\n================================\nONYX xPos\nwww.xpos.az\n================================\n================================";
+        $footer = "\n================================\n================================\nxPOS\nwww.xpos.az\n================================\n================================";
         $content .= $footer;
 
         return $content;
+    }
+
+    /**
+     * Format thermal printer commands for web preview
+     */
+    private function formatPreviewContent(string $content, int $width): string
+    {
+        $lines = explode("\n", $content);
+        $formatted = [];
+
+        foreach ($lines as $line) {
+            // Replace {line} with separator
+            if (strpos($line, '{line}') !== false) {
+                $formatted[] = str_repeat('=', $width);
+                continue;
+            }
+
+            // Process formatting tags
+            $processedLine = $line;
+
+            // Remove bold tags (can't show in plain text preview)
+            $processedLine = str_replace(['{bold}', '{/bold}'], '', $processedLine);
+            $processedLine = str_replace(['{double}', '{/double}'], '', $processedLine);
+
+            // Handle alignment
+            if (strpos($processedLine, '{center}') !== false) {
+                $text = trim(str_replace('{center}', '', $processedLine));
+                $spaces = max(0, floor(($width - mb_strlen($text)) / 2));
+                $formatted[] = str_repeat(' ', $spaces) . $text;
+            } elseif (strpos($processedLine, '{right}') !== false) {
+                $text = trim(str_replace('{right}', '', $processedLine));
+                $spaces = max(0, $width - mb_strlen($text));
+                $formatted[] = str_repeat(' ', $spaces) . $text;
+            } elseif (strpos($processedLine, '{left}') !== false) {
+                $formatted[] = str_replace('{left}', '', $processedLine);
+            } else {
+                // No alignment tag, keep as is
+                if (trim($processedLine) !== '') {
+                    $formatted[] = $processedLine;
+                } else {
+                    $formatted[] = '';
+                }
+            }
+        }
+
+        return implode("\n", $formatted);
     }
 
     /**

@@ -64,7 +64,6 @@ export default function SlimSidebarLayout({
         return false;
     });
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
 
     const handleWarehouseChange = (warehouseId: string | number) => {
         const warehouseIdToSend = warehouseId ? (typeof warehouseId === 'string' ? parseInt(warehouseId, 10) : warehouseId) : null;
@@ -79,13 +78,6 @@ export default function SlimSidebarLayout({
             localStorage.setItem('sidebarExpanded', String(sidebarExpanded));
         }
     }, [sidebarExpanded]);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
 
     // Command palette keyboard shortcut
     useEffect(() => {
@@ -586,35 +578,18 @@ export default function SlimSidebarLayout({
                     {/* Bottom Information Bar */}
                     <footer className={`fixed bottom-0 right-0 left-0 z-30 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white shadow-lg transition-all duration-300 ${sidebarExpanded ? 'lg:left-64' : 'lg:left-20'}`}>
                         <div className="flex items-center justify-between px-4 py-2 text-xs">
-                            <div className="flex items-center space-x-6">
-                                <div className="flex items-center space-x-1 text-slate-300">
-                                    <span>{t('footer.version')}:</span>
-                                    <span className="font-mono bg-slate-600 px-2 py-0.5 rounded text-white">{getAppVersion()}</span>
-                                </div>
+                            <div className="flex items-center space-x-4">
+                                <Link
+                                    href="/knowledge"
+                                    className="flex items-center space-x-1 bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded transition-colors duration-200 text-slate-200 hover:text-white"
+                                >
+                                    <span>{t('footer.knowledge_base')}</span>
+                                </Link>
                             </div>
 
-                            <div className="hidden md:flex items-center space-x-4">
-                                <div className="flex items-center space-x-2 text-slate-300">
-                                    <span className="font-mono">
-                                        {currentTime.toLocaleTimeString('az-AZ', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            second: '2-digit'
-                                        })}
-                                    </span>
-                                </div>
-
-                                <div className="text-slate-400">|</div>
-
-                                <div className="flex items-center space-x-2 text-slate-300">
-                                    <span className="font-medium">
-                                        {currentTime.toLocaleDateString('az-AZ', {
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric'
-                                        })}
-                                    </span>
-                                </div>
+                            <div className="flex items-center space-x-1 text-slate-300">
+                                <span>{t('footer.version')}:</span>
+                                <span className="font-mono bg-slate-600 px-2 py-0.5 rounded text-white">{getAppVersion()}</span>
                             </div>
 
                             <div className="flex items-center space-x-6">

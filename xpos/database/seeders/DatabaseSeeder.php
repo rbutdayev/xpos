@@ -50,9 +50,14 @@ class DatabaseSeeder extends Seeder
             echo "✓ Super Admin password updated (admin@xpos.az)\n";
         }
 
-        // Call XPOSSeeder to create comprehensive test data
+        // Call seeders to create comprehensive test data
         $this->call([
+            CurrencySeeder::class,
+            FiscalPrinterProviderSeeder::class,
             XPOSSeeder::class,
+            ReceiptTemplateSeeder::class,
+            KnowledgeBaseCategoriesSeeder::class,  // 13 parent + 88 subcategories
+            KnowledgeArticlesSeeder::class,        // 36 high-quality articles from KNOWLEDGE_BASE_ARTICLES.md
         ]);
     }
 }

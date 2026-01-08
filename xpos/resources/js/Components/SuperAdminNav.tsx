@@ -66,6 +66,7 @@ export default function SuperAdminNav({ activePage }: Props) {
             ),
             items: [
                 { path: '/admin', label: 'Dashboard', exact: true },
+                { path: '/admin/knowledge', label: 'Bilik Bazası' },
                 { path: '/admin/system-health', label: 'Sistem Statusu' },
                 { path: '/admin/security', label: 'Təhlükəsizlik' },
                 { path: '/admin/storage-settings', label: 'Object Store' },

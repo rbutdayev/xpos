@@ -67,14 +67,14 @@ class ThermalPrintService
             'vehicle_mileage' => $serviceRecord->vehicle_mileage !== null ? number_format($serviceRecord->vehicle_mileage) . ' km' : '-',
             'service_description' => $serviceRecord->description,
             'employee_name' => $serviceRecord->employee->name ?? '',
-            'labor_cost' => number_format($serviceRecord->labor_cost, 2) . ' AZN',
-            'parts_cost' => number_format($partsTotal, 2) . ' AZN',
-            'total_cost' => number_format($totalCost, 2) . ' AZN',
+            'labor_cost' => number_format($serviceRecord->labor_cost, 2),
+            'parts_cost' => number_format($partsTotal, 2),
+            'total_cost' => number_format($totalCost, 2),
             // Sales-equivalent variables for service records
-            'subtotal' => number_format($subtotal, 2) . ' AZN',
-            'tax_amount' => number_format($taxAmount, 2) . ' AZN',
-            'discount_amount' => number_format($discountAmount, 2) . ' AZN',
-            'total' => number_format($finalTotal, 2) . ' AZN',
+            'subtotal' => number_format($subtotal, 2),
+            'tax_amount' => number_format($taxAmount, 2),
+            'discount_amount' => number_format($discountAmount, 2),
+            'total' => number_format($finalTotal, 2),
             'payment_method' => $serviceRecord->payment_method ?? 'Nağd', // Default payment method for services
             'divider' => str_repeat('-', $template->width_chars ?? $defaultSettings->width_chars),
         ];
@@ -146,17 +146,14 @@ class ThermalPrintService
             'receipt_number' => $sale->sale_number,
             'customer_name' => $sale->customer ? $sale->customer->name : 'Anonim Müştəri',
             'customer_phone' => $sale->customer ? $sale->customer->phone ?? '' : '',
-            'subtotal' => number_format($sale->subtotal, 2) . ' AZN',
-            'tax_amount' => number_format($sale->tax_amount, 2) . ' AZN',
-            'discount_amount' => number_format($sale->discount_amount, 2) . ' AZN',
-            'total' => number_format($sale->total, 2) . ' AZN',
-            'payment_method' => $sale->payments->pluck('method')->map(function($method) {
-                $labels = [
-                    'nağd' => 'Nağd',
-                    'kart' => 'Kart',
-                    'köçürmə' => 'Köçürmə',
-                ];
-                return $labels[$method] ?? $method;
+            'subtotal' => number_format($sale->subtotal, 2),
+            'tax_amount' => number_format($sale->tax_amount, 2),
+            'discount_amount' => number_format($sale->discount_amount, 2),
+            'total' => number_format($sale->total, 2),
+            'payment_method' => $sale->payments->map(function($payment) {
+                return $payment->method instanceof \App\Enums\PaymentMethod
+                    ? $payment->method->labelAz()
+                    : $payment->method;
             })->implode(', '),
             'divider' => str_repeat('-', $template->width_chars ?? $defaultSettings->width_chars),
         ];
@@ -339,11 +336,14 @@ class ThermalPrintService
             $content = str_replace("{{{$key}}}", $value, $content);
         }
 
+        // Process formatting commands for plain text output
+        $content = $this->processFormattingCommands($content);
+
         // Always add the standard footer
         $footer = "\n" . str_repeat('-', 32) . "\n"
                 . str_repeat('-', 32) . "\n"
-                . str_pad('ONYX xPos', 32, ' ', STR_PAD_BOTH) . "\n"
-                . str_pad('www.onyx.az', 32, ' ', STR_PAD_BOTH) . "\n"
+                . str_pad('xPOS', 32, ' ', STR_PAD_BOTH) . "\n"
+                . str_pad('www.xpos.az', 32, ' ', STR_PAD_BOTH) . "\n"
                 . str_repeat('-', 32) . "\n"
                 . str_repeat('-', 32);
         $content .= $footer;
@@ -352,6 +352,48 @@ class ThermalPrintService
         $content = $this->addLeftMargin($content, 3);
 
         return $content;
+    }
+
+    /**
+     * Process formatting commands for plain text thermal printing
+     */
+    private function processFormattingCommands(string $content): string
+    {
+        $lines = explode("\n", $content);
+        $formatted = [];
+        $width = 48; // Default thermal paper width
+
+        foreach ($lines as $line) {
+            // Replace {line} with separator
+            if (strpos($line, '{line}') !== false) {
+                $formatted[] = str_repeat('=', $width);
+                continue;
+            }
+
+            $processedLine = $line;
+
+            // Remove bold tags (plain text can't show bold)
+            $processedLine = str_replace(['{bold}', '{/bold}'], '', $processedLine);
+            $processedLine = str_replace(['{double}', '{/double}'], '', $processedLine);
+
+            // Handle alignment
+            if (strpos($processedLine, '{center}') !== false) {
+                $text = trim(str_replace('{center}', '', $processedLine));
+                $spaces = max(0, floor(($width - mb_strlen($text)) / 2));
+                $formatted[] = str_repeat(' ', $spaces) . $text;
+            } elseif (strpos($processedLine, '{right}') !== false) {
+                $text = trim(str_replace('{right}', '', $processedLine));
+                $spaces = max(0, $width - mb_strlen($text));
+                $formatted[] = str_repeat(' ', $spaces) . $text;
+            } elseif (strpos($processedLine, '{left}') !== false) {
+                $formatted[] = str_replace('{left}', '', $processedLine);
+            } else {
+                // No alignment tag, keep as is
+                $formatted[] = $processedLine;
+            }
+        }
+
+        return implode("\n", $formatted);
     }
 
     /**
@@ -376,7 +418,7 @@ class ThermalPrintService
     {
         // For standard PC printing, we return the content that can be printed
         // using browser's print functionality or sent to system default printer
-        
+
         return [
             'success' => true,
             'message' => 'Qəbz hazırlandı - brauzerin çap funksiyasından istifadə edin',
