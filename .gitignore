@@ -1,0 +1,4 @@
+# Helm secrets - DO NOT COMMIT
+iac/helm/xpos/values-prod-secrets.yaml
+iac/helm/xpos/values-dev-secrets.yaml
+*-secrets.yaml
