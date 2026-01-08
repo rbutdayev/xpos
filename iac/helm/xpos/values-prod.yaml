@@ -141,18 +141,20 @@ ingress:
       hosts:
         - app.xpos.az
 
-# SECURITY: Run as non-root user
-podSecurityContext:
-  fsGroup: 2000
-  runAsNonRoot: true
-  runAsUser: 1000
+# SECURITY: Disabled due to supervisord compatibility issue
+# The Docker images use supervisord with user=root which conflicts
+# TODO: Fix Dockerfiles to remove supervisord user directive
+podSecurityContext: {}
+  # fsGroup: 2000
+  # runAsNonRoot: true
+  # runAsUser: 1000
 
-securityContext:
-  capabilities:
-    drop:
-    - ALL
-  readOnlyRootFilesystem: false  # Laravel needs write access to storage
-  allowPrivilegeEscalation: false
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: false
+  # allowPrivilegeEscalation: false
 
 ---
 # DEPLOYMENT INSTRUCTIONS:
