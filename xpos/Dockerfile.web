@@ -98,7 +98,14 @@ RUN mkdir -p /etc/supervisor.d && \
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache || true && \
     mkdir -p /run/nginx && \
-    chown -R www-data:www-data /var/lib/nginx /var/log/nginx
+    mkdir -p /var/lib/nginx/tmp/client_body \
+             /var/lib/nginx/tmp/proxy \
+             /var/lib/nginx/tmp/fastcgi \
+             /var/lib/nginx/tmp/uwsgi \
+             /var/lib/nginx/tmp/scgi && \
+    chown -R www-data:www-data /var/lib/nginx /var/log/nginx && \
+    mkdir -p /var/www/storage/logs /var/www/storage/app/public && \
+    chmod -R 775 /var/www/storage
 
 EXPOSE 80
 

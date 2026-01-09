@@ -35,7 +35,7 @@ secrets:
   redisPassword: ""  # Not used when existingSecret is set
 
 web:
-  replicaCount: 3
+  replicaCount: 2
 
   # IMPROVEMENT: Better resource alignment
   resources:
@@ -48,7 +48,7 @@ web:
 
   autoscaling:
     enabled: true
-    minReplicas: 3
+    minReplicas: 2
     maxReplicas: 20
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
