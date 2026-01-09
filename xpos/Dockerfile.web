@@ -103,7 +103,8 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache || true
              /var/lib/nginx/tmp/fastcgi \
              /var/lib/nginx/tmp/uwsgi \
              /var/lib/nginx/tmp/scgi && \
-    chown -R www-data:www-data /var/lib/nginx /var/log/nginx && \
+    chown -R nginx:nginx /var/lib/nginx /var/log/nginx && \
+    chmod -R 755 /var/lib/nginx && \
     mkdir -p /var/www/storage/logs /var/www/storage/app/public && \
     chmod -R 775 /var/www/storage
 
