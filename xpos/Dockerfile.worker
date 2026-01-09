@@ -62,4 +62,4 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache || true
 USER www-data
 
 # Kubernetes will restart this if it fails - no supervisor needed
-CMD ["php", "artisan", "queue:work", "redis", "--queue=default,goods-receipts", "--sleep=3", "--tries=3", "--max-time=3600", "--verbose"]
+CMD ["php", "artisan", "queue:work", "redis", "--queue=default,goods-receipts", "--sleep=3", "--tries=3", "--max-time=21600", "--verbose"]
