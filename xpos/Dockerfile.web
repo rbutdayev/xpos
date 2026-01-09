@@ -25,6 +25,7 @@ RUN apk add --no-cache --virtual .build-deps \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
+    libwebp-dev \
     gcc \
     g++ \
     make \
@@ -34,7 +35,7 @@ RUN apk add --no-cache --virtual .build-deps \
   && apk add --no-cache ca-certificates
 
 # PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
   && docker-php-ext-install -j$(nproc) pdo pdo_mysql zip gd bcmath intl mbstring pcntl opcache
 
 # Redis extension
@@ -54,7 +55,7 @@ FROM php:8.3-fpm-alpine
 WORKDIR /var/www
 
 # Runtime deps + Nginx + Supervisor (still needed for php-fpm + nginx in same container)
-RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype \
+RUN apk add --no-cache bash ca-certificates openssl curl libzip zlib libpng libjpeg-turbo freetype libwebp \
     icu-libs icu-data-full oniguruma \
     nginx supervisor
 
