@@ -25,7 +25,7 @@ export default function TabsNav({ active, onChange }: Props) {
               className={`
                 relative flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-md
                 font-medium text-xs sm:text-sm transition-all duration-200 ease-in-out
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                 whitespace-nowrap flex-shrink-0
                 ${active === tab.id
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'

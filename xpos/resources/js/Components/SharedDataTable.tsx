@@ -246,7 +246,8 @@ export default function SharedDataTable({
     // Selection handlers
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedIds(data.data.map(item => item[idField]));
+            // Only select items that are not disabled
+            setSelectedIds(data.data.filter(item => !item.disabled).map(item => item[idField]));
         } else {
             setSelectedIds([]);
         }
@@ -372,7 +373,7 @@ export default function SharedDataTable({
                                 {onRefresh && (
                                     <button
                                         onClick={onRefresh}
-                                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     >
                                         {t('dataTable.refresh')}
                                     </button>
@@ -381,7 +382,7 @@ export default function SharedDataTable({
                                 {createButton && (
                                     <Link
                                         href={createButton.href}
-                                        className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${createButton.className || ''}`}
+                                        className={`px-4 py-2 text-sm font-medium text-white bg-slate-700 border border-transparent rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 ${createButton.className || ''}`}
                                     >
                                         {createButton.label}
                                     </Link>
@@ -409,7 +410,7 @@ export default function SharedDataTable({
                                                 onChange={(e) => onSearchChange(e.target.value)}
                                                 onKeyDown={(e) => e.key === 'Enter' && onSearch?.()}
                                                 placeholder={effectiveSearchPlaceholder}
-                                                className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                             />
                                         </div>
                                     </div>
@@ -429,7 +430,7 @@ export default function SharedDataTable({
                                     {onSearch && (
                                         <button
                                             onClick={onSearch}
-                                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                                            className="px-4 py-2 text-sm font-medium text-white bg-slate-700 rounded-md hover:bg-slate-600"
                                         >
                                             {t('dataTable.search')}
                                         </button>
@@ -459,7 +460,7 @@ export default function SharedDataTable({
                                                 <select
                                                     value={filter.value}
                                                     onChange={(e) => filter.onChange(e.target.value)}
-                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 >
                                                     <option value="">{filter.placeholder || t('dataTable.selectPlaceholder')}</option>
                                                     {filter.options?.map(option => (
@@ -473,7 +474,7 @@ export default function SharedDataTable({
                                                     type="date"
                                                     value={filter.value}
                                                     onChange={(e) => filter.onChange(e.target.value)}
-                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 />
                                             ) : (
                                                 <input
@@ -481,7 +482,7 @@ export default function SharedDataTable({
                                                     value={filter.value}
                                                     onChange={(e) => filter.onChange(e.target.value)}
                                                     placeholder={filter.placeholder}
-                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 />
                                             )}
                                         </div>
@@ -526,11 +527,11 @@ export default function SharedDataTable({
                                                 case 'secondary':
                                                     return 'bg-gray-500 hover:bg-gray-600 text-white border-gray-400';
                                                 case 'view':
-                                                    return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400';
+                                                    return 'bg-slate-500 hover:bg-slate-600 text-white border-slate-400';
                                                 case 'edit':
                                                     return 'bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-400';
                                                 default:
-                                                    return 'bg-white hover:bg-gray-50 text-blue-700 border-white';
+                                                    return 'bg-white hover:bg-gray-50 text-slate-700 border-white';
                                             }
                                         };
 
@@ -575,7 +576,7 @@ export default function SharedDataTable({
                                                     type="checkbox"
                                                     checked={selectedIds.length === data.data.length && data.data.length > 0}
                                                     onChange={(e) => handleSelectAll(e.target.checked)}
-                                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                    className="rounded border-gray-300 text-slate-600 focus:ring-slate-500"
                                                 />
                                             </th>
                                         )}
@@ -637,7 +638,7 @@ export default function SharedDataTable({
                                                 <tr
                                                     className={`transition-all duration-200 ${customRowClass} ${isMobile && effectiveMobileClickable ? 'cursor-pointer' : ''} ${onRowDoubleClick || onRowClick ? 'cursor-pointer' : ''} ${
                                                         isSelected
-                                                            ? 'bg-blue-100 hover:bg-blue-200 ring-2 ring-blue-300 ring-inset'
+                                                            ? 'bg-blue-100 hover:bg-blue-200 ring-2 ring-slate-300 ring-inset'
                                                             : 'hover:bg-blue-50'
                                                     }`}
                                                     onClick={(e) => {
@@ -674,7 +675,8 @@ export default function SharedDataTable({
                                                                 type="checkbox"
                                                                 checked={selectedIds.includes(itemId)}
                                                                 onChange={(e) => handleSelectRow(itemId, e.target.checked)}
-                                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                                disabled={item.disabled === true}
+                                                                className="rounded border-gray-300 text-slate-600 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             />
                                                         </td>
                                                     )}

@@ -284,7 +284,7 @@ export default function Show({ auth, card, giftCardsEnabled = true, discountsEna
                                                     <div className="mt-2 pt-2 border-t border-gray-100">
                                                         <Link
                                                             href={`/sales/${transaction.sale.sale_id}`}
-                                                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                                                            className="text-xs text-slate-600 hover:text-slate-800 flex items-center"
                                                         >
                                                             <BanknotesIcon className="w-4 h-4 mr-1" />
                                                             Satış #{transaction.sale.sale_id} (₼{transaction.sale.total})
@@ -329,7 +329,7 @@ export default function Show({ auth, card, giftCardsEnabled = true, discountsEna
                                                 <dd className="mt-1 text-sm text-gray-900">
                                                     <a
                                                         href={`tel:${card.customer.phone}`}
-                                                        className="text-blue-600 hover:text-blue-800"
+                                                        className="text-slate-600 hover:text-slate-800"
                                                     >
                                                         {card.customer.phone}
                                                     </a>
@@ -342,7 +342,7 @@ export default function Show({ auth, card, giftCardsEnabled = true, discountsEna
                                                 <dd className="mt-1 text-sm text-gray-900">
                                                     <a
                                                         href={`mailto:${card.customer.email}`}
-                                                        className="text-blue-600 hover:text-blue-800"
+                                                        className="text-slate-600 hover:text-slate-800"
                                                     >
                                                         {card.customer.email}
                                                     </a>
@@ -352,7 +352,7 @@ export default function Show({ auth, card, giftCardsEnabled = true, discountsEna
                                         <div className="pt-3">
                                             <Link
                                                 href={`/customers/${card.customer.id}`}
-                                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                                className="text-sm text-slate-600 hover:text-slate-800 font-medium"
                                             >
                                                 Müştəri profilinə keç →
                                             </Link>

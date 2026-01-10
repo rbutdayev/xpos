@@ -84,7 +84,7 @@ export default function DailySalesSummary({ summary, selectedDate, onDateChange 
                         onClick={handleToday}
                         className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
                             isToday
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-slate-700 text-white'
                                 : 'bg-white text-gray-700 hover:bg-blue-100 border border-gray-300'
                         }`}
                     >

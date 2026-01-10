@@ -149,7 +149,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                     id="supplier_id"
                                     value={form.data.supplier_id}
                                     onChange={(e) => (form.setData as any)('supplier_id', e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                     required
                                 >
                                     <option value="">Təchizatçı seçin</option>
@@ -170,7 +170,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                     id="warehouse_id"
                                     value={form.data.warehouse_id}
                                     onChange={(e) => (form.setData as any)('warehouse_id', e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                     required
                                 >
                                     <option value="">Anbar seçin</option>
@@ -192,7 +192,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                     id="return_date"
                                     value={form.data.return_date}
                                     onChange={(e) => (form.setData as any)('return_date', e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                     required
                                 />
                             </div>
@@ -313,7 +313,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                                         step="0.001"
                                                         value={item.quantity}
                                                         onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                                         min="0.001"
                                                         max={item.product?.available_quantity || undefined}
                                                         required
@@ -334,7 +334,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                                         type="text"
                                                         value={item.unit}
                                                         onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                                         required
                                                     />
                                                 </div>
@@ -349,7 +349,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                                         step="0.01"
                                                         value={item.unit_cost}
                                                         onChange={(e) => updateItem(index, 'unit_cost', e.target.value)}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                                         min="0"
                                                         required
                                                     />
@@ -389,7 +389,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                                 rows={4}
                                 value={form.data.reason}
                                 onChange={(e) => (form.setData as any)('reason', e.target.value)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                 placeholder="Məhsulların qaytarılma səbəbini qeyd edin..."
                                 maxLength={1000}
                                 required
@@ -411,7 +411,7 @@ export default function Create({ suppliers, warehouses }: Props) {
                             <button
                                 type="submit"
                                 disabled={form.processing || form.data.items.length === 0}
-                                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center justify-center disabled:opacity-50"
+                                className="w-full sm:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded inline-flex items-center justify-center disabled:opacity-50"
                             >
                                 {form.processing ? 'Yadda saxlanır...' : 'Qaytarma yarat'}
                             </button>

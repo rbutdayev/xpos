@@ -160,7 +160,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     name="category_id"
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="">{t('categories.placeholders.selectType')}</option>
@@ -181,7 +181,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     name="branch_id"
                                     value={data.branch_id}
                                     onChange={(e) => setData('branch_id', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
@@ -202,7 +202,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     name="payment_method"
                                     value={data.payment_method}
                                     onChange={(e) => setData('payment_method', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
@@ -241,7 +241,7 @@ export default function Create({ categories, branches, paymentMethods, supplierC
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />

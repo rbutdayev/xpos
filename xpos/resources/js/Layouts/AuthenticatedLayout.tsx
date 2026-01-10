@@ -27,6 +27,7 @@ import {
     MagnifyingGlassIcon,
     DeviceTabletIcon,
     TruckIcon,
+    ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 // Import topbar navigation components
@@ -34,6 +35,7 @@ import SalesTopbar from '@/Components/Navigation/SalesTopbar';
 import ProductsTopbar from '@/Components/Navigation/ProductsTopbar';
 import WarehouseTopbar from '@/Components/Navigation/WarehouseTopbar';
 import FinanceTopbar from '@/Components/Navigation/FinanceTopbar';
+import ReportsTopbar from '@/Components/Navigation/ReportsTopbar';
 import AdminTopbar from '@/Components/Navigation/AdminTopbar';
 import RentalsTopbar from '@/Components/Navigation/RentalsTopbar';
 import ServicesTopbar from '@/Components/Navigation/ServicesTopbar';
@@ -43,7 +45,7 @@ interface SidebarItem {
     href?: string;
     icon: React.ComponentType<{ className?: string }>;
     current?: boolean;
-    section: 'dashboard' | 'pos' | 'sales' | 'products' | 'warehouse' | 'services' | 'rentals' | 'finance' | 'admin';
+    section: 'dashboard' | 'pos' | 'sales' | 'products' | 'warehouse' | 'services' | 'rentals' | 'finance' | 'reports' | 'admin';
 }
 
 export default function SlimSidebarLayout({
@@ -147,9 +149,16 @@ export default function SlimSidebarLayout({
         if (currentRoute.includes('expenses') ||
             currentRoute.includes('expense-categories') ||
             currentRoute.includes('employee-salaries') ||
-            currentRoute.includes('supplier-payments') ||
-            currentRoute.includes('reports')) {
+            currentRoute.includes('supplier-payments')) {
             return 'finance';
+        }
+
+        if (currentRoute.includes('attendance')) {
+            return 'reports';
+        }
+
+        if (currentRoute.includes('reports')) {
+            return 'reports';
         }
 
         if (currentRoute.includes('companies') ||
@@ -243,6 +252,13 @@ export default function SlimSidebarLayout({
                     icon: CurrencyDollarIcon,
                     current: activeSection === 'finance',
                     section: 'finance'
+                },
+                {
+                    name: t('navigation.reports'),
+                    href: '/reports',
+                    icon: ChartBarIcon,
+                    current: activeSection === 'reports',
+                    section: 'reports'
                 },
                 {
                     name: t('navigation.administration'),
@@ -349,6 +365,13 @@ export default function SlimSidebarLayout({
                 section: 'finance'
             },
             {
+                name: t('navigation.reports'),
+                href: '/reports',
+                icon: ChartBarIcon,
+                current: activeSection === 'reports',
+                section: 'reports'
+            },
+            {
                 name: t('navigation.administration'),
                 href: '/settings',
                 icon: CogIcon,
@@ -374,6 +397,8 @@ export default function SlimSidebarLayout({
                 return <WarehouseTopbar />;
             case 'finance':
                 return <FinanceTopbar />;
+            case 'reports':
+                return <ReportsTopbar />;
             case 'admin':
                 return <AdminTopbar />;
             case 'rentals':
@@ -397,20 +422,20 @@ export default function SlimSidebarLayout({
                     group relative flex items-center rounded-xl px-3 py-3 text-base font-semibold transition-all duration-200
                     ${showExpanded ? '' : 'lg:justify-center'}
                     ${item.current
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30'
-                        : 'text-slate-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 hover:text-slate-900'
+                        ? 'bg-slate-600 text-white shadow-lg border border-slate-500'
+                        : 'text-slate-300 hover:bg-slate-600/70 hover:text-white'
                     }
                 `}
                 title={!showExpanded ? item.name : ''}
             >
-                <IconComponent className={`h-6 w-6 flex-shrink-0 transition-all duration-200 ${showExpanded ? 'mr-3' : 'lg:mr-0'} ${item.current ? 'text-white' : 'text-blue-500'}`} />
+                <IconComponent className={`h-6 w-6 flex-shrink-0 transition-all duration-200 ${showExpanded ? 'mr-3' : 'lg:mr-0'} ${item.current ? 'text-blue-400' : 'text-blue-400'}`} />
 
                 {/* Show text when expanded or on mobile */}
                 <span className={`whitespace-nowrap ${showExpanded ? '' : 'lg:hidden'}`}>{item.name}</span>
 
                 {/* Tooltip on hover (only when collapsed on desktop) */}
                 {!sidebarExpanded && (
-                    <span className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
+                    <span className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-slate-700 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none shadow-xl">
                         {item.name}
                     </span>
                 )}
@@ -440,16 +465,16 @@ export default function SlimSidebarLayout({
 
                 {/* Slim Sidebar */}
                 <div className={`
-                    fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-2xl transform transition-all duration-300 ease-in-out border-r border-slate-200
+                    fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-slate-800 via-slate-700 to-slate-800 shadow-2xl transform transition-all duration-300 ease-in-out border-r border-slate-600
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'}
                     ${sidebarExpanded ? 'lg:w-64' : 'lg:w-20'}
                 `}>
                     {/* Sidebar header */}
-                    <div className="flex h-16 flex-shrink-0 items-center border-b border-slate-200 px-4 justify-center bg-gradient-to-r from-white to-slate-50 relative">
+                    <div className="flex h-16 flex-shrink-0 items-center border-b border-slate-600 px-4 justify-center bg-white relative">
                         {/* Mobile close button */}
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="lg:hidden absolute top-3 right-3 p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-all duration-200 z-10"
+                            className="lg:hidden absolute top-3 right-3 p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all duration-200 z-10"
                         >
                             <XMarkIcon className="h-6 w-6" />
                         </button>
@@ -463,7 +488,7 @@ export default function SlimSidebarLayout({
                                 {/* Collapse button */}
                                 <button
                                     onClick={() => setSidebarExpanded(false)}
-                                    className="hidden lg:flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-all duration-200 ml-auto"
+                                    className="hidden lg:flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all duration-200 ml-auto"
                                     title={t('navigation.collapse')}
                                 >
                                     <ChevronLeftIcon className="w-5 h-5" />
@@ -473,7 +498,7 @@ export default function SlimSidebarLayout({
                             /* Expand button (centered when collapsed) */
                             <button
                                 onClick={() => setSidebarExpanded(true)}
-                                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-all duration-200"
+                                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all duration-200"
                                 title={t('navigation.expand')}
                             >
                                 <Bars3Icon className="w-6 h-6" />
@@ -482,28 +507,33 @@ export default function SlimSidebarLayout({
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-                        {navigation.map((item) => (
-                            <SidebarItem key={item.name} item={item} />
+                    <nav className="flex-1 overflow-y-auto px-3 py-4">
+                        {navigation.map((item, index) => (
+                            <div key={item.name}>
+                                <SidebarItem item={item} />
+                                {index < navigation.length - 1 && (
+                                    <div className="my-2 border-t border-slate-600/60" />
+                                )}
+                            </div>
                         ))}
                     </nav>
 
                     {/* User menu */}
-                    <div className={`flex-shrink-0 border-t border-slate-200 p-3 relative z-[60] bg-gradient-to-r from-white to-slate-50`}>
+                    <div className={`flex-shrink-0 border-t border-slate-600 p-3 relative z-[60] bg-slate-700/50 backdrop-blur-sm`}>
                         <Dropdown>
                             <Dropdown.Trigger>
                                 {sidebarExpanded ? (
                                     /* Expanded state: Full user card */
-                                    <button className="group block w-full rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 hover:from-slate-100 hover:to-slate-200 px-3 py-2.5 text-left transition-all duration-200 shadow-sm hover:shadow-md border border-slate-200">
+                                    <button className="group block w-full rounded-xl bg-slate-600/50 hover:bg-slate-600 px-3 py-2.5 text-left transition-all duration-200 shadow-md hover:shadow-lg border border-slate-500">
                                         <div className="flex items-center">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-bold text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-400/20">
                                                 {user.name?.charAt(0).toUpperCase() || '?'}
                                             </div>
                                             <div className="ml-3 flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                                                <p className="text-xs text-slate-600 truncate">{user.email}</p>
+                                                <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+                                                <p className="text-xs text-slate-300 truncate">{user.email}</p>
                                             </div>
-                                            <ChevronDownIcon className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors flex-shrink-0" />
+                                            <ChevronDownIcon className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors flex-shrink-0" />
                                         </div>
                                     </button>
                                 ) : (
@@ -517,10 +547,10 @@ export default function SlimSidebarLayout({
                                 )}
                             </Dropdown.Trigger>
 
-                            <Dropdown.Content align="right" direction="up" contentClasses="py-1 bg-white border border-slate-200 shadow-xl" width="48">
-                                <div className="px-4 py-3 border-b border-gray-200">
-                                    <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                                    <p className="text-xs text-gray-500">{user.email}</p>
+                            <Dropdown.Content align="right" direction="up" contentClasses="py-1 bg-slate-700 border border-slate-600 shadow-xl" width="48">
+                                <div className="px-4 py-3 border-b border-slate-600">
+                                    <p className="text-sm font-semibold text-white">{user.name}</p>
+                                    <p className="text-xs text-slate-400">{user.email}</p>
                                 </div>
                                 <Dropdown.Link href="/profile">{t('navigation.profile')}</Dropdown.Link>
                                 <Dropdown.Link

@@ -62,7 +62,7 @@ export default function SystemPreferences({ data, setData, errors }: Props) {
           <input type="hidden" name="warehouse_type" value="main" />
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
-              <div className="flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-lg">
+              <div className="flex items-center justify-center w-10 h-10 bg-slate-700 rounded-lg">
                 <BuildingOffice2Icon className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">

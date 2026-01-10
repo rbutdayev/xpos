@@ -45,7 +45,7 @@ export default function RegionalSettingsSection({
                         maxLength={3}
                         value={data.currency_code}
                         onChange={(e) => setData('currency_code', e.target.value.toUpperCase())}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -55,7 +55,7 @@ export default function RegionalSettingsSection({
                         maxLength={5}
                         value={data.currency_symbol}
                         onChange={(e) => setData('currency_symbol', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -63,7 +63,7 @@ export default function RegionalSettingsSection({
                     <select
                         value={data.timezone}
                         onChange={(e) => setData('timezone', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     >
                         {timezones.map((tz) => (
                             <option key={tz.value} value={tz.value}>
@@ -77,7 +77,7 @@ export default function RegionalSettingsSection({
                     <select
                         value={data.date_format}
                         onChange={(e) => setData('date_format', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     >
                         <option value="d.m.Y">31.12.2025</option>
                         <option value="d/m/Y">31/12/2025</option>
@@ -90,7 +90,7 @@ export default function RegionalSettingsSection({
                     <select
                         value={data.time_format}
                         onChange={(e) => setData('time_format', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     >
                         <option value="H:i">24:00 (15:30)</option>
                         <option value="h:i A">12:00 (3:30 PM)</option>

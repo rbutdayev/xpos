@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputLabel from '@/Components/InputLabel';
@@ -41,25 +41,12 @@ export default function Edit({ provider }: Props) {
     };
 
     return (
-        <>
+        <SuperAdminLayout title={`${provider.name} - API Konfiqurasiyası`}>
             <Head title={`Redaktə et - ${provider.name}`} />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                {provider.name} - API Konfiqurasiyası
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Provider code: <code className="bg-gray-100 px-2 py-1 rounded">{provider.code}</code>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
+            <p className="mb-6 text-sm text-gray-600">
+                Provider code: <code className="bg-gray-100 px-2 py-1 rounded">{provider.code}</code>
+            </p>
 
                     <div className="max-w-3xl">
                         {/* Info Box */}
@@ -108,7 +95,7 @@ export default function Edit({ provider }: Props) {
                                         id="description"
                                         value={data.description}
                                         onChange={(e) => setData('description', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         rows={3}
                                     />
                                     <InputError message={errors.description} className="mt-2" />
@@ -190,7 +177,7 @@ export default function Edit({ provider }: Props) {
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-slate-500"
                                     />
                                     <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
                                         Aktiv (sistemdə istifadə olunsun)
@@ -222,8 +209,6 @@ export default function Edit({ provider }: Props) {
                             </div>
                         </form>
                     </div>
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

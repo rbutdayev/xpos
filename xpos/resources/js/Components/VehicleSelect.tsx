@@ -107,7 +107,7 @@ export default function VehicleSelect({
                 type="button"
                 onClick={handleToggle}
                 disabled={disabled}
-                className={`relative w-full cursor-pointer rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm ${
+                className={`relative w-full cursor-pointer rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 sm:text-sm ${
                     disabled ? 'bg-gray-50 text-gray-500' : ''
                 }`}
                 aria-haspopup="listbox"
@@ -142,7 +142,7 @@ export default function VehicleSelect({
                                 <input
                                     ref={searchRef}
                                     type="text"
-                                    className="w-full rounded-md border-gray-300 pl-10 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full rounded-md border-gray-300 pl-10 text-sm focus:border-slate-500 focus:ring-slate-500"
                                     placeholder="Nəqliyyat vasitəsi axtar..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
@@ -154,7 +154,7 @@ export default function VehicleSelect({
                     {/* Clear option */}
                     {!required && (
                         <div
-                            className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-600 hover:text-white"
+                            className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-slate-700 hover:text-white"
                             onClick={handleClear}
                         >
                             <span className="font-normal block truncate text-gray-500 italic">
@@ -178,8 +178,8 @@ export default function VehicleSelect({
                                 key={vehicle.id}
                                 className={`relative cursor-pointer select-none py-2 pl-3 pr-9 ${
                                     vehicle.id.toString() === value
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'text-gray-900 hover:bg-indigo-600 hover:text-white'
+                                        ? 'bg-slate-700 text-white'
+                                        : 'text-gray-900 hover:bg-slate-700 hover:text-white'
                                 }`}
                                 onClick={() => handleSelect(vehicle)}
                             >

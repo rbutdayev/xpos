@@ -271,7 +271,7 @@ export default function Configure({
                                             step="0.01"
                                             value={denomination}
                                             onChange={(e) => setDenomination(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                             placeholder="Məsələn: 50"
                                             required
                                         />
@@ -287,7 +287,7 @@ export default function Configure({
                                             max={freeCards.length}
                                             value={quantity}
                                             onChange={(e) => setQuantity(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                             placeholder={`Maksimum ${freeCards.length}`}
                                             required
                                         />
@@ -295,7 +295,7 @@ export default function Configure({
                                     </div>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium whitespace-nowrap"
+                                        className="px-6 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 font-medium whitespace-nowrap"
                                     >
                                         Konfiqurasiya Et
                                     </button>
@@ -368,11 +368,11 @@ export default function Configure({
                                                                 value={newDenomination}
                                                                 onChange={(e) => setNewDenomination(e.target.value)}
                                                                 placeholder="Yeni məbləğ"
-                                                                className="w-32 px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                                className="w-32 px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                             />
                                                             <button
                                                                 onClick={() => handleUpdateDenomination(denomination)}
-                                                                className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 whitespace-nowrap"
+                                                                className="px-3 py-1 text-sm bg-slate-700 text-white rounded-md hover:bg-slate-600 whitespace-nowrap"
                                                             >
                                                                 Təsdiqlə
                                                             </button>
@@ -416,7 +416,7 @@ export default function Configure({
                                                                     setPage(denomination, 1);
                                                                 }}
                                                                 placeholder="Kart nömrəsi ilə axtar..."
-                                                                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                             />
                                                         </div>
                                                     </div>
@@ -459,7 +459,7 @@ export default function Configure({
                                                                                 <td className="px-4 py-3 text-sm text-right">
                                                                                     <Link
                                                                                         href={`/gift-cards/${card.id}`}
-                                                                                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                                                                        className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-800"
                                                                                     >
                                                                                         <EyeIcon className="w-4 h-4" />
                                                                                         Bax

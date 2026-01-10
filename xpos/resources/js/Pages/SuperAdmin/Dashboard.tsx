@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import StatCard from '@/Components/StatCard';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface AccountStats {
     total: number;
@@ -33,42 +33,30 @@ interface Props {
 
 export default function SuperAdminDashboard({ stats, error }: Props) {
     return (
-        <>
+        <SuperAdminLayout title="Super Admin Panel">
             <Head title="Super Admin Dashboard" />
-            
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Super Admin Panel
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Sistem idarəsi və monitorinq
-                            </p>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Error Message */}
-                    {error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">
-                                        Sistem Xətası
-                                    </h3>
-                                    <div className="mt-2 text-sm text-red-700">
-                                        {error}
-                                    </div>
+            <div className="space-y-6">
+                {/* Subtitle */}
+                <p className="text-sm text-gray-600">
+                    Sistem idarəsi və monitorinq
+                </p>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                        <div className="flex">
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">
+                                    Sistem Xətası
+                                </h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    {error}
                                 </div>
                             </div>
                         </div>
-                    )}
-
-                    {/* Navigation */}
-                    <SuperAdminNav />
+                    </div>
+                )}
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -98,13 +86,13 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                     <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Account Statistics */}
                         <div className="bg-white shadow rounded-lg overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200 bg-blue-50">
+                            <div className="px-6 py-4 border-b border-gray-200 bg-slate-50">
                                 <h3 className="text-lg font-semibold text-gray-900">Hesab Statistikası</h3>
                             </div>
                             <div className="p-6">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                        <div className="text-2xl font-bold text-blue-600">{stats.accounts.total}</div>
+                                        <div className="text-2xl font-bold text-slate-700">{stats.accounts.total}</div>
                                         <div className="text-sm text-gray-600 mt-1">Ümumi</div>
                                     </div>
                                     <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -115,8 +103,8 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                         <div className="text-2xl font-bold text-red-600">{stats.accounts.suspended}</div>
                                         <div className="text-sm text-gray-600 mt-1">Dayandırılmış</div>
                                     </div>
-                                    <div className="text-center p-4 bg-indigo-50 rounded-lg">
-                                        <div className="text-2xl font-bold text-indigo-600">{stats.accounts.created_this_month}</div>
+                                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-slate-700">{stats.accounts.created_this_month}</div>
                                         <div className="text-sm text-gray-600 mt-1">Bu ay yaradılan</div>
                                     </div>
                                 </div>
@@ -125,13 +113,13 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
 
                         {/* User Statistics */}
                         <div className="bg-white shadow rounded-lg overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200 bg-purple-50">
+                            <div className="px-6 py-4 border-b border-gray-200 bg-slate-50">
                                 <h3 className="text-lg font-semibold text-gray-900">İstifadəçi Statistikası</h3>
                             </div>
                             <div className="p-6">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                        <div className="text-2xl font-bold text-purple-600">{stats.users.total}</div>
+                                        <div className="text-2xl font-bold text-slate-700">{stats.users.total}</div>
                                         <div className="text-sm text-gray-600 mt-1">Ümumi</div>
                                     </div>
                                     <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -142,8 +130,8 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                         <div className="text-2xl font-bold text-gray-600">{stats.users.inactive}</div>
                                         <div className="text-sm text-gray-600 mt-1">Qeyri-aktiv</div>
                                     </div>
-                                    <div className="text-center p-4 bg-indigo-50 rounded-lg">
-                                        <div className="text-2xl font-bold text-indigo-600">{stats.users.created_this_month}</div>
+                                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                                        <div className="text-2xl font-bold text-slate-700">{stats.users.created_this_month}</div>
                                         <div className="text-sm text-gray-600 mt-1">Bu ay əlavə olundu</div>
                                     </div>
                                 </div>
@@ -183,7 +171,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/accounts"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         Hesabları Gör
                                     </a>
@@ -200,7 +188,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/payments"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         Ödənişlər
                                     </a>
@@ -217,7 +205,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/users"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         İstifadəçiləri Gör
                                     </a>
@@ -234,7 +222,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/loyalty-cards"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         Kartlar
                                     </a>
@@ -251,7 +239,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/fiscal-printer-providers"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         Printerlər
                                     </a>
@@ -268,7 +256,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/system-health"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         Status Paneli
                                     </a>
@@ -302,7 +290,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                                 <div className="mt-4">
                                     <a
                                         href="/admin/storage-settings"
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                     >
                                         Storage Parametrləri
                                     </a>
@@ -310,8 +298,7 @@ export default function SuperAdminDashboard({ stats, error }: Props) {
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

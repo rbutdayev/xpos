@@ -90,7 +90,7 @@ export default function Index({ categories, filters }: Props) {
 
                     <Link
                         href="/rental-categories/create"
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
+                        className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600"
                     >
                         <PlusIcon className="w-4 h-4 mr-2" />
                         Yeni Kateqoriya
@@ -190,7 +190,7 @@ export default function Index({ categories, filters }: Props) {
                                             <div className="flex justify-end space-x-2">
                                                 <Link
                                                     href={`/rental-categories/${category.id}/edit`}
-                                                    className="text-blue-600 hover:text-blue-900"
+                                                    className="text-slate-600 hover:text-slate-900"
                                                 >
                                                     <PencilIcon className="w-5 h-5" />
                                                 </Link>

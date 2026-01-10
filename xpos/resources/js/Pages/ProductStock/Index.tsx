@@ -123,7 +123,7 @@ export default function Index({ stocks, warehouses, filters }: Props) {
                     <button
                         type="button"
                         onClick={() => setShowImportModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
                     >
                         <ArrowUpTrayIcon className="w-5 h-5" />
                         <span>Başlanğıc Qalıq İmport</span>

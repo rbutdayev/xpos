@@ -83,7 +83,7 @@ export default function SupplierProductSelector({
                     <button
                         type="button"
                         onClick={() => setIsSupplierDropdownOpen(!isSupplierDropdownOpen)}
-                        className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
                     >
                         <span className="flex items-center">
                             {selectedSupplier ? (
@@ -117,7 +117,7 @@ export default function SupplierProductSelector({
                                     key={supplier.id}
                                     type="button"
                                     onClick={() => handleSupplierSelect(supplier)}
-                                    className="w-full text-left cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white"
+                                    className="w-full text-left cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-slate-700 hover:text-white"
                                 >
                                     <div className="flex items-center">
                                         <BuildingOfficeIcon className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -143,7 +143,7 @@ export default function SupplierProductSelector({
                             type="button"
                             onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)}
                             disabled={isLoadingProducts}
-                            className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <span className="flex items-center">
                                 {isLoadingProducts ? (
@@ -171,7 +171,7 @@ export default function SupplierProductSelector({
                                         key={product.id}
                                         type="button"
                                         onClick={() => handleProductSelect(product)}
-                                        className="w-full text-left cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white group"
+                                        className="w-full text-left cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-slate-700 hover:text-white group"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center min-w-0 flex-1">

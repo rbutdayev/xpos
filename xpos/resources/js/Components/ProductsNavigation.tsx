@@ -22,7 +22,7 @@ export default function ProductsNavigation({ currentRoute }: ProductsNavigationP
                 {/* New Product Button - PRIORITY 1 */}
                 <Link
                     href={route('products.create')}
-                    className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1"
                 >
                     <PlusCircleIcon className="w-5 h-5 text-gray-400" />
                     <span className="font-semibold">Yeni Məhsul</span>
@@ -34,7 +34,7 @@ export default function ProductsNavigation({ currentRoute }: ProductsNavigationP
                     className={`
                         relative flex items-center gap-2.5 px-4 py-3 rounded-md
                         font-medium text-sm transition-all duration-200 ease-in-out
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                         ${isActive('categories')
                             ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
                             : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100'
@@ -54,7 +54,7 @@ export default function ProductsNavigation({ currentRoute }: ProductsNavigationP
                     className={`
                         relative flex items-center gap-2.5 px-4 py-3 rounded-md
                         font-medium text-sm transition-all duration-200 ease-in-out
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                         ${isActive('products') && !isActive('categories')
                             ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
                             : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100'
@@ -71,7 +71,7 @@ export default function ProductsNavigation({ currentRoute }: ProductsNavigationP
                 {/* Bulk Create Button */}
                 <Link
                     href={route('products.bulk-create')}
-                    className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1"
                 >
                     <DocumentPlusIcon className="w-5 h-5 text-gray-400" />
                     <span className="font-semibold">Toplu Məhsul Yaratma</span>

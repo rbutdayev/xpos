@@ -66,7 +66,7 @@ export default function KnowledgeIndex({ categories, featured_articles }: Knowle
             <h2 className="text-2xl font-bold text-gray-900">{t('featured_articles', 'Featured Articles')}</h2>
             <Link
               href="/knowledge/articles"
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-slate-600 hover:text-slate-800 font-medium"
             >
               {t('view_all', 'View All')} →
             </Link>
@@ -105,7 +105,7 @@ export default function KnowledgeIndex({ categories, featured_articles }: Knowle
           href="https://xpos.az/az/support"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          className="inline-block bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
         >
           {t('contact_support_btn', 'Contact Support')}
         </a>

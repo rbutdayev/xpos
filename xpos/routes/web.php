@@ -53,6 +53,7 @@ use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\SuperAdmin\KnowledgeCategoryController;
 use App\Http\Controllers\SuperAdmin\KnowledgeArticleController;
 use App\Http\Controllers\SuperAdmin\KnowledgeContextHelpController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -115,6 +116,18 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('superadmin.')-
     Route::patch('/payments/{account}/toggle-status', [App\Http\Controllers\AccountPaymentsController::class, 'toggleAccountStatus'])->name('payments.toggle-status');
     Route::delete('/payments/{account}', [App\Http\Controllers\AccountPaymentsController::class, 'destroy'])->name('payments.destroy');
     Route::post('/payments/bulk-delete', [App\Http\Controllers\AccountPaymentsController::class, 'bulkDelete'])->name('payments.bulk-delete');
+
+    // Module Pricing Management
+    Route::get('/module-pricing', [App\Http\Controllers\SuperAdmin\ModulePricingController::class, 'index'])
+        ->name('module-pricing.index');
+    Route::put('/module-pricing/{pricing}', [App\Http\Controllers\SuperAdmin\ModulePricingController::class, 'update'])
+        ->name('module-pricing.update');
+    Route::post('/module-pricing/bulk-update', [App\Http\Controllers\SuperAdmin\ModulePricingController::class, 'bulkUpdate'])
+        ->name('module-pricing.bulk-update');
+
+    // Module Usage History
+    Route::get('/accounts/{account}/module-history', [App\Http\Controllers\AccountPaymentsController::class, 'moduleHistory'])
+        ->name('accounts.module-history');
 
     Route::get('/users', [SuperAdminController::class, 'users'])->name('users');
     Route::delete('/users/{user}', [SuperAdminController::class, 'deleteUser'])->name('users.destroy');
@@ -386,6 +399,11 @@ Route::middleware(['auth', 'account.access'])->group(function () {
     Route::get('/products/import/status/{importJobId}', [ProductController::class, 'importStatus'])->name('products.import.status');
     Route::delete('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->name('products.bulk-delete');
     Route::patch('/products/bulk-status', [ProductController::class, 'bulkUpdateStatus'])->name('products.bulk-status');
+
+    // Product deletion with dependencies
+    Route::post('/products/{product}/check-dependencies', [ProductController::class, 'checkDependencies'])->name('products.check-dependencies');
+    Route::delete('/products/{product}/force-destroy', [ProductController::class, 'forceDestroy'])->name('products.force-destroy');
+
     Route::resource('products', ProductController::class);
 
     // Product Variants
@@ -1014,6 +1032,27 @@ Route::middleware(['auth', 'account.access'])->group(function () {
         Route::post('/{rentalTemplate}/set-default', [\App\Http\Controllers\RentalTemplateController::class, 'setDefault'])->name('set-default');
         Route::get('/{rentalTemplate}/preview', [\App\Http\Controllers\RentalTemplateController::class, 'preview'])->name('preview');
         Route::post('/{rentalTemplate}/duplicate', [\App\Http\Controllers\RentalTemplateController::class, 'duplicate'])->name('duplicate');
+    });
+
+    // Attendance Management
+    Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/scan', [AttendanceController::class, 'scan'])->name('scan');
+        Route::get('/status', [AttendanceController::class, 'status'])->name('status');
+        Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
+        Route::post('/check-out', [AttendanceController::class, 'checkOut'])->name('check-out');
+        Route::get('/history', [AttendanceController::class, 'history'])->name('history');
+
+        Route::middleware('can:view-attendance-reports')->group(function () {
+            Route::get('/reports', [\App\Http\Controllers\AttendanceReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/export', [\App\Http\Controllers\AttendanceReportController::class, 'export'])->name('reports.export');
+        });
+
+        Route::middleware('can:manage-attendance')->group(function () {
+            Route::get('/qr-codes', [\App\Http\Controllers\AttendanceReportController::class, 'qrCodes'])->name('qr-codes');
+            Route::get('/settings', [\App\Http\Controllers\AttendanceSettingsController::class, 'index'])->name('settings');
+            Route::post('/settings/radius', [\App\Http\Controllers\AttendanceSettingsController::class, 'updateRadius'])->name('settings.radius');
+            Route::post('/settings/branch/{branch}/location', [\App\Http\Controllers\AttendanceSettingsController::class, 'updateBranchLocation'])->name('settings.branch-location');
+        });
     });
 
     // Redirect legacy/misspelled stock routes

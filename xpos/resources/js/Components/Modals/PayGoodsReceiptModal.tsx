@@ -204,7 +204,7 @@ export default function PayGoodsReceiptModal({
                             id="category_id"
                             value={formData.category_id}
                             onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             required
                         >
                             <option value="">Kateqoriya seçin</option>
@@ -223,7 +223,7 @@ export default function PayGoodsReceiptModal({
                             id="branch_id"
                             value={formData.branch_id}
                             onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             required
                         >
                             <option value="">Filial seçin</option>
@@ -242,7 +242,7 @@ export default function PayGoodsReceiptModal({
                             id="payment_method"
                             value={formData.payment_method}
                             onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             required
                         >
                             {Object.entries(paymentMethods).map(([key, label]) => (
@@ -260,7 +260,7 @@ export default function PayGoodsReceiptModal({
                             id="notes"
                             value={formData.notes}
                             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             rows={3}
                             maxLength={1000}
                         />

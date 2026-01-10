@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useTranslation } from 'react-i18next';
 
 interface Category {
@@ -55,31 +55,19 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
   const commonEmojis = ['📚', '📖', '🎓', '❓', '🔧', '💡', '⚙️', '📊', '🛒', '👥'];
 
   return (
-    <>
+    <SuperAdminLayout title={t('knowledge:create_category', 'Create Category')}>
       <Head title={t('knowledge:create_category', 'Create Category')} />
 
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {t('knowledge:create_category', 'Create Category')}
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                {t('knowledge:create_category_description', 'Create a new knowledge base category')}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
+        <p className="text-sm text-gray-600">
+          {t('knowledge:create_category_description', 'Create a new knowledge base category')}
+        </p>
           {/* Navigation */}
-          <SuperAdminNav activePage="/admin/knowledge" />
 
           <div className="max-w-2xl mx-auto">
         {/* Breadcrumb */}
         <div className="mb-6">
-          <Link href="/admin/knowledge/categories" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/admin/knowledge/categories" className="text-slate-600 hover:text-slate-800 font-medium">
             ← {t('common:back', 'Back')}
           </Link>
         </div>
@@ -96,7 +84,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="e.g., Getting Started"
@@ -113,7 +101,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
                 errors.description ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Brief description of this category"
@@ -134,7 +122,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
                   type="button"
                   onClick={() => setFormData((prev) => ({ ...prev, icon: emoji }))}
                   className={`text-2xl p-2 border rounded-lg transition-all ${
-                    formData.icon === emoji ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'
+                    formData.icon === emoji ? 'border-slate-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'
                   }`}
                 >
                   {emoji}
@@ -146,7 +134,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
               name="icon"
               value={formData.icon}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
                 errors.icon ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Or paste any emoji"
@@ -165,7 +153,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
                 name="parent_id"
                 value={formData.parent_id}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
               >
                 <option value="">{t('knowledge:no_parent', 'No parent (Top level)')}</option>
                 {parentCategories.map((cat) => (
@@ -185,7 +173,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
                 name="is_active"
                 checked={formData.is_active}
                 onChange={handleChange}
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-slate-500"
               />
               <span className="text-sm font-medium text-gray-700">
                 {t('knowledge:active', 'Active')}
@@ -198,7 +186,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-slate-700 hover:bg-slate-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               {loading ? t('common:creating', 'Creating...') : t('knowledge:create_category', 'Create Category')}
             </button>
@@ -211,8 +199,7 @@ export default function KnowledgeCategoriesCreate({ parentCategories = [] }: Kno
           </div>
         </form>
       </div>
-        </div>
       </div>
-    </>
+    </SuperAdminLayout>
   );
 }

@@ -105,7 +105,7 @@ export default function LocationInput({ value, onChange, className = '' }: Locat
                     type="button"
                     onClick={handleGetCurrentLocation}
                     disabled={isGettingLocation}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
                 >
                     <MapPinIcon className={`w-5 h-5 ${isGettingLocation ? 'animate-pulse' : ''}`} />
                     <span>
@@ -151,7 +151,7 @@ export default function LocationInput({ value, onChange, className = '' }: Locat
                     value={value.address}
                     onChange={(e) => handleAddressChange(e.target.value)}
                     placeholder="Məsələn: Nizami küç. 5, Bakı"
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                     GPS koordinatları əldə etdikdən sonra bu sahəni redaktə edə bilərsiniz
@@ -174,7 +174,7 @@ export default function LocationInput({ value, onChange, className = '' }: Locat
                             value={value.latitude ?? ''}
                             onChange={(e) => handleManualLatChange(e.target.value)}
                             placeholder="40.409264"
-                            className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                         />
                     </div>
                     <div>
@@ -187,7 +187,7 @@ export default function LocationInput({ value, onChange, className = '' }: Locat
                             value={value.longitude ?? ''}
                             onChange={(e) => handleManualLngChange(e.target.value)}
                             placeholder="49.867092"
-                            className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                         />
                     </div>
                 </div>

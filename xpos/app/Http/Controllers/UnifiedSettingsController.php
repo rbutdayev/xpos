@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SmsCredential;
 use App\Models\TelegramCredential;
 use App\Services\NotificationService;
+use App\Services\ModuleBillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -291,7 +292,7 @@ class UnifiedSettingsController extends Controller
     /**
      * Toggle module (services, rent, etc.)
      */
-    public function toggleModule(Request $request)
+    public function toggleModule(Request $request, ModuleBillingService $billingService)
     {
         // Only account_owner and admin can toggle modules
         if (!Auth::user()->isAdmin()) {
@@ -299,11 +300,24 @@ class UnifiedSettingsController extends Controller
         }
 
         $request->validate([
-            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards,expeditor,wolt,yango,bolt',
+            'module' => 'required|in:services,rent,loyalty,shop,discounts,gift_cards,expeditor,attendance,wolt,yango,bolt,fiscal-printer,sms,telegram',
+            'confirmed' => 'boolean',
+        ]);
+
+        \Log::info('Toggle module request', [
+            'module' => $request->module,
+            'confirmed' => $request->input('confirmed', false),
+            'user_id' => Auth::id(),
         ]);
 
         $account = $request->user()->account;
         $module = $request->module;
+        $confirmed = $request->input('confirmed', false);
+
+        // Fiscal printer requires account owner
+        if ($module === 'fiscal-printer' && !Auth::user()->isOwner()) {
+            abort(403, 'Fiskal printer yalnız account owner tərəfindən idarə oluna bilər.');
+        }
 
         // Map module names to database columns
         $moduleFields = [
@@ -314,9 +328,13 @@ class UnifiedSettingsController extends Controller
             'discounts' => 'discounts_module_enabled',
             'gift_cards' => 'gift_cards_module_enabled',
             'expeditor' => 'expeditor_module_enabled',
+            'attendance' => 'attendance_module_enabled',
             'wolt' => 'wolt_enabled',
             'yango' => 'yango_enabled',
             'bolt' => 'bolt_enabled',
+            'fiscal-printer' => 'fiscal_printer_enabled',
+            'sms' => 'sms_module_enabled',
+            'telegram' => 'telegram_module_enabled',
         ];
 
         // Define module dependencies
@@ -328,6 +346,7 @@ class UnifiedSettingsController extends Controller
             'discounts' => [],
             'gift_cards' => [],
             'expeditor' => [], // Expeditor has no dependencies
+            'attendance' => [], // Attendance has no dependencies
             'wolt' => [], // Delivery platforms don't require SMS
             'yango' => [],
             'bolt' => [],
@@ -335,9 +354,10 @@ class UnifiedSettingsController extends Controller
 
         $fieldName = $moduleFields[$module];
         $isCurrentlyEnabled = $account->$fieldName;
+        $isEnabling = !$isCurrentlyEnabled;
 
         // If trying to enable the module, check dependencies
-        if (!$isCurrentlyEnabled && !empty($moduleDependencies[$module])) {
+        if ($isEnabling && !empty($moduleDependencies[$module])) {
             $dependencyCheck = $account->checkModuleDependencies($moduleDependencies[$module]);
 
             if (!$dependencyCheck['met']) {
@@ -348,9 +368,55 @@ class UnifiedSettingsController extends Controller
             }
         }
 
+        // Validate configuration exists before enabling
+        if ($isEnabling) {
+            if ($module === 'fiscal-printer') {
+                $hasConfig = \App\Models\FiscalPrinterConfig::where('account_id', $account->id)->exists();
+                if (!$hasConfig) {
+                    return redirect()->back()->withErrors([
+                        'configuration' => 'Fiskal printer konfiqurasiya edilməyib. Əvvəlcə /fiscal-printer səhifəsinə daxil olun.'
+                    ]);
+                }
+            }
+
+            // SMS and Telegram: Allow enabling without credentials
+            // Users can enable module first, then configure credentials later
+        }
+
+        // Calculate billing impact
+        $impact = $billingService->calculateModuleToggleImpact($account, $module, $isEnabling);
+
+        // If it's a paid module being enabled and not yet confirmed, require confirmation
+        if ($impact['is_paid_module'] && $isEnabling && !$confirmed) {
+            // Return impact data directly for frontend modal
+            return redirect()->back()->with('confirmationRequired', [
+                'module_name' => $module,
+                'module_price' => $impact['price'],
+                'prorated_amount' => $impact['prorated_amount'],
+                'new_monthly_total' => $impact['new_monthly_total'],
+                'days_used' => $impact['days_used'],
+                'days_in_month' => $impact['days_in_month'],
+            ]);
+        }
+
         // Toggle the module
-        $account->$fieldName = !$isCurrentlyEnabled;
+        $account->$fieldName = $isEnabling;
         $account->save();
+
+        // Apply billing changes if it's a paid module
+        if ($impact['is_paid_module']) {
+            try {
+                $billingService->applyModuleToggle($account, $module, $isEnabling, Auth::id());
+            } catch (\Exception $e) {
+                // Rollback the module toggle if billing update fails
+                $account->$fieldName = !$isEnabling;
+                $account->save();
+
+                return redirect()->back()->withErrors([
+                    'billing' => 'Ödəniş məlumatları yenilənərkən xəta baş verdi.'
+                ]);
+            }
+        }
 
         // Human-readable module names
         $moduleNames = [
@@ -361,17 +427,26 @@ class UnifiedSettingsController extends Controller
             'discounts' => 'Endirimlər',
             'gift_cards' => 'Hədiyyə Kartları',
             'expeditor' => 'Ekspeditor (Sahə Satışı)',
+            'attendance' => 'İşçi Davamiyyəti',
             'wolt' => 'Wolt',
             'yango' => 'Yango',
             'bolt' => 'Bolt Food',
+            'fiscal-printer' => 'Fiskal Printer',
+            'sms' => 'SMS Xidməti',
+            'telegram' => 'Telegram Bot',
         ];
 
         $moduleName = $moduleNames[$module] ?? $module;
 
-        return redirect()->back()->with('success',
-            $account->$fieldName
-                ? "{$moduleName} modulu aktivləşdirildi."
-                : "{$moduleName} modulu söndürüldü."
-        );
+        $successMessage = $isEnabling
+            ? "{$moduleName} modulu aktivləşdirildi."
+            : "{$moduleName} modulu söndürüldü.";
+
+        // Add billing info to success message if it's a paid module
+        if ($impact['is_paid_module']) {
+            $successMessage .= " Aylıq ödəniş: {$impact['new_monthly_total']} ₼";
+        }
+
+        return redirect()->back()->with('success', $successMessage);
     }
 }

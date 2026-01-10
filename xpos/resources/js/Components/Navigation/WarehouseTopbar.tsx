@@ -97,12 +97,12 @@ export default function WarehouseTopbar() {
                                 className={`
                                     flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 whitespace-nowrap
                                     ${item.isActive
-                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                        ? 'bg-slate-50 text-slate-700 border border-slate-200'
                                         : 'text-gray-600 hover:bg-gray-100'
                                     }
                                 `}
                             >
-                                <Icon className={`w-5 h-5 ${item.isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                                <Icon className={`w-5 h-5 ${item.isActive ? 'text-slate-600' : 'text-gray-400'}`} />
                                 {item.label}
                             </Link>
                         );

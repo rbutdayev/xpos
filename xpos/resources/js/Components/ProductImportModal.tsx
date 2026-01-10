@@ -174,7 +174,7 @@ export default function ProductImportModal({ isOpen, onClose, onImportStarted }:
                                         <button
                                             type="button"
                                             onClick={handleDownloadTemplate}
-                                            className="w-full inline-flex items-center justify-center px-4 py-3 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            className="w-full inline-flex items-center justify-center px-4 py-3 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                         >
                                             <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
                                             Excel Şablonunu Yüklə
@@ -225,7 +225,7 @@ export default function ProductImportModal({ isOpen, onClose, onImportStarted }:
                                                         <div className="flex text-sm text-gray-600">
                                                             <label
                                                                 htmlFor="file-upload"
-                                                                className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                                                className="relative cursor-pointer rounded-md font-medium text-slate-600 hover:text-slate-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-slate-500"
                                                             >
                                                                 <span>Fayl yüklə</span>
                                                                 <input
@@ -253,14 +253,14 @@ export default function ProductImportModal({ isOpen, onClose, onImportStarted }:
                                         <button
                                             type="button"
                                             onClick={resetModal}
-                                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                             disabled={uploading}
                                         >
                                             Ləğv et
                                         </button>
                                         <button
                                             type="submit"
-                                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-700 border border-transparent rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                             disabled={!selectedFile || uploading}
                                         >
                                             {uploading ? (

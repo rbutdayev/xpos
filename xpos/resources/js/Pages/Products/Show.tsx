@@ -76,7 +76,7 @@ export default function Show({ product, photos, branches }: Props) {
                 <div className="mt-2 flex items-center">
                   <Link
                     href={`/products/${product.parentProduct.id}`}
-                    className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+                    className="text-sm text-slate-600 hover:text-slate-800 hover:underline"
                   >
                     <span className="text-gray-500">{t('variant')}</span> {product.parentProduct.name} ({product.parentProduct.sku})
                   </Link>
@@ -85,7 +85,7 @@ export default function Show({ product, photos, branches }: Props) {
             </div>
           </div>
           {currentUser?.role !== 'sales_staff' && (
-            <Link href={`/products/${product.id}/edit`} className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
+            <Link href={`/products/${product.id}/edit`} className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600">
               <PencilIcon className="w-4 h-4 mr-2" />
               {t('actions.edit')}
             </Link>

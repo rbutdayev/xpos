@@ -93,7 +93,7 @@ export default function AdvancedPagination({
                             <select
                                 value={per_page}
                                 onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
-                                className="border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                                className="border-gray-300 rounded-md text-sm focus:ring-slate-500 focus:border-slate-500"
                             >
                                 <option value={10}>10</option>
                                 <option value={25}>25</option>

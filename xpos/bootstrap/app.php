@@ -150,6 +150,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class,  // Security: Add security headers to all responses
             \App\Http\Middleware\SetLocale::class,  // Set application locale based on user preference
             \App\Http\Middleware\AddCsrfTokenToResponse::class,  // CRITICAL: Add CSRF token to all responses (fixes 419 errors)
+            \App\Http\Middleware\RedirectAttendanceUser::class,  // Restrict attendance_user role to attendance routes only
         ]);
 
         $middleware->api(append: [

@@ -89,7 +89,7 @@ export default function Edit({ item, customers }: Props) {
                                     name="service_type"
                                     value={data.service_type}
                                     onChange={(e) => setData('service_type', e.target.value as ServiceType)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     {Object.values(SERVICE_TYPES).map((type) => (
                                         <option key={type.id} value={type.id}>
@@ -108,7 +108,7 @@ export default function Edit({ item, customers }: Props) {
                                     name="customer_id"
                                     value={data.customer_id}
                                     onChange={(e) => setData('customer_id', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="">Müştəri seçin</option>
                                     {customers.map((customer) => (
@@ -144,7 +144,7 @@ export default function Edit({ item, customers }: Props) {
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder="Məhsulun ətraflı təsviri..."
                                 />
                                 <InputError message={errors.description} className="mt-2" />
@@ -284,7 +284,7 @@ export default function Edit({ item, customers }: Props) {
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder="Əlavə qeydlər və ya xüsusi göstərişlər..."
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
@@ -299,7 +299,7 @@ export default function Edit({ item, customers }: Props) {
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-indigo-600 focus:ring-slate-500 border-gray-300 rounded"
                                     />
                                     <InputLabel htmlFor="is_active" value="Aktiv məhsul" className="ml-2" />
                                 </div>

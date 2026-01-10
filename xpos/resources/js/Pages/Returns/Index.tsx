@@ -129,7 +129,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
             render: (returnItem: SaleReturn) => (
                 <Link
                     href={route('returns.show', returnItem.return_id)}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-slate-600 hover:text-slate-800 font-medium"
                 >
                     {returnItem.return_number}
                 </Link>
@@ -143,7 +143,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                 returnItem.sale ? (
                     <Link
                         href={route('sales.show', returnItem.sale_id)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-slate-600 hover:text-slate-800"
                     >
                         {returnItem.sale.sale_number}
                     </Link>
@@ -217,7 +217,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
         {
             label: t('view'),
             onClick: (returnItem: SaleReturn) => router.visit(route('returns.show', returnItem.return_id)),
-            className: 'text-blue-600 hover:text-blue-800',
+            className: 'text-slate-600 hover:text-slate-800',
         },
     ];
 
@@ -323,7 +323,7 @@ export default function Index({ auth, returns, filters, statistics, discountsEna
                                 onClick={handleTodayFilter}
                                 className={`w-full px-4 py-2 text-sm font-medium rounded-md ${
                                     isTodaySelected()
-                                        ? 'bg-blue-600 text-white'
+                                        ? 'bg-slate-700 text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >

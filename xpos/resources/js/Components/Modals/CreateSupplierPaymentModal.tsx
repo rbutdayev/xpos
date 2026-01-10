@@ -169,7 +169,7 @@ export default function CreateSupplierPaymentModal({
                                         const receipt = unpaidGoodsReceipts.find(gr => gr.id === Number(e.target.value));
                                         if (receipt) handleGoodsReceiptSelect(receipt);
                                     }}
-                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="">Mal qəbulu seçin</option>
                                     {unpaidGoodsReceipts.map((receipt) => {
@@ -194,7 +194,7 @@ export default function CreateSupplierPaymentModal({
                                             }}
                                             onFocus={() => setShowGoodsReceiptDropdown(true)}
                                             placeholder="Mal qəbulu axtar (№, təchizatçı, məhsul)"
-                                            className="mt-1 block w-full pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                            className="mt-1 block w-full pl-10 border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         />
                                     </div>
                                     {showGoodsReceiptDropdown && filteredGoodsReceipts.length > 0 && (
@@ -268,7 +268,7 @@ export default function CreateSupplierPaymentModal({
                                     id="supplier_id"
                                     value={formData.supplier_id}
                                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, supplier_id: e.target.value })}
-                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="">Təchizatçı seçin</option>
@@ -325,7 +325,7 @@ export default function CreateSupplierPaymentModal({
                                     id="payment_method"
                                     value={formData.payment_method}
                                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, payment_method: e.target.value })}
-                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     {Object.entries(paymentMethods).map(([key, value]) => (
@@ -376,7 +376,7 @@ export default function CreateSupplierPaymentModal({
                                     id="branch_id"
                                     value={formData.branch_id}
                                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, branch_id: e.target.value })}
-                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="">Filial seçin</option>
@@ -396,7 +396,7 @@ export default function CreateSupplierPaymentModal({
                                     id="category_id"
                                     value={formData.category_id}
                                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
-                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="">Kateqoriya seçin (istəyə bağlı)</option>
                                     {categories.map((category) => (
@@ -416,7 +416,7 @@ export default function CreateSupplierPaymentModal({
                                     value={formData.notes}
                                     onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
                                     rows={5}
-                                    className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder="Əlavə qeydlər (istəyə bağlı)"
                                 />
                                 <InputError message={errors.notes} className="mt-2" />

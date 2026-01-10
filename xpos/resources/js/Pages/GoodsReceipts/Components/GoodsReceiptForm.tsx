@@ -256,7 +256,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                                             <select
                                                 value={productItem.receiving_unit || productItem.unit}
                                                 onChange={(e) => updateProduct(index, 'receiving_unit', e.target.value)}
-                                                className="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                className="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                             >
                                                 <option value={productItem.product.base_unit || 'L'}>
                                                     {productItem.product.base_unit || 'L'} ({t('goodsReceipts.unit')})
@@ -373,7 +373,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                     rows={3}
                     value={form.data.notes}
                     onChange={(e) => (form.setData as any)('notes', e.target.value)}
-                    className="mt-2 w-full rounded border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-2 w-full rounded border-gray-300 focus:border-slate-500 focus:ring-slate-500"
                     placeholder={t('additionalInfo')}
                 />
             </div>
@@ -442,7 +442,7 @@ export default function GoodsReceiptForm({ suppliers, warehouses, employees, rec
                             type="button"
                             onClick={submitAsCompleted}
                             disabled={isFormDisabled || form.data.products.length === 0}
-                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                            className="w-full sm:w-auto px-4 py-2 bg-slate-700 text-white font-medium rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                         >
                             {isFormDisabled && (
                                 <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />

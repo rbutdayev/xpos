@@ -164,7 +164,7 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
                           e.stopPropagation();
                           openPhotoViewer(index);
                         }}
-                        className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="p-2 bg-slate-700 text-white rounded hover:bg-slate-600"
                         title="Böyük göstər"
                       >
                         <EyeIcon className="w-4 h-4" />
@@ -175,7 +175,7 @@ export default function ImageUploadSection({ productId, photos = [] }: { product
                             e.stopPropagation();
                             setPrimaryPhoto(photo.id);
                           }}
-                          className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                          className="px-2 py-1 bg-slate-700 text-white text-xs rounded hover:bg-slate-600"
                         >
                           Əsas et
                         </button>

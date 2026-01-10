@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface StorageSettings {
     storage_driver: 'local' | 'azure' | 's3' | 's3-compatible';
@@ -64,25 +64,8 @@ export default function StorageSettings({ currentSettings }: Props) {
     ];
 
     return (
-        <>
+        <SuperAdminLayout title="Object Store Parametrləri">
             <Head title="Object Store Parametrləri" />
-
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Object Store Parametrləri
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Fayl yaddaşı konfiqurasiyasını idarə edin
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
 
                     <div className="bg-white shadow-sm rounded-lg">
                         <form onSubmit={handleSubmit} className="p-6 space-y-8">
@@ -98,7 +81,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                             onClick={() => setData('storage_driver', option.value as any)}
                                             className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${
                                                 data.storage_driver === option.value
-                                                    ? 'border-blue-500 bg-blue-50'
+                                                    ? 'border-slate-500 bg-blue-50'
                                                     : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                         >
@@ -114,7 +97,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                             value={option.value}
                                                             checked={data.storage_driver === option.value}
                                                             onChange={(e) => setData('storage_driver', e.target.value as any)}
-                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                                            className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300"
                                                         />
                                                         <label className="ml-2 text-base font-medium text-gray-900">
                                                             {option.label}
@@ -149,7 +132,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                         <textarea
                                             value={data.azure_connection_string}
                                             onChange={(e) => setData('azure_connection_string', e.target.value)}
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             rows={4}
                                             placeholder="DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
                                         />
@@ -166,7 +149,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                             type="text"
                                             value={data.azure_container}
                                             onChange={(e) => setData('azure_container', e.target.value)}
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             placeholder="xpos"
                                         />
                                         {errors.azure_container && (
@@ -206,7 +189,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                 type="text"
                                                 value={data.s3_access_key}
                                                 onChange={(e) => setData('s3_access_key', e.target.value)}
-                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                 placeholder="AKIAIOSFODNN7EXAMPLE"
                                             />
                                             {errors.s3_access_key && (
@@ -222,7 +205,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                 type="password"
                                                 value={data.s3_secret_key}
                                                 onChange={(e) => setData('s3_secret_key', e.target.value)}
-                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                 placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
                                             />
                                             {errors.s3_secret_key && (
@@ -240,7 +223,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                 type="text"
                                                 value={data.s3_bucket}
                                                 onChange={(e) => setData('s3_bucket', e.target.value)}
-                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                 placeholder="my-xpos-bucket"
                                             />
                                             {errors.s3_bucket && (
@@ -256,7 +239,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                 type="text"
                                                 value={data.s3_region}
                                                 onChange={(e) => setData('s3_region', e.target.value)}
-                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                 placeholder="us-east-1"
                                             />
                                             {errors.s3_region && (
@@ -275,7 +258,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                     type="url"
                                                     value={data.s3_endpoint}
                                                     onChange={(e) => setData('s3_endpoint', e.target.value)}
-                                                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                     placeholder="https://s3.us-west-000.backblazeb2.com"
                                                 />
                                                 {errors.s3_endpoint && (
@@ -291,7 +274,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                                     type="checkbox"
                                                     checked={data.s3_use_path_style_endpoint}
                                                     onChange={(e) => setData('s3_use_path_style_endpoint', e.target.checked)}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                                 />
                                                 <label className="ml-2 text-sm text-gray-700">
                                                     Path Style Endpoint istifadə et (Backblaze üçün tövsiyə olunur)
@@ -308,7 +291,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                             type="url"
                                             value={data.s3_url}
                                             onChange={(e) => setData('s3_url', e.target.value)}
-                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             placeholder="https://cdn.example.com"
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
@@ -408,7 +391,7 @@ export default function StorageSettings({ currentSettings }: Props) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50"
                                 >
                                     {processing ? (
                                         <>
@@ -425,8 +408,6 @@ export default function StorageSettings({ currentSettings }: Props) {
                             </div>
                         </form>
                     </div>
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

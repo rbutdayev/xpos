@@ -54,6 +54,11 @@ trait HasStandardRoles
         return ['admin', 'account_owner', 'tailor'];
     }
 
+    public static function getAttendanceRoles(): array
+    {
+        return ['admin', 'account_owner', 'branch_manager', 'attendance_user'];
+    }
+
     /**
      * Check if user has any of the specified role types
      */
@@ -100,5 +105,10 @@ trait HasStandardRoles
     public function hasSuperAdminRole(): bool
     {
         return $this->hasRole(self::getSuperAdminRoles());
+    }
+
+    public function hasAttendanceRole(): bool
+    {
+        return $this->hasRole(self::getAttendanceRoles());
     }
 }

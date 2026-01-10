@@ -74,7 +74,7 @@ export default function Show({ item, tailorServices }: Props) {
                                         <h4 className="text-sm font-medium text-gray-500">Müştəri</h4>
                                         <Link
                                             href={`/customers/${item.customer.id}`}
-                                            className="text-blue-600 hover:text-blue-900"
+                                            className="text-slate-600 hover:text-slate-900"
                                         >
                                             {item.customer.name}
                                         </Link>
@@ -177,7 +177,7 @@ export default function Show({ item, tailorServices }: Props) {
                                 </div>
                                 <Link
                                     href={`/tailor-services/create?customer_id=${item.customer.id}&customer_item_id=${item.id}`}
-                                    className="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
+                                    className="inline-flex items-center px-3 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600"
                                 >
                                     <PlusIcon className="w-4 h-4 mr-1" />
                                     Yeni xidmət əlavə et
@@ -207,7 +207,7 @@ export default function Show({ item, tailorServices }: Props) {
                                                 </div>
                                                 <Link
                                                     href={`/tailor-services/${service.id}`}
-                                                    className="text-blue-600 hover:text-blue-900 text-sm"
+                                                    className="text-slate-600 hover:text-slate-900 text-sm"
                                                 >
                                                     Bax
                                                 </Link>
@@ -254,7 +254,7 @@ export default function Show({ item, tailorServices }: Props) {
                                         <div className="text-center">
                                             <Link
                                                 href={`/tailor-services?customer_item_id=${item.id}`}
-                                                className="text-blue-600 hover:text-blue-900 text-sm"
+                                                className="text-slate-600 hover:text-slate-900 text-sm"
                                             >
                                                 Bütün xidmət qeydlərini gör →
                                             </Link>
@@ -272,7 +272,7 @@ export default function Show({ item, tailorServices }: Props) {
                                     </p>
                                     <Link
                                         href={`/tailor-services/create?customer_id=${item.customer.id}&customer_item_id=${item.id}`}
-                                        className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
+                                        className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
                                         İlk xidməti əlavə et

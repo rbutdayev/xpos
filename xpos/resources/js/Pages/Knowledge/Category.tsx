@@ -148,7 +148,7 @@ export default function KnowledgeCategory({ category, articles = { data: [], met
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <option value="">{t('all_types', 'All Types')}</option>
               {articleTypes.map((type) => (
@@ -166,7 +166,7 @@ export default function KnowledgeCategory({ category, articles = { data: [], met
             <select
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <option value="">{t('all_levels', 'All Levels')}</option>
               {difficultyLevels.map((level) => (
@@ -180,7 +180,7 @@ export default function KnowledgeCategory({ category, articles = { data: [], met
           <div className="flex items-end">
             <button
               onClick={handleFilterChange}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="w-full bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               {t('apply_filters', 'Apply Filters')}
             </button>
@@ -227,7 +227,7 @@ export default function KnowledgeCategory({ category, articles = { data: [], met
           <p className="text-gray-600 text-lg mb-4">{t('no_articles', 'No articles found in this category')}</p>
           <Link
             href="/knowledge"
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-slate-600 hover:text-slate-800 font-medium"
           >
             {t('back_to_knowledge', 'Back to Knowledge Base')} →
           </Link>

@@ -254,7 +254,7 @@ export default function Send({ customers, totalCustomersWithPhone, hasCredential
                                         </div>
                                         <textarea
                                             id="message"
-                                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                             rows={4}
                                             value={data.message}
                                             onChange={(e) => setData('message', e.target.value)}

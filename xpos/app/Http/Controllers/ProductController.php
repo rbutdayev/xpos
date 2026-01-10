@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Warehouse;
 use App\Models\Branch;
 use App\Models\ImportJob;
+use App\Models\SaleItem;
+use App\Models\TailorServiceItem;
 use App\Services\BarcodeService;
 use App\Services\DocumentUploadService;
 use App\Services\ProductPhotoService;
@@ -868,6 +870,137 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')
                         ->with('success', __('app.deleted_successfully'));
+    }
+
+    /**
+     * Check product dependencies before deletion
+     */
+    public function checkDependencies(Product $product)
+    {
+        // Only account_owner and admin can force delete
+        if (!in_array(Auth::user()->role, ['account_owner', 'admin'])) {
+            abort(403, 'Bu əməliyyat üçün icazəniz yoxdur.');
+        }
+
+        Gate::authorize('access-account-data', $product);
+
+        $dependencies = $product->checkDependencies();
+
+        $blockingTotal = array_sum($dependencies['blocking']);
+        $allowedTotal = array_sum($dependencies['allowed']);
+
+        return response()->json([
+            'can_delete' => $dependencies['can_delete'],
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'is_active' => $product->is_active,
+            ],
+            'blocking_dependencies' => array_merge(
+                $dependencies['blocking'],
+                ['total' => $blockingTotal]
+            ),
+            'allowed_dependencies' => array_merge(
+                $dependencies['allowed'],
+                ['total' => $allowedTotal]
+            ),
+            'message' => $dependencies['can_delete']
+                ? "Bu məhsul {$allowedTotal} asılılıqla silinəcək."
+                : "Bu məhsul {$blockingTotal} müştəri əməliyyatında istifadə edildiyinə görə silinə bilməz."
+        ]);
+    }
+
+    /**
+     * Force delete product with all allowed dependencies
+     */
+    public function forceDestroy(Request $request, Product $product)
+    {
+        // Only account_owner and admin can force delete
+        if (!in_array(Auth::user()->role, ['account_owner', 'admin'])) {
+            abort(403, 'Bu əməliyyat üçün icazəniz yoxdur.');
+        }
+
+        Gate::authorize('delete-account-data');
+        Gate::authorize('access-account-data', $product);
+
+        // Double-check dependencies
+        $dependencies = $product->checkDependencies();
+
+        if (!$dependencies['can_delete']) {
+            return back()->withErrors([
+                'error' => 'Bu məhsul müştəri əməliyyatlarında istifadə edildiyinə görə silinə bilməz.'
+            ]);
+        }
+
+        $productName = $product->name;
+        $productId = $product->id;
+        $totalDependencies = array_sum($dependencies['allowed']);
+        $productData = $product->toArray();
+
+        try {
+            DB::transaction(function () use ($product) {
+                // Delete product photos first
+                try {
+                    $this->photoService->deleteAllProductPhotos($product);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to delete product photos during force deletion: ' . $e->getMessage());
+                }
+
+                // Delete product documents and their files from storage
+                foreach ($product->documents as $document) {
+                    try {
+                        $this->documentService->deleteDocument($document);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to delete product document during force deletion: ' . $e->getMessage());
+                    }
+                }
+
+                // Delete dependencies in specific order
+                DB::table('min_max_alerts')->where('product_id', $product->id)->delete();
+                $product->supplierProducts()->delete();
+                $product->prices()->delete();
+                $product->variants()->delete();
+                DB::table('warehouse_transfers')->where('product_id', $product->id)->delete();
+                DB::table('stock_movements')->where('product_id', $product->id)->delete();
+                $product->goodsReceiptItems()->delete();
+                $product->stockHistory()->delete();
+                $product->stock()->delete();
+
+                // Force delete (permanent)
+                $product->forceDelete();
+            });
+
+            // Log the action (if AuditLog model exists)
+            if (class_exists(\App\Models\AuditLog::class)) {
+                \App\Models\AuditLog::create([
+                    'account_id' => Auth::user()->account_id,
+                    'user_id' => Auth::id(),
+                    'action' => 'product_force_delete',
+                    'model_type' => 'Product',
+                    'model_id' => $productId,
+                    'old_values' => $productData,
+                    'new_values' => null,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'description' => "Forcefully deleted product: {$productName} with {$totalDependencies} dependencies"
+                ]);
+            }
+
+            return redirect()->route('products.index')
+                ->with('success', "{$productName} məhsulu və {$totalDependencies} asılılıq uğurla silindi.");
+
+        } catch (\Exception $e) {
+            \Log::error('Product force delete failed', [
+                'product_id' => $productId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Məhsul silinərkən xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.'
+            ]);
+        }
     }
 
     public function calculatePrice(Request $request, Product $product)

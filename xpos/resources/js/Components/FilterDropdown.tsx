@@ -28,7 +28,7 @@ export default function FilterDropdown({ options, value, onChange, placeholder }
         <Listbox value={value} onChange={onChange}>
             {({ open }) => (
                 <div className="relative">
-                    <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm">
+                    <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-slate-500 sm:text-sm">
                         <span className="block truncate">
                             {selectedOption?.label || defaultPlaceholder}
                         </span>
@@ -50,7 +50,7 @@ export default function FilterDropdown({ options, value, onChange, placeholder }
                                     key={option.value}
                                     className={({ active }) =>
                                         classNames(
-                                            active ? 'bg-blue-600 text-white' : 'text-gray-900',
+                                            active ? 'bg-slate-700 text-white' : 'text-gray-900',
                                             'relative cursor-default select-none py-2 pl-3 pr-9'
                                         )
                                     }

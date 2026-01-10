@@ -243,7 +243,7 @@ export default function Show({ receiptTemplate, systemSettings }: Props) {
                             <div className="p-6 space-y-3">
                                 <Link
                                     href={`/receipt-templates/${receiptTemplate.template_id}/edit`}
-                                    className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                    className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                                 >
                                     <PencilIcon className="w-4 h-4 mr-2" />
                                     Redaktə et

@@ -169,7 +169,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                                 id="payment_method"
                                                 value={paymentData.method}
                                                 onChange={(e) => setPaymentData('method', e.target.value)}
-                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 required
                                             >
                                                 <option value="nağd">{t('paymentMethods.cash')}</option>
@@ -248,7 +248,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                         id="customer_id"
                                         value={data.customer_id}
                                         onChange={(e) => setData('customer_id', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="">{t('edit.selectCustomer')}</option>
                                         {customers.map((customer) => (
@@ -266,7 +266,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                         id="status"
                                         value={data.status}
                                         onChange={(e) => setData('status', e.target.value as 'pending' | 'completed' | 'cancelled' | 'refunded')}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         required
                                     >
                                         <option value="pending">{t('status.pending')}</option>
@@ -302,7 +302,7 @@ export default function Edit({ auth, sale, customers }: SalesEditProps) {
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={4}
                                     placeholder={t('edit.notesPlaceholder')}
-                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
                             </div>

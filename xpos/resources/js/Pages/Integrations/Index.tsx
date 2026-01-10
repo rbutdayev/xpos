@@ -21,6 +21,8 @@ import {
     TrashIcon,
 } from '@heroicons/react/24/outline';
 import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 
 interface Integration {
     id: string;
@@ -28,12 +30,14 @@ interface Integration {
     description: string;
     icon: React.ComponentType<{ className?: string }>;
     category: 'communication' | 'fiscal' | 'loyalty' | 'payment' | 'business' | 'delivery' | 'other';
-    status: 'active' | 'inactive' | 'not_configured';
+    status: 'active' | 'inactive';
     route: string;
     color: string;
     features: string[];
     requiresOwner?: boolean;
     isSimpleToggle?: boolean;
+    requiresConfiguration?: boolean;
+    disabled?: boolean;
 }
 
 interface DependencyStatus {
@@ -41,13 +45,21 @@ interface DependencyStatus {
     missing: string[];
 }
 
+interface ModulePrice {
+    module_id: string;
+    price: number;
+    is_paid: boolean;
+}
+
 interface IntegrationsProps extends PageProps {
     smsConfigured: boolean;
+    smsEnabled: boolean;
     telegramConfigured: boolean;
+    telegramEnabled: boolean;
     fiscalPrinterConfigured: boolean;
     fiscalPrinterEnabled: boolean;
     loyaltyProgramConfigured: boolean;
-    loyaltyProgramActive: boolean;
+    loyaltyModuleEnabled: boolean;
     shopEnabled: boolean;
     shopConfigured: boolean;
     shopUrl: string | null;
@@ -56,20 +68,32 @@ interface IntegrationsProps extends PageProps {
     discountsModuleEnabled: boolean;
     giftCardsModuleEnabled: boolean;
     expeditorModuleEnabled: boolean;
+    attendanceModuleEnabled: boolean;
     woltEnabled?: boolean;
     yangoEnabled?: boolean;
     boltEnabled?: boolean;
     dependencyStatus: Record<string, DependencyStatus>;
+    modulePrices?: Record<string, number>;
+    confirmationRequired?: {
+        module_name: string;
+        module_price: number;
+        prorated_amount: number;
+        new_monthly_total: number;
+        days_used: number;
+        days_in_month: number;
+    };
 }
 
 export default function Index({
     auth,
     smsConfigured,
+    smsEnabled,
     telegramConfigured,
+    telegramEnabled,
     fiscalPrinterConfigured,
     fiscalPrinterEnabled,
     loyaltyProgramConfigured,
-    loyaltyProgramActive,
+    loyaltyModuleEnabled,
     shopEnabled,
     shopConfigured,
     shopUrl,
@@ -78,12 +102,46 @@ export default function Index({
     discountsModuleEnabled,
     giftCardsModuleEnabled,
     expeditorModuleEnabled,
+    attendanceModuleEnabled,
     woltEnabled = false,
     yangoEnabled = false,
     boltEnabled = false,
-    dependencyStatus = {}
+    dependencyStatus = {},
+    modulePrices = {},
+    confirmationRequired
 }: IntegrationsProps) {
     const isOwner = auth.user.role === 'account_owner';
+    const [showConfirmationModal, setShowConfirmationModal] = React.useState(false);
+    const [showErrorModal, setShowErrorModal] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState<string>('');
+    const [pendingModuleToggle, setPendingModuleToggle] = React.useState<{
+        moduleId: string;
+        moduleName: string;
+        currentlyEnabled: boolean;
+        price?: number;
+        proratedAmount?: number;
+        newMonthlyTotal?: number;
+        daysUsed?: number;
+        daysInMonth?: number;
+    } | null>(null);
+
+    // Check if there's a confirmation required from the backend
+    React.useEffect(() => {
+        if (confirmationRequired) {
+            const integration = integrations.find(i => i.id === confirmationRequired.module_name);
+            setPendingModuleToggle({
+                moduleId: confirmationRequired.module_name,
+                moduleName: integration?.name || confirmationRequired.module_name,
+                currentlyEnabled: false, // We're enabling, that's why we need confirmation
+                price: confirmationRequired.module_price,
+                proratedAmount: confirmationRequired.prorated_amount,
+                newMonthlyTotal: confirmationRequired.new_monthly_total,
+                daysUsed: confirmationRequired.days_used,
+                daysInMonth: confirmationRequired.days_in_month,
+            });
+            setShowConfirmationModal(true);
+        }
+    }, [confirmationRequired]);
 
     const canEnableModule = (moduleId: string): { canEnable: boolean; message?: string } => {
         if (!dependencyStatus[moduleId]) {
@@ -108,7 +166,7 @@ export default function Index({
             description: 'Məhsullarınızı online satışa çıxarın və gəlir əldə edin',
             icon: ShoppingBagIcon,
             category: 'other',
-            status: shopConfigured ? (shopEnabled ? 'active' : 'inactive') : 'not_configured',
+            status: shopEnabled ? 'active' : 'inactive',
             route: '/shop-settings',
             color: 'blue',
             features: [
@@ -116,7 +174,9 @@ export default function Index({
                 'Məhsul kataloqu',
                 'Online sifarişlər',
                 'Ödəniş inteqrasiyası'
-            ]
+            ],
+            isSimpleToggle: true,
+            requiresConfiguration: shopEnabled && !shopConfigured
         },
         {
             id: 'wolt',
@@ -124,7 +184,7 @@ export default function Index({
             description: 'Wolt platformasından sifarişləri avtomatik qəbul edin',
             icon: TruckIcon,
             category: 'delivery',
-            status: woltEnabled ? 'active' : 'inactive',
+            status: 'inactive',
             route: '/integrations/wolt',
             color: 'violet',
             features: [
@@ -133,7 +193,7 @@ export default function Index({
                 'Anbar seçimi',
                 'Filial təyini'
             ],
-            isSimpleToggle: true
+            disabled: true
         },
         {
             id: 'yango',
@@ -141,7 +201,7 @@ export default function Index({
             description: 'Yango platformasından sifarişləri avtomatik qəbul edin',
             icon: TruckIcon,
             category: 'delivery',
-            status: yangoEnabled ? 'active' : 'inactive',
+            status: 'inactive',
             route: '/integrations/yango',
             color: 'yellow',
             features: [
@@ -150,7 +210,7 @@ export default function Index({
                 'Anbar seçimi',
                 'Filial təyini'
             ],
-            isSimpleToggle: true
+            disabled: true
         },
         {
             id: 'bolt',
@@ -158,7 +218,7 @@ export default function Index({
             description: 'Bolt Food platformasından sifarişləri avtomatik qəbul edin',
             icon: TruckIcon,
             category: 'delivery',
-            status: boltEnabled ? 'active' : 'inactive',
+            status: 'inactive',
             route: '/integrations/bolt',
             color: 'green',
             features: [
@@ -167,7 +227,7 @@ export default function Index({
                 'Anbar seçimi',
                 'Filial təyini'
             ],
-            isSimpleToggle: true
+            disabled: true
         },
         {
             id: 'sms',
@@ -175,7 +235,7 @@ export default function Index({
             description: 'Müştərilərə SMS göndərin, avtomatik bildirişlər və kampaniyalar',
             icon: PaperAirplaneIcon,
             category: 'communication',
-            status: smsConfigured ? 'active' : 'not_configured',
+            status: smsEnabled ? 'active' : 'inactive',
             route: '/integrations/sms',
             color: 'blue',
             features: [
@@ -183,7 +243,9 @@ export default function Index({
                 'Müştəri bildirişləri',
                 'Avtomatik mesajlar',
                 'SMS statistikası'
-            ]
+            ],
+            isSimpleToggle: true,
+            requiresConfiguration: smsEnabled && !smsConfigured
         },
         {
             id: 'telegram',
@@ -191,7 +253,7 @@ export default function Index({
             description: 'Telegram vasitəsilə bildirişlər və əlaqə',
             icon: ChatBubbleLeftRightIcon,
             category: 'communication',
-            status: telegramConfigured ? 'active' : 'not_configured',
+            status: telegramEnabled ? 'active' : 'inactive',
             route: '/integrations/telegram',
             color: 'sky',
             features: [
@@ -199,7 +261,9 @@ export default function Index({
                 'Satış məlumatları',
                 'Stok xəbərdarlıqları',
                 'Müştəri sorğuları'
-            ]
+            ],
+            isSimpleToggle: true,
+            requiresConfiguration: telegramEnabled && !telegramConfigured
         },
         {
             id: 'fiscal-printer',
@@ -207,7 +271,7 @@ export default function Index({
             description: 'Vergilər Nazirliyinin tələb etdiyi elektron kassa inteqrasiyası',
             icon: ReceiptPercentIcon,
             category: 'fiscal',
-            status: fiscalPrinterConfigured ? (fiscalPrinterEnabled ? 'active' : 'inactive') : 'not_configured',
+            status: fiscalPrinterEnabled ? 'active' : 'inactive',
             route: '/fiscal-printer',
             color: 'emerald',
             features: [
@@ -216,15 +280,17 @@ export default function Index({
                 'Lokal şəbəkə əlaqəsi',
                 'Audit log'
             ],
-            requiresOwner: true
+            requiresOwner: true,
+            isSimpleToggle: true,
+            requiresConfiguration: fiscalPrinterEnabled && !fiscalPrinterConfigured
         },
         {
-            id: 'loyalty-program',
+            id: 'loyalty',
             name: 'Loyallıq Proqramı',
             description: 'Müştərilərə bal qazandırın və sadiq müştərilər yaradın',
             icon: GiftIcon,
             category: 'loyalty',
-            status: loyaltyProgramConfigured ? (loyaltyProgramActive ? 'active' : 'inactive') : 'not_configured',
+            status: loyaltyModuleEnabled ? 'active' : 'inactive',
             route: '/loyalty-program',
             color: 'purple',
             features: [
@@ -232,7 +298,9 @@ export default function Index({
                 'Endirim üçün bal istifadəsi',
                 'Bal bitmə tarixi',
                 'Müştəri loyallıq hesabatı'
-            ]
+            ],
+            isSimpleToggle: true,
+            requiresConfiguration: loyaltyModuleEnabled && !loyaltyProgramConfigured
         },
         {
             id: 'services',
@@ -318,6 +386,23 @@ export default function Index({
                 'Sürətli sifariş təkrarı'
             ],
             isSimpleToggle: true
+        },
+        {
+            id: 'attendance',
+            name: 'İşçi Davamiyyəti',
+            description: 'İşçilərin işə gəlmə və gedişini GPS ilə izləyin',
+            icon: ClockIcon,
+            category: 'business',
+            status: attendanceModuleEnabled ? 'active' : 'inactive',
+            route: '/attendance/reports',
+            color: 'blue',
+            features: [
+                'QR kod ilə giriş/çıxış',
+                'GPS məkan yoxlaması',
+                'Avtomatik hesabatlar',
+                'İş saatı hesablaması'
+            ],
+            isSimpleToggle: true
         }
     ];
 
@@ -338,31 +423,121 @@ export default function Index({
         : integrations.filter(i => i.category === selectedCategory);
 
     const handleIntegrationClick = (integration: Integration) => {
-        if (integration.requiresOwner && !isOwner) {
-            alert('Bu inteqrasiyaya yalnız account owner daxil ola bilər.');
+        // Prevent clicks on disabled integrations
+        if (integration.disabled) {
+            setErrorMessage('Bu xidmət hələ mövcud deyil. Tezliklə əlavə ediləcək.');
+            setShowErrorModal(true);
             return;
         }
+
+        // Check permissions first
+        if (integration.requiresOwner && !isOwner) {
+            setErrorMessage('Bu inteqrasiyaya yalnız account owner daxil ola bilər.');
+            setShowErrorModal(true);
+            return;
+        }
+
+        // For simple toggle modules without dedicated settings pages, show message
+        const modulesWithoutSettings = ['services', 'rent', 'discounts'];
+        if (modulesWithoutSettings.includes(integration.id)) {
+            if (integration.status === 'inactive') {
+                setErrorMessage('Modul aktiv deyil. Əvvəlcə modulu aktivləşdirin.');
+                setShowErrorModal(true);
+            } else {
+                setErrorMessage('Bu modul aktivdir və xüsusi parametr səhifəsi yoxdur.');
+                setShowErrorModal(true);
+            }
+            return;
+        }
+
+        // Navigate to module settings/configuration page
         router.visit(integration.route);
     };
 
     const handleToggleModule = (moduleId: string, currentlyEnabled: boolean) => {
+        console.log('handleToggleModule called:', { moduleId, currentlyEnabled });
+
+        const integration = integrations.find(i => i.id === moduleId);
+
         if (!currentlyEnabled) {
             const { canEnable, message } = canEnableModule(moduleId);
+            console.log('Dependency check:', { canEnable, message });
             if (!canEnable) {
-                alert(message);
+                setErrorMessage(message || 'Xəta baş verdi');
+                setShowErrorModal(true);
                 return;
             }
         }
 
+        // Get module name for the modal
+        const moduleName = integration?.name || moduleId;
+
+        // Get pricing info if available
+        const modulePrice = modulePrices?.[moduleId];
+
+        console.log('Sending toggle request:', { moduleId, confirmed: false, modulePrice });
+
+        // First send with confirmed: false to check if confirmation is needed
         router.post('/settings/toggle-module', {
-            module: moduleId
+            module: moduleId,
+            confirmed: false
         }, {
             preserveScroll: true,
+            onSuccess: (page: any) => {
+                console.log('Toggle request successful');
+                // If backend returns confirmation_required, the useEffect will handle it
+                // Otherwise, the toggle was successful
+            },
+            onError: (errors: any) => {
+                console.error('Toggle request error:', errors);
+            },
         });
+    };
+
+    const handleConfirmToggle = () => {
+        if (!pendingModuleToggle) return;
+
+        router.post('/settings/toggle-module', {
+            module: pendingModuleToggle.moduleId,
+            confirmed: true
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowConfirmationModal(false);
+                setPendingModuleToggle(null);
+            },
+        });
+    };
+
+    const handleCancelToggle = () => {
+        setShowConfirmationModal(false);
+        setPendingModuleToggle(null);
     };
 
     // Handle double-click to view/configure integration
     const handleRowDoubleClick = (integration: Integration) => {
+        // Prevent double-click on disabled integrations
+        if (integration.disabled) {
+            setErrorMessage('Bu xidmət hələ mövcud deyil. Tezliklə əlavə ediləcək.');
+            setShowErrorModal(true);
+            return;
+        }
+
+        // Prevent double-click on unconfigured integrations (regardless of active/inactive)
+        if (integration.requiresConfiguration) {
+            setErrorMessage('Modul quraşdırılmayıb. Əvvəlcə "Quraşdır" düyməsinə klikləyin.');
+            setShowErrorModal(true);
+            return;
+        }
+
+        // Prevent double-click on INACTIVE but configured integrations
+        if (integration.status === 'inactive') {
+            setErrorMessage('Modul aktiv deyil. Əvvəlcə modulu aktivləşdirin.');
+            setShowErrorModal(true);
+            return;
+        }
+
+        // Allow double-click only on ACTIVE and CONFIGURED integrations
         handleIntegrationClick(integration);
     };
 
@@ -375,7 +550,8 @@ export default function Index({
                 ids: selectedIds
             }, {
                 onError: (errors) => {
-                    alert('Deaktiv etmə zamanı xəta baş verdi');
+                    setErrorMessage('Deaktiv etmə zamanı xəta baş verdi');
+                    setShowErrorModal(true);
                 },
                 preserveScroll: true
             });
@@ -391,7 +567,8 @@ export default function Index({
                 ids: selectedIds
             }, {
                 onError: (errors) => {
-                    alert('Aktiv etmə zamanı xəta baş verdi');
+                    setErrorMessage('Aktiv etmə zamanı xəta baş verdi');
+                    setShowErrorModal(true);
                 },
                 preserveScroll: true
             });
@@ -404,36 +581,75 @@ export default function Index({
         if (selectedIds.length === 1 && selectedIntegrations.length === 1) {
             const integration = selectedIntegrations[0];
 
-            const actions: BulkAction[] = [
-                {
-                    label: 'Bax',
-                    icon: <EyeIcon className="w-4 h-4" />,
-                    variant: 'view' as const,
-                    onClick: () => handleIntegrationClick(integration)
-                },
-                {
-                    label: integration.status === 'not_configured' ? 'Quraşdır' : 'Parametrlər',
-                    icon: <PencilIcon className="w-4 h-4" />,
+            // Disabled integrations get no actions
+            if (integration.disabled) {
+                return [];
+            }
+
+            const actions: BulkAction[] = [];
+
+            // Check if module requires configuration first (regardless of active/inactive status)
+            if (integration.requiresConfiguration) {
+                // Module not configured yet - show Configure button only
+                actions.push({
+                    label: 'Quraşdır',
+                    icon: <Cog6ToothIcon className="w-4 h-4" />,
                     variant: 'edit' as const,
                     onClick: () => handleIntegrationClick(integration)
-                }
-            ];
+                });
 
-            // Add toggle actions for toggleable integrations
-            if (['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'shop', 'wolt', 'yango', 'bolt'].includes(integration.id)) {
-                if (integration.status === 'active') {
+                // If it's an active but unconfigured module, also show Deactivate button
+                if (integration.status === 'active' && ['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'attendance', 'shop', 'wolt', 'yango', 'bolt', 'fiscal-printer', 'sms', 'telegram', 'loyalty'].includes(integration.id)) {
                     actions.push({
                         label: 'Deaktiv et',
                         icon: <TrashIcon className="w-4 h-4" />,
                         variant: 'danger' as const,
-                        onClick: () => handleToggleModule(integration.id, true)
+                        onClick: () => {
+                            console.log('Deaktiv et clicked for:', integration.id);
+                            handleToggleModule(integration.id, true);
+                        }
                     });
-                } else if (integration.status === 'inactive') {
+                }
+            } else if (integration.status === 'inactive') {
+                // INACTIVE but configured: Show Activate button
+                if (['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'attendance', 'shop', 'wolt', 'yango', 'bolt', 'fiscal-printer', 'sms', 'telegram', 'loyalty'].includes(integration.id)) {
                     actions.push({
                         label: 'Aktiv et',
                         icon: <CheckCircleIcon className="w-4 h-4" />,
                         variant: 'success' as const,
-                        onClick: () => handleToggleModule(integration.id, false)
+                        onClick: () => {
+                            console.log('Aktiv et clicked for:', integration.id);
+                            handleToggleModule(integration.id, false);
+                        }
+                    });
+                }
+            } else {
+                // ACTIVE and CONFIGURED: Show View, Settings, and Deactivate buttons
+                actions.push(
+                    {
+                        label: 'Bax',
+                        icon: <EyeIcon className="w-4 h-4" />,
+                        variant: 'view' as const,
+                        onClick: () => handleIntegrationClick(integration)
+                    },
+                    {
+                        label: 'Parametrlər',
+                        icon: <PencilIcon className="w-4 h-4" />,
+                        variant: 'edit' as const,
+                        onClick: () => handleIntegrationClick(integration)
+                    }
+                );
+
+                // Add deactivate button for toggleable active modules
+                if (['services', 'rent', 'discounts', 'gift_cards', 'expeditor', 'attendance', 'shop', 'wolt', 'yango', 'bolt', 'fiscal-printer', 'sms', 'telegram', 'loyalty'].includes(integration.id)) {
+                    actions.push({
+                        label: 'Deaktiv et',
+                        icon: <TrashIcon className="w-4 h-4" />,
+                        variant: 'danger' as const,
+                        onClick: () => {
+                            console.log('Deaktiv et clicked for:', integration.id);
+                            handleToggleModule(integration.id, true);
+                        }
                     });
                 }
             }
@@ -461,7 +677,7 @@ export default function Index({
     // Brand color configurations for each integration
     const brandColors: Record<string, { gradient: string; iconColor: string; border?: string }> = {
         'shop': {
-            gradient: 'bg-gradient-to-br from-blue-500 to-indigo-600',
+            gradient: 'bg-gradient-to-br from-slate-500 to-slate-700',
             iconColor: 'text-white'
         },
         'wolt': {
@@ -477,7 +693,7 @@ export default function Index({
             iconColor: 'text-white'
         },
         'sms': {
-            gradient: 'bg-gradient-to-br from-blue-400 to-blue-600',
+            gradient: 'bg-gradient-to-br from-slate-400 to-slate-700',
             iconColor: 'text-white'
         },
         'telegram': {
@@ -493,11 +709,11 @@ export default function Index({
             iconColor: 'text-white'
         },
         'services': {
-            gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+            gradient: 'bg-gradient-to-br from-slate-500 to-slate-700',
             iconColor: 'text-white'
         },
         'rent': {
-            gradient: 'bg-gradient-to-br from-teal-500 to-cyan-600',
+            gradient: 'bg-gradient-to-br from-slate-500 to-slate-700',
             iconColor: 'text-white'
         },
         'discounts': {
@@ -524,8 +740,8 @@ export default function Index({
 
                 return (
                     <div className="flex-shrink-0">
-                        <div className={`w-12 h-12 rounded-lg ${colors.gradient} flex items-center justify-center shadow-sm`}>
-                            <IconComponent className={`w-6 h-6 ${colors.iconColor}`} />
+                        <div className={`w-12 h-12 rounded-lg ${integration.disabled ? 'bg-gray-200' : colors.gradient} flex items-center justify-center shadow-sm ${integration.disabled ? 'opacity-50' : ''}`}>
+                            <IconComponent className={`w-6 h-6 ${integration.disabled ? 'text-gray-400' : colors.iconColor}`} />
                         </div>
                     </div>
                 );
@@ -535,19 +751,44 @@ export default function Index({
             key: 'name',
             label: 'Ad',
             sortable: true,
-            render: (integration: Integration) => (
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-semibold text-gray-900">{integration.name}</h3>
-                        {integration.requiresOwner && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                Owner
-                            </span>
-                        )}
+            render: (integration: Integration) => {
+                const modulePrice = modulePrices?.[integration.id];
+                const isPaidModule = modulePrice !== undefined && modulePrice > 0;
+
+                return (
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h3 className={`text-base font-semibold ${integration.disabled ? 'text-gray-400' : 'text-gray-900'}`}>{integration.name}</h3>
+                            {integration.disabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                                    Tezliklə
+                                </span>
+                            )}
+                            {integration.requiresOwner && !integration.disabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                    Owner
+                                </span>
+                            )}
+                            {integration.requiresConfiguration && !integration.disabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                                    Quraşdırılmayıb
+                                </span>
+                            )}
+                            {isPaidModule && !integration.disabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                                    {modulePrice} ₼/ay
+                                </span>
+                            )}
+                            {modulePrice !== undefined && modulePrice === 0 && !integration.disabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+                                    Pulsuz
+                                </span>
+                            )}
+                        </div>
+                        <p className={`text-sm ${integration.disabled ? 'text-gray-400' : 'text-gray-600'}`}>{integration.description}</p>
                     </div>
-                    <p className="text-sm text-gray-600">{integration.description}</p>
-                </div>
-            )
+                );
+            }
         },
         {
             key: 'category',
@@ -563,7 +804,7 @@ export default function Index({
                     'other': 'Digər'
                 };
                 return (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-xs font-medium text-gray-700">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-xs font-medium ${integration.disabled ? 'text-gray-400 opacity-50' : 'text-gray-700'}`}>
                         {categoryLabels[integration.category] || integration.category}
                     </span>
                 );
@@ -573,6 +814,14 @@ export default function Index({
             key: 'status',
             label: 'Status',
             render: (integration: Integration) => {
+                if (integration.disabled) {
+                    return (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-50 border border-gray-200 opacity-50">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                            <span className="text-xs font-medium text-gray-400">Deaktiv</span>
+                        </span>
+                    );
+                }
                 if (integration.status === 'active') {
                     return (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200">
@@ -580,20 +829,11 @@ export default function Index({
                             <span className="text-xs font-medium text-emerald-700">Aktiv</span>
                         </span>
                     );
-                } else if (integration.status === 'inactive') {
+                } else {
                     return (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-50 border border-gray-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                            <span className="text-xs font-medium text-gray-600">
-                                {integration.isSimpleToggle ? 'Deaktiv' : 'Konfiqurasiya edilib'}
-                            </span>
-                        </span>
-                    );
-                } else {
-                    return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            <span className="text-xs font-medium text-amber-700">Quraşdırılmayıb</span>
+                            <span className="text-xs font-medium text-gray-600">Deaktiv</span>
                         </span>
                     );
                 }
@@ -603,18 +843,18 @@ export default function Index({
             key: 'features',
             label: 'Xüsusiyyətlər',
             render: (integration: Integration) => (
-                <div className="flex flex-wrap gap-1.5">
+                <div className={`flex flex-wrap gap-1.5 ${integration.disabled ? 'opacity-50' : ''}`}>
                     {integration.features.slice(0, 3).map((feature, index) => (
                         <span
                             key={index}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs text-gray-700"
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs ${integration.disabled ? 'text-gray-400' : 'text-gray-700'}`}
                         >
-                            <CheckCircleIcon className="w-3 h-3 text-gray-400" />
+                            <CheckCircleIcon className={`w-3 h-3 ${integration.disabled ? 'text-gray-300' : 'text-gray-400'}`} />
                             {feature}
                         </span>
                     ))}
                     {integration.features.length > 3 && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs text-gray-500">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs ${integration.disabled ? 'text-gray-400' : 'text-gray-500'}`}>
                             +{integration.features.length - 3}
                         </span>
                     )}
@@ -666,11 +906,11 @@ export default function Index({
                 </div>
 
                 {/* Info Banner */}
-                <div className="mb-6 bg-blue-50/50 border border-blue-100 rounded-lg p-4">
+                <div className="mb-6 bg-slate-50/50 border border-slate-100 rounded-lg p-4">
                     <div className="flex gap-3">
                         <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                 </svg>
                             </div>
@@ -702,13 +942,121 @@ export default function Index({
                     dense={false}
                     onRowDoubleClick={handleRowDoubleClick}
                     rowClassName={(integration: Integration) => {
+                        if (integration.disabled) {
+                            return 'opacity-60 cursor-not-allowed';
+                        }
                         const isDisabled = integration.requiresOwner && !isOwner;
-                        return `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                        return `cursor-pointer hover:bg-slate-50 transition-all duration-200 ${
                             isDisabled ? 'opacity-60' : ''
                         }`;
                     }}
                 />
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmationModal && pendingModuleToggle && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-5">
+                            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                Modul Aktivləşdirmə Təsdiqi
+                            </h3>
+
+                            <div className="mb-4">
+                                <p className="text-sm text-gray-700 mb-3">
+                                    {pendingModuleToggle.currentlyEnabled
+                                        ? `${pendingModuleToggle.moduleName} modulunu deaktiv etmək istədiyinizə əminsiniz?`
+                                        : 'Bu modulun aktivləşdirilməsi gələcək aydan aylıq ödənişinizə əlavə olunacaq.'
+                                    }
+                                </p>
+
+                                {pendingModuleToggle.price !== undefined && pendingModuleToggle.price > 0 ? (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+                                        <p className="text-sm font-medium text-green-900">
+                                            🎉 İlk ay PULSUZ!
+                                        </p>
+                                        <div className="space-y-2 text-sm text-green-800">
+                                            <div className="flex justify-between">
+                                                <span>Bu ay:</span>
+                                                <strong className="text-green-700">PULSUZ (0 ₼)</strong>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Gələcək aydan:</span>
+                                                <strong>{pendingModuleToggle.price.toFixed(2)} ₼/ay</strong>
+                                            </div>
+                                            {pendingModuleToggle.newMonthlyTotal !== undefined && (
+                                                <div className="flex justify-between pt-2 border-t border-green-300">
+                                                    <span className="font-semibold">Yeni aylıq ödəniş (gələcək aydan):</span>
+                                                    <strong className="text-green-900">{pendingModuleToggle.newMonthlyTotal.toFixed(2)} ₼</strong>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <p className="text-sm text-green-800">
+                                            Bu modul pulsuz
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end space-x-3">
+                                <SecondaryButton
+                                    type="button"
+                                    onClick={handleCancelToggle}
+                                >
+                                    Ləğv et
+                                </SecondaryButton>
+                                <PrimaryButton
+                                    type="button"
+                                    onClick={handleConfirmToggle}
+                                >
+                                    {pendingModuleToggle.currentlyEnabled
+                                        ? 'Təsdiq et və Deaktiv et'
+                                        : 'Təsdiq et və Aktivləşdir'
+                                    }
+                                </PrimaryButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-5">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="flex-shrink-0">
+                                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+                                    </div>
+                                </div>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                    Xəta
+                                </h3>
+                            </div>
+
+                            <div className="mb-6">
+                                <p className="text-sm text-gray-700">
+                                    {errorMessage}
+                                </p>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <PrimaryButton
+                                    type="button"
+                                    onClick={() => setShowErrorModal(false)}
+                                >
+                                    Bağla
+                                </PrimaryButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

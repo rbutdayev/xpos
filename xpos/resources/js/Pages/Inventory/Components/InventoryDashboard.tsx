@@ -19,7 +19,7 @@ export default function InventoryDashboard({ selectedWarehouse }: Props) {
                     <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.title')}</h3>
                 </div>
                 {selectedWarehouse && (
-                    <Link href={route('inventory.warehouse', selectedWarehouse.id)} className="text-blue-600 hover:text-blue-800 text-sm">
+                    <Link href={route('inventory.warehouse', selectedWarehouse.id)} className="text-slate-600 hover:text-slate-800 text-sm">
                         {t('dashboard.details')}
                     </Link>
                 )}

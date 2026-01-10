@@ -81,7 +81,7 @@ export default function Edit({ warehouse, branches }: Props) {
                                     <InputLabel htmlFor="type" value="Anbar Növü *" />
                                     <select
                                         id="type"
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         value={data.type}
                                         onChange={(e) => setData('type', e.target.value as 'main' | 'auxiliary' | 'mobile')}
                                         required
@@ -133,7 +133,7 @@ export default function Edit({ warehouse, branches }: Props) {
                                 <InputLabel htmlFor="description" value="Anbar Təsviri" />
                                 <textarea
                                     id="description"
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={4}

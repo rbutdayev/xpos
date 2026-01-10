@@ -380,7 +380,7 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Kart nömrəsi ilə axtar..."
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     />
                                 </div>
                             </div>
@@ -388,7 +388,7 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                                 <select
                                     value={status}
                                     onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                 >
                                     <option value="">Bütün statuslar</option>
                                     <option value="free">Boş</option>
@@ -402,7 +402,7 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                             <div className="flex gap-2">
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+                                    className="px-6 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 font-medium"
                                 >
                                     Axtar
                                 </button>
@@ -609,7 +609,7 @@ export default function Index({ auth, cards, stats, filters, giftCardsEnabled = 
                                             <div className="bg-gray-50 px-6 py-4 flex items-center justify-between">
                                                 <Link
                                                     href={`/gift-cards/${quickViewCard.id}`}
-                                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                                    className="text-sm text-slate-600 hover:text-slate-800 font-medium"
                                                 >
                                                     Tam Detallara Keç →
                                                 </Link>

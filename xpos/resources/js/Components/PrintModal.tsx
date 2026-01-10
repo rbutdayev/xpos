@@ -333,7 +333,7 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
                                     <select
                                         value={selectedTemplate || ''}
                                         onChange={(e) => setSelectedTemplate(Number(e.target.value) || null)}
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     >
                                         <option value="">Şablon seçin...</option>
                                         {templates.map((template) => (
@@ -377,7 +377,7 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
                                     <button
                                         onClick={handlePrint}
                                         disabled={loading || !selectedTemplate}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-slate-700 border border-transparent rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50"
                                     >
                                         {loading ? 'Göndərilir...' : 'Çap et'}
                                     </button>
@@ -420,7 +420,7 @@ export default function PrintModal({ isOpen, onClose, resourceType, resourceId, 
                                     <button
                                         onClick={handlePrint}
                                         disabled={loading}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-slate-700 border border-transparent rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50"
                                     >
                                         {loading ? 'Göndərilir...' : 'Çap et'}
                                     </button>

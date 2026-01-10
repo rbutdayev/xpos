@@ -162,7 +162,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 p-5 rounded-lg">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-3">
-                                                    <div className="bg-blue-600 p-3 rounded-full">
+                                                    <div className="bg-slate-700 p-3 rounded-full">
                                                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                                         </svg>
@@ -207,7 +207,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                 <h3 className="text-lg font-medium text-gray-900">{t('itemsDevices.title')}</h3>
                                 <Link
                                     href={`/customer-items/create?customer_id=${customer.id}`}
-                                    className="inline-flex items-center px-3 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
+                                    className="inline-flex items-center px-3 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600"
                                 >
                                     <PlusIcon className="w-4 h-4 mr-1" />
                                     Əlavə et
@@ -242,7 +242,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                                     <div className="flex space-x-2">
                                                         <Link
                                                             href={`/customer-items/${item.id}`}
-                                                            className="text-blue-600 hover:text-blue-900 text-xs"
+                                                            className="text-slate-600 hover:text-slate-900 text-xs"
                                                         >
                                                             Bax
                                                         </Link>
@@ -278,7 +278,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                     <p className="text-gray-500">{t('emptyState.noItems')}</p>
                                     <Link
                                         href={`/customer-items/create?customer_id=${customer.id}`}
-                                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 mt-4"
+                                        className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600 mt-4"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
                                         {t('emptyState.addFirstItem')}
@@ -295,7 +295,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                 <h3 className="text-lg font-medium text-gray-900">{t('serviceDetails.title')}</h3>
                                 <Link
                                     href={`/tailor-services/create?customer_id=${customer.id}`}
-                                    className="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
+                                    className="inline-flex items-center px-3 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600"
                                 >
                                     <PlusIcon className="w-4 h-4 mr-1" />
                                     Yeni xidmət
@@ -332,7 +332,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                                     </div>
                                                     <Link
                                                         href={`/tailor-services/${service.id}`}
-                                                        className="text-blue-600 hover:text-blue-900 text-sm"
+                                                        className="text-slate-600 hover:text-slate-900 text-sm"
                                                     >
                                                         Bax
                                                     </Link>
@@ -376,7 +376,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                         <div className="text-center">
                                             <Link
                                                 href={`/tailor-services?customer_id=${customer.id}`}
-                                                className="text-blue-600 hover:text-blue-900 text-sm"
+                                                className="text-slate-600 hover:text-slate-900 text-sm"
                                             >
                                                 {t('serviceDetails.viewAll')}
                                             </Link>
@@ -389,7 +389,7 @@ export default function Show({ customer, customerItems, serviceHistory, serviceC
                                     <p className="text-gray-500">{t('emptyState.noServices')}</p>
                                     <Link
                                         href={`/tailor-services/create?customer_id=${customer.id}`}
-                                        className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 mt-4"
+                                        className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600 mt-4"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
                                         {t('emptyState.addFirstService')}

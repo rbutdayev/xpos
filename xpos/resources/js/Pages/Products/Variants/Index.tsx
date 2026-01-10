@@ -191,7 +191,7 @@ export default function Index({ product, variants }: Props) {
                         <div className="flex justify-end gap-2">
                           <Link
                             href={route('variants.edit', variant.id)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className="text-slate-600 hover:text-slate-900"
                           >
                             <PencilIcon className="w-5 h-5" />
                           </Link>

@@ -262,7 +262,7 @@ export default function PaySupplierCreditModal({
                             id="category_id"
                             value={formData.category_id}
                             onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             required
                         >
                             <option value="">Kateqoriya seçin</option>
@@ -282,7 +282,7 @@ export default function PaySupplierCreditModal({
                             id="branch_id"
                             value={formData.branch_id}
                             onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, branch_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             required
                         >
                             <option value="">Filial seçin</option>
@@ -302,7 +302,7 @@ export default function PaySupplierCreditModal({
                             id="payment_method"
                             value={formData.payment_method}
                             onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, payment_method: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             required
                         >
                             <option value="">Ödəniş üsulu seçin</option>
@@ -339,7 +339,7 @@ export default function PaySupplierCreditModal({
                             value={formData.notes}
                             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, notes: e.target.value })}
                             rows={3}
-                            className="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             placeholder="Əlavə qeydlər (istəyə bağlı)"
                         />
                         <InputError message={errors.notes} className="mt-2" />

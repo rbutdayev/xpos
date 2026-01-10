@@ -329,7 +329,7 @@ export default function Index({ receiptTemplates, filters }: Props) {
                         action: (
                             <a
                                 href="/receipt-templates/create"
-                                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                className="inline-flex items-center px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600"
                             >
                                 <PlusIcon className="w-4 h-4 mr-2" />
                                 İlk qəbz şablonunu yaradın

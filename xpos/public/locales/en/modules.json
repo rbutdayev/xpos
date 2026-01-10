@@ -1,0 +1,61 @@
+{
+  "pricing": {
+    "title": "Module Pricing",
+    "subtitle": "Manage pricing for paid modules",
+    "monthlyPrice": "Monthly Price",
+    "status": "Status",
+    "lastUpdated": "Last Updated",
+    "editPrice": "Edit Price",
+    "savePrice": "Save Price",
+    "pricePerMonth": "Price per month (AZN)",
+    "free": "Free",
+    "paid": "Paid",
+    "perMonth": "/month"
+  },
+  "confirmation": {
+    "title": "Module Activation Confirmation",
+    "enableMessage": "Are you sure you want to enable the \"{{moduleName}}\" module?",
+    "disableMessage": "Are you sure you want to disable the \"{{moduleName}}\" module?",
+    "pricingInfo": "This is a paid module and requires a monthly subscription:",
+    "monthlyCharge": "Monthly charge: {{price}} AZN",
+    "proratedCharge": "Prorated charge (this month): {{price}} AZN",
+    "nextBilling": "Next billing date: {{date}}",
+    "confirm": "Yes, Enable",
+    "cancel": "No, Cancel",
+    "confirmDisable": "Yes, Disable",
+    "freeModule": "This module is free and does not require any additional payment."
+  },
+  "history": {
+    "title": "Module History",
+    "subtitle": "Module change history for account",
+    "accountInfo": "Account Information",
+    "currentBilling": "Current Billing Information",
+    "totalMonthly": "Total Monthly",
+    "activeModules": "Active Modules",
+    "noActiveModules": "No active modules",
+    "changeHistory": "Change History",
+    "date": "Date",
+    "module": "Module",
+    "action": "Action",
+    "price": "Price",
+    "proratedAmount": "Prorated Amount",
+    "newTotal": "New Total",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "noHistory": "No history available",
+    "backToPayments": "Back to Payments",
+    "viewHistory": "View History",
+    "moduleBreakdown": "Module Breakdown"
+  },
+  "notifications": {
+    "priceUpdated": "Module price updated successfully",
+    "moduleEnabled": "Module enabled successfully",
+    "moduleDisabled": "Module disabled successfully",
+    "error": "An error occurred"
+  },
+  "validation": {
+    "priceRequired": "Price is required",
+    "priceMinimum": "Price cannot be less than 0",
+    "priceInvalid": "Invalid price format"
+  }
+}

@@ -161,7 +161,7 @@ export default function Timeline({ products, warehouses, activities, productInfo
                                         id="warehouse"
                                         value={warehouseId}
                                         onChange={(e) => setWarehouseId(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                                     >
                                         <option value="">Bütün Anbarlar</option>
                                         {warehouses.map((warehouse) => (
@@ -181,7 +181,7 @@ export default function Timeline({ products, warehouses, activities, productInfo
                                         id="start_date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                                     />
                                 </div>
 
@@ -194,7 +194,7 @@ export default function Timeline({ products, warehouses, activities, productInfo
                                         id="end_date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                                     />
                                 </div>
                             </div>
@@ -202,13 +202,13 @@ export default function Timeline({ products, warehouses, activities, productInfo
                             <div className="flex gap-3 mb-6">
                                 <button
                                     onClick={handleSearch}
-                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                    className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                 >
                                     Tarixçəni Göstər
                                 </button>
                                 <button
                                     onClick={handleReset}
-                                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                 >
                                     Sıfırla
                                 </button>
@@ -318,7 +318,7 @@ export default function Timeline({ products, warehouses, activities, productInfo
                                                         disabled={!link.url}
                                                         className={`px-3 py-1 text-sm rounded ${
                                                             link.active
-                                                                ? 'bg-indigo-600 text-white'
+                                                                ? 'bg-slate-700 text-white'
                                                                 : link.url
                                                                 ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'

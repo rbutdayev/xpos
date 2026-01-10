@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useTranslation } from 'react-i18next';
 
 interface Article {
@@ -50,26 +50,13 @@ export default function KnowledgeContextHelpIndex({ contextHelps = { data: [], m
   };
 
   return (
-    <>
+    <SuperAdminLayout title={t('knowledge:manage_context_help', 'Manage Context Help')}>
       <Head title={t('knowledge:manage_context_help', 'Manage Context Help')} />
 
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {t('knowledge:manage_context_help', 'Manage Context Help')}
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                {t('knowledge:context_help_description', 'Manage contextual help tooltips')}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Navigation */}
-          <SuperAdminNav activePage="/admin/knowledge" />
+      <div className="space-y-6">
+        <p className="text-sm text-gray-600">
+          {t('knowledge:context_help_description', 'Manage contextual help tooltips')}
+        </p>
 
           {/* Knowledge Base Navigation Tabs */}
           <div className="mb-6 flex gap-2 border-b border-gray-200">
@@ -98,7 +85,7 @@ export default function KnowledgeContextHelpIndex({ contextHelps = { data: [], m
         <div className="flex justify-end mb-6">
           <Link
             href="/admin/knowledge/context-help/create"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             {t('common:create', 'Create New')}
           </Link>
@@ -113,11 +100,11 @@ export default function KnowledgeContextHelpIndex({ contextHelps = { data: [], m
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               placeholder={t('knowledge:search_context_key', 'Search by context key...')}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             <button
               onClick={handleSearch}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               {t('common:search', 'Search')}
             </button>
@@ -180,7 +167,7 @@ export default function KnowledgeContextHelpIndex({ contextHelps = { data: [], m
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <Link
                         href={`/admin/knowledge/context-help/${contextHelp.id}/edit`}
-                        className="text-blue-600 hover:text-blue-900 transition-colors"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
                       >
                         {t('common:edit', 'Edit')}
                       </Link>
@@ -236,15 +223,14 @@ export default function KnowledgeContextHelpIndex({ contextHelps = { data: [], m
             </p>
             <Link
               href="/admin/knowledge/context-help/create"
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-slate-600 hover:text-slate-800 font-medium"
             >
               {t('knowledge:create_first_context_help', 'Create the first context help mapping')} →
             </Link>
           </div>
         )}
       </div>
-        </div>
       </div>
-    </>
+    </SuperAdminLayout>
   );
 }

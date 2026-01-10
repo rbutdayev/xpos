@@ -142,12 +142,12 @@ export default function DiscountSection({ product, branches }: Props) {
                 {price.discount_percentage}%
               </span>
               {status === 'active' && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-green-600 text-white rounded-full">
+                <span className="px-2 py-0.5 text-xs font-medium bg-slate-700 text-white rounded-full">
                   Aktiv
                 </span>
               )}
               {status === 'waiting' && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-blue-600 text-white rounded-full">
+                <span className="px-2 py-0.5 text-xs font-medium bg-slate-700 text-white rounded-full">
                   Gözləyir
                 </span>
               )}
@@ -239,7 +239,7 @@ export default function DiscountSection({ product, branches }: Props) {
           </div>
           <button
             onClick={handleAdd}
-            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 transition ease-in-out duration-150"
+            className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600 active:bg-green-900 transition ease-in-out duration-150"
           >
             <PlusIcon className="w-4 h-4 mr-2" />
             Yeni Endirim

@@ -95,7 +95,7 @@ export default function Edit({ category, parentCategories, types }: Props) {
                                         name="type"
                                         value={data.type}
                                         onChange={(e) => setData('type', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     >
                                         <option value="">{t('categories.placeholders.selectType')}</option>
                                         {Object.entries(types).map(([value, label]) => (
@@ -115,7 +115,7 @@ export default function Edit({ category, parentCategories, types }: Props) {
                                         name="parent_id"
                                         value={data.parent_id}
                                         onChange={(e) => setData('parent_id', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     >
                                         <option value="">{t('categories.placeholders.selectParent')}</option>
                                         {parentCategories.map((parentCategory) => (
@@ -139,7 +139,7 @@ export default function Edit({ category, parentCategories, types }: Props) {
                                         value={data.description}
                                         onChange={(e) => setData('description', e.target.value)}
                                         rows={3}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         placeholder={t('categories.placeholders.description')}
                                     />
                                     <InputError message={errors.description} className="mt-2" />
@@ -153,7 +153,7 @@ export default function Edit({ category, parentCategories, types }: Props) {
                                             name="is_active"
                                             checked={data.is_active}
                                             onChange={(e) => setData('is_active', e.target.checked)}
-                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                                         />
                                         <span className="ml-2 text-sm text-gray-900">{t('categories.activeCategory')}</span>
                                     </label>

@@ -11,9 +11,11 @@ import {
     DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import { useModuleAccess } from '@/Hooks/useModuleAccess';
 
 export default function AdminTopbar() {
     const { t } = useTranslation('common');
+    const { canAccessModule } = useModuleAccess();
 
     const isActive = (routeName: string) => {
         const activeRoute = route().current() || '';
@@ -63,24 +65,24 @@ export default function AdminTopbar() {
             label: t('navigation.printer_configs'),
             isActive: isActive('printer-configs')
         },
-        {
+        ...(canAccessModule('fiscal_printer') ? [{
             href: route('fiscal-printer-jobs.index'),
             icon: QueueListIcon,
             label: t('navigation.fiscal_printer_queue'),
             isActive: isActive('fiscal-printer-jobs')
-        },
-        {
+        }] : []),
+        ...(canAccessModule('sms') ? [{
             href: route('sms.logs'),
             icon: ChatBubbleLeftRightIcon,
             label: t('navigation.sms_logs'),
             isActive: isActive('sms.logs')
-        },
-        {
+        }] : []),
+        ...(canAccessModule('telegram') ? [{
             href: route('telegram.logs'),
             icon: ChatBubbleLeftRightIcon,
             label: t('navigation.telegram_logs'),
             isActive: isActive('telegram.logs')
-        },
+        }] : []),
         {
             href: route('audit-logs.index'),
             icon: ClockIcon,
@@ -103,12 +105,12 @@ export default function AdminTopbar() {
                                 className={`
                                     flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 whitespace-nowrap
                                     ${item.isActive
-                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                        ? 'bg-slate-50 text-slate-700 border border-slate-200'
                                         : 'text-gray-600 hover:bg-gray-100'
                                     }
                                 `}
                             >
-                                <Icon className={`w-5 h-5 ${item.isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                                <Icon className={`w-5 h-5 ${item.isActive ? 'text-slate-600' : 'text-gray-400'}`} />
                                 {item.label}
                             </Link>
                         );

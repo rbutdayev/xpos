@@ -148,7 +148,7 @@ export default function Calendar({ branches, categories }: Props) {
                             onClick={() => setShowFilters(!showFilters)}
                             className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${
                                 showFilters || hasActiveFilters
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                    ? 'bg-slate-700 text-white hover:bg-slate-600'
                                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                             }`}
                         >
@@ -174,7 +174,7 @@ export default function Calendar({ branches, categories }: Props) {
                                 <select
                                     value={filters.branch_id}
                                     onChange={(e) => handleFilterChange('branch_id', e.target.value)}
-                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                 >
                                     <option value="">Hamısı</option>
                                     {branches.map(branch => (
@@ -192,7 +192,7 @@ export default function Calendar({ branches, categories }: Props) {
                                 <select
                                     value={filters.rental_category}
                                     onChange={(e) => handleFilterChange('rental_category', e.target.value)}
-                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                 >
                                     <option value="">Hamısı</option>
                                     {categories.map(category => (
@@ -210,7 +210,7 @@ export default function Calendar({ branches, categories }: Props) {
                                 <select
                                     value={filters.status}
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
-                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                 >
                                     <option value="">Hamısı</option>
                                     {statusOptions.map(status => (
@@ -417,7 +417,7 @@ export default function Calendar({ branches, categories }: Props) {
                             </button>
                             <a
                                 href={`/rentals/${selectedEvent.id}`}
-                                className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                                className="px-4 py-2 bg-slate-700 border border-transparent rounded-md text-sm font-medium text-white hover:bg-slate-600"
                             >
                                 Ətraflı Bax
                             </a>

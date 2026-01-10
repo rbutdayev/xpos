@@ -1,0 +1,61 @@
+{
+  "pricing": {
+    "title": "Modul Qiymətləndirməsi",
+    "subtitle": "Pullu modullar üçün qiymətləri idarə edin",
+    "monthlyPrice": "Aylıq Qiymət",
+    "status": "Status",
+    "lastUpdated": "Son Yenilənmə",
+    "editPrice": "Qiyməti Redaktə Et",
+    "savePrice": "Qiyməti Yadda Saxla",
+    "pricePerMonth": "Aylıq qiymət (AZN)",
+    "free": "Pulsuz",
+    "paid": "Pullu",
+    "perMonth": "/ay"
+  },
+  "confirmation": {
+    "title": "Modul Aktivləşdirmə Təsdiqi",
+    "enableMessage": "\"{{moduleName}}\" modulunu aktivləşdirmək istədiyinizdən əminsiniz?",
+    "disableMessage": "\"{{moduleName}}\" modulunu deaktiv etmək istədiyinizdən əminsiniz?",
+    "pricingInfo": "Bu modul pulludur və aylıq ödəniş tələb edir:",
+    "monthlyCharge": "Aylıq ödəniş: {{price}} AZN",
+    "proratedCharge": "Proporsional ödəniş (bu ay): {{price}} AZN",
+    "nextBilling": "Növbəti ödəniş tarixi: {{date}}",
+    "confirm": "Bəli, Aktivləşdir",
+    "cancel": "Xeyr, Ləğv Et",
+    "confirmDisable": "Bəli, Deaktiv Et",
+    "freeModule": "Bu modul pulsuzdur və heç bir əlavə ödəniş tələb etmir."
+  },
+  "history": {
+    "title": "Modul Tarixçəsi",
+    "subtitle": "Hesab üçün modul dəyişikliklərinin tarixçəsi",
+    "accountInfo": "Hesab Məlumatı",
+    "currentBilling": "Cari Ödəniş Məlumatı",
+    "totalMonthly": "Cəmi Aylıq",
+    "activeModules": "Aktiv Modullar",
+    "noActiveModules": "Aktiv modul yoxdur",
+    "changeHistory": "Dəyişiklik Tarixçəsi",
+    "date": "Tarix",
+    "module": "Modul",
+    "action": "Əməliyyat",
+    "price": "Qiymət",
+    "proratedAmount": "Proporsional Məbləğ",
+    "newTotal": "Yeni Cəmi",
+    "enabled": "Aktivləşdirilib",
+    "disabled": "Deaktiv edilib",
+    "noHistory": "Tarixçə yoxdur",
+    "backToPayments": "Ödənişlərə Qayıt",
+    "viewHistory": "Tarixçəyə Bax",
+    "moduleBreakdown": "Modul Bölgüsü"
+  },
+  "notifications": {
+    "priceUpdated": "Modul qiyməti uğurla yeniləndi",
+    "moduleEnabled": "Modul aktivləşdirildi",
+    "moduleDisabled": "Modul deaktiv edildi",
+    "error": "Xəta baş verdi"
+  },
+  "validation": {
+    "priceRequired": "Qiymət tələb olunur",
+    "priceMinimum": "Qiymət 0-dan az ola bilməz",
+    "priceInvalid": "Yanlış qiymət formatı"
+  }
+}

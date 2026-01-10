@@ -269,7 +269,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                 onChange={(e) => setCardNumber(e.target.value.toUpperCase())}
                                 onKeyPress={handleKeyPress}
                                 placeholder="AZ-CARD-123456"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                 disabled={isLooking || isSelling}
                                 autoFocus
                             />
@@ -277,7 +277,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                 type="button"
                                 onClick={handleLookup}
                                 disabled={isLooking || isSelling || !cardNumber.trim()}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                             >
                                 {isLooking ? 'Axtarılır...' : 'Axtar'}
                             </button>
@@ -317,7 +317,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                 <select
                                     value={customerId}
                                     onChange={(e) => setCustomerId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     disabled={isSelling}
                                 >
                                     <option value="">Seçin...</option>
@@ -341,7 +341,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                         disabled={isSelling}
                                         className={`px-4 py-2 border rounded-md font-medium transition-colors ${
                                             paymentMethod === 'nağd'
-                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                ? 'bg-slate-700 text-white border-blue-600'
                                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                         }`}
                                     >
@@ -353,7 +353,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                         disabled={isSelling}
                                         className={`px-4 py-2 border rounded-md font-medium transition-colors ${
                                             paymentMethod === 'kart'
-                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                ? 'bg-slate-700 text-white border-blue-600'
                                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                         }`}
                                     >
@@ -365,7 +365,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                         disabled={isSelling}
                                         className={`px-4 py-2 border rounded-md font-medium transition-colors ${
                                             paymentMethod === 'köçürmə'
-                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                ? 'bg-slate-700 text-white border-blue-600'
                                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                         }`}
                                     >
@@ -382,7 +382,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                                 <select
                                     value={expiryMonths}
                                     onChange={(e) => setExpiryMonths(parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     disabled={isSelling}
                                 >
                                     <option value={1}>1 ay</option>
@@ -416,7 +416,7 @@ export default function GiftCardSaleModal({ isOpen, onClose, customers, branchId
                             type="button"
                             onClick={handleSell}
                             disabled={isSelling}
-                            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+                            className="px-6 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
                         >
                             {isSelling ? 'Satılır...' : `₼${cardInfo.denomination} - Sat`}
                         </button>

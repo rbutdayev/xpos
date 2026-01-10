@@ -351,7 +351,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                         )}
                                         <a
                                             href={route('customers.show', rental.customer.id)}
-                                            className="inline-flex items-center mt-2 text-xs text-blue-600 hover:text-blue-800"
+                                            className="inline-flex items-center mt-2 text-xs text-slate-600 hover:text-slate-800"
                                         >
                                             <EyeIcon className="h-3 w-3 mr-1" />
                                             Müştəriyə bax
@@ -496,7 +496,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                         {item.product ? (
                                             <a
                                                 href={route('products.show', item.product.id)}
-                                                className="inline-flex items-center mt-3 text-sm text-blue-600 hover:text-blue-800"
+                                                className="inline-flex items-center mt-3 text-sm text-slate-600 hover:text-slate-800"
                                             >
                                                 <EyeIcon className="h-4 w-4 mr-1" />
                                                 Məhsula bax
@@ -568,7 +568,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                             href={rental.collateral_photo_path}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-600 hover:text-blue-800 text-sm"
+                                            className="text-slate-600 hover:text-slate-800 text-sm"
                                         >
                                             🖼️ Şəkli göstər
                                         </a>
@@ -853,7 +853,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                 <div className="mt-6 pt-6 border-t">
                                     <a
                                         href={route('rentals.agreement.pdf', rental.id)}
-                                        className="flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                        className="flex items-center justify-center px-4 py-2.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors text-sm font-medium"
                                     >
                                         <svg
                                             className="h-5 w-5 mr-2"
@@ -886,7 +886,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                             <div className="space-y-3">
                                 <button
                                     onClick={() => router.visit(route('rentals.return.show', rental.id))}
-                                    className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                                    className="w-full flex items-center justify-center px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium"
                                 >
                                     <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -896,7 +896,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                 {['reserved', 'active', 'overdue'].includes(rental.status) && (
                                     <button
                                         onClick={() => router.visit(route('rentals.edit', rental.id))}
-                                        className="w-full flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                                        className="w-full flex items-center justify-center px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium"
                                     >
                                         <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -906,7 +906,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                 )}
                                 <button
                                     onClick={() => setShowExtendModal(true)}
-                                    className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                    className="w-full flex items-center justify-center px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium"
                                 >
                                     <ArrowPathIcon className="h-5 w-5 mr-2" />
                                     Uzat
@@ -934,7 +934,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                 </div>
                                 <button
                                     onClick={() => setShowAddPaymentModal(true)}
-                                    className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                                    className="w-full flex items-center justify-center px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium"
                                 >
                                     <CurrencyDollarIcon className="h-5 w-5 mr-2" />
                                     Ödəniş əlavə et
@@ -958,7 +958,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                     value={newEndDate}
                                     onChange={(e) => setNewEndDate(e.target.value)}
                                     min={rental.rental_end_date}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                                     disabled={isSubmitting}
                                 />
                             </div>
@@ -975,7 +975,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                 </button>
                                 <button
                                     onClick={handleExtendSubmit}
-                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Yüklənir...' : 'Təsdiq et'}
@@ -1048,7 +1048,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                             step="0.01"
                                             min="0.01"
                                             max={rental.credit_amount}
-                                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                                             placeholder="0.00"
                                             disabled={isSubmitting}
                                         />
@@ -1065,7 +1065,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                     <select
                                         value={paymentMethod}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                                         disabled={isSubmitting}
                                     >
                                         <option value="cash">{translatePaymentMethod('cash')}</option>
@@ -1082,7 +1082,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                         value={paymentNotes}
                                         onChange={(e) => setPaymentNotes(e.target.value)}
                                         rows={3}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                                         placeholder="Ödəniş haqqında qeyd..."
                                         disabled={isSubmitting}
                                     />
@@ -1104,7 +1104,7 @@ export default function Show({ rental, agreementPhotos = [], customerSignatureUr
                                 </button>
                                 <button
                                     onClick={handleAddPayment}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Yüklənir...' : 'Ödənişi Təsdiq Et'}

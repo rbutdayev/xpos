@@ -109,7 +109,7 @@ export default function CreateManualSupplierCreditModal({
                             id="supplier_id"
                             value={formData.supplier_id}
                             onChange={(e) => setFormData({ ...formData, supplier_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             required
                             disabled={!!preselectedSupplierId}
                         >
@@ -130,7 +130,7 @@ export default function CreateManualSupplierCreditModal({
                             id="branch_id"
                             value={formData.branch_id}
                             onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             required
                         >
                             {branches.map((branch) => (
@@ -181,7 +181,7 @@ export default function CreateManualSupplierCreditModal({
                             id="entry_type"
                             value={formData.entry_type}
                             onChange={(e) => setFormData({ ...formData, entry_type: e.target.value as 'manual' | 'migration' })}
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             required
                         >
                             <option value="manual">{t('suppliers:entryTypes.manual', 'Əl ilə')}</option>
@@ -252,7 +252,7 @@ export default function CreateManualSupplierCreditModal({
                             id="notes"
                             value={formData.notes}
                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             rows={3}
                             placeholder={t('suppliers:placeholders.notes', 'Əlavə qeydlər (ixtiyari)')}
                         />

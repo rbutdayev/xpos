@@ -177,7 +177,7 @@ export default function Create() {
                                             id="name"
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                             required
                                         />
                                         {errors.name && <div className="mt-2 text-sm text-red-600">{errors.name}</div>}
@@ -191,7 +191,7 @@ export default function Create() {
                                             id="type"
                                             value={data.type}
                                             onChange={(e) => setData('type', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                             required
                                         >
                                             {templateTypes.map((type) => (
@@ -211,7 +211,7 @@ export default function Create() {
                                             id="paper_size"
                                             value={data.paper_size}
                                             onChange={(e) => setData('paper_size', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                             required
                                         >
                                             {paperSizes.map((size) => (
@@ -234,7 +234,7 @@ export default function Create() {
                                             max="100"
                                             value={data.width_chars}
                                             onChange={(e) => setData('width_chars', parseInt(e.target.value))}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                             required
                                         />
                                         {errors.width_chars && <div className="mt-2 text-sm text-red-600">{errors.width_chars}</div>}
@@ -252,7 +252,7 @@ export default function Create() {
                                             rows={4}
                                             value={data.notes}
                                             onChange={(e) => setData('notes', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                             placeholder="Şablon haqqında əlavə məlumatlar..."
                                         />
                                         {errors.notes && <div className="mt-2 text-sm text-red-600">{errors.notes}</div>}
@@ -265,7 +265,7 @@ export default function Create() {
                                                 id="is_default"
                                                 checked={data.is_default}
                                                 onChange={(e) => setData('is_default', e.target.checked)}
-                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                             />
                                             <label htmlFor="is_default" className="ml-2 block text-sm text-gray-900">
                                                 Bu növ üçün əsas şablon
@@ -279,7 +279,7 @@ export default function Create() {
                                                 id="is_active"
                                                 checked={data.is_active}
                                                 onChange={(e) => setData('is_active', e.target.checked)}
-                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                             />
                                             <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
                                                 Aktiv
@@ -303,7 +303,7 @@ export default function Create() {
                             rows={15}
                             value={data.template_content}
                             onChange={(e) => setData('template_content', e.target.value)}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm font-mono"
                             placeholder="Şablon məzmununu daxil edin..."
                             required
                         />
@@ -351,14 +351,14 @@ export default function Create() {
                             <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
                                 <Link
                                     href="/receipt-templates"
-                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                 >
                                     Ləğv et
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                    className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50"
                                 >
                                     {processing ? 'Yaradılır...' : 'Şablonu Yarat'}
                                 </button>

@@ -308,7 +308,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                             placeholder="Axtarış üçün ən azı 2 hərf daxil edin..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-2"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 mb-2"
                                         />
                                         {isSearching && (
                                             <p className="text-xs text-gray-500 mb-2">Axtarılır...</p>
@@ -324,7 +324,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                                         setSelectedProduct(product);
                                                     }
                                                 }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                 size={Math.min(filteredProducts.length + 1, 8)}
                                             >
                                                 <option value="">Məhsul seçin</option>
@@ -361,7 +361,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                 <select
                                     value={data.branch_id}
                                     onChange={(e) => setData('branch_id', parseInt(e.target.value))}
-                                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${isEditing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 ${isEditing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                     required
                                     disabled={isEditing}
                                 >
@@ -411,7 +411,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     type="text"
                                     value={data.serial_number}
                                     onChange={(e) => setData('serial_number', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="Məs: SN123456789"
                                 />
                                 {errors.serial_number && (
@@ -432,7 +432,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                         <select
                                             value={data.rental_category}
                                             onChange={(e) => setData('rental_category', e.target.value)}
-                                            className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${isEditing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 ${isEditing ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                                             required
                                             disabled={isEditing}
                                         >
@@ -473,7 +473,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     <select
                                         value={data.status}
                                         onChange={(e) => setData('status', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     >
                                         <option value="available">Mövcud</option>
                                         <option value="rented">Kirayədə</option>
@@ -490,7 +490,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                         id="is_active"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                     />
                                     <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
                                         Aktiv
@@ -517,7 +517,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     min="0"
                                     value={data.daily_rate || ''}
                                     onChange={(e) => setData('daily_rate', e.target.value ? parseFloat(e.target.value) : null)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="0.00"
                                 />
                                 {errors.daily_rate && (
@@ -535,7 +535,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     min="0"
                                     value={data.weekly_rate || ''}
                                     onChange={(e) => setData('weekly_rate', e.target.value ? parseFloat(e.target.value) : null)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="0.00"
                                 />
                                 {errors.weekly_rate && (
@@ -553,7 +553,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     min="0"
                                     value={data.monthly_rate || ''}
                                     onChange={(e) => setData('monthly_rate', e.target.value ? parseFloat(e.target.value) : null)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="0.00"
                                 />
                                 {errors.monthly_rate && (
@@ -573,7 +573,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     min="0"
                                     value={data.purchase_price || ''}
                                     onChange={(e) => setData('purchase_price', e.target.value ? parseFloat(e.target.value) : null)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="0.00"
                                 />
                                 {errors.purchase_price && (
@@ -594,7 +594,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     min="0"
                                     value={data.replacement_cost || ''}
                                     onChange={(e) => setData('replacement_cost', e.target.value ? parseFloat(e.target.value) : null)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="0.00"
                                 />
                                 {errors.replacement_cost && (
@@ -622,7 +622,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     value={data.condition_notes}
                                     onChange={(e) => setData('condition_notes', e.target.value)}
                                     rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="Məhsulun cari vəziyyəti haqqında qeydlər (cızıqlar, ləkələr, defektlər və s.)"
                                 />
                                 {errors.condition_notes && (
@@ -638,7 +638,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="Texniki baxış tarixçəsi, təmir qeydləri və digər məlumatlar"
                                 />
                                 {errors.notes && (
@@ -661,7 +661,7 @@ export default function Form({ inventoryItem, products = [], branches, categorie
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 flex items-center disabled:opacity-50"
+                            className="px-4 py-2 bg-slate-700 border border-transparent rounded-md text-sm font-medium text-white hover:bg-slate-600 flex items-center disabled:opacity-50"
                         >
                             <CheckIcon className="w-4 h-4 mr-2" />
                             {processing ? 'Saxlanılır...' : 'Saxla'}

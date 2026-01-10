@@ -194,7 +194,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     className={`
                                         relative flex items-center gap-2.5 px-5 py-3 rounded-md
                                         font-medium text-sm transition-all duration-200 ease-in-out
-                                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                         ${activeTab === 'channels'
                                             ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
                                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-600'
@@ -212,7 +212,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     className={`
                                         relative flex items-center gap-2.5 px-5 py-3 rounded-md
                                         font-medium text-sm transition-all duration-200 ease-in-out
-                                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                         ${activeTab === 'sms'
                                             ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
                                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-600'
@@ -230,7 +230,7 @@ export default function NotificationSettings({ sms, telegram, notification_setti
                                     className={`
                                         relative flex items-center gap-2.5 px-5 py-3 rounded-md
                                         font-medium text-sm transition-all duration-200 ease-in-out
-                                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                         ${activeTab === 'telegram'
                                             ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
                                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-600'

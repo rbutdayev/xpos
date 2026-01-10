@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import SecondaryButton from '@/Components/SecondaryButton';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface User {
     id: number;
@@ -80,29 +80,16 @@ export default function SuperAdminUsers({ users, search }: Props) {
     };
 
     return (
-        <>
+        <SuperAdminLayout title="İstifadəçi Monitorinqi">
             <Head title="İstifadəçilər - Super Admin" />
-            
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                İstifadəçi Monitorinqi
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Bütün sistem istifadəçilərini izləyin
-                            </p>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Navigation */}
-                    <SuperAdminNav />
+            <div className="space-y-6">
+                <p className="text-sm text-gray-600">
+                    Bütün sistem istifadəçilərini izləyin
+                </p>
 
-                    {/* Search */}
-                    <div className="mb-6">
+                {/* Search */}
+                <div className="mb-6">
                         <form onSubmit={handleSearch} className="flex items-center space-x-2">
                             <TextInput
                                 type="text"
@@ -178,7 +165,7 @@ export default function SuperAdminUsers({ users, search }: Props) {
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div className="text-sm font-medium text-purple-900">
+                                                    <div className="text-sm font-medium text-slate-900">
                                                         Sistem Administratoru
                                                     </div>
                                                 )}
@@ -186,10 +173,10 @@ export default function SuperAdminUsers({ users, search }: Props) {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                                     user.role === 'super_admin' 
-                                                        ? 'bg-purple-100 text-purple-800'
+                                                        ? 'bg-slate-100 text-slate-800'
                                                         : user.role === 'account_owner'
-                                                        ? 'bg-indigo-100 text-indigo-800'
-                                                        : 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-slate-100 text-slate-800'
+                                                        : 'bg-slate-100 text-slate-800'
                                                 }`}>
                                                     {getRoleDisplayName(user.role)}
                                                 </span>
@@ -265,8 +252,7 @@ export default function SuperAdminUsers({ users, search }: Props) {
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

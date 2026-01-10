@@ -103,7 +103,7 @@ export default function Preview({ template, language: initialLanguage, sampleDat
                             </div>
                             <button
                                 onClick={handlePrint}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+                                className="px-4 py-2 bg-slate-700 text-white rounded-md text-sm font-medium hover:bg-slate-600 flex items-center"
                             >
                                 <PrinterIcon className="w-4 h-4 mr-2" />
                                 Çap Et

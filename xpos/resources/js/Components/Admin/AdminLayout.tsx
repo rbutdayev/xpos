@@ -59,7 +59,7 @@ export default function AdminLayout({
                                             className={`
                                                 relative flex items-center gap-2.5 px-5 py-3 rounded-md
                                                 font-medium text-sm transition-all duration-200 ease-in-out
-                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                                focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                                 ${tab.current
                                                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
                                                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'

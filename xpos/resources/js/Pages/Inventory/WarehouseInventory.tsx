@@ -228,7 +228,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                         {(search || categoryId || status) && (
                             <button
                                 onClick={clearFilters}
-                                className="text-sm text-blue-600 hover:text-blue-800"
+                                className="text-sm text-slate-600 hover:text-slate-800"
                             >
                                 {t('filters.clearFilters')}
                             </button>
@@ -248,7 +248,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder={t('filters.searchPlaceholder')}
-                                    className="pl-10 w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    className="pl-10 w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                                     onKeyPress={(e) => e.key === 'Enter' && handleFilter()}
                                 />
                             </div>
@@ -262,7 +262,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                             <select
                                 value={categoryId}
                                 onChange={(e) => setCategoryId(e.target.value)}
-                                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                             >
                                 <option value="">{t('filters.allCategories')}</option>
                                 {categories.map((category) => (
@@ -281,7 +281,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                             >
                                 <option value="">{t('filters.allStatuses')}</option>
                                 <option value="low_stock">{t('stockStatus.lowStock')}</option>
@@ -294,7 +294,7 @@ export default function WarehouseInventory({ warehouse, productStock, categories
                         <div className="flex items-end">
                             <button
                                 onClick={handleFilter}
-                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                             >
                                 {t('filters.applyFilters')}
                             </button>

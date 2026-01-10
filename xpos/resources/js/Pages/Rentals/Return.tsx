@@ -487,7 +487,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                             type="date"
                                             value={actualReturnDate}
                                             onChange={(e) => setActualReturnDate(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500"
                                         />
                                     </div>
                                 </div>
@@ -669,7 +669,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                                     })}
                                                     <button
                                                         type="button"
-                                                        className="flex items-center text-xs text-blue-600 hover:text-blue-800 mt-2"
+                                                        className="flex items-center text-xs text-slate-600 hover:text-slate-800 mt-2"
                                                     >
                                                         <CameraIcon className="h-3 w-3 mr-1" />
                                                         Şəkil əlavə et
@@ -906,7 +906,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                             onClick={() => setPaymentMethod('cash')}
                                             className={`px-3 py-2 text-sm font-medium rounded-md ${
                                                 paymentMethod === 'cash'
-                                                    ? 'bg-blue-600 text-white'
+                                                    ? 'bg-slate-700 text-white'
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                         >
@@ -917,7 +917,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                             onClick={() => setPaymentMethod('card')}
                                             className={`px-3 py-2 text-sm font-medium rounded-md ${
                                                 paymentMethod === 'card'
-                                                    ? 'bg-blue-600 text-white'
+                                                    ? 'bg-slate-700 text-white'
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                         >
@@ -928,7 +928,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                             onClick={() => setPaymentMethod('transfer')}
                                             className={`px-3 py-2 text-sm font-medium rounded-md ${
                                                 paymentMethod === 'transfer'
-                                                    ? 'bg-blue-600 text-white'
+                                                    ? 'bg-slate-700 text-white'
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             }`}
                                         >
@@ -943,7 +943,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                         <div className="space-y-3">
                             <button
                                 onClick={() => setShowConfirmModal(true)}
-                                className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-sm"
+                                className="w-full flex items-center justify-center px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium shadow-sm"
                             >
                                 <CheckIcon className="h-5 w-5 mr-2" />
                                 Qaytarmanı Tamamla
@@ -1051,7 +1051,7 @@ export default function Return({ rental, rentalCategory = 'general', conditionCh
                                 </button>
                                 <button
                                     onClick={handleSubmitConfirm}
-                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                                    className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-medium"
                                 >
                                     Təsdiq et və Qaytarışı Tamamla
                                 </button>

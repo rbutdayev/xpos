@@ -215,7 +215,7 @@ export default function DocumentUpload({
                     <select
                         value={documentType}
                         onChange={(e) => setDocumentType(e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                     >
                         {allowedTypes.map(type => (
                             <option key={type} value={type}>
@@ -234,7 +234,7 @@ export default function DocumentUpload({
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={2}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                         placeholder="Sənəd haqqında qısa məlumat..."
                     />
                 </div>
@@ -257,7 +257,7 @@ export default function DocumentUpload({
                             Faylları buraya sürükləyin və ya 
                             <button
                                 type="button"
-                                className="ml-1 text-blue-600 hover:text-blue-500 font-medium"
+                                className="ml-1 text-slate-600 hover:text-slate-500 font-medium"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 seçin
@@ -365,7 +365,7 @@ export default function DocumentUpload({
                                         href={doc.download_url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-500"
+                                        className="text-slate-600 hover:text-slate-500"
                                         title="Görüntülə"
                                     >
                                         <EyeIcon className="w-4 h-4" />

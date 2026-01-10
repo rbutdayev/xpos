@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface Provider {
     id: number;
@@ -21,26 +21,8 @@ interface Props {
 
 export default function Index({ providers }: Props) {
     return (
-        <>
+        <SuperAdminLayout title="Fiskal Printer Provayderləri">
             <Head title="Fiskal Printer Provayderləri - Super Admin" />
-
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Fiskal Printer Provayderləri
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                API URL-lərini və endpoint-ləri konfiqurasiya edin
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Navigation */}
-                    <SuperAdminNav />
 
                     {/* Providers Table */}
                     <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -96,7 +78,7 @@ export default function Index({ providers }: Props) {
                                             <td className="px-6 py-4 text-sm">
                                                 <a
                                                     href={`/admin/fiscal-printer-providers/${provider.id}/edit`}
-                                                    className="text-blue-600 hover:text-blue-900 font-medium"
+                                                    className="text-slate-600 hover:text-slate-900 font-medium"
                                                 >
                                                     Redaktə et
                                                 </a>
@@ -134,8 +116,6 @@ export default function Index({ providers }: Props) {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

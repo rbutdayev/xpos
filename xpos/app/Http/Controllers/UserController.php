@@ -101,13 +101,13 @@ class UserController extends Controller
         }
 
         // Define roles that require branch assignment
-        $branchRequiredRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+        $branchRequiredRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor', 'attendance_user'];
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:admin,branch_manager,warehouse_manager,sales_staff,cashier,accountant,tailor',
+            'role' => 'required|in:admin,branch_manager,warehouse_manager,sales_staff,cashier,accountant,tailor,attendance_user',
             'password' => 'required|string|min:8|confirmed',
             'status' => 'required|in:active,inactive',
             'position' => 'nullable|string|max:255',
@@ -234,13 +234,13 @@ class UserController extends Controller
         $isAccountOwner = $user->role === 'account_owner';
 
         // Define roles that require branch assignment
-        $branchRequiredRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor'];
+        $branchRequiredRoles = ['sales_staff', 'branch_manager', 'cashier', 'tailor', 'attendance_user'];
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'role' => $isAccountOwner ? 'sometimes' : 'required|in:admin,branch_manager,warehouse_manager,sales_staff,cashier,accountant,tailor',
+            'role' => $isAccountOwner ? 'sometimes' : 'required|in:admin,branch_manager,warehouse_manager,sales_staff,cashier,accountant,tailor,attendance_user',
             'status' => 'required|in:active,inactive',
             'password' => 'nullable|string|min:8|confirmed',
             'position' => 'nullable|string|max:255',
@@ -462,6 +462,7 @@ class UserController extends Controller
             ['value' => 'cashier', 'label' => 'Kassir'],
             ['value' => 'accountant', 'label' => 'Mühasib'],
             ['value' => 'tailor', 'label' => 'Usta'],
+            ['value' => 'attendance_user', 'label' => 'İşə Gəlmə İzləməsi İstifadəçisi'],
         ];
     }
 
@@ -476,6 +477,7 @@ class UserController extends Controller
             'cashier' => 'Kassir',
             'accountant' => 'Mühasib',
             'tailor' => 'Usta',
+            'attendance_user' => 'İşə Gəlmə İzləməsi İstifadəçisi',
         ];
 
         return $roles[$role] ?? $role;

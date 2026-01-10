@@ -123,7 +123,7 @@ export default function Edit({ customer }: Props) {
                                     name="customer_type"
                                     value={data.customer_type}
                                     onChange={(e) => setData('customer_type', e.target.value as 'individual' | 'corporate')}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="individual">{t('types.individual')}</option>
                                     <option value="corporate">{t('types.corporate')}</option>
@@ -214,7 +214,7 @@ export default function Edit({ customer }: Props) {
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder={t('placeholders.address')}
                                 />
                                 <InputError message={errors.address} className="mt-2" />
@@ -229,7 +229,7 @@ export default function Edit({ customer }: Props) {
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />
@@ -291,7 +291,7 @@ export default function Edit({ customer }: Props) {
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-indigo-600 focus:ring-slate-500 border-gray-300 rounded"
                                     />
                                     <InputLabel htmlFor="is_active" value={t('fields.activeCustomer')} className="ml-2" />
                                 </div>

@@ -47,7 +47,7 @@ export default function ReceiptSettingsSection({
                         type="text"
                         value={data.receipt_header_text}
                         onChange={(e) => setData('receipt_header_text', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                         placeholder="Qəbz başlığında göstəriləcək mətn"
                     />
                 </FormField>
@@ -61,7 +61,7 @@ export default function ReceiptSettingsSection({
                         type="text"
                         value={data.receipt_footer_text}
                         onChange={(e) => setData('receipt_footer_text', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                         placeholder="Qəbz altbilgisində göstəriləcək mətn"
                     />
                 </FormField>
@@ -70,7 +70,7 @@ export default function ReceiptSettingsSection({
                     <select
                         value={data.default_paper_size}
                         onChange={(e) => setData('default_paper_size', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     >
                         {paperSizes.map((size) => (
                             <option key={size.value} value={size.value}>
@@ -87,7 +87,7 @@ export default function ReceiptSettingsSection({
                         max="100"
                         value={data.default_width_chars}
                         onChange={(e) => setData('default_width_chars', parseInt(e.target.value))}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
             </FormGrid>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import SecurityMetrics from '../../Components/Admin/Security/SecurityMetrics';
 import ThreatMonitor from '../../Components/Admin/Security/ThreatMonitor';
 import LoginAttempts from '../../Components/Admin/Security/LoginAttempts';
@@ -100,28 +100,10 @@ export default function SecurityCenter({
     };
 
     return (
-        <>
+        <SuperAdminLayout title="Təhlükəsizlik və Audit Mərkəzi">
             <Head title="Təhlükəsizlik Mərkəzi - Super Admin" />
-            
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Təhlükəsizlik və Audit Mərkəzi
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Təhlükəsizlik hadisələrini izləyin, IP ünvanlarını idarə edin və audit loglarını nəzərdən keçirin
-                            </p>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="space-y-8">
-                        {/* Navigation */}
-                        <SuperAdminNav />
+            <div className="space-y-8">
 
                         {/* Action Header */}
                         <div className="flex justify-between items-start">
@@ -143,7 +125,7 @@ export default function SecurityCenter({
                         <button
                             onClick={refreshData}
                             disabled={loading}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                            className="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-600 disabled:opacity-50 transition-colors"
                         >
                             {loading ? (
                                 <div className="flex items-center space-x-2">
@@ -210,13 +192,11 @@ export default function SecurityCenter({
                     />
                 </div>
 
-                        {/* Enhanced Audit Logs */}
-                        <div className="mt-8">
-                            <AuditViewer onLoadAuditLogs={loadAuditLogs} />
-                        </div>
-                    </div>
+                {/* Enhanced Audit Logs */}
+                <div className="mt-8">
+                    <AuditViewer onLoadAuditLogs={loadAuditLogs} />
                 </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

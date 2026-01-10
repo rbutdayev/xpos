@@ -41,7 +41,7 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
 
         <div>
           <InputLabel htmlFor="category_id" value="Kateqoriya" />
-          <select id="category_id" value={data.category_id || ''} onChange={(e) => onChange('category_id', e.target.value)} className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+          <select id="category_id" value={data.category_id || ''} onChange={(e) => onChange('category_id', e.target.value)} className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm">
             <option value="">Kateqoriya seç</option>
             {categories
               .filter((c) => !c.is_service)
@@ -60,7 +60,7 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
             id="unit"
             value={data.unit || 'ədəd'}
             onChange={(e) => onChange('unit', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
             required
           >
             <option value="ədəd">ədəd (piece)</option>
@@ -143,7 +143,7 @@ export default function BasicInfoSection({ data, errors, onChange, categories, o
         <div className="md:col-span-3">
           <InputLabel htmlFor="description" value="Təsvir" />
           <textarea id="description" value={data.description || ''} onChange={(e) => onChange('description', e.target.value)} rows={3}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500" />
           <InputError message={errors.description} className="mt-2" />
         </div>
 

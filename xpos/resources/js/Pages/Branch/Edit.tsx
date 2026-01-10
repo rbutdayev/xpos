@@ -177,7 +177,7 @@ export default function Edit({ branch, warehouses, currentWarehouseAccess }: Pro
                                     <InputLabel htmlFor="address" value="Ünvan" />
                                     <textarea
                                         id="address"
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
                                         rows={3}
@@ -228,7 +228,7 @@ export default function Edit({ branch, warehouses, currentWarehouseAccess }: Pro
                                 <InputLabel htmlFor="description" value="Təsvir" />
                                 <textarea
                                     id="description"
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={4}
@@ -248,7 +248,7 @@ export default function Edit({ branch, warehouses, currentWarehouseAccess }: Pro
                                     type="button"
                                     onClick={addWarehouseAccess}
                                     disabled={data.warehouse_access.length >= warehouses.length}
-                                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <PlusIcon className="h-4 w-4 mr-1" />
                                     Anbar Əlavə Et
@@ -266,7 +266,7 @@ export default function Edit({ branch, warehouses, currentWarehouseAccess }: Pro
                                         <button
                                             type="button"
                                             onClick={addWarehouseAccess}
-                                            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                         >
                                             <PlusIcon className="h-4 w-4 mr-2" />
                                             İlk Anbarı Əlavə Et
@@ -285,7 +285,7 @@ export default function Edit({ branch, warehouses, currentWarehouseAccess }: Pro
                                                     <select
                                                         value={access.warehouse_id}
                                                         onChange={(e) => updateWarehouseAccess(index, 'warehouse_id', parseInt(e.target.value))}
-                                                        className="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                        className="block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                                     >
                                                         {warehouses.map((warehouse) => (
                                                             <option key={warehouse.id} value={warehouse.id}>

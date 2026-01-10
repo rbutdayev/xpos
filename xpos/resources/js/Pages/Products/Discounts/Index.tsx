@@ -251,7 +251,7 @@ export default function Index({ auth, products, branches, filters, discountsEnab
                                     <select
                                         value={selectedBranch}
                                         onChange={(e) => handleBranchChange(e.target.value)}
-                                        className="rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                                        className="rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="">Bütün filiallar</option>
                                         {branches.map((branch) => (
@@ -266,7 +266,7 @@ export default function Index({ auth, products, branches, filters, discountsEnab
                                         onClick={() => handleTabChange('active')}
                                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                                             activeTab === 'active'
-                                                ? 'bg-green-600 text-white'
+                                                ? 'bg-slate-700 text-white'
                                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                     >

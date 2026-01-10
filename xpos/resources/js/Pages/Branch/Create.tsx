@@ -114,7 +114,7 @@ export default function Create() {
                                     <InputLabel htmlFor="address" value="Ünvan" />
                                     <textarea
                                         id="address"
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
                                         rows={3}
@@ -165,7 +165,7 @@ export default function Create() {
                                 <InputLabel htmlFor="description" value="Təsvir" />
                                 <textarea
                                     id="description"
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={4}

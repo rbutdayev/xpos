@@ -92,7 +92,7 @@ export default function Settings({ auth, credentials, statistics }: SMSSettingsP
                                     <button
                                         type="button"
                                         onClick={() => setIsEditing(true)}
-                                        className="text-blue-600 hover:text-blue-800"
+                                        className="text-slate-600 hover:text-slate-800"
                                     >
                                         Redaktə et
                                     </button>
@@ -159,7 +159,7 @@ export default function Settings({ auth, credentials, statistics }: SMSSettingsP
                                         <input
                                             id="is_active"
                                             type="checkbox"
-                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-slate-500"
                                             checked={data.is_active}
                                             onChange={(e) => setData('is_active', e.target.checked)}
                                         />

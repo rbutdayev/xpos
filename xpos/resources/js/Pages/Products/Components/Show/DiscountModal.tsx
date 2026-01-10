@@ -124,7 +124,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
                   <select
                     value={formData.branch_id}
                     onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                   >
                     <option value="">Bütün filiallar</option>
                     {branches.map((branch) => (
@@ -151,7 +151,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
                     required
                     value={formData.discount_percentage}
                     onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                     placeholder="Məs: 20"
                   />
                   {errors.discount_percentage && (
@@ -184,7 +184,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
                     required
                     value={formData.effective_from}
                     onChange={(e) => setFormData({ ...formData, effective_from: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                   />
                   {errors.effective_from && (
                     <p className="mt-1 text-sm text-red-600">{errors.effective_from}</p>
@@ -201,7 +201,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
                     value={formData.effective_until}
                     onChange={(e) => setFormData({ ...formData, effective_until: e.target.value })}
                     min={formData.effective_from}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                   />
                   {errors.effective_until && (
                     <p className="mt-1 text-sm text-red-600">{errors.effective_until}</p>
@@ -219,7 +219,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
                     min="0"
                     value={formData.min_sale_price}
                     onChange={(e) => setFormData({ ...formData, min_sale_price: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                     placeholder="Məs: 50.00"
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -237,7 +237,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
               <button
                 type="submit"
                 disabled={processing}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-slate-700 text-base font-medium text-white hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
               >
                 {processing ? 'Saxlanılır...' : editingPrice ? 'Yenilə' : 'Əlavə et'}
               </button>
@@ -245,7 +245,7 @@ export default function DiscountModal({ product, branches, editingPrice, onClose
                 type="button"
                 onClick={onClose}
                 disabled={processing}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50"
               >
                 Ləğv et
               </button>

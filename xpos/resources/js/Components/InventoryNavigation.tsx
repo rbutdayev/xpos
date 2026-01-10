@@ -83,7 +83,7 @@ export default function InventoryNavigation({ currentRoute }: InventoryNavigatio
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`${baseClasses} ${item.isActive ? activeClasses : inactiveClasses} focus:ring-blue-500`}
+                            className={`${baseClasses} ${item.isActive ? activeClasses : inactiveClasses} focus:ring-slate-500`}
                         >
                             <Icon className={`w-5 h-5 ${item.isActive ? iconActiveColor : iconInactiveColor}`} />
                             <span className="font-semibold">{item.label}</span>

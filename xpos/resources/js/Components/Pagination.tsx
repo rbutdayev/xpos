@@ -62,7 +62,7 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                         {links[0]?.url ? (
                             <Link
                                 href={links[0].url!}
-                                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-slate-500"
                             >
                                 <span className="sr-only">{t('pagination.previous')}</span>
                                 <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
@@ -93,8 +93,8 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                                     href={link.url!}
                                     className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                                         link.active
-                                            ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-                                            : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                            ? 'z-10 bg-slate-700 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600'
+                                            : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-slate-500'
                                     }`}
                                     aria-current={link.active ? 'page' : undefined}
                                 >
@@ -105,7 +105,7 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                                     key={index}
                                     className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                                         link.active
-                                            ? 'z-10 bg-blue-600 text-white'
+                                            ? 'z-10 bg-slate-700 text-white'
                                             : 'text-gray-400 ring-1 ring-inset ring-gray-300 cursor-not-allowed'
                                     }`}
                                 >
@@ -118,7 +118,7 @@ export default function Pagination({ links, currentPage, lastPage }: Props) {
                         {links[links.length - 1]?.url ? (
                             <Link
                                 href={links[links.length - 1].url!}
-                                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-none focus:ring-2 focus:ring-slate-500"
                             >
                                 <span className="sr-only">{t('pagination.next')}</span>
                                 <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />

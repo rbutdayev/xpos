@@ -189,7 +189,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                                             key={command.id}
                                             className={`cursor-pointer select-none px-4 py-3 ${
                                                 index === selectedIndex
-                                                    ? 'bg-blue-600 text-white'
+                                                    ? 'bg-slate-700 text-white'
                                                     : 'hover:bg-gray-100'
                                             }`}
                                             onClick={() => handleSelect(command)}

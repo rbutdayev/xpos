@@ -175,7 +175,7 @@ const IPBlocklist = memo(({ blockedIPs, onUnblockIP, onBlockIP }: IPBlocklistPro
                                     </div>
                                     <button
                                         onClick={() => onUnblockIP(ip.ip_address)}
-                                        className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 ml-4"
+                                        className="bg-slate-700 text-white px-3 py-1 rounded text-sm hover:bg-slate-600 ml-4"
                                     >
                                         Unblock
                                     </button>

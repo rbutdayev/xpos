@@ -67,7 +67,7 @@ function ProductSearchSection({ query, setQuery, loading, results, onSelect, mod
               <button
                 type="button"
                 onClick={() => setShowScanner(true)}
-                className="mt-5 rounded-md bg-indigo-600 p-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="mt-5 rounded-md bg-slate-700 p-2 text-white hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
                 title="Kamera ilə skan et"
               >
                 <CameraIcon className="h-5 w-5" />

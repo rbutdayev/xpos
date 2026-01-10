@@ -39,7 +39,7 @@ export default function CompanyInformationSection({
                         type="text"
                         value={data.company_name}
                         onChange={(e) => setData('company_name', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                         required
                     />
                 </FormField>
@@ -49,7 +49,7 @@ export default function CompanyInformationSection({
                         type="text"
                         value={data.tax_number}
                         onChange={(e) => setData('tax_number', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -57,7 +57,7 @@ export default function CompanyInformationSection({
                     <select
                         value={data.default_language}
                         onChange={(e) => setData('default_language', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                         required
                     >
                         <option value="az">Azərbaycan dili</option>
@@ -71,7 +71,7 @@ export default function CompanyInformationSection({
                         type="text"
                         value={data.company_phone}
                         onChange={(e) => setData('company_phone', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -80,7 +80,7 @@ export default function CompanyInformationSection({
                         type="email"
                         value={data.company_email}
                         onChange={(e) => setData('company_email', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -89,7 +89,7 @@ export default function CompanyInformationSection({
                         type="url"
                         value={data.company_website}
                         onChange={(e) => setData('company_website', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                         placeholder="https://example.com"
                     />
                 </FormField>
@@ -99,7 +99,7 @@ export default function CompanyInformationSection({
                         rows={3}
                         value={data.company_address}
                         onChange={(e) => setData('company_address', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
             </FormGrid>

@@ -63,7 +63,7 @@ export default function Index({ items, customers, filters }: CustomerItemsIndexP
                 <div>
                     <Link
                         href={route('customer-items.show', item.id)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-slate-600 hover:text-slate-800 font-medium"
                     >
                         {item.reference_number}
                     </Link>

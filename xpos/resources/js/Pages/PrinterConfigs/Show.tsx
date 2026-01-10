@@ -136,7 +136,7 @@ export default function Show({ printerConfig }: Props) {
                                     <button
                                         onClick={handleTestPrint}
                                         disabled={testing}
-                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-200 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-200 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50"
                                     >
                                         <PrinterIcon className="w-4 h-4 mr-2" />
                                         {testing ? 'Test Edilir...' : 'Test Çap'}
@@ -145,7 +145,7 @@ export default function Show({ printerConfig }: Props) {
 
                                 <Link
                                     href={`/printer-configs/${printerConfig.id}/edit`}
-                                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                 >
                                     <PencilIcon className="w-4 h-4 mr-2" />
                                     Redaktə Et

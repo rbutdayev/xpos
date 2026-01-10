@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useTranslation } from 'react-i18next';
 
 interface Category {
@@ -98,31 +98,13 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
   };
 
   return (
-    <>
+    <SuperAdminLayout title={t('knowledge:create_article', 'Create Article')}>
       <Head title={t('knowledge:create_article', 'Create Article')} />
-
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {t('knowledge:create_article', 'Create Article')}
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                {t('knowledge:create_article_description', 'Create a new knowledge base article')}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Navigation */}
-          <SuperAdminNav activePage="/admin/knowledge" />
 
           <div className="max-w-4xl mx-auto">
         {/* Breadcrumb */}
         <div className="mb-6">
-          <Link href="/admin/knowledge/articles" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/admin/knowledge/articles" className="text-slate-600 hover:text-slate-800 font-medium">
             ← {t('common:back', 'Back')}
           </Link>
         </div>
@@ -142,7 +124,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                 name="knowledge_category_id"
                 value={formData.knowledge_category_id}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
                   errors.knowledge_category_id ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -168,7 +150,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
                   errors.title ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Article title"
@@ -185,7 +167,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                 name="content"
                 value={formData.content}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 ${
                   errors.content ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Article content (HTML supported)"
@@ -203,7 +185,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                 name="excerpt"
                 value={formData.excerpt}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                 placeholder="Brief summary of the article"
                 rows={3}
               />
@@ -224,7 +206,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   name="type"
                   value={formData.type}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                 >
                   <option value="faq">FAQ</option>
                   <option value="guide">{t('knowledge:type_guide', 'Guide')}</option>
@@ -243,7 +225,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   name="difficulty_level"
                   value={formData.difficulty_level}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                 >
                   <option value="beginner">{t('knowledge:difficulty_beginner', 'Beginner')}</option>
                   <option value="intermediate">{t('knowledge:difficulty_intermediate', 'Intermediate')}</option>
@@ -263,7 +245,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                   placeholder="Add a tag and press Enter"
                 />
                 <button
@@ -300,7 +282,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   name="is_published"
                   checked={formData.is_published}
                   onChange={handleChange}
-                  className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-slate-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   {t('knowledge:publish_article', 'Publish article')}
@@ -312,7 +294,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   name="is_featured"
                   checked={formData.is_featured}
                   onChange={handleChange}
-                  className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-slate-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   {t('knowledge:feature_article', 'Feature article (show on homepage)')}
@@ -340,7 +322,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                     type="text"
                     value={translation.title}
                     onChange={(e) => handleTranslationChange(index, 'title', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                     placeholder={`Article title in ${languages[translation.language]}`}
                   />
                 </div>
@@ -353,7 +335,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   <textarea
                     value={translation.content}
                     onChange={(e) => handleTranslationChange(index, 'content', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                     placeholder={`Article content in ${languages[translation.language]}`}
                     rows={6}
                   />
@@ -367,7 +349,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
                   <textarea
                     value={translation.excerpt}
                     onChange={(e) => handleTranslationChange(index, 'excerpt', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                     placeholder={`Article excerpt in ${languages[translation.language]}`}
                     rows={3}
                   />
@@ -381,7 +363,7 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-slate-700 hover:bg-slate-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               {loading ? t('common:creating', 'Creating...') : t('knowledge:create_article', 'Create Article')}
             </button>
@@ -394,8 +376,6 @@ export default function KnowledgeArticlesCreate({ categories = [], languages = {
           </div>
         </form>
       </div>
-        </div>
-      </div>
-    </>
+    </SuperAdminLayout>
   );
 }

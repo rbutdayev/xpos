@@ -176,59 +176,6 @@ export default function ShopSettings({
                                 </div>
                             )}
 
-                            {/* Shop Status Card */}
-                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                                <div className="p-6 border-b border-gray-100">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                            <ShoppingBagIcon className="w-5 h-5 text-blue-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-base font-semibold text-gray-900">
-                                                Mağaza Statusu
-                                            </h3>
-                                            <p className="text-sm text-gray-500">
-                                                Online mağazanızı aktivləşdirin və ya deaktiv edin
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-6">
-                                    <div className="flex items-start gap-3">
-                                        <Checkbox
-                                            checked={data.shop_enabled}
-                                            onChange={(e) => setData('shop_enabled', e.target.checked)}
-                                            disabled={!sms_configured}
-                                            className="mt-0.5"
-                                        />
-                                        <div className="flex-1">
-                                            <label className="text-sm font-medium text-gray-900 block mb-1">
-                                                Online mağazanı aktivləşdir
-                                            </label>
-                                            <p className="text-sm text-gray-600">
-                                                Müştərilər məhsullarınızı onlayn görə və sifariş verə biləcək
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {errors.shop_enabled && (
-                                        <p className="mt-3 text-sm text-red-600">{errors.shop_enabled}</p>
-                                    )}
-
-                                    {data.shop_enabled && (
-                                        <div className="mt-5 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
-                                                <p className="text-sm font-medium text-emerald-900">
-                                                    Online mağaza aktivdir və işləyir
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
                             {/* Shop Configuration Card */}
                             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 <div className="p-6 border-b border-gray-100">
@@ -284,7 +231,7 @@ export default function ShopSettings({
                                                             href={shop_settings.shop_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-sm text-blue-600 hover:text-blue-800 font-mono truncate block"
+                                                            className="text-sm text-slate-600 hover:text-slate-800 font-mono truncate block"
                                                         >
                                                             {shop_settings.shop_url}
                                                         </a>
@@ -305,7 +252,7 @@ export default function ShopSettings({
                                             value={data.shop_warehouse_id}
                                             onChange={(e) => setData('shop_warehouse_id', e.target.value)}
                                             disabled={!data.shop_enabled}
-                                            className="block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                            className="block w-full rounded-lg border-gray-300 focus:border-slate-500 focus:ring-slate-500 text-sm"
                                         >
                                             <option value="">Bütün anbarlar</option>
                                             {warehouses.map((warehouse) => (
@@ -439,7 +386,7 @@ export default function ShopSettings({
                                                     }
                                                     rows={4}
                                                     disabled={!data.shop_enabled || !sms_configured}
-                                                    className="block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                    className="block w-full rounded-lg border-gray-300 focus:border-slate-500 focus:ring-slate-500 text-sm"
                                                     placeholder="Sizin sifarişiniz qəbul edildi. Sifariş nömrəsi: {order_number}"
                                                 />
                                                 <p className="mt-1.5 text-xs text-gray-500">
@@ -465,7 +412,7 @@ export default function ShopSettings({
                                     <PrimaryButton
                                         type="submit"
                                         disabled={processing}
-                                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-sm"
+                                        className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium shadow-sm"
                                     >
                                         {processing ? 'Yadda saxlanılır...' : 'Dəyişiklikləri saxla'}
                                     </PrimaryButton>

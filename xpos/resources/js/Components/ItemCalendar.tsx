@@ -209,7 +209,7 @@ export default function ItemCalendar({ inventoryId, height = '600px' }: ItemCale
                             </button>
                             <a
                                 href={`/rentals/${selectedEvent.id}`}
-                                className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                                className="px-4 py-2 bg-slate-700 border border-transparent rounded-md text-sm font-medium text-white hover:bg-slate-600"
                             >
                                 Ətraflı Bax
                             </a>

@@ -176,7 +176,7 @@ export default function Edit({ company }: Props) {
                                             name="default_language"
                                             value={data.default_language}
                                             onChange={(e) => setData('default_language', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                             required
                                         >
                                             {languageOptions.map((option) => (
@@ -196,7 +196,7 @@ export default function Edit({ company }: Props) {
                                             value={data.address}
                                             onChange={(e) => setData('address', e.target.value)}
                                             rows={3}
-                                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         />
                                         <InputError message={errors.address} className="mt-2" />
                                     </div>
@@ -265,7 +265,7 @@ export default function Edit({ company }: Props) {
                                         value={data.description}
                                         onChange={(e) => setData('description', e.target.value)}
                                         rows={4}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         placeholder="Şirkət haqqında əlavə məlumatlar..."
                                     />
                                     <InputError message={errors.description} className="mt-2" />
@@ -276,7 +276,7 @@ export default function Edit({ company }: Props) {
                             <div className="flex items-center justify-end space-x-2 pt-6 border-t border-gray-200">
                                 <Link
                                     href={route('companies.show', company.id)}
-                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                 >
                                     Ləğv et
                                 </Link>

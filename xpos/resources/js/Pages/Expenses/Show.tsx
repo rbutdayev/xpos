@@ -147,7 +147,7 @@ export default function Show({ expense }: Props) {
                                                             href={`/expenses/${expense.expense_id}/view-receipt`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                            className="text-slate-600 hover:text-slate-800 text-sm font-medium"
                                                         >
                                                             {t('actions.viewReceipt')}
                                                         </a>

@@ -181,7 +181,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     name="category_id"
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {(categories || []).map((category) => (
@@ -201,7 +201,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     name="branch_id"
                                     value={data.branch_id}
                                     onChange={(e) => setData('branch_id', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {(branches || []).map((branch) => (
@@ -221,7 +221,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     name="payment_method"
                                     value={data.payment_method}
                                     onChange={(e) => setData('payment_method', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                 >
                                     <option value="">{t('messages.selectOption', { ns: 'common' })}</option>
                                     {Object.entries(paymentMethods || {}).map(([key, value]) => (
@@ -242,7 +242,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                             href={`/storage/${expense.receipt_file_path}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-600 hover:text-blue-800 text-sm"
+                                            className="text-slate-600 hover:text-slate-800 text-sm"
                                         >
                                             {t('actions.viewReceipt')}
                                         </a>
@@ -276,7 +276,7 @@ export default function Edit({ expense, categories, branches, paymentMethods, fl
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder={t('placeholders.notes')}
                                 />
                                 <InputError message={errors.notes} className="mt-2" />

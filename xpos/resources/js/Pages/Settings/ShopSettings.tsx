@@ -33,7 +33,6 @@ interface Props {
 }
 
 interface FormData {
-    shop_enabled: boolean;
     shop_slug: string;
     shop_sms_merchant_notifications: boolean;
     shop_notification_phone: string;
@@ -44,7 +43,6 @@ interface FormData {
 export default function ShopSettings({ settings }: Props) {
     const { t } = useTranslation('settings');
     const { data, setData, patch, processing, errors, recentlySuccessful } = useForm<FormData>({
-        shop_enabled: settings.shop_enabled,
         shop_slug: settings.shop_slug || '',
         shop_sms_merchant_notifications: settings.shop_sms_merchant_notifications,
         shop_notification_phone: settings.shop_notification_phone || '',
@@ -85,31 +83,16 @@ Məbləğ: {total} ₼
                             icon={ShoppingBagIcon}
                         >
                             <FormGrid>
-                                <div className="sm:col-span-6">
-                                    <label className="flex items-center space-x-3">
-                                        <Checkbox
-                                            checked={data.shop_enabled}
-                                            onChange={(e) => setData('shop_enabled', e.target.checked)}
-                                        />
-                                        <span className="text-sm font-medium text-gray-900">
-                                            {t('shop.enableShop')}
-                                        </span>
-                                    </label>
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        {t('shop.enableShopHint')}
-                                    </p>
-                                </div>
-
                                 <FormField label={t('shop.businessName')} className="sm:col-span-6">
                                     <TextInput
                                         value={data.shop_slug}
                                         onChange={(e) => setData('shop_slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                                         placeholder="menim-magazam"
-                                        disabled={!data.shop_enabled}
+                                        disabled={!settings.shop_enabled}
                                         className="mt-1 block w-full"
                                     />
                                     <InputError message={errors.shop_slug} className="mt-2" />
-                                    {data.shop_slug && data.shop_enabled && (
+                                    {data.shop_slug && settings.shop_enabled && (
                                         <p className="mt-2 text-sm text-green-600">
                                             <GlobeAltIcon className="inline-block w-4 h-4 mr-1" />
                                             {t('shop.shopUrl')}: <strong>{window.location.origin}/shop/{data.shop_slug}</strong>
@@ -146,7 +129,7 @@ Məbləğ: {total} ₼
                                             <Checkbox
                                                 checked={data.shop_sms_merchant_notifications}
                                                 onChange={(e) => setData('shop_sms_merchant_notifications', e.target.checked)}
-                                                disabled={!data.shop_enabled}
+                                                disabled={!settings.shop_enabled}
                                             />
                                             <span className="text-sm font-medium text-gray-900">
                                                 {t('shop.merchantNotifications')}
@@ -162,7 +145,7 @@ Məbləğ: {total} ₼
                                             value={data.shop_notification_phone}
                                             onChange={(e) => setData('shop_notification_phone', e.target.value)}
                                             placeholder="+994XXXXXXXXX"
-                                            disabled={!data.shop_enabled || !data.shop_sms_merchant_notifications}
+                                            disabled={!settings.shop_enabled || !data.shop_sms_merchant_notifications}
                                             className="mt-1 block w-full"
                                         />
                                         <p className="mt-1 text-xs text-gray-500">
@@ -175,7 +158,7 @@ Məbləğ: {total} ₼
                                             <Checkbox
                                                 checked={data.shop_sms_customer_notifications}
                                                 onChange={(e) => setData('shop_sms_customer_notifications', e.target.checked)}
-                                                disabled={!data.shop_enabled}
+                                                disabled={!settings.shop_enabled}
                                             />
                                             <span className="text-sm font-medium text-gray-900">
                                                 {t('shop.customerNotifications')}
@@ -191,9 +174,9 @@ Məbləğ: {total} ₼
                                             value={data.shop_customer_sms_template}
                                             onChange={(e) => setData('shop_customer_sms_template', e.target.value)}
                                             rows={6}
-                                            disabled={!data.shop_enabled || !data.shop_sms_customer_notifications}
+                                            disabled={!settings.shop_enabled || !data.shop_sms_customer_notifications}
                                             placeholder={defaultTemplate}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         />
                                         <p className="mt-2 text-xs text-gray-500">
                                             <strong>{t('shop.templateVariables')}:</strong> {'{customer_name}'}, {'{order_number}'}, {'{total}'}, {'{shop_name}'}, {'{shop_phone}'}

@@ -25,12 +25,12 @@ export interface ModuleConfig {
     nameAz: string; // Azerbaijani translation
     description: string;
     icon: React.ComponentType<{ className?: string }>;
-    flagKey?: 'services_module_enabled' | 'rent_module_enabled' | 'shop_enabled' | 'loyalty_module_enabled' | 'discounts_module_enabled' | 'expeditor_module_enabled'; // Optional for modules like SMS
+    flagKey?: 'services_module_enabled' | 'rent_module_enabled' | 'shop_enabled' | 'loyalty_module_enabled' | 'discounts_module_enabled' | 'expeditor_module_enabled' | 'attendance_module_enabled'; // Optional for modules like SMS
     routes: string[];
     permissions: string[];
     requiredRoles: string[];
     dependencies?: string[]; // Other module IDs required
-    category: 'sales' | 'inventory' | 'finance' | 'customer';
+    category: 'sales' | 'inventory' | 'finance' | 'customer' | 'business';
 }
 
 /**
@@ -153,6 +153,19 @@ export const MODULES: Record<string, ModuleConfig> = {
         permissions: ['access-pos'],
         requiredRoles: ['admin', 'account_owner', 'sales_staff'],
         category: 'sales',
+    },
+
+    attendance: {
+        id: 'attendance',
+        name: 'Employee Attendance',
+        nameAz: 'İşçi Davamiyyəti',
+        description: 'Employee attendance tracking with QR codes and GPS verification',
+        icon: ClockIcon,
+        flagKey: 'attendance_module_enabled',
+        routes: ['/attendance', '/attendance/scan', '/attendance/reports', '/attendance/qr-codes'],
+        permissions: ['use-attendance', 'view-attendance-reports', 'manage-attendance'],
+        requiredRoles: ['admin', 'account_owner', 'branch_manager', 'attendance_user'],
+        category: 'business',
     },
 };
 

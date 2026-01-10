@@ -172,6 +172,24 @@ export const PERMISSIONS: Record<string, PermissionConfig> = {
         description: 'Configure and manage loyalty program',
         category: 'operations',
     },
+    'use-attendance': {
+        id: 'use-attendance',
+        name: 'Use Attendance',
+        description: 'Clock in/out and use attendance features',
+        category: 'operations',
+    },
+    'view-attendance-reports': {
+        id: 'view-attendance-reports',
+        name: 'View Attendance Reports',
+        description: 'View attendance reports and analytics',
+        category: 'operations',
+    },
+    'manage-attendance': {
+        id: 'manage-attendance',
+        name: 'Manage Attendance',
+        description: 'Manage attendance settings, QR codes, and configurations',
+        category: 'operations',
+    },
 };
 
 /**
@@ -254,6 +272,16 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
         'view-reports',
         'manage-users',
         'manage-branch-operations',
+        'view-attendance-reports',
+        'manage-attendance',
+    ],
+
+    /**
+     * Attendance User - Clock in/out only
+     */
+    attendance_user: [
+        'access-dashboard',
+        'use-attendance',
     ],
 };
 

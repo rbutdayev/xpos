@@ -22,7 +22,10 @@ interface ModuleFlags {
     rentEnabled?: boolean;
     discountsEnabled?: boolean;
     expeditorEnabled?: boolean;
+    attendanceEnabled?: boolean;
     smsConfigured?: boolean;
+    smsEnabled?: boolean;
+    telegramEnabled?: boolean;
     woltEnabled?: boolean;
     yangoEnabled?: boolean;
     boltEnabled?: boolean;
@@ -84,7 +87,10 @@ export function useModuleAccess(): UseModuleAccessReturn {
         rentEnabled: page.props.rentEnabled as boolean | undefined,
         discountsEnabled: page.props.discountsEnabled as boolean | undefined,
         expeditorEnabled: page.props.expeditorEnabled as boolean | undefined,
+        attendanceEnabled: page.props.attendanceEnabled as boolean | undefined,
         smsConfigured: page.props.smsConfigured as boolean | undefined,
+        smsEnabled: page.props.smsEnabled as boolean | undefined,
+        telegramEnabled: page.props.telegramEnabled as boolean | undefined,
         woltEnabled: page.props.woltEnabled as boolean | undefined,
         yangoEnabled: page.props.yangoEnabled as boolean | undefined,
         boltEnabled: page.props.boltEnabled as boolean | undefined,
@@ -100,9 +106,14 @@ export function useModuleAccess(): UseModuleAccessReturn {
             return false;
         }
 
-        // Special case for SMS module - check if SMS credentials exist
+        // Special case for SMS module - check if module is enabled
         if (moduleId === 'sms') {
-            return flags.smsConfigured === true;
+            return flags.smsEnabled === true;
+        }
+
+        // Special case for Telegram module - check if module is enabled
+        if (moduleId === 'telegram') {
+            return flags.telegramEnabled === true;
         }
 
         // Modules without flagKey cannot be checked
@@ -118,6 +129,7 @@ export function useModuleAccess(): UseModuleAccessReturn {
             loyalty_module_enabled: flags.loyaltyEnabled,
             discounts_module_enabled: flags.discountsEnabled,
             expeditor_module_enabled: flags.expeditorEnabled,
+            attendance_module_enabled: flags.attendanceEnabled,
         };
 
         return flagMap[module.flagKey] === true;

@@ -335,7 +335,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                     {order.customer_phone && (
                         <a
                             href={`tel:${order.customer_phone}`}
-                            className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                            className="text-sm text-slate-600 hover:text-slate-700 flex items-center gap-1"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <PhoneIcon className="w-3 h-3" />
@@ -512,7 +512,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                             <select
                                 value={newStatus}
                                 onChange={(e) => setNewStatus(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                             >
                                 <option value="pending">Gözləyir</option>
                                 <option value="completed">Tamamlandı (Stok çıxılacaq)</option>
@@ -527,7 +527,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                                 value={statusNotes}
                                 onChange={(e) => setStatusNotes(e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                                 placeholder="Status dəyişikliyi haqqında qeyd..."
                             />
                         </div>
@@ -541,7 +541,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                                         type="checkbox"
                                         checked={useFiscalPrinter}
                                         onChange={(e) => setUseFiscalPrinter(e.target.checked)}
-                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                                     />
                                     <label htmlFor="use_fiscal_printer_modal" className="ml-2 text-sm text-gray-700">
                                         Fiskal çap
@@ -556,7 +556,7 @@ export default function Index({ orders, filters, statusCounts, fiscalPrinterEnab
                         <div className="flex gap-2">
                             <button
                                 onClick={handleStatusUpdate}
-                                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                                className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
                             >
                                 Yadda saxla
                             </button>

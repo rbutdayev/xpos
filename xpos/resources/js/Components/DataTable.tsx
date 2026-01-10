@@ -126,7 +126,7 @@ export default function DataTable({
                                                                 <Link
                                                                     key={actionIndex}
                                                                     href={href}
-                                                                    className={action.className || 'text-blue-600 hover:text-blue-900'}
+                                                                    className={action.className || 'text-slate-600 hover:text-slate-900'}
                                                                 >
                                                                     {action.label}
                                                                 </Link>
@@ -137,7 +137,7 @@ export default function DataTable({
                                                             <button
                                                                 key={actionIndex}
                                                                 onClick={() => action.onClick && action.onClick(item)}
-                                                                className={action.className || 'text-blue-600 hover:text-blue-900'}
+                                                                className={action.className || 'text-slate-600 hover:text-slate-900'}
                                                             >
                                                                 {action.label}
                                                             </button>

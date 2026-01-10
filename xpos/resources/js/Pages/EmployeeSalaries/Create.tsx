@@ -88,7 +88,7 @@ export default function Create({ employees, statuses, months, currentYear, curre
                                     name="employee_id"
                                     value={data.employee_id}
                                     onChange={(e) => handleEmployeeChange(e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     <option value="">İşçi seçin</option>
@@ -110,7 +110,7 @@ export default function Create({ employees, statuses, months, currentYear, curre
                                         name="month"
                                         value={data.month}
                                         onChange={(e) => setData('month', e.target.value)}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         required
                                     >
                                         {Object.entries(months).map(([value, label]) => (
@@ -234,7 +234,7 @@ export default function Create({ employees, statuses, months, currentYear, curre
                                     name="status"
                                     value={data.status}
                                     onChange={(e) => setData('status', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     required
                                 >
                                     {Object.entries(statuses).map(([value, label]) => (
@@ -292,7 +292,7 @@ export default function Create({ employees, statuses, months, currentYear, curre
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     rows={3}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                     placeholder="Əlavə qeydlər (istəyə bağlı)"
                                 />
                                 <InputError message={errors.notes} className="mt-2" />

@@ -99,7 +99,7 @@ export default function Index({ services, filters, branches, stats, serviceType 
                 <div>
                     <Link
                         href={route('services.show', { serviceType: routeParam, tailorService: service.id })}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-slate-600 hover:text-slate-800 font-medium"
                     >
                         {service.service_number}
                     </Link>
@@ -330,7 +330,7 @@ export default function Index({ services, filters, branches, stats, serviceType 
                             <h1 className="text-2xl font-semibold text-gray-900">{serviceConfig.name}</h1>
                             <Link
                                 href={route('services.create', { serviceType: routeParam })}
-                                className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                className="inline-flex items-center px-4 py-2 bg-slate-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-600 focus:bg-blue-700 active:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
                                 <PlusCircleIcon className="w-5 h-5 mr-2" />
                                 Yeni Xidmət

@@ -189,7 +189,7 @@ export default function BarcodePrintModal({
                                 <select
                                     value={labelSize}
                                     onChange={(e) => setLabelSize(e.target.value as 'small' | 'medium' | 'large')}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-slate-500 focus:border-slate-500"
                                 >
                                     <option value="small">Small (40×25mm)</option>
                                     <option value="medium">Medium (50×30mm)</option>
@@ -207,7 +207,7 @@ export default function BarcodePrintModal({
                                     max="20"
                                     value={copies}
                                     onChange={(e) => setCopies(parseInt(e.target.value) || 1)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-slate-500 focus:border-slate-500"
                                 />
                             </div>
                             
@@ -217,7 +217,7 @@ export default function BarcodePrintModal({
                                         type="checkbox"
                                         checked={showProductName}
                                         onChange={(e) => setShowProductName(e.target.checked)}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        className="rounded border-gray-300 text-slate-600 focus:ring-slate-500"
                                     />
                                     <span className="ml-2 text-sm text-gray-700">Show product name</span>
                                 </label>
@@ -249,13 +249,13 @@ export default function BarcodePrintModal({
                     <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 rounded-b-lg">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handlePrint}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-white bg-slate-700 border border-transparent rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 flex items-center gap-2"
                         >
                             <PrinterIcon className="h-4 w-4" />
                             Print Labels

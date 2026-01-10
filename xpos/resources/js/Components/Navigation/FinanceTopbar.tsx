@@ -2,7 +2,6 @@ import { Link } from '@inertiajs/react';
 import {
     BanknotesIcon,
     UsersIcon,
-    ChartBarIcon,
     PlusCircleIcon,
     FolderIcon,
     CurrencyDollarIcon
@@ -43,12 +42,6 @@ export default function FinanceTopbar() {
             label: t('navigation.employee_salaries'),
             isActive: isActive('employee-salaries')
         },
-        {
-            href: route('reports.index'),
-            icon: ChartBarIcon,
-            label: t('navigation.reports'),
-            isActive: isActive('reports')
-        },
     ];
 
     return (
@@ -63,7 +56,7 @@ export default function FinanceTopbar() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-500/30 hover:from-blue-700 hover:to-blue-800 whitespace-nowrap"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-md shadow-slate-500/30 hover:from-slate-600 hover:to-slate-700 whitespace-nowrap"
                                 >
                                     <Icon className="w-5 h-5" />
                                     {item.label}
@@ -78,12 +71,12 @@ export default function FinanceTopbar() {
                                 className={`
                                     flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 whitespace-nowrap
                                     ${item.isActive
-                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                        ? 'bg-slate-50 text-slate-700 border border-slate-200'
                                         : 'text-gray-600 hover:bg-gray-100'
                                     }
                                 `}
                             >
-                                <Icon className={`w-5 h-5 ${item.isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                                <Icon className={`w-5 h-5 ${item.isActive ? 'text-slate-600' : 'text-gray-400'}`} />
                                 {item.label}
                             </Link>
                         );

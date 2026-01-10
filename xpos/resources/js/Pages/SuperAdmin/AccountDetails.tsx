@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 
@@ -75,60 +75,43 @@ export default function AccountDetails({ account, stats, flash }: Props) {
     };
 
     return (
-        <>
+        <SuperAdminLayout title={account.company_name}>
             <Head title={`${account.company_name} - Hesab Detalları`} />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <Link href="/admin/accounts" className="text-indigo-600 hover:text-indigo-900 text-sm mb-2 inline-block">
-                                ← Hesablara qayıt
-                            </Link>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                {account.company_name}
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Hesab detalları və istifadəçilər
-                            </p>
+            <Link href="/admin/accounts" className="text-slate-600 hover:text-slate-900 text-sm mb-4 inline-block">
+                ← Hesablara qayıt
+            </Link>
+
+            {/* Flash Messages */}
+            {flash?.success && (
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-green-800">
+                                Uğurlu
+                            </h3>
+                            <div className="mt-2 text-sm text-green-700">
+                                {flash.success}
+                            </div>
                         </div>
                     </div>
                 </div>
+            )}
 
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Flash Messages */}
-                    {flash?.success && (
-                        <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-green-800">
-                                        Uğurlu
-                                    </h3>
-                                    <div className="mt-2 text-sm text-green-700">
-                                        {flash.success}
-                                    </div>
-                                </div>
+            {flash?.error && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">
+                                Xəta
+                            </h3>
+                            <div className="mt-2 text-sm text-red-700">
+                                {flash.error}
                             </div>
                         </div>
-                    )}
-
-                    {flash?.error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">
-                                        Xəta
-                                    </h3>
-                                    <div className="mt-2 text-sm text-red-700">
-                                        {flash.error}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Navigation */}
-                    <SuperAdminNav />
+                    </div>
+                </div>
+            )}
 
                     {/* Account Info Card */}
                     <div className="bg-white shadow rounded-lg mb-6">
@@ -344,8 +327,6 @@ export default function AccountDetails({ account, stats, flash }: Props) {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
             {/* Clear Data Confirmation Modal */}
             {showClearDataModal && (
@@ -416,6 +397,6 @@ export default function AccountDetails({ account, stats, flash }: Props) {
                     </div>
                 </div>
             )}
-        </>
+        </SuperAdminLayout>
     );
 }

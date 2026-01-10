@@ -4,7 +4,7 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface GiftCard {
     id: number;
@@ -187,25 +187,13 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
     };
 
     return (
-        <>
+        <SuperAdminLayout title="Hədiyyə Kartları İdarəsi">
             <Head title="Hədiyyə Kartları - Super Admin" />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Hədiyyə Kartları İdarəsi
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Hədiyyə kartlarını yaradın və idarə edin
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
+            <div className="space-y-6">
+                <p className="text-sm text-gray-600">
+                    Hədiyyə kartlarını yaradın və idarə edin
+                </p>
 
                     {/* Flash Messages */}
                     {flash?.success && (
@@ -405,7 +393,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="">Hamısı</option>
                                         <option value="free">Azad</option>
@@ -418,7 +406,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                                     <select
                                         value={accountFilter}
                                         onChange={(e) => setAccountFilter(e.target.value)}
-                                        className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="">Bütün hesablar</option>
                                         {accounts.map((account) => (
@@ -473,7 +461,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                                             <select
                                                 value={data.account_id}
                                                 onChange={(e) => setData('account_id', e.target.value)}
-                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 required
                                             >
                                                 <option value="">Hesab seçin...</option>
@@ -532,7 +520,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                                     type="checkbox"
                                     checked={selectedCards.length === totalCardsCount && totalCardsCount > 0}
                                     onChange={handleSelectAll}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-indigo-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                                 <label className="ml-2 text-sm text-gray-600">
                                     Bütün kartları seç ({totalCardsCount})
@@ -576,7 +564,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                                                 type="checkbox"
                                                 checked={selectedCards.includes(card.id)}
                                                 onChange={() => handleSelectCard(card.id)}
-                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                className="h-4 w-4 text-indigo-600 focus:ring-slate-500 border-gray-300 rounded"
                                             />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -617,7 +605,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                                             <div className="flex justify-end space-x-2">
                                                 <Link
                                                     href={route('superadmin.gift-cards.show', card.id)}
-                                                    className="text-indigo-600 hover:text-indigo-900"
+                                                    className="text-slate-600 hover:text-slate-900"
                                                 >
                                                     Bax
                                                 </Link>
@@ -700,8 +688,7 @@ export default function GiftCardsIndex({ cards, stats, filters, accounts, flash 
                             </div>
                         )}
                     </div>
-                </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

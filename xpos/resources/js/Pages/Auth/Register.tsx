@@ -47,7 +47,7 @@ export default function Register() {
                             id="name"
                             name="name"
                             value={data.name}
-                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition duration-200"
                             autoComplete="name"
                             isFocused={true}
                             placeholder={t('register.namePlaceholder')}
@@ -66,7 +66,7 @@ export default function Register() {
                             type="email"
                             name="email"
                             value={data.email}
-                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition duration-200"
                             autoComplete="username"
                             placeholder={t('register.emailPlaceholder')}
                             onChange={(e) => setData('email', e.target.value)}
@@ -84,7 +84,7 @@ export default function Register() {
                             type="password"
                             name="password"
                             value={data.password}
-                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition duration-200"
                             autoComplete="new-password"
                             placeholder={t('register.passwordPlaceholder')}
                             onChange={(e) => setData('password', e.target.value)}
@@ -106,7 +106,7 @@ export default function Register() {
                             type="password"
                             name="password_confirmation"
                             value={data.password_confirmation}
-                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            className="mt-2 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition duration-200"
                             autoComplete="new-password"
                             placeholder={t('register.confirmPasswordPlaceholder')}
                             onChange={(e) =>
@@ -123,7 +123,7 @@ export default function Register() {
 
                     <div>
                         <PrimaryButton
-                            className="w-full justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
+                            className="w-full justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition duration-200"
                             disabled={processing}
                         >
                             {processing ? t('register.registering') : t('register.registerButton')}
@@ -137,7 +137,7 @@ export default function Register() {
                         {t('register.alreadyHaveAccount')}{' '}
                         <Link
                             href={route('login')}
-                            className="font-medium text-blue-600 hover:text-blue-500 underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                            className="font-medium text-slate-600 hover:text-slate-500 underline focus:outline-none focus:ring-2 focus:ring-slate-500 rounded"
                         >
                             {t('register.loginLink')}
                         </Link>

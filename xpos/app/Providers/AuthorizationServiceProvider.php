@@ -275,5 +275,29 @@ class AuthorizationServiceProvider extends ServiceProvider
         Gate::define('manage-knowledge-base', function (User $user) {
             return $user->isSuperAdmin();
         });
+
+        // Attendance Module Gates
+        // Use Attendance - All active users can use attendance when module is enabled
+        Gate::define('use-attendance', function (User $user) {
+            return $user->isActive()
+                && $user->account
+                && $user->account->isAttendanceModuleEnabled();
+        });
+
+        // View Attendance Reports - Management roles can view reports
+        Gate::define('view-attendance-reports', function (User $user) {
+            return $user->isActive()
+                && in_array($user->role, ['account_owner', 'admin', 'branch_manager'])
+                && $user->account
+                && $user->account->isAttendanceModuleEnabled();
+        });
+
+        // Manage Attendance - Account owners and admins can manage attendance settings
+        Gate::define('manage-attendance', function (User $user) {
+            return $user->isActive()
+                && in_array($user->role, ['account_owner', 'admin'])
+                && $user->account
+                && $user->account->isAttendanceModuleEnabled();
+        });
     }
 }

@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface AccountStats {
     total: number;
@@ -33,25 +33,8 @@ export default function SystemStats({ stats }: Props) {
     };
 
     return (
-        <>
+        <SuperAdminLayout title="Sistem Statistikası">
             <Head title="Sistem Statistikası - Super Admin" />
-
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Sistem Statistikası
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Ümumi sistem statistikası və hesabatlar
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
 
                     {/* Account Statistics */}
                     <div className="mb-8">
@@ -286,8 +269,6 @@ export default function SystemStats({ stats }: Props) {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

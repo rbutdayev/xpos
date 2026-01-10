@@ -1,0 +1,134 @@
+{
+  "title": "Attendance Check-In",
+  "subtitle": "Use GPS or QR code to check in and check out",
+  "scanMode": "Scan Mode",
+  "gpsMode": "GPS Mode",
+  "qrMode": "QR Scanner",
+  "switchToQR": "Switch to QR Scanner",
+  "switchToGPS": "Switch to GPS",
+  "qrScanner": {
+    "title": "Scan QR Code",
+    "instruction": "Point your camera at the branch QR code",
+    "scanning": "Scanning...",
+    "cameraPermissionDenied": "Camera permission denied. Please enable camera access.",
+    "cameraNotSupported": "Camera is not supported on this device",
+    "invalidQR": "Invalid QR code. Please scan a valid attendance QR code.",
+    "wrongAccount": "This QR code belongs to a different account",
+    "qrExpired": "This QR code has expired. Please generate a new one.",
+    "scanSuccess": "QR code scanned successfully!"
+  },
+  "noBranchAssigned": "No Branch Assigned",
+  "noBranchMessage": "You must be assigned to a branch before you can use the attendance system. Please contact your administrator.",
+  "gpsStatus": "GPS Status",
+  "acquiringGPS": "Acquiring GPS location...",
+  "gpsNotSupported": "GPS is not supported by your browser",
+  "gpsError": "Error acquiring GPS location",
+  "gpsPermissionDenied": "GPS permission denied. Please enable location access.",
+  "gpsUnavailable": "GPS position unavailable",
+  "gpsTimeout": "GPS request timed out",
+  "gpsErrorTitle": "GPS Error",
+  "gpsAcquired": "GPS location acquired",
+  "accuracy": "Accuracy",
+  "distanceFromBranch": "Distance from branch",
+  "mustBeWithinRadius": "You must be within {{radius}}m of the branch",
+  "todayStatus": "Today's Status",
+  "checkedInAt": "Checked in at {{time}}",
+  "checkedOutAt": "Checked out at {{time}}",
+  "distance": "Distance",
+  "processing": "Processing...",
+  "checkIn": "Check In",
+  "checkOut": "Check Out",
+  "waitingForGPS": "Waiting for GPS location...",
+  "tooFarForCheckOut": "You are too far from the branch to check out",
+  "alreadyCheckedOut": "You have already checked out for today",
+  "status": {
+    "present": "Present",
+    "late": "Late",
+    "absent": "Absent",
+    "incomplete": "Incomplete",
+    "completed": "Completed"
+  },
+  "my_history": {
+    "title": "My Attendance History",
+    "description": "View your attendance records and statistics",
+    "empty": {
+      "title": "No Records Found",
+      "description": "You don't have any attendance records yet"
+    }
+  },
+  "stats": {
+    "total_days": "Total Days",
+    "total_hours": "Total Hours",
+    "total_records": "Total Records",
+    "unique_employees": "Unique Employees"
+  },
+  "filters": {
+    "date_from": "From Date",
+    "date_to": "To Date",
+    "branch": "Branch",
+    "all_branches": "All Branches",
+    "search_placeholder": "Search by employee name..."
+  },
+  "fields": {
+    "check_in": "Check In",
+    "check_out": "Check Out",
+    "duration": "Duration",
+    "date": "Date",
+    "status": "Status",
+    "employee": "Employee",
+    "branch": "Branch"
+  },
+  "actions": {
+    "filter": "Filter",
+    "reset": "Reset",
+    "export": "Export",
+    "print": "Print",
+    "export_csv": "Export CSV"
+  },
+  "reports": {
+    "title": "Attendance Reports",
+    "description": "View and export employee attendance records"
+  },
+  "qr_codes": {
+    "title": "QR Codes for Attendance",
+    "description": "Print QR codes for each branch",
+    "info": "Post these QR codes at branch entrances for employee check-in",
+    "scan_instruction": "Scan to check in/out",
+    "branch_id": "Branch ID",
+    "empty": {
+      "title": "No Branches Found",
+      "description": "Create branches to generate QR codes"
+    }
+  },
+  "empty": {
+    "title": "No Records Found",
+    "description": "No attendance records match the selected filters"
+  },
+  "settings": {
+    "title": "Attendance Settings",
+    "description": "Configure attendance tracking, branch locations, and check-in radius",
+    "moduleStatus": "Module Status",
+    "enableModule": "Enable Attendance Module",
+    "moduleStatusDescription": "Toggle attendance tracking for your entire account",
+    "allowedRadius": "Allowed Check-in Radius",
+    "radiusInMeters": "Radius (meters)",
+    "radiusDescription": "Employees must be within this distance from the branch to check in/out (10-1000m)",
+    "branchLocations": "Branch GPS Locations",
+    "noBranches": "No branches found. Create branches first.",
+    "noLocation": "No location",
+    "ready": "Ready",
+    "locationNotSet": "GPS location not set",
+    "setLocation": "Set Location",
+    "editLocation": "Edit GPS Location",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "locationHint": "Tip: Use Google Maps to find exact coordinates. Right-click on the branch location and select coordinates.",
+    "useCurrentLocation": "Use Current Location",
+    "gettingLocation": "Getting location...",
+    "geolocationNotSupported": "Geolocation is not supported by your browser",
+    "geolocationPermissionDenied": "Location permission denied. Please allow location access in your browser settings.",
+    "geolocationUnavailable": "Location information is unavailable",
+    "geolocationTimeout": "Location request timed out",
+    "geolocationError": "An error occurred while getting your location"
+  }
+}

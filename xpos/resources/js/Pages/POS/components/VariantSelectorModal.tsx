@@ -127,7 +127,7 @@ function VariantSelectorModal({ product, isOpen, onClose, onSelect }: Props) {
                     className={`
                       py-3 px-4 rounded-lg font-medium text-sm transition-all
                       ${isSelected
-                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-600 ring-offset-2'
+                        ? 'bg-slate-700 text-white ring-2 ring-indigo-600 ring-offset-2'
                         : hasAnyStock
                         ? 'bg-white text-gray-700 border-2 border-gray-300 hover:border-indigo-600'
                         : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'
@@ -160,7 +160,7 @@ function VariantSelectorModal({ product, isOpen, onClose, onSelect }: Props) {
                     className={`
                       py-3 px-4 rounded-lg text-sm font-medium transition-all flex items-center space-x-2
                       ${isSelected
-                        ? 'bg-indigo-600 text-white ring-2 ring-indigo-600 ring-offset-2'
+                        ? 'bg-slate-700 text-white ring-2 ring-indigo-600 ring-offset-2'
                         : hasStock && selectedSize
                         ? 'bg-white text-gray-700 border-2 border-gray-300 hover:border-indigo-600'
                         : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'

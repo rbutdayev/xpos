@@ -9,7 +9,7 @@ export default function StockLevelIndicator({ percentage, label }: Props) {
         <div>
             {label && <div className="text-sm text-gray-600 mb-1">{label}</div>}
             <div className="w-full bg-gray-200 rounded h-2">
-                <div className="bg-blue-600 h-2 rounded" style={{ width: `${pct}%` }} />
+                <div className="bg-slate-700 h-2 rounded" style={{ width: `${pct}%` }} />
             </div>
         </div>
     );

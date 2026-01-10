@@ -142,7 +142,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                     <select
                                         value={selectedReportType}
                                         onChange={(e) => setSelectedReportType(e.target.value)}
-                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="">{t('selectReportType')}</option>
                                         {reportTypes.map((type) => (
@@ -160,7 +160,7 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                         type="date"
                                         value={dateFrom}
                                         onChange={(e) => setDateFrom(e.target.value)}
-                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     />
                                 </div>
                                 <div>
@@ -171,14 +171,14 @@ export default function Index({ reportTypes = [], recentReports = [], stats }: P
                                         type="date"
                                         value={dateTo}
                                         onChange={(e) => setDateTo(e.target.value)}
-                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     />
                                 </div>
                                 <div className="flex items-end">
                                     <button
                                         onClick={handleGenerateReport}
                                         disabled={isGenerating || !selectedReportType || !dateFrom || !dateTo}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-md font-medium flex items-center justify-center"
+                                        className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-md font-medium flex items-center justify-center"
                                     >
                                         {isGenerating ? (
                                             <>

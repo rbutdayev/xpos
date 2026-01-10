@@ -51,7 +51,7 @@ export default function LoginLanguageSwitcher() {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isChanging}
-        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white/90 backdrop-blur-sm border-2 border-indigo-200 rounded-xl hover:bg-white hover:border-indigo-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95"
+        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white/90 backdrop-blur-sm border-2 border-indigo-200 rounded-xl hover:bg-white hover:border-indigo-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95"
         title={currentLanguage.nativeName}
       >
         <GlobeAltIcon className="w-5 h-5 text-indigo-600" />

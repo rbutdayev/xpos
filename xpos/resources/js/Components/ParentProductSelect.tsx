@@ -154,7 +154,7 @@ export default function ParentProductSelect({
                             onFocus={handleInputFocus}
                             placeholder={placeholder}
                             disabled={disabled}
-                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent ${
                                 error ? 'border-red-300' : 'border-gray-300'
                             } ${disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}`}
                         />

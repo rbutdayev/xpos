@@ -151,7 +151,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     placeholder="Printer adını dəyişin"
                                     required
                                 />
@@ -167,7 +167,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                 <select
                                     value={data.printer_type}
                                     onChange={e => setData('printer_type', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     required
                                 >
                                     {printerTypes.map(type => (
@@ -251,7 +251,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                 <select
                                     value={data.paper_size}
                                     onChange={e => setData('paper_size', e.target.value)}
-                                    className="w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className="w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                 >
                                     {paperSizes.map(size => (
                                         <option key={size.value} value={size.value}>
@@ -274,7 +274,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                     <select
                                         value={data.settings.encoding}
                                         onChange={e => setData('settings', { ...data.settings, encoding: e.target.value })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         {encodingOptions.map(encoding => (
                                             <option key={encoding.value} value={encoding.value}>
@@ -292,7 +292,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                         type="number"
                                         value={data.settings.line_spacing}
                                         onChange={e => setData('settings', { ...data.settings, line_spacing: parseFloat(e.target.value) })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         min="0.5"
                                         max="3"
                                         step="0.1"
@@ -309,7 +309,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                         type="number"
                                         value={data.settings.margin_top}
                                         onChange={e => setData('settings', { ...data.settings, margin_top: parseInt(e.target.value) })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         min="0"
                                         max="50"
                                     />
@@ -323,7 +323,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                         type="number"
                                         value={data.settings.margin_bottom}
                                         onChange={e => setData('settings', { ...data.settings, margin_bottom: parseInt(e.target.value) })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         min="0"
                                         max="50"
                                     />
@@ -337,7 +337,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                         type="number"
                                         value={data.settings.margin_left}
                                         onChange={e => setData('settings', { ...data.settings, margin_left: parseInt(e.target.value) })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         min="0"
                                         max="50"
                                     />
@@ -351,7 +351,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                         type="number"
                                         value={data.settings.margin_right}
                                         onChange={e => setData('settings', { ...data.settings, margin_right: parseInt(e.target.value) })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                         min="0"
                                         max="50"
                                     />
@@ -374,7 +374,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                     <select
                                         value={data.settings.label_size_preset}
                                         onChange={e => setData('settings', { ...data.settings, label_size_preset: e.target.value })}
-                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         {labelSizePresets.map(preset => (
                                             <option key={preset.value} value={preset.value}>
@@ -397,7 +397,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                                 type="number"
                                                 value={data.settings.custom_label_width}
                                                 onChange={e => setData('settings', { ...data.settings, custom_label_width: parseInt(e.target.value) || 0 })}
-                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 min="20"
                                                 max="200"
                                                 placeholder="76"
@@ -412,7 +412,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                                 type="number"
                                                 value={data.settings.custom_label_height}
                                                 onChange={e => setData('settings', { ...data.settings, custom_label_height: parseInt(e.target.value) || 0 })}
-                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 min="10"
                                                 max="300"
                                                 placeholder="51"
@@ -427,7 +427,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                                 type="number"
                                                 value={data.settings.custom_label_gap}
                                                 onChange={e => setData('settings', { ...data.settings, custom_label_gap: parseInt(e.target.value) || 0 })}
-                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 min="0"
                                                 max="50"
                                                 placeholder="20"
@@ -484,7 +484,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                         id="is_default"
                                         checked={data.is_default}
                                         onChange={e => setData('is_default', e.target.checked)}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        className="rounded border-gray-300 text-slate-600 focus:ring-slate-500"
                                     />
                                     <label htmlFor="is_default" className="ml-3 text-sm text-gray-700">
                                         Standart printer olaraq təyin et
@@ -498,7 +498,7 @@ export default function Edit({ printerConfig, branches }: Props) {
                                     <select
                                         value={data.is_active ? 'true' : 'false'}
                                         onChange={e => setData('is_active', e.target.value === 'true')}
-                                        className="w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full md:w-auto rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="true">Aktiv</option>
                                         <option value="false">Deaktiv</option>
@@ -511,14 +511,14 @@ export default function Edit({ printerConfig, branches }: Props) {
                         <div className="border-t pt-6 flex justify-end space-x-3">
                             <Link
                                 href="/printer-configs"
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500"
                             >
                                 Ləğv Et
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="px-4 py-2 text-sm font-medium text-white bg-slate-700 border border-transparent rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50"
                             >
                                 {processing ? 'Saxlanılır...' : 'Dəyişiklikləri Saxla'}
                             </button>

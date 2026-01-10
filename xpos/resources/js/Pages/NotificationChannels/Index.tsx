@@ -238,7 +238,7 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
                                             id="merchant_enabled"
                                             checked={merchantEnabled}
                                             onChange={(e) => setMerchantEnabled(e.target.checked)}
-                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                                         />
                                         <label htmlFor="merchant_enabled" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
                                             Yeni sifariş bildirişlərini aktiv et
@@ -260,7 +260,7 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
                                                         checked={merchantSmsEnabled}
                                                         onChange={(e) => setMerchantSmsEnabled(e.target.checked)}
                                                         disabled={!sms.configured}
-                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50"
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500 disabled:opacity-50"
                                                     />
                                                     <label
                                                         htmlFor="merchant_sms"
@@ -305,7 +305,7 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
                                                         checked={merchantTelegramEnabled}
                                                         onChange={(e) => setMerchantTelegramEnabled(e.target.checked)}
                                                         disabled={!telegram.configured}
-                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50"
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500 disabled:opacity-50"
                                                     />
                                                     <label
                                                         htmlFor="merchant_telegram"
@@ -376,7 +376,7 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
                                             id="customer_enabled"
                                             checked={customerEnabled}
                                             onChange={(e) => setCustomerEnabled(e.target.checked)}
-                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                                         />
                                         <label htmlFor="customer_enabled" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
                                             Müştəriyə təsdiq bildirişi göndər
@@ -396,7 +396,7 @@ export default function Index({ auth, sms, telegram, notification_settings, acco
                                                     checked={customerSmsEnabled}
                                                     onChange={(e) => setCustomerSmsEnabled(e.target.checked)}
                                                     disabled={!sms.configured}
-                                                    className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50"
+                                                    className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500 disabled:opacity-50"
                                                 />
                                                 <label
                                                     htmlFor="customer_sms"

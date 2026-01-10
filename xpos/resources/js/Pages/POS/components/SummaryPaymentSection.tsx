@@ -570,7 +570,7 @@ function SummaryPaymentSection({
                 type="checkbox"
                 checked={formData.use_fiscal_printer ?? true}
                 onChange={(e) => setFormData((prev: any) => ({ ...prev, use_fiscal_printer: e.target.checked }))}
-                className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                 disabled={processing}
               />
               <label htmlFor="use_fiscal_printer" className="ml-2 text-sm text-gray-700">

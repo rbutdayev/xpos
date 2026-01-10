@@ -78,7 +78,7 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
             id="material"
             value={getAttr('material')}
             onChange={(e) => setAttr('material', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
           >
             <option value="">Material seçin</option>
             {MATERIALS.map((m) => (
@@ -97,7 +97,7 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
             id="season"
             value={getAttr('season')}
             onChange={(e) => setAttr('season', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
           >
             <option value="">Mövsüm seçin</option>
             {SEASONS.map((s) => (
@@ -116,7 +116,7 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
             id="gender"
             value={getAttr('gender')}
             onChange={(e) => setAttr('gender', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
           >
             <option value="">Cins seçin</option>
             {GENDERS.map((g) => (
@@ -135,7 +135,7 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
             id="style"
             value={getAttr('style')}
             onChange={(e) => setAttr('style', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
           >
             <option value="">Stil seçin</option>
             {STYLES.map((s) => (
@@ -183,7 +183,7 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
             value={getAttr('care_instructions')}
             onChange={(e) => setAttr('care_instructions', e.target.value)}
             rows={2}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
             placeholder="məs: 30°C-də yuma, ütüləmək olmaz"
           />
           <InputError message={errors['attributes.care_instructions']} className="mt-2" />
@@ -197,7 +197,7 @@ export default function ClothingInfoSection({ data, errors, onChange }: Props) {
             value={getAttr('additional_notes')}
             onChange={(e) => setAttr('additional_notes', e.target.value)}
             rows={2}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
             placeholder="Məhsul haqqında əlavə məlumat"
           />
           <InputError message={errors['attributes.additional_notes']} className="mt-2" />

@@ -1,0 +1,134 @@
+{
+  "title": "Davamiyyət Qeydiyyatı",
+  "subtitle": "İşə gəliş və gedişi qeyd etmək üçün GPS və ya QR koddan istifadə edin",
+  "scanMode": "Skan Rejimi",
+  "gpsMode": "GPS Rejimi",
+  "qrMode": "QR Skaner",
+  "switchToQR": "QR Skanera keç",
+  "switchToGPS": "GPS-ə keç",
+  "qrScanner": {
+    "title": "QR Kodu Skan Et",
+    "instruction": "Kameranı filialın QR koduna yönəldin",
+    "scanning": "Skan edilir...",
+    "cameraPermissionDenied": "Kamera icazəsi rədd edildi. Xahiş olunur kamera girişini aktivləşdirin.",
+    "cameraNotSupported": "Bu cihazda kamera dəstəklənmir",
+    "invalidQR": "Yanlış QR kod. Xahiş olunur etibarlı davamiyyət QR kodunu skan edin.",
+    "wrongAccount": "Bu QR kod başqa hesaba aiddir",
+    "qrExpired": "Bu QR kodun müddəti bitib. Xahiş olunur yenisini yaradın.",
+    "scanSuccess": "QR kod uğurla skan edildi!"
+  },
+  "noBranchAssigned": "Filial Təyin Edilməyib",
+  "noBranchMessage": "Davamiyyət sistemindən istifadə etməzdən əvvəl sizə filial təyin edilməlidir. Zəhmət olmasa administratorla əlaqə saxlayın.",
+  "gpsStatus": "GPS Statusu",
+  "acquiringGPS": "GPS yerləşməsi əldə edilir...",
+  "gpsNotSupported": "GPS brauzeriniz tərəfindən dəstəklənmir",
+  "gpsError": "GPS yerləşməsini əldə etməkdə xəta",
+  "gpsPermissionDenied": "GPS icazəsi rədd edildi. Zəhmət olmasa məkan girişini aktivləşdirin.",
+  "gpsUnavailable": "GPS mövqeyi əlçatan deyil",
+  "gpsTimeout": "GPS sorğusunun vaxtı bitdi",
+  "gpsErrorTitle": "GPS Xətası",
+  "gpsAcquired": "GPS yerləşməsi əldə edildi",
+  "accuracy": "Dəqiqlik",
+  "distanceFromBranch": "Filiala məsafə",
+  "mustBeWithinRadius": "Siz filialın {{radius}}m radiusu daxilində olmalısınız",
+  "todayStatus": "Bugünkü Status",
+  "checkedInAt": "İşə gəlmə: {{time}}",
+  "checkedOutAt": "İşdən çıxma: {{time}}",
+  "distance": "Məsafə",
+  "processing": "İşlənir...",
+  "checkIn": "İşə Gəliş",
+  "checkOut": "İşdən Gediş",
+  "waitingForGPS": "GPS yerləşməsi gözlənilir...",
+  "tooFarForCheckOut": "İşdən çıxmaq üçün filialdan çox uzaqdasınız",
+  "alreadyCheckedOut": "Siz artıq bu gün işdən çıxmısınız",
+  "status": {
+    "present": "İştirak",
+    "late": "Gecikmiş",
+    "absent": "Qayıb",
+    "incomplete": "Tamamlanmamış",
+    "completed": "Tamamlanmış"
+  },
+  "my_history": {
+    "title": "Mənim Davamiyyət Tarixçəm",
+    "description": "Davamiyyət qeydlərinizi və statistikanızı göstərin",
+    "empty": {
+      "title": "Qeyd Tapılmadı",
+      "description": "Hələ heç bir davamiyyət qeydiniz yoxdur"
+    }
+  },
+  "stats": {
+    "total_days": "Cəmi Günlər",
+    "total_hours": "Cəmi Saatlar",
+    "total_records": "Cəmi Qeydlər",
+    "unique_employees": "Unikal İşçilər"
+  },
+  "filters": {
+    "date_from": "Tarixdən",
+    "date_to": "Tarixə",
+    "branch": "Filial",
+    "all_branches": "Bütün Filiallar",
+    "search_placeholder": "İşçi adı ilə axtar..."
+  },
+  "fields": {
+    "check_in": "İşə Gəliş",
+    "check_out": "İşdən Gediş",
+    "duration": "Müddət",
+    "date": "Tarix",
+    "status": "Status",
+    "employee": "İşçi",
+    "branch": "Filial"
+  },
+  "actions": {
+    "filter": "Filtr",
+    "reset": "Sıfırla",
+    "export": "İxrac",
+    "print": "Çap Et",
+    "export_csv": "CSV İxrac Et"
+  },
+  "reports": {
+    "title": "Davamiyyət Hesabatları",
+    "description": "İşçi davamiyyət qeydlərini göstərin və ixrac edin"
+  },
+  "qr_codes": {
+    "title": "Davamiyyət üçün QR Kodlar",
+    "description": "Hər filial üçün QR kodları çap edin",
+    "info": "İşçilərin işə gəlməsi üçün bu QR kodlarını filial girişlərində yerləşdirin",
+    "scan_instruction": "İşə gəliş/çıxış üçün skan edin",
+    "branch_id": "Filial ID",
+    "empty": {
+      "title": "Filial Tapılmadı",
+      "description": "QR kodları yaratmaq üçün filiallar yaradın"
+    }
+  },
+  "empty": {
+    "title": "Qeyd Tapılmadı",
+    "description": "Seçilmiş filtrlərə uyğun davamiyyət qeydləri yoxdur"
+  },
+  "settings": {
+    "title": "Davamiyyət Parametrləri",
+    "description": "Davamiyyət izləməsini, filial yerləşmələrini və giriş radiusunu konfiqurasiya edin",
+    "moduleStatus": "Modul Statusu",
+    "enableModule": "Davamiyyət Modulunu Aktivləşdir",
+    "moduleStatusDescription": "Bütün hesab üçün davamiyyət izləməsini aktiv/deaktiv edin",
+    "allowedRadius": "İcazə Verilən Giriş Radiusu",
+    "radiusInMeters": "Radius (metr)",
+    "radiusDescription": "İşçilər işə gəliş/gediş üçün filialdan bu məsafə daxilində olmalıdır (10-1000m)",
+    "branchLocations": "Filial GPS Yerləşmələri",
+    "noBranches": "Filial tapılmadı. Əvvəlcə filiallar yaradın.",
+    "noLocation": "Yerləşmə yoxdur",
+    "ready": "Hazırdır",
+    "locationNotSet": "GPS yerləşməsi təyin edilməyib",
+    "setLocation": "Yerləşmə Təyin Et",
+    "editLocation": "GPS Yerləşməsini Redaktə Et",
+    "latitude": "Enlik",
+    "longitude": "Uzunluq",
+    "locationHint": "Məsləhət: Dəqiq koordinatları tapmaq üçün Google Maps istifadə edin. Filial yerləşməsində sağ klik edib koordinatları seçin.",
+    "useCurrentLocation": "Cihaz Yerləşməsindən İstifadə Et",
+    "gettingLocation": "Yerləşmə alınır...",
+    "geolocationNotSupported": "Brauzeriniz GPS-i dəstəkləmir",
+    "geolocationPermissionDenied": "Yerləşmə icazəsi rədd edildi. Zəhmət olmasa brauzer parametrlərində yerləşmə girişinə icazə verin.",
+    "geolocationUnavailable": "Yerləşmə məlumatı əlçatan deyil",
+    "geolocationTimeout": "Yerləşmə sorğusunun vaxtı bitdi",
+    "geolocationError": "Yerləşməni əldə etməkdə xəta baş verdi"
+  }
+}

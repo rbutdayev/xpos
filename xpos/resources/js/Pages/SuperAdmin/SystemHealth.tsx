@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Head } from '@inertiajs/react';
 import { useSystemHealth } from '@/Hooks/Admin/useSystemHealth';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import SystemMetrics from '@/Components/Admin/Health/SystemMetrics';
 import QueueMonitor from '@/Components/Admin/Health/QueueMonitor';
 import ResourceUsage from '@/Components/Admin/Health/ResourceUsage';
@@ -114,27 +114,8 @@ export default function SystemHealth({
     };
 
     return (
-        <>
+        <SuperAdminLayout title="Sistemin statusu">
             <Head title="Sistemin statusu - Super Admin" />
-            
-            <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Sistemin statusu
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Real vaxt sistem performansı və resurs istifadəsi monitorinqi
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Navigation */}
-                    <SuperAdminNav />
 
                     {/* Actions Bar */}
                     <div className="flex items-center justify-between mb-6">
@@ -150,7 +131,7 @@ export default function SystemHealth({
                             <div className="relative">
                                 <button
                                     onClick={() => setShowExportMenu(!showExportMenu)}
-                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                 >
                                     <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
                                     İxrac et
@@ -179,7 +160,7 @@ export default function SystemHealth({
                             <button
                                 onClick={handleRefresh}
                                 disabled={isRefreshing}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50"
                             >
                                 <ArrowPathIcon className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                                 {isRefreshing ? 'Yenilənir...' : 'Yenilə'}
@@ -375,8 +356,6 @@ export default function SystemHealth({
                     )}
                     </>
                 )}
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

@@ -308,7 +308,7 @@ export default function QuickScan({ warehouse }: QuickScanProps) {
                         <div className="flex gap-2">
                             <button
                                 onClick={handleExport}
-                                className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
+                                className="inline-flex items-center px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-md hover:bg-slate-600 transition-colors"
                             >
                                 <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
                                 Excel Export

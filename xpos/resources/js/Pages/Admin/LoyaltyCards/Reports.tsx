@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import SecondaryButton from '@/Components/SecondaryButton';
 
 interface Account {
@@ -34,34 +34,22 @@ interface Props {
 
 export default function LoyaltyCardsReports({ cardsByAccount, recentAssignments }: Props) {
     return (
-        <>
+        <SuperAdminLayout
+            title="Loaylıq Kartları Hesabatları"
+            actions={
+                <Link href={route('superadmin.loyalty-cards.index')}>
+                    <SecondaryButton type="button">
+                        Geriyə
+                    </SecondaryButton>
+                </Link>
+            }
+        >
             <Head title="Loaylıq Kartları Hesabatları - Super Admin" />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">
-                                        Loaylıq Kartları Hesabatları
-                                    </h1>
-                                    <p className="mt-2 text-sm text-gray-600">
-                                        Kart istifadəsi və təyinat statistikası
-                                    </p>
-                                </div>
-                                <Link href={route('superadmin.loyalty-cards.index')}>
-                                    <SecondaryButton type="button">
-                                        Geriyə
-                                    </SecondaryButton>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
+            <div className="space-y-6">
+                <p className="text-sm text-gray-600">
+                    Kart istifadəsi və təyinat statistikası
+                </p>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Cards by Account */}
                         <div className="bg-white shadow rounded-lg">
@@ -226,8 +214,7 @@ export default function LoyaltyCardsReports({ cardsByAccount, recentAssignments 
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

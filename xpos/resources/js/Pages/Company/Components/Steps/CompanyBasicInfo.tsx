@@ -202,7 +202,7 @@ export default function CompanyBasicInfo({ data, setData, errors, onValidationCh
             id="currency_code"
             value={data.currency_code || 'AZN'}
             onChange={(e) => setData('currency_code', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
           >
             {currencies.map((currency) => (
               <option key={currency.code} value={currency.code}>
@@ -223,7 +223,7 @@ export default function CompanyBasicInfo({ data, setData, errors, onValidationCh
             id="default_language"
             value={data.default_language || 'az'}
             onChange={(e) => setData('default_language', e.target.value)}
-            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
           >
             <option value="az">Azərbaycanca</option>
             <option value="en">English</option>

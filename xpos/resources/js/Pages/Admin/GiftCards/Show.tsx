@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface GiftCard {
     id: number;
@@ -114,33 +114,23 @@ export default function GiftCardShow({ card, transactions }: Props) {
     };
 
     return (
-        <>
+        <SuperAdminLayout
+            title={`Hədiyyə Kartı #${card.card_number}`}
+            actions={
+                <Link
+                    href={route('superadmin.gift-cards.index')}
+                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                >
+                    ← Geri
+                </Link>
+            }
+        >
             <Head title={`Hədiyyə Kartı ${card.card_number}`} />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6 flex justify-between items-center">
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900">
-                                    Hədiyyə Kartı #{card.card_number}
-                                </h1>
-                                <p className="mt-2 text-sm text-gray-600">
-                                    Kartın təfərrüatları və əməliyyat tarixçəsi
-                                </p>
-                            </div>
-                            <Link
-                                href={route('superadmin.gift-cards.index')}
-                                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            >
-                                ← Geri
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
+            <div className="space-y-6">
+                <p className="text-sm text-gray-600">
+                    Kartın təfərrüatları və əməliyyat tarixçəsi
+                </p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         {/* Card Details */}
@@ -368,8 +358,7 @@ export default function GiftCardShow({ card, transactions }: Props) {
                             </div>
                         )}
                     </div>
-                </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

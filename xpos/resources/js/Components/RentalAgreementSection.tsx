@@ -171,7 +171,7 @@ export default function RentalAgreementSection({
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                                 rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                 placeholder="Əlavə qeydlər (məsələn: Arxa tərəfdə kiçik cızıq var)"
                             />
                         </div>
@@ -245,7 +245,7 @@ export default function RentalAgreementSection({
                                 type="button"
                                 onClick={handleProceedToSignature}
                                 disabled={!canProceedToSignature()}
-                                className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Müştəri İmzasına Keç
                             </button>
@@ -301,7 +301,7 @@ export default function RentalAgreementSection({
                                     type="checkbox"
                                     checked={termsAccepted}
                                     onChange={(e) => setTermsAccepted(e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                             </div>
                             <label htmlFor="terms-accepted" className="ml-3 text-sm text-gray-700">
@@ -381,7 +381,7 @@ export default function RentalAgreementSection({
                                 type="button"
                                 onClick={handleProceedToStaff}
                                 disabled={!customerSignature || !termsAccepted}
-                                className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 İşçi Təsdiqi
                             </button>
@@ -445,7 +445,7 @@ export default function RentalAgreementSection({
                             <button
                                 type="button"
                                 onClick={handleComplete}
-                                className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                                className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600"
                             >
                                 <CheckCircleIcon className="h-5 w-5 mr-2" />
                                 Müqaviləni Təsdiqlə və Kirayəni Yarat

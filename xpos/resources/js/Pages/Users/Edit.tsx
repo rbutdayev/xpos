@@ -163,7 +163,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                                     name="role"
                                                     value={data.role}
                                                     onChange={(e) => setData('role', e.target.value)}
-                                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                    className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                                     required
                                                 >
                                                     <option value="">{t('form.rolePlaceholder')}</option>
@@ -188,7 +188,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             name="status"
                                             value={data.status}
                                             onChange={(e) => setData('status', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         >
                                             <option value="active">{t('form.active')}</option>
                                             <option value="inactive">{t('form.inactive')}</option>
@@ -198,7 +198,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                 </div>
 
                                 {/* Show branch selection for branch-specific roles */}
-                                {['sales_staff', 'branch_manager', 'cashier', 'tailor'].includes(data.role) && (
+                                {['sales_staff', 'branch_manager', 'cashier', 'tailor', 'attendance_user'].includes(data.role) && (
                                     <div className="mt-6">
                                         <InputLabel htmlFor="branch_id" value={`${t('form.branch')} *`} />
                                         <select
@@ -206,8 +206,8 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             name="branch_id"
                                             value={data.branch_id || ''}
                                             onChange={(e) => setData('branch_id', e.target.value ? parseInt(e.target.value) : undefined)}
-                                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                            required={['sales_staff', 'branch_manager', 'cashier', 'tailor'].includes(data.role)}
+                                            className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
+                                            required={['sales_staff', 'branch_manager', 'cashier', 'tailor', 'attendance_user'].includes(data.role)}
                                         >
                                             <option value="">{t('form.branchPlaceholder')}</option>
                                             {(branches || []).map((branch) => (
@@ -222,6 +222,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             {data.role === 'sales_staff' && t('form.salesStaffHint')}
                                             {data.role === 'cashier' && t('form.cashierHint')}
                                             {data.role === 'tailor' && t('form.tailorHint')}
+                                            {data.role === 'attendance_user' && 'İşçi hansı filiala aid olduğunu seçin (GPS yoxlaması üçün)'}
                                         </p>
                                     </div>
                                 )}
@@ -286,7 +287,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                         id="notes"
                                         name="notes"
                                         value={data.notes}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                                         rows={3}
                                         onChange={(e) => setData('notes', e.target.value)}
                                         placeholder={t('form.notesPlaceholder')}
@@ -346,7 +347,7 @@ export default function Edit({ user, roleOptions, branches }: Props) {
                                             type="checkbox"
                                             checked={data.kiosk_enabled || false}
                                             onChange={(e) => setData('kiosk_enabled', e.target.checked)}
-                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                            className="h-4 w-4 text-indigo-600 focus:ring-slate-500 border-gray-300 rounded"
                                         />
                                         <label htmlFor="kiosk_enabled" className="ml-2 block text-sm text-gray-900">
                                             {t('form.kioskEnabled')}

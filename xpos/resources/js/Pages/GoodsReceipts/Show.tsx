@@ -177,7 +177,7 @@ export default function Show({ receipt }: Props) {
                                     href={route('goods-receipts.print', receipt.id)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors shadow-sm font-medium"
                                 >
                                     <PrinterIcon className="w-5 h-5" />
                                     <span className="hidden sm:inline">{t('goodsReceipts.printReceipt')}</span>
@@ -348,7 +348,7 @@ export default function Show({ receipt }: Props) {
                                                             <div className="flex items-start justify-between gap-4">
                                                                 <div className="flex-1">
                                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                                        <span className="w-7 h-7 flex items-center justify-center bg-green-600 text-white rounded-full text-xs font-bold">
+                                                                        <span className="w-7 h-7 flex items-center justify-center bg-slate-700 text-white rounded-full text-xs font-bold">
                                                                             {groupIndex + 1}
                                                                         </span>
                                                                         <span className="font-semibold text-gray-900">{group.main.reference_number}</span>

@@ -149,7 +149,7 @@ const AuditViewer = memo(({ onLoadAuditLogs }: AuditViewerProps) => {
                         <button
                             onClick={loadLogs}
                             disabled={loading}
-                            className="bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                            className="bg-slate-700 text-white px-4 py-1 rounded text-sm hover:bg-slate-600 disabled:opacity-50"
                         >
                             {loading ? 'Loading...' : 'Refresh'}
                         </button>

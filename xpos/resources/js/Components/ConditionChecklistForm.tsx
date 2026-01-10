@@ -90,7 +90,7 @@ export default function ConditionChecklistForm({
                         <select
                             value={value || ''}
                             onChange={(e) => handleChange(item.id, e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                             required={item.required}
                         >
                             <option value="">Seçin</option>
@@ -114,7 +114,7 @@ export default function ConditionChecklistForm({
                             type="text"
                             value={value || ''}
                             onChange={(e) => handleChange(item.id, e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                             required={item.required}
                         />
                     </div>
@@ -134,7 +134,7 @@ export default function ConditionChecklistForm({
                             max={item.max}
                             step={item.step || 1}
                             onChange={(e) => handleChange(item.id, e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                             required={item.required}
                         />
                     </div>
@@ -151,7 +151,7 @@ export default function ConditionChecklistForm({
                             value={value || ''}
                             onChange={(e) => handleChange(item.id, e.target.value)}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                             required={item.required}
                         />
                     </div>

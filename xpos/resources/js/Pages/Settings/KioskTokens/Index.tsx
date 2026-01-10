@@ -175,7 +175,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                             {tokens.length > 0 && (
                                 <button
                                     onClick={() => setShowCreateModal(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
                                 >
                                     + Yeni Token
                                 </button>
@@ -272,7 +272,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                 <p className="text-gray-500 mb-4">Hələ heç bir token yaradılmayıb</p>
                                 <button
                                     onClick={() => setShowCreateModal(true)}
-                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    className="px-6 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
                                 >
                                     İlk Tokeni Yarat
                                 </button>
@@ -334,7 +334,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <button
                                                         onClick={() => copyToken(token.token_preview)}
-                                                        className="text-blue-600 hover:text-blue-900 mr-3"
+                                                        className="text-slate-600 hover:text-slate-900 mr-3"
                                                         title="Kopyala"
                                                     >
                                                         Kopyala
@@ -381,7 +381,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                     value={newTokenName}
                                     onChange={(e) => setNewTokenName(e.target.value)}
                                     placeholder="Məsələn: Kiosk Terminal 1"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-purple-500"
                                     required
                                     disabled={isSubmitting}
                                 />
@@ -396,7 +396,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                 <select
                                     value={selectedBranch}
                                     onChange={(e) => setSelectedBranch(e.target.value ? parseInt(e.target.value) : '')}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-purple-500"
                                     disabled={isSubmitting}
                                     required
                                 >
@@ -426,7 +426,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                                    className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 disabled:opacity-50"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Yaradılır...' : 'Yarat'}
@@ -457,7 +457,7 @@ export default function Index({ auth, tokens, branches, downloads }: Props) {
                                 </code>
                                 <button
                                     onClick={() => copyToken(createdToken)}
-                                    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 whitespace-nowrap"
+                                    className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 whitespace-nowrap"
                                 >
                                     Kopyala
                                 </button>

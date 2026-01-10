@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\AccountPayment;
+use App\Services\ModuleBillingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -236,5 +237,20 @@ class AccountPaymentsController extends Controller
         AccountPayment::where('status', 'pending')
             ->where('due_date', '<', Carbon::today())
             ->update(['status' => 'overdue']);
+    }
+
+    /**
+     * Display module billing history for an account
+     */
+    public function moduleHistory(Account $account, ModuleBillingService $billingService)
+    {
+        $history = $billingService->getAccountModuleHistory($account->id);
+        $breakdown = $billingService->getAccountBillingBreakdown($account);
+
+        return Inertia::render('SuperAdmin/ModuleHistory', [
+            'account' => $account->only(['id', 'company_name', 'email', 'monthly_payment_amount', 'payment_start_date']),
+            'history' => $history,
+            'breakdown' => $breakdown,
+        ]);
     }
 }

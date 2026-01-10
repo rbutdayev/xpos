@@ -63,10 +63,13 @@ class HandleInertiaRequests extends Middleware
             'discountsEnabled' => $user && $user->account ? ($user->account->discounts_module_enabled ?? false) : false,
             'giftCardsEnabled' => $user && $user->account ? ($user->account->gift_cards_module_enabled ?? false) : false,
             'expeditorEnabled' => $user && $user->account ? ($user->account->expeditor_module_enabled ?? false) : false,
+            'attendanceEnabled' => $user && $user->account ? ($user->account->attendance_module_enabled ?? false) : false,
             'woltEnabled' => $user && $user->account ? ($user->account->wolt_enabled ?? false) : false,
             'yangoEnabled' => $user && $user->account ? ($user->account->yango_enabled ?? false) : false,
             'boltEnabled' => $user && $user->account ? ($user->account->bolt_enabled ?? false) : false,
             'smsConfigured' => $user && $user->account ? $user->account->hasSmsConfigured() : false,
+            'smsEnabled' => $user && $user->account ? (bool) ($user->account->sms_module_enabled ?? false) : false,
+            'telegramEnabled' => $user && $user->account ? (bool) ($user->account->telegram_module_enabled ?? false) : false,
             'currency' => $user ? app(CurrencyService::class)->getCompanyCurrency() : null,
             'locale' => app()->getLocale(),
             'translations' => [

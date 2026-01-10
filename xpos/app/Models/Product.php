@@ -443,6 +443,55 @@ class Product extends Model
         return collect([$this]);
     }
 
+    /**
+     * Relationships for deletion dependencies
+     */
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    public function tailorServiceItems(): HasMany
+    {
+        return $this->hasMany(TailorServiceItem::class);
+    }
+
+    /**
+     * Check if product can be deleted and return dependency information
+     */
+    public function checkDependencies(): array
+    {
+        // Blocking dependencies (customer transactions)
+        $blocking = [
+            'sale_items' => $this->saleItems()->count(),
+            'tailor_service_items' => $this->tailorServiceItems()->count(),
+        ];
+
+        // Allowed dependencies (internal operations)
+        $allowed = [
+            'goods_receipt_items' => $this->goodsReceiptItems()->count(),
+            'stock_history' => $this->stockHistory()->count(),
+            'product_stock' => $this->stock()->count(),
+            'warehouse_transfers' => \DB::table('warehouse_transfers')
+                ->where('product_id', $this->id)->count(),
+            'stock_movements' => \DB::table('stock_movements')
+                ->where('product_id', $this->id)->count(),
+            'min_max_alerts' => \DB::table('min_max_alerts')
+                ->where('product_id', $this->id)->count(),
+            'product_documents' => $this->documents()->count(),
+            'supplier_products' => $this->supplierProducts()->count(),
+            'product_prices' => $this->prices()->count(),
+            'product_variants' => $this->variants()->count(),
+            'product_photos' => $this->photos()->count(),
+        ];
+
+        return [
+            'can_delete' => array_sum($blocking) === 0,
+            'blocking' => $blocking,
+            'allowed' => $allowed,
+        ];
+    }
+
     protected static function boot()
     {
         parent::boot();

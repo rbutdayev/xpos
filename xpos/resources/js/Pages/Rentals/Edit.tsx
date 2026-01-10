@@ -474,7 +474,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                                 // Delay hiding results to allow click
                                                 setTimeout(() => setShowCustomerResults(false), 200);
                                             }}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             placeholder="Müştəri adı, telefon və ya email ilə axtar..."
                                         />
 
@@ -536,7 +536,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <select
                                     value={formData.branch_id}
                                     onChange={(e) => handleInputChange('branch_id', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     required
                                 >
                                     <option value="">Filial seçin</option>
@@ -560,7 +560,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                     type="date"
                                     value={formData.rental_start_date}
                                     onChange={(e) => handleInputChange('rental_start_date', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     required
                                 />
                                 {errors.rental_start_date && (
@@ -596,7 +596,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                             <button
                                 type="button"
                                 onClick={addItem}
-                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                             >
                                 <PlusIcon className="h-4 w-4 mr-1" />
                                 Məhsul Əlavə Et
@@ -635,7 +635,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                                             setActiveItemIndex(index);
                                                             setShowScanner(true);
                                                         }}
-                                                        className="rounded-md bg-indigo-600 p-1.5 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        className="rounded-md bg-slate-700 p-1.5 text-white hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                         title="Kamera ilə skan et"
                                                     >
                                                         <CameraIcon className="h-4 w-4" />
@@ -663,7 +663,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                                                 }
                                                             }
                                                         }}
-                                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${!formData.branch_id ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 ${!formData.branch_id ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                                         placeholder={formData.branch_id ? "Məhsul adı, kodu və ya barkod..." : "Əvvəlcə filial seçin"}
                                                         disabled={!formData.branch_id}
                                                     />
@@ -761,7 +761,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                                 onChange={(e) =>
                                                     handleItemChange(index, 'rate_type', e.target.value)
                                                 }
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             >
                                                 <option value="daily">Günlük</option>
                                                 <option value="weekly">Həftəlik</option>
@@ -780,7 +780,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                                 onChange={(e) =>
                                                     handleItemChange(index, 'unit_price', e.target.value)
                                                 }
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                 placeholder="0.00"
                                                 required
                                             />
@@ -797,7 +797,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                                 onChange={(e) =>
                                                     handleItemChange(index, 'duration', parseInt(e.target.value) || 1)
                                                 }
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             />
                                         </div>
 
@@ -817,7 +817,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                             <textarea
                                                 value={item.notes}
                                                 onChange={(e) => handleItemChange(index, 'notes', e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                                 rows={2}
                                                 placeholder="Məhsul haqqında qeydlər..."
                                             />
@@ -842,7 +842,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <select
                                     value={formData.collateral_type}
                                     onChange={(e) => handleInputChange('collateral_type', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     required
                                 >
                                     <option value="deposit_cash">Nağd Depozit</option>
@@ -867,7 +867,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                         step="0.01"
                                         value={formData.collateral_amount}
                                         onChange={(e) => handleInputChange('collateral_amount', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                         placeholder="0.00"
                                         required
                                     />
@@ -890,7 +890,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                             onChange={(e) =>
                                                 handleInputChange('collateral_document_type', e.target.value)
                                             }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             placeholder="Sənəd növünü daxil edin"
                                         />
                                         {errors.collateral_document_type && (
@@ -910,7 +910,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                             onChange={(e) =>
                                                 handleInputChange('collateral_document_number', e.target.value)
                                             }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                             placeholder="Sənəd nömrəsini daxil edin"
                                         />
                                     </div>
@@ -925,7 +925,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <textarea
                                     value={formData.collateral_notes}
                                     onChange={(e) => handleInputChange('collateral_notes', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     rows={3}
                                     placeholder="Girov haqqında əlavə qeydlər..."
                                 />
@@ -942,7 +942,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <select
                                     value={formData.status}
                                     onChange={(e) => handleInputChange('status', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                 >
                                     <option value="reserved">Rezerv edilib</option>
                                     <option value="active">Aktiv</option>
@@ -956,7 +956,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <select
                                     value={formData.payment_status}
                                     onChange={(e) => handleInputChange('payment_status', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                 >
                                     <option value="credit">Borclu</option>
                                     <option value="partial">Qismən ödənilib</option>
@@ -973,7 +973,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                     step="0.01"
                                     value={formData.paid_amount}
                                     onChange={(e) => handleInputChange('paid_amount', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     placeholder="0.00"
                                 />
                             </div>
@@ -991,7 +991,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => handleInputChange('notes', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     rows={4}
                                     placeholder="Kirayə haqqında ümumi qeydlər..."
                                 />
@@ -1004,7 +1004,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                                 <textarea
                                     value={formData.internal_notes}
                                     onChange={(e) => handleInputChange('internal_notes', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
                                     rows={4}
                                     placeholder="Yalnız daxili istifadə üçün qeydlər..."
                                 />
@@ -1025,7 +1025,7 @@ export default function Edit({ rental, customers, branches, templates }: Props) 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                            className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
                         >
                             {processing ? 'Yadda saxlanılır...' : 'Dəyişiklikləri Yadda Saxla'}
                         </button>

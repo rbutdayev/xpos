@@ -111,7 +111,7 @@ export default function VariantSelector({
         value={selectedVariantId || ''}
         onChange={handleChange}
         required={required}
-        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+        className="mt-1 block w-full border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
       >
         <option value="">Variant seçin</option>
         {variants.filter(v => v.is_active).map((variant) => {

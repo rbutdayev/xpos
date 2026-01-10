@@ -16,10 +16,11 @@ interface SalesNavigationProps {
     currentRoute?: string;
     showDiscounts?: boolean;
     showGiftCards?: boolean;
+    showSMS?: boolean;
     children?: React.ReactNode; // Allow custom action buttons
 }
 
-export default function SalesNavigation({ currentRoute, showDiscounts = false, showGiftCards = false, children }: SalesNavigationProps) {
+export default function SalesNavigation({ currentRoute, showDiscounts = false, showGiftCards = false, showSMS = false, children }: SalesNavigationProps) {
     const isActive = (routeName: string) => {
         const activeRoute = currentRoute || route().current() || '';
         return activeRoute.includes(routeName);
@@ -82,7 +83,7 @@ export default function SalesNavigation({ currentRoute, showDiscounts = false, s
                 {!children && (
                     <Link
                         href={route('pos.index')}
-                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                        className="relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1"
                     >
                         <PlusCircleIcon className="w-5 h-5 text-white" />
                         <span className="font-semibold">POS-da Satış et</span>
@@ -103,7 +104,7 @@ export default function SalesNavigation({ currentRoute, showDiscounts = false, s
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`${baseClasses} ${item.isActive ? activeClasses : inactiveClasses} focus:ring-blue-500`}
+                            className={`${baseClasses} ${item.isActive ? activeClasses : inactiveClasses} focus:ring-slate-500`}
                         >
                             <Icon className={`w-5 h-5 ${item.isActive ? 'text-white' : 'text-gray-400'}`} />
                             <span className="font-semibold">{item.label}</span>
@@ -113,20 +114,22 @@ export default function SalesNavigation({ currentRoute, showDiscounts = false, s
                         </Link>
                     );
                 })}
-                <Link
-                    href={route('sms.send-page')}
-                    className={`relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-                        isActive('sms')
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02] focus:ring-blue-500'
-                            : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:ring-blue-500'
-                    }`}
-                >
-                    <PaperAirplaneIcon className={`w-5 h-5 ${isActive('sms') ? 'text-white' : 'text-gray-400'}`} />
-                    <span className="font-semibold">SMS Göndər</span>
-                    {isActive('sms') && (
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
-                    )}
-                </Link>
+                {showSMS && (
+                    <Link
+                        href={route('sms.send-page')}
+                        className={`relative flex items-center gap-2.5 px-4 py-3 rounded-md font-medium text-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+                            isActive('sms')
+                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02] focus:ring-slate-500'
+                                : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 focus:ring-slate-500'
+                        }`}
+                    >
+                        <PaperAirplaneIcon className={`w-5 h-5 ${isActive('sms') ? 'text-white' : 'text-gray-400'}`} />
+                        <span className="font-semibold">SMS Göndər</span>
+                        {isActive('sms') && (
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                        )}
+                    </Link>
+                )}
             </nav>
         </div>
     );

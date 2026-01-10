@@ -46,6 +46,8 @@ class Account extends Model
         'bolt_restaurant_id',
         'bolt_warehouse_id',
         'bolt_branch_id',
+        // Attendance settings
+        'attendance_allowed_radius',
     ];
 
     /**
@@ -65,6 +67,7 @@ class Account extends Model
         'rent_module_enabled',         // Paid features - only super admin
         'discounts_module_enabled',    // Paid features - only super admin
         'gift_cards_module_enabled',   // Paid features - only super admin
+        'attendance_module_enabled',   // Paid features - only super admin
     ];
 
     protected $casts = [
@@ -85,6 +88,7 @@ class Account extends Model
         'discounts_module_enabled' => 'boolean',
         'gift_cards_module_enabled' => 'boolean',
         'expeditor_module_enabled' => 'boolean',
+        'attendance_module_enabled' => 'boolean',
         // Delivery platform integrations
         'wolt_enabled' => 'boolean',
         'wolt_api_key' => 'encrypted',
@@ -127,6 +131,11 @@ class Account extends Model
     public function warehouses(): HasMany
     {
         return $this->hasMany(Warehouse::class);
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
     }
 
     public function shopWarehouse(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -277,6 +286,12 @@ class Account extends Model
         return $this->expeditor_module_enabled ?? false;
     }
 
+    // Attendance module helper methods
+    public function isAttendanceModuleEnabled(): bool
+    {
+        return $this->attendance_module_enabled ?? false;
+    }
+
     // Delivery platform helper methods
     public function isWoltEnabled(): bool
     {
@@ -321,6 +336,7 @@ class Account extends Model
             'shop' => $this->isShopEnabled(),
             'discounts' => $this->isDiscountsModuleEnabled(),
             'gift_cards' => $this->isGiftCardsModuleEnabled(),
+            'attendance' => $this->isAttendanceModuleEnabled(),
             default => false,
         };
     }
@@ -343,6 +359,7 @@ class Account extends Model
             'shop' => 'Online Mağaza',
             'discounts' => 'Endirimlər Modulu',
             'gift_cards' => 'Hədiyyə Kartları',
+            'attendance' => 'İşə Gəlmə İzləməsi',
         ];
 
         foreach ($dependencies as $dependency) {

@@ -191,7 +191,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                       id="category_id"
                       value={data.category_id}
                       onChange={(e) => setData('category_id', e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                       required
                     >
                       <option value="">{t('required.select')}</option>
@@ -216,7 +216,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                       min="0"
                       value={data.sale_price}
                       onChange={(e) => setData('sale_price', e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                       required
                     />
                     {errors.sale_price && <p className="mt-1 text-sm text-red-600">{errors.sale_price}</p>}
@@ -234,7 +234,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                       min="0"
                       value={data.purchase_price}
                       onChange={(e) => setData('purchase_price', e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                       required
                     />
                     {errors.purchase_price && <p className="mt-1 text-sm text-red-600">{errors.purchase_price}</p>}
@@ -249,7 +249,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                       id="unit"
                       value={data.unit}
                       onChange={(e) => setData('unit', e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                       required
                     >
                       <option value="ədəd">ədəd (piece)</option>
@@ -278,7 +278,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                   <button
                     type="button"
                     onClick={addProduct}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                   >
                     <PlusIcon className="w-4 h-4 mr-1" />
                     {t('bulk.addProduct')}
@@ -312,7 +312,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             id={`product_name_${index}`}
                             value={product.name}
                             onChange={(e) => updateProduct(index, 'name', e.target.value)}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             required
                           />
                         </div>
@@ -327,7 +327,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             id={`product_sku_${index}`}
                             value={product.sku}
                             onChange={(e) => updateProduct(index, 'sku', e.target.value)}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                           />
                         </div>
 
@@ -341,7 +341,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             id={`product_barcode_${index}`}
                             value={product.barcode}
                             onChange={(e) => updateProduct(index, 'barcode', e.target.value)}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             placeholder={t('bulk.barcodePlaceholder')}
                           />
                         </div>
@@ -356,7 +356,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             id={`product_size_${index}`}
                             value={product.size}
                             onChange={(e) => updateProduct(index, 'size', e.target.value)}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             placeholder={t('bulk.sizePlaceholder')}
                           />
                         </div>
@@ -371,7 +371,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                             id={`product_color_${index}`}
                             value={product.color}
                             onChange={(e) => updateProduct(index, 'color', e.target.value)}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             placeholder={t('bulk.colorPlaceholder')}
                           />
                         </div>
@@ -390,7 +390,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                               id={`product_warehouse_${index}`}
                               value={product.warehouse_id}
                               onChange={(e) => updateProduct(index, 'warehouse_id', e.target.value)}
-                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                             >
                               <option value="">{t('bulk.selectWarehouse')}</option>
                               {warehouses.map((warehouse) => (
@@ -413,7 +413,7 @@ export default function BulkCreate({ categories, warehouses }: Props) {
                               min="0"
                               value={product.initial_quantity}
                               onChange={(e) => updateProduct(index, 'initial_quantity', e.target.value)}
-                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm"
                               placeholder="0"
                             />
                           </div>

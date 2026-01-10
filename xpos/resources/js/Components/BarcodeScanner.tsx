@@ -161,7 +161,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
             </div>
             <button
               onClick={onClose}
-              className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
@@ -201,7 +201,7 @@ export default function BarcodeScanner({ isOpen, onClose, onScan }: BarcodeScann
           <div className="border-t border-gray-200 px-6 py-4">
             <button
               onClick={onClose}
-              className="w-full rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               {t('actions.close')}
             </button>

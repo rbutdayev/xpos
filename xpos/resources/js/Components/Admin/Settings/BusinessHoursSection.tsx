@@ -47,7 +47,7 @@ export default function BusinessHoursSection({
                         type="time"
                         value={data.business_hours_start}
                         onChange={(e) => setData('business_hours_start', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -56,7 +56,7 @@ export default function BusinessHoursSection({
                         type="time"
                         value={data.business_hours_end}
                         onChange={(e) => setData('business_hours_end', e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                     />
                 </FormField>
 
@@ -72,7 +72,7 @@ export default function BusinessHoursSection({
                                     type="checkbox"
                                     checked={data.business_days.includes(day.value)}
                                     onChange={(e) => onBusinessDayChange(day.value, e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                                 <span className="ml-2 text-sm text-gray-900">{day.label}</span>
                             </label>

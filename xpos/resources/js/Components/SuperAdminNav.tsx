@@ -42,6 +42,7 @@ export default function SuperAdminNav({ activePage }: Props) {
                 { path: '/admin/accounts', label: 'Hesablar' },
                 { path: '/admin/payments', label: 'Ödənişlər' },
                 { path: '/admin/users', label: 'İstifadəçilər' },
+                { path: '/admin/module-pricing', label: 'Modul Qiymətləri' },
             ]
         },
         {

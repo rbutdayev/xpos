@@ -93,7 +93,7 @@ export default function Form({ category }: Props) {
                                     type="text"
                                     value={data.name_az}
                                     onChange={(e) => setData('name_az', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     required
                                 />
                                 {errors.name_az && (
@@ -109,7 +109,7 @@ export default function Form({ category }: Props) {
                                     type="text"
                                     value={data.name_en || ''}
                                     onChange={(e) => setData('name_en', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                 />
                                 {errors.name_en && (
                                     <p className="mt-1 text-sm text-red-600">{errors.name_en}</p>
@@ -124,7 +124,7 @@ export default function Form({ category }: Props) {
                                     type="text"
                                     value={data.slug}
                                     onChange={(e) => setData('slug', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     placeholder="Boş buraxsanız avtomatik yaranacaq"
                                 />
                                 {errors.slug && (
@@ -150,7 +150,7 @@ export default function Form({ category }: Props) {
                                         type="text"
                                         value={data.color}
                                         onChange={(e) => setData('color', e.target.value)}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                         placeholder="#3B82F6"
                                     />
                                 </div>
@@ -167,7 +167,7 @@ export default function Form({ category }: Props) {
                                     type="number"
                                     value={data.sort_order}
                                     onChange={(e) => setData('sort_order', parseInt(e.target.value) || 0)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                 />
                                 {errors.sort_order && (
                                     <p className="mt-1 text-sm text-red-600">{errors.sort_order}</p>
@@ -180,7 +180,7 @@ export default function Form({ category }: Props) {
                                     id="is_active"
                                     checked={data.is_active}
                                     onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
                                     Aktiv
@@ -227,7 +227,7 @@ export default function Form({ category }: Props) {
                                         value={data.description_az || ''}
                                         onChange={(e) => setData('description_az', e.target.value)}
                                         rows={4}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     />
                                     {errors.description_az && (
                                         <p className="mt-1 text-sm text-red-600">{errors.description_az}</p>
@@ -242,7 +242,7 @@ export default function Form({ category }: Props) {
                                         value={data.description_en || ''}
                                         onChange={(e) => setData('description_en', e.target.value)}
                                         rows={4}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     />
                                     {errors.description_en && (
                                         <p className="mt-1 text-sm text-red-600">{errors.description_en}</p>
@@ -264,7 +264,7 @@ export default function Form({ category }: Props) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 flex items-center disabled:opacity-50"
+                            className="px-4 py-2 bg-slate-700 border border-transparent rounded-md text-sm font-medium text-white hover:bg-slate-600 flex items-center disabled:opacity-50"
                         >
                             <CheckIcon className="w-4 h-4 mr-2" />
                             {processing ? 'Saxlanılır...' : 'Saxla'}

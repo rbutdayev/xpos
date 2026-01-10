@@ -16,6 +16,25 @@ class SmsController extends Controller
     public function __construct(SmsService $smsService)
     {
         $this->smsService = $smsService;
+
+        // Check if SMS module is enabled for all methods except index (settings page)
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            $account = $user->account ?? null;
+
+            // Allow access to settings page (index) to configure the module
+            $currentRoute = $request->route()->getName();
+            if ($currentRoute === 'sms.index') {
+                return $next($request);
+            }
+
+            // For all other routes, check if module is enabled
+            if (!$account || !$account->sms_module_enabled) {
+                abort(403, 'SMS modulu aktiv deyil. Əvvəlcə modulu aktivləşdirin.');
+            }
+
+            return $next($request);
+        });
     }
 
     /**

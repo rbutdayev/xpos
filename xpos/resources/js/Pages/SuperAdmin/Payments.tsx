@@ -1,11 +1,11 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
-import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilIcon, TrashIcon, ClockIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
 interface AccountPayment {
     id: number;
@@ -14,6 +14,12 @@ interface AccountPayment {
     paid_date?: string;
     status: 'pending' | 'paid' | 'overdue';
     notes?: string;
+}
+
+interface ActiveModule {
+    module_id: string;
+    module_name: string;
+    price: number;
 }
 
 interface Account {
@@ -28,6 +34,8 @@ interface Account {
     payment_status: string;
     latest_payment?: AccountPayment;
     next_due_date?: string;
+    active_modules?: ActiveModule[];
+    module_total?: number;
 }
 
 interface Props {
@@ -50,6 +58,7 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
     const [searchTerm, setSearchTerm] = useState(search || '');
     const [statusFilter, setStatusFilter] = useState(status || '');
     const [editingPaymentSettings, setEditingPaymentSettings] = useState<Account | null>(null);
+    const [hoveredAccount, setHoveredAccount] = useState<number | null>(null);
 
     const { data: editData, setData: setEditData, put, processing: editProcessing, errors: editErrors, reset: resetEdit } = useForm({
         monthly_payment_amount: '',
@@ -149,6 +158,12 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
             const account = selectedAccounts[0];
 
             const actions: BulkAction[] = [
+                {
+                    label: 'Modul Tarixçəsinə Bax',
+                    icon: <ClockIcon className="w-4 h-4" />,
+                    variant: 'view' as const,
+                    onClick: () => router.visit(route('superadmin.payments.module-history', account.id))
+                },
                 {
                     label: 'Redaktə',
                     icon: <PencilIcon className="w-4 h-4" />,
@@ -251,15 +266,52 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
             key: 'monthly_payment_amount',
             label: 'Aylıq Məbləğ',
             sortable: true,
-            render: (account: Account) => (
-                account.monthly_payment_amount ? (
-                    <div className="text-sm text-gray-900">
-                        {account.monthly_payment_amount} ₼
+            render: (account: Account) => {
+                if (!account.monthly_payment_amount && !account.module_total) {
+                    return <span className="text-sm text-gray-400">-</span>;
+                }
+
+                const hasModules = account.active_modules && account.active_modules.length > 0;
+                const showBreakdown = hasModules && account.module_total;
+
+                return (
+                    <div
+                        className="relative"
+                        onMouseEnter={() => setHoveredAccount(account.id)}
+                        onMouseLeave={() => setHoveredAccount(null)}
+                    >
+                        <div className="flex items-center gap-2">
+                            <div className="text-sm text-gray-900">
+                                {account.monthly_payment_amount || 0} ₼
+                            </div>
+                            {showBreakdown && (
+                                <InformationCircleIcon className="w-4 h-4 text-gray-400 cursor-help" />
+                            )}
+                        </div>
+
+                        {/* Tooltip */}
+                        {showBreakdown && hoveredAccount === account.id && (
+                            <div className="absolute z-10 left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 p-3">
+                                <div className="text-xs font-semibold text-gray-700 mb-2">
+                                    Modul Tərkibi
+                                </div>
+                                <div className="space-y-1.5">
+                                    {account.active_modules?.map((module) => (
+                                        <div key={module.module_id} className="flex items-center justify-between text-xs">
+                                            <span className="text-gray-600">{module.module_name}</span>
+                                            <span className="font-medium text-gray-900">{module.price.toFixed(2)} ₼</span>
+                                        </div>
+                                    ))}
+                                    <div className="pt-1.5 border-t border-gray-200 flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-gray-700">Aylıq Ödəniş</span>
+                                        <span className="text-xs font-bold text-indigo-700">{account.module_total?.toFixed(2)} ₼</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <span className="text-sm text-gray-400">-</span>
-                )
-            )
+                );
+            }
         },
         {
             key: 'next_due_date',
@@ -314,47 +366,30 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
     ];
 
     return (
-        <>
+        <SuperAdminLayout title="Ödənişlər İdarəsi">
             <Head title="Ödənişlər - Super Admin" />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Ödənişlər İdarəsi
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Hesabların ödəniş statusunu idarə edin
-                            </p>
+            {flash?.success && (
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-green-800">Uğurlu</h3>
+                            <div className="mt-2 text-sm text-green-700">{flash.success}</div>
                         </div>
                     </div>
                 </div>
+            )}
 
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {flash?.success && (
-                        <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-green-800">Uğurlu</h3>
-                                    <div className="mt-2 text-sm text-green-700">{flash.success}</div>
-                                </div>
-                            </div>
+            {flash?.error && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">Xəta</h3>
+                            <div className="mt-2 text-sm text-red-700">{flash.error}</div>
                         </div>
-                    )}
-
-                    {flash?.error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">Xəta</h3>
-                                    <div className="mt-2 text-sm text-red-700">{flash.error}</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <SuperAdminNav />
+                    </div>
+                </div>
+            )}
 
                     {/* Edit Payment Settings Modal */}
                     {editingPaymentSettings && (
@@ -444,8 +479,6 @@ export default function SuperAdminPayments({ accounts, search, status, flash }: 
                             `cursor-pointer hover:bg-blue-50 transition-all duration-200`
                         }
                     />
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

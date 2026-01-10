@@ -3,7 +3,7 @@ import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 interface Account {
     id: number;
@@ -134,57 +134,39 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
     };
 
     return (
-        <>
+        <SuperAdminLayout title="Hesablar İdarəsi">
             <Head title="Hesablar - Super Admin" />
-            
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Hesablar İdarəsi
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Bütün müştəri hesablarını idarə edin
-                            </p>
+
+            {/* Flash Messages */}
+            {flash?.success && (
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-green-800">
+                                Uğurlu
+                            </h3>
+                            <div className="mt-2 text-sm text-green-700">
+                                {flash.success}
+                            </div>
                         </div>
                     </div>
                 </div>
+            )}
 
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Flash Messages */}
-                    {flash?.success && (
-                        <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-green-800">
-                                        Uğurlu
-                                    </h3>
-                                    <div className="mt-2 text-sm text-green-700">
-                                        {flash.success}
-                                    </div>
-                                </div>
+            {flash?.error && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">
+                                Xəta
+                            </h3>
+                            <div className="mt-2 text-sm text-red-700">
+                                {flash.error}
                             </div>
                         </div>
-                    )}
-                    
-                    {flash?.error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">
-                                        Xəta
-                                    </h3>
-                                    <div className="mt-2 text-sm text-red-700">
-                                        {flash.error}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Navigation */}
-                    <SuperAdminNav />
+                    </div>
+                </div>
+            )}
 
                     {/* Search and Create */}
                     <div className="flex justify-between items-center mb-6">
@@ -199,7 +181,7 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                             <select
                                 value={planFilter}
                                 onChange={(e) => setPlanFilter(e.target.value)}
-                                className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                className="border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm"
                             >
                                 <option value="">Bütün planlar</option>
                                 <option value="başlanğıc">{plans.başlanğıc}</option>
@@ -266,7 +248,7 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                                 <select
                                                     value={editData.is_active ? '1' : '0'}
                                                     onChange={(e) => setEditData('is_active', e.target.value === '1')}
-                                                    className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full"
+                                                    className="border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm w-full"
                                                 >
                                                     <option value="1">Aktiv</option>
                                                     <option value="0">Dayandırılıb</option>
@@ -375,7 +357,7 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                         <select
                                             value={data.subscription_plan}
                                             onChange={(e) => setData('subscription_plan', e.target.value)}
-                                            className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full"
+                                            className="border-gray-300 focus:border-slate-500 focus:ring-slate-500 rounded-md shadow-sm w-full"
                                             required
                                         >
                                             <option value="başlanğıc">{plans.başlanğıc}</option>
@@ -481,9 +463,9 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                                     account.subscription_plan === 'enterprise'
-                                                        ? 'bg-purple-100 text-purple-800'
+                                                        ? 'bg-slate-100 text-slate-800'
                                                         : account.subscription_plan === 'professional'
-                                                        ? 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-slate-100 text-slate-800'
                                                         : 'bg-gray-100 text-gray-800'
                                                 }`}>
                                                     {dbPlanToDisplay[account.subscription_plan] || account.subscription_plan}
@@ -508,13 +490,13 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                                                 <div className="flex justify-end space-x-2">
                                                     <Link
                                                         href={`/admin/accounts/${account.id}`}
-                                                        className="text-blue-600 hover:text-blue-900"
+                                                        className="text-slate-600 hover:text-slate-900"
                                                     >
                                                         Bax
                                                     </Link>
                                                     <button
                                                         onClick={() => handleEditAccount(account)}
-                                                        className="text-indigo-600 hover:text-indigo-900"
+                                                        className="text-slate-600 hover:text-slate-900"
                                                     >
                                                         Redaktə
                                                     </button>
@@ -567,8 +549,6 @@ export default function SuperAdminAccounts({ accounts, search, plan, plans, flas
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </>
+        </SuperAdminLayout>
     );
 }

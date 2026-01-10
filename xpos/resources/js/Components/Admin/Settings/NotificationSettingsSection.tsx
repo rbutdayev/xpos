@@ -37,7 +37,7 @@ export default function NotificationSettingsSection({
                             type="checkbox"
                             checked={data.email_notifications}
                             onChange={(e) => setData('email_notifications', e.target.checked)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                         />
                         <label className="ml-3 text-sm text-gray-900">
                             E-mail bildirişləri aktivdir
@@ -49,7 +49,7 @@ export default function NotificationSettingsSection({
                             type="checkbox"
                             checked={data.sms_notifications}
                             onChange={(e) => setData('sms_notifications', e.target.checked)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                         />
                         <label className="ml-3 text-sm text-gray-900">
                             SMS bildirişləri aktivdir
@@ -63,7 +63,7 @@ export default function NotificationSettingsSection({
                             type="email"
                             value={data.notification_email}
                             onChange={(e) => setData('notification_email', e.target.value)}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                             disabled={!data.email_notifications}
                         />
                     </FormField>
@@ -73,7 +73,7 @@ export default function NotificationSettingsSection({
                             type="text"
                             value={data.notification_phone}
                             onChange={(e) => setData('notification_phone', e.target.value)}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
                             disabled={!data.sms_notifications}
                         />
                     </FormField>

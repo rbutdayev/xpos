@@ -415,7 +415,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                                 type="checkbox"
                                                 checked={data.auto_send}
                                                 onChange={(e) => setData('auto_send', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-slate-500"
                                                 disabled={!isEditing}
                                             />
                                             <label htmlFor="auto_send" className="ml-2 text-sm text-gray-700">
@@ -429,7 +429,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                                 type="checkbox"
                                                 checked={data.show_in_terminal}
                                                 onChange={(e) => setData('show_in_terminal', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-slate-500"
                                                 disabled={!isEditing}
                                             />
                                             <label htmlFor="show_in_terminal" className="ml-2 text-sm text-gray-700">
@@ -443,7 +443,7 @@ export default function Index({ auth, config, providers, account }: FiscalPrinte
                                                 type="checkbox"
                                                 checked={data.is_active}
                                                 onChange={(e) => setData('is_active', e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-slate-500"
                                                 disabled={!isEditing}
                                             />
                                             <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">

@@ -67,7 +67,7 @@ export default function SearchFilters({
                                         onChange={(e) => onSearchChange(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder={defaultSearchPlaceholder}
-                                        className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     />
                                 </div>
                             </div>
@@ -91,7 +91,7 @@ export default function SearchFilters({
                                                 type="date"
                                                 value={filter.value}
                                                 onChange={(e) => filter.onChange(e.target.value)}
-                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                             />
                                         </div>
                                     ) : (
@@ -104,7 +104,7 @@ export default function SearchFilters({
                                                 value={filter.value}
                                                 onChange={(e) => filter.onChange(e.target.value)}
                                                 placeholder={filter.placeholder}
-                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                             />
                                         </div>
                                     )}
@@ -119,7 +119,7 @@ export default function SearchFilters({
                         <div className="flex gap-2">
                             <button
                                 onClick={onSearch}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500"
                             >
                                 {t('actions.search')}
                             </button>

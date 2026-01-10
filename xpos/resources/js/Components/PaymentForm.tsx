@@ -107,7 +107,7 @@ export default function PaymentForm({
                         checked={isCredit}
                         onChange={(e) => onCreditToggle?.(e.target.checked)}
                         disabled={disabled}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-slate-500"
                     />
                     <label htmlFor="is_credit_sale" className="text-sm font-medium text-gray-700">
                         {t('payment.creditSale')}
@@ -121,7 +121,7 @@ export default function PaymentForm({
                             type="button"
                             onClick={() => setShowAddPaymentForm(true)}
                             disabled={disabled || remainingAmount <= 0}
-                            className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -188,7 +188,7 @@ export default function PaymentForm({
                                                 id="payment_method"
                                                 value={newPayment.method}
                                                 onChange={(e) => setNewPayment(prev => ({ ...prev, method: e.target.value as any }))}
-                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500"
                                             >
                                                 <option value="nağd">{t('payment.cash')}</option>
                                                 <option value="kart">{t('payment.card')}</option>
@@ -245,14 +245,14 @@ export default function PaymentForm({
                                             type="button"
                                             onClick={handleAddPayment}
                                             disabled={newPayment.amount <= 0}
-                                            className="flex-1 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {t('actions.add')}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setShowAddPaymentForm(false)}
-                                            className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            className="flex-1 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                                         >
                                             {t('actions.cancel')}
                                         </button>
@@ -278,7 +278,7 @@ export default function PaymentForm({
                     value={paymentStatus}
                     onChange={(e) => onPaymentStatusChange?.(e.target.value as any)}
                     disabled={disabled}
-                    className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-slate-500 focus:border-slate-500"
                 >
                     <option value="paid">{t('payment.status.paid')}</option>
                     <option value="credit">{t('payment.status.credit')}</option>

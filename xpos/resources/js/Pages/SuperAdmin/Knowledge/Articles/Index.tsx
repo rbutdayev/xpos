@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useTranslation } from 'react-i18next';
 
 interface Category {
@@ -65,26 +65,8 @@ export default function KnowledgeArticlesIndex({ articles = { data: [], meta: { 
   };
 
   return (
-    <>
+    <SuperAdminLayout title={t('knowledge:manage_articles', 'Manage Articles')}>
       <Head title={t('knowledge:manage_articles', 'Manage Articles')} />
-
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {t('knowledge:manage_articles', 'Manage Articles')}
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                {t('knowledge:articles_description', 'Manage knowledge base articles')}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Navigation */}
-          <SuperAdminNav activePage="/admin/knowledge" />
 
           {/* Knowledge Base Navigation Tabs */}
           <div className="mb-6 flex gap-2 border-b border-gray-200">
@@ -113,7 +95,7 @@ export default function KnowledgeArticlesIndex({ articles = { data: [], meta: { 
         <div className="flex justify-end mb-6">
           <Link
             href="/admin/knowledge/articles/create"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             {t('common:create', 'Create New')}
           </Link>
@@ -127,12 +109,12 @@ export default function KnowledgeArticlesIndex({ articles = { data: [], meta: { 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('common:search', 'Search')}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <option value="">{t('knowledge:all_categories', 'All Categories')}</option>
               {categories.map((cat) => (
@@ -143,7 +125,7 @@ export default function KnowledgeArticlesIndex({ articles = { data: [], meta: { 
             </select>
             <button
               onClick={handleFilter}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               {t('common:filter', 'Filter')}
             </button>
@@ -219,7 +201,7 @@ export default function KnowledgeArticlesIndex({ articles = { data: [], meta: { 
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <Link
                         href={`/admin/knowledge/articles/${article.id}/edit`}
-                        className="text-blue-600 hover:text-blue-900 transition-colors"
+                        className="text-slate-600 hover:text-slate-900 transition-colors"
                       >
                         {t('common:edit', 'Edit')}
                       </Link>
@@ -275,15 +257,13 @@ export default function KnowledgeArticlesIndex({ articles = { data: [], meta: { 
             </p>
             <Link
               href="/admin/knowledge/articles/create"
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-slate-600 hover:text-slate-800 font-medium"
             >
               {t('knowledge:create_first_article', 'Create the first article')} →
             </Link>
           </div>
         )}
       </div>
-        </div>
-      </div>
-    </>
+    </SuperAdminLayout>
   );
 }

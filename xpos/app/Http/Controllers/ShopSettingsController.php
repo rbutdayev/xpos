@@ -74,7 +74,6 @@ class ShopSettingsController extends Controller
         Gate::authorize('manage-products');
 
         $request->validate([
-            'shop_enabled' => 'nullable|boolean',
             'shop_slug' => [
                 'nullable',
                 'string',
@@ -100,36 +99,9 @@ class ShopSettingsController extends Controller
         ]);
 
         $account = $request->user()->account;
-        $accountId = $request->user()->account_id;
 
-        // If enabling shop, require SMS configuration first
-        if ($request->shop_enabled) {
-            $smsConfigured = SmsCredential::where('account_id', $accountId)
-                ->where('is_active', true)
-                ->exists();
-
-            if (!$smsConfigured) {
-                return back()->withErrors([
-                    'shop_enabled' => __('errors.shop_requires_sms')
-                ]);
-            }
-
-            if (!$account->shop_slug && !$request->shop_slug) {
-                return back()->withErrors([
-                    'shop_slug' => 'Mağaza URL tələb olunur'
-                ]);
-            }
-
-            if (!$request->shop_warehouse_id) {
-                return back()->withErrors([
-                    'shop_warehouse_id' => 'Anbar seçimi tələb olunur'
-                ]);
-            }
-        }
-
-        // Update account
+        // Update account (shop_enabled is managed via Integrations page)
         $account->update([
-            'shop_enabled' => $request->shop_enabled ?? false,
             'shop_slug' => $request->shop_slug,
             'shop_warehouse_id' => $request->shop_warehouse_id,
             'shop_sms_merchant_notifications' => $request->shop_sms_merchant_notifications ?? false,
@@ -137,11 +109,6 @@ class ShopSettingsController extends Controller
             'shop_sms_customer_notifications' => $request->shop_sms_customer_notifications ?? false,
             'shop_customer_sms_template' => $request->shop_customer_sms_template,
         ]);
-
-        // If shop is being enabled, create an "Online Shop" system user if it doesn't exist
-        if ($request->shop_enabled) {
-            $this->ensureOnlineShopUser($account);
-        }
 
         return back()->with('success', 'Mağaza parametrləri yeniləndi');
     }

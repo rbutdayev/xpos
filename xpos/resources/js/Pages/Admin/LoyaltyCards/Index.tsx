@@ -3,7 +3,7 @@ import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import SharedDataTable, { BulkAction } from '@/Components/SharedDataTable';
 import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
@@ -271,25 +271,13 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
     ];
 
     return (
-        <>
+        <SuperAdminLayout title="Loaylıq Kartları İdarəsi">
             <Head title="Loaylıq Kartları - Super Admin" />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="bg-white shadow">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="py-6">
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Loaylıq Kartları İdarəsi
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Fiziki loaylıq kartlarını yaradın və idarə edin
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <SuperAdminNav />
+            <div className="space-y-6">
+                <p className="text-sm text-gray-600">
+                    Fiziki loaylıq kartlarını yaradın və idarə edin
+                </p>
                     {/* Flash Messages */}
                     {flash?.success && (
                         <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
@@ -421,7 +409,7 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        className="border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     >
                                         <option value="">Hamı</option>
                                         <option value="free">Azad</option>
@@ -460,7 +448,7 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
                                             <select
                                                 value={data.account_id}
                                                 onChange={(e) => setData('account_id', e.target.value)}
-                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                                 required
                                             >
                                                 <option value="">Hesab seçin...</option>
@@ -558,8 +546,7 @@ export default function LoyaltyCardsIndex({ cards, stats, filters, accounts, fla
                             `cursor-pointer hover:bg-blue-50 transition-all duration-200`
                         }
                     />
-                </div>
             </div>
-        </>
+        </SuperAdminLayout>
     );
 }

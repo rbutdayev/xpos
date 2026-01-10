@@ -130,7 +130,7 @@ export default function KnowledgeSearchResults({ query = '', articles = { data: 
           </p>
           <Link
             href="/knowledge"
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-slate-600 hover:text-slate-800 font-medium"
           >
             {t('browse_categories', 'Browse Categories')} →
           </Link>

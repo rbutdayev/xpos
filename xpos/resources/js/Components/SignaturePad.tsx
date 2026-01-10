@@ -90,7 +90,7 @@ export default function SignaturePad({
                 <button
                     type="button"
                     onClick={handleSave}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
                     disabled={isEmpty}
                 >
                     İmzanı Təsdiqlə

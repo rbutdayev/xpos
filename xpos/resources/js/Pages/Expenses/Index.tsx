@@ -1273,7 +1273,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                         placeholder={t('placeholders.searchExpenses')}
-                                        className="pl-10 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="pl-10 w-full rounded-lg border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                     />
                                 </div>
 
@@ -1288,7 +1288,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                     </button>
                                     <button
                                         onClick={handleSearch}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-slate-700 rounded-lg hover:bg-slate-600"
                                     >
                                         Axtar
                                     </button>
@@ -1310,7 +1310,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                             <select
                                                 value={selectedCategory}
                                                 onChange={(e) => setSelectedCategory(e.target.value)}
-                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                             >
                                                 <option value="">{t('filters.allCategories')}</option>
                                                 {categories.map(cat => (
@@ -1327,7 +1327,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                             <select
                                                 value={selectedBranch}
                                                 onChange={(e) => setSelectedBranch(e.target.value)}
-                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                             >
                                                 <option value="">{t('filters.allBranches')}</option>
                                                 {branches.map(branch => (
@@ -1344,7 +1344,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                             <select
                                                 value={selectedPaymentMethod}
                                                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500"
                                             >
                                                 <option value="">{t('filters.allMethods')}</option>
                                                 {Object.entries(paymentMethods).map(([value, label]) => (
@@ -1380,7 +1380,7 @@ export default function Index({ expenses, categories, branches, paymentMethods, 
                                             {expenses.current_page < expenses.last_page && (
                                                 <Link
                                                     href={`/expenses?page=${expenses.current_page + 1}`}
-                                                    className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                                                    className="px-3 py-1 text-sm font-medium text-white bg-slate-700 rounded-md hover:bg-slate-600"
                                                 >
                                                     Növbəti
                                                 </Link>

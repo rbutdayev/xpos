@@ -141,7 +141,7 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                 <div className="flex items-center gap-2">
                     <Link
                         href={route('sales.show', sale.sale_id)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-slate-600 hover:text-slate-800 font-medium"
                     >
                         {sale.sale_number}
                     </Link>
@@ -461,7 +461,7 @@ export default function Index({ auth, sales, filters, branches, dailySummary, su
                             onClick={handleTodayFilter}
                             className={`inline-flex items-center px-4 py-2 border rounded-md font-semibold text-xs uppercase tracking-widest transition ease-in-out duration-150 ${
                                 isTodaySelected()
-                                    ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                                    ? 'bg-slate-700 text-white border-blue-600 hover:bg-slate-600'
                                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                             }`}
                         >

@@ -24,6 +24,8 @@ import { formatQuantityWithUnit } from '@/utils/formatters';
 import StockDetailsModal from '@/Components/StockDetailsModal';
 import ProductImportModal from '@/Components/ProductImportModal';
 import ImportProgressModal from '@/Components/ImportProgressModal';
+import ProductDeleteModal from '@/Components/ProductDeleteModal';
+import axios from 'axios';
 
 interface Props {
     products: {
@@ -75,6 +77,10 @@ export default function Index({ products, categories, warehouses, filters, selec
     const [showImportModal, setShowImportModal] = useState(false);
     const [showProgressModal, setShowProgressModal] = useState(false);
     const [currentImportJobId, setCurrentImportJobId] = useState<number | null>(null);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [dependencies, setDependencies] = useState<any>(null);
+    const [deletingProduct, setDeletingProduct] = useState(false);
 
     const handleImportStarted = (importJobId: number) => {
         setCurrentImportJobId(importJobId);
@@ -152,27 +158,45 @@ export default function Index({ products, categories, warehouses, filters, selec
         return null;
     };
 
-    const deleteProduct = (product: Product) => {
-        // Enhanced confirmation message with business rule warning
-        const confirmMessage = t('products:messages.confirmDelete', { name: product.name });
+    const deleteProduct = async (product: Product) => {
+        setSelectedProduct(product);
+        setDeleteModalOpen(true);
 
-        if (confirm(confirmMessage)) {
-            router.delete(`/products/${product.id}`, {
-                onError: (errors) => {
-                    // Handle specific error cases
-                    if (errors.error) {
-                        alert(`${t('products:messages.deleteError')}: ${errors.error}`);
-                    } else if (errors.product) {
-                        alert(`${t('products:messages.deleteError')}: ${errors.product}`);
-                    } else {
-                        alert(t('products:messages.deleteError'));
-                    }
-                },
-                onSuccess: () => {
-                    // Success message will be shown via flash message
-                }
-            });
+        try {
+            const response = await axios.post(`/products/${product.id}/check-dependencies`);
+            setDependencies(response.data);
+        } catch (err: any) {
+            console.error('Failed to check dependencies:', err);
+            alert('Asılılıqlar yoxlanarkən xəta baş verdi.');
+            setDeleteModalOpen(false);
         }
+    };
+
+    const confirmDelete = () => {
+        if (!selectedProduct) return;
+
+        setDeletingProduct(true);
+        router.delete(`/products/${selectedProduct.id}/force-destroy`, {
+            onSuccess: () => {
+                setDeleteModalOpen(false);
+                setSelectedProduct(null);
+                setDependencies(null);
+                setDeletingProduct(false);
+            },
+            onError: (errors) => {
+                setDeletingProduct(false);
+                if (errors.error) {
+                    alert(errors.error);
+                }
+            }
+        });
+    };
+
+    const handleDeactivate = () => {
+        if (!selectedProduct) return;
+
+        setDeleteModalOpen(false);
+        toggleProductStatus(selectedProduct);
     };
 
     const toggleProductStatus = (product: Product) => {
@@ -264,7 +288,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                                     {formatQuantityWithUnit(stockInfo.total, product.unit)}
                                 </div>
                                 {getCurrentWarehouseName() ? (
-                                    <div className="text-xs text-blue-600 flex items-center justify-center">
+                                    <div className="text-xs text-slate-600 flex items-center justify-center">
                                         <HomeModernIcon className="w-3 h-3 mr-1" />
                                         {getCurrentWarehouseName()}
                                     </div>
@@ -292,7 +316,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                                                     e.stopPropagation();
                                                     setStockModalProduct(product);
                                                 }}
-                                                className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                                className="mt-1 inline-flex items-center text-xs text-slate-600 hover:text-slate-800 hover:underline"
                                             >
                                                 <MagnifyingGlassIcon className="w-3 h-3 mr-0.5" />
                                                 {t('products:actions.viewDetails')}
@@ -503,10 +527,10 @@ export default function Index({ products, categories, warehouses, filters, selec
 
                 {/* Warehouse Context Display */}
                 {(selectedWarehouse || selectedWarehouseFilter) && (
-                    <div className="mb-4 bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <div className="mb-4 bg-slate-50 border border-slate-200 rounded-md p-3">
                         <div className="flex items-center">
-                            <HomeModernIcon className="w-5 h-5 text-blue-500 mr-2" />
-                            <span className="text-sm text-blue-700">
+                            <HomeModernIcon className="w-5 h-5 text-slate-500 mr-2" />
+                            <span className="text-sm text-slate-700">
                                 {selectedWarehouseFilter ? t('products:filters.warehouseFilterActive') : t('products:filters.selectedWarehouse')}
                                 <strong>{getCurrentWarehouseName()}</strong>
                             </span>
@@ -519,7 +543,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                     <button
                         type="button"
                         onClick={() => setShowImportModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
                     >
                         <ArrowUpTrayIcon className="w-5 h-5" />
                         <span>Import</span>
@@ -546,7 +570,7 @@ export default function Index({ products, categories, warehouses, filters, selec
                     dense={true}
                     onRowDoubleClick={handleRowDoubleClick}
                     rowClassName={(product: Product) =>
-                        `cursor-pointer hover:bg-blue-50 transition-all duration-200 ${
+                        `cursor-pointer hover:bg-slate-50 transition-all duration-200 ${
                             product.is_active ? '' : 'opacity-60'
                         }`
                     }
@@ -575,6 +599,20 @@ export default function Index({ products, categories, warehouses, filters, selec
                     isOpen={showProgressModal}
                     onClose={() => setShowProgressModal(false)}
                     importJobId={currentImportJobId}
+                />
+
+                {/* Delete Modal */}
+                <ProductDeleteModal
+                    isOpen={deleteModalOpen}
+                    onClose={() => {
+                        setDeleteModalOpen(false);
+                        setSelectedProduct(null);
+                        setDependencies(null);
+                    }}
+                    dependencies={dependencies}
+                    onConfirm={confirmDelete}
+                    onDeactivate={handleDeactivate}
+                    loading={deletingProduct}
                 />
             </div>
         </AuthenticatedLayout>

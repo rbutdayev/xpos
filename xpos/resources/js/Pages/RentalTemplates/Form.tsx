@@ -129,7 +129,7 @@ export default function Form({ template, categories }: Props) {
                                     type="text"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     required
                                 />
                                 {errors.name && (
@@ -145,7 +145,7 @@ export default function Form({ template, categories }: Props) {
                                     <select
                                         value={data.rental_category}
                                         onChange={(e) => setData('rental_category', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                         required
                                     >
                                         {categories.map((cat) => (
@@ -176,7 +176,7 @@ export default function Form({ template, categories }: Props) {
                                     id="is_active"
                                     checked={data.is_active}
                                     onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
                                     Aktiv
@@ -189,7 +189,7 @@ export default function Form({ template, categories }: Props) {
                                     id="is_default"
                                     checked={data.is_default}
                                     onChange={(e) => setData('is_default', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor="is_default" className="ml-2 block text-sm text-gray-700">
                                     Default Şablon
@@ -202,7 +202,7 @@ export default function Form({ template, categories }: Props) {
                                     id="require_photos"
                                     checked={data.require_photos}
                                     onChange={(e) => setData('require_photos', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                 />
                                 <label htmlFor="require_photos" className="ml-2 block text-sm text-gray-700">
                                     Foto Tələb Et
@@ -221,7 +221,7 @@ export default function Form({ template, categories }: Props) {
                                     onChange={(e) => setData('min_photos', parseInt(e.target.value) || 0)}
                                     min="0"
                                     max="20"
-                                    className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                 />
                             </div>
                         )}
@@ -234,7 +234,7 @@ export default function Form({ template, categories }: Props) {
                                 value={data.notes}
                                 onChange={(e) => setData('notes', e.target.value)}
                                 rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                             />
                         </div>
                     </div>
@@ -250,7 +250,7 @@ export default function Form({ template, categories }: Props) {
                                         className={`
                                             relative flex items-center gap-2.5 px-5 py-3 rounded-md
                                             font-medium text-sm transition-all duration-200 ease-in-out
-                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                             ${activeTab === 'az'
                                                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
                                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
@@ -268,7 +268,7 @@ export default function Form({ template, categories }: Props) {
                                         className={`
                                             relative flex items-center gap-2.5 px-5 py-3 rounded-md
                                             font-medium text-sm transition-all duration-200 ease-in-out
-                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                             ${activeTab === 'en'
                                                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transform scale-[1.02]'
                                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
@@ -295,7 +295,7 @@ export default function Form({ template, categories }: Props) {
                                             value={data.terms_and_conditions_az}
                                             onChange={(e) => setData('terms_and_conditions_az', e.target.value)}
                                             rows={10}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 font-mono text-sm"
                                             placeholder="Markdown formatında yaza bilərsiniz..."
                                             required
                                         />
@@ -312,7 +312,7 @@ export default function Form({ template, categories }: Props) {
                                             value={data.damage_liability_terms_az}
                                             onChange={(e) => setData('damage_liability_terms_az', e.target.value)}
                                             rows={6}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 font-mono text-sm"
                                             placeholder="Markdown formatında yaza bilərsiniz..."
                                             required
                                         />
@@ -331,7 +331,7 @@ export default function Form({ template, categories }: Props) {
                                             value={data.terms_and_conditions_en}
                                             onChange={(e) => setData('terms_and_conditions_en', e.target.value)}
                                             rows={10}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 font-mono text-sm"
                                             placeholder="You can write in Markdown format..."
                                         />
                                         {errors.terms_and_conditions_en && (
@@ -347,7 +347,7 @@ export default function Form({ template, categories }: Props) {
                                             value={data.damage_liability_terms_en}
                                             onChange={(e) => setData('damage_liability_terms_en', e.target.value)}
                                             rows={6}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500 font-mono text-sm"
                                             placeholder="You can write in Markdown format..."
                                         />
                                         {errors.damage_liability_terms_en && (
@@ -385,7 +385,7 @@ export default function Form({ template, categories }: Props) {
                                     };
                                     setData('condition_checklist', [...data.condition_checklist, newItem]);
                                 }}
-                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-700 hover:bg-slate-600"
                             >
                                 <PlusIcon className="h-4 w-4 mr-1" />
                                 Sahə Əlavə Et
@@ -431,7 +431,7 @@ export default function Form({ template, categories }: Props) {
                                                         newChecklist[index] = { ...item, id: e.target.value };
                                                         setData('condition_checklist', newChecklist);
                                                     }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                     placeholder="no_damage, buttons_intact, clean_condition"
                                                     required
                                                 />
@@ -452,7 +452,7 @@ export default function Form({ template, categories }: Props) {
                                                         newChecklist[index] = { ...item, type: e.target.value };
                                                         setData('condition_checklist', newChecklist);
                                                     }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                 >
                                                     <option value="boolean">Bəli/Xeyr</option>
                                                     <option value="text">Qısa mətn</option>
@@ -475,7 +475,7 @@ export default function Form({ template, categories }: Props) {
                                                         newChecklist[index] = { ...item, label_az: e.target.value };
                                                         setData('condition_checklist', newChecklist);
                                                     }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                     placeholder="Zədə yoxdur"
                                                     required
                                                 />
@@ -494,7 +494,7 @@ export default function Form({ template, categories }: Props) {
                                                         newChecklist[index] = { ...item, label_en: e.target.value };
                                                         setData('condition_checklist', newChecklist);
                                                     }}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                     placeholder="No damage"
                                                 />
                                             </div>
@@ -533,7 +533,7 @@ export default function Form({ template, categories }: Props) {
                                                                 });
                                                             }}
                                                             rows={2}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                             placeholder="Mükəmməl, Yaxşı, Orta, Pis"
                                                         />
                                                         {item.options_az && item.options_az.length > 0 && !optionsEditState[`${index}_az`] && (
@@ -573,7 +573,7 @@ export default function Form({ template, categories }: Props) {
                                                                 });
                                                             }}
                                                             rows={2}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                             placeholder="Perfect, Good, Average, Poor"
                                                         />
                                                         {item.options_en && item.options_en.length > 0 && !optionsEditState[`${index}_en`] && (
@@ -600,7 +600,7 @@ export default function Form({ template, categories }: Props) {
                                                                 newChecklist[index] = { ...item, min: parseInt(e.target.value) || 0 };
                                                                 setData('condition_checklist', newChecklist);
                                                             }}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                         />
                                                     </div>
                                                     <div>
@@ -615,7 +615,7 @@ export default function Form({ template, categories }: Props) {
                                                                 newChecklist[index] = { ...item, max: parseInt(e.target.value) || 100 };
                                                                 setData('condition_checklist', newChecklist);
                                                             }}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                                         />
                                                     </div>
                                                 </>
@@ -634,7 +634,7 @@ export default function Form({ template, categories }: Props) {
                                                         newChecklist[index] = { ...item, required: e.target.checked };
                                                         setData('condition_checklist', newChecklist);
                                                     }}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                    className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                                 />
                                                 <label htmlFor={`required_${index}`} className="ml-2 block text-sm text-gray-700">
                                                     Mütləq doldurulmalıdır
@@ -680,7 +680,7 @@ export default function Form({ template, categories }: Props) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 flex items-center disabled:opacity-50"
+                            className="px-4 py-2 bg-slate-700 border border-transparent rounded-md text-sm font-medium text-white hover:bg-slate-600 flex items-center disabled:opacity-50"
                         >
                             <CheckIcon className="w-4 h-4 mr-2" />
                             {processing ? 'Saxlanılır...' : 'Saxla'}

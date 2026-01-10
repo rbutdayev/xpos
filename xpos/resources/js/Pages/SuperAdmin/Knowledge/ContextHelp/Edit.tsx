@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import SuperAdminNav from '@/Components/SuperAdminNav';
+import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useTranslation } from 'react-i18next';
 
 interface Article {
@@ -54,31 +54,19 @@ export default function KnowledgeContextHelpEdit({ contextHelp = { id: 0, key: '
   };
 
   return (
-    <>
+    <SuperAdminLayout title={t('knowledge:edit_context_help', 'Edit Context Help')}>
       <Head title={t('knowledge:edit_context_help', 'Edit Context Help')} />
 
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {t('knowledge:edit_context_help', 'Edit Context Help')}
-              </h1>
-              <p className="mt-2 text-sm text-gray-600">
-                {t('knowledge:edit_context_help_description', 'Edit contextual help tooltip')}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
+        <p className="text-sm text-gray-600">
+          {t('knowledge:edit_context_help_description', 'Edit contextual help tooltip')}
+        </p>
           {/* Navigation */}
-          <SuperAdminNav activePage="/admin/knowledge" />
 
           <div className="max-w-2xl mx-auto">
         {/* Breadcrumb */}
         <div className="mb-6">
-          <Link href="/admin/knowledge/context-help" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/admin/knowledge/context-help" className="text-slate-600 hover:text-slate-800 font-medium">
             ← {t('common:back', 'Back')}
           </Link>
         </div>
@@ -110,7 +98,7 @@ export default function KnowledgeContextHelpEdit({ contextHelp = { id: 0, key: '
               name="knowledge_article_id"
               value={formData.knowledge_article_id}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <option value="">{t('common:select', 'Select an article (optional)')}</option>
               {articles.map((article) => (
@@ -132,7 +120,7 @@ export default function KnowledgeContextHelpEdit({ contextHelp = { id: 0, key: '
                 name="is_active"
                 checked={formData.is_active}
                 onChange={handleChange}
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-slate-500"
               />
               <span className="text-sm font-medium text-gray-700">
                 {t('knowledge:active', 'Active')}
@@ -148,7 +136,7 @@ export default function KnowledgeContextHelpEdit({ contextHelp = { id: 0, key: '
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="bg-slate-700 hover:bg-slate-600 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               {loading ? t('common:saving', 'Saving...') : t('common:save_changes', 'Save Changes')}
             </button>
@@ -161,8 +149,7 @@ export default function KnowledgeContextHelpEdit({ contextHelp = { id: 0, key: '
           </div>
         </form>
       </div>
-        </div>
       </div>
-    </>
+    </SuperAdminLayout>
   );
 }

@@ -206,7 +206,7 @@ export default function KnowledgeArticle({ article, related_articles = [] }: Kno
         <div className="mt-12 text-center">
           <Link
             href={`/knowledge/categories/${article.category.slug}`}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-slate-600 hover:text-slate-800 font-medium"
           >
             ← {t('back_to_category', 'Back to Category')}
           </Link>

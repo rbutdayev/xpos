@@ -143,7 +143,7 @@ export default function StatCard({
         return (
             <button
                 onClick={onClick}
-                className="w-full text-left transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-lg"
+                className="w-full text-left transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-opacity-50 rounded-lg"
             >
                 <CardContent />
             </button>

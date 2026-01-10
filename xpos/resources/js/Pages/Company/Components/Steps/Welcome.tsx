@@ -60,7 +60,7 @@ export default function Welcome() {
             </p>
 
             {/* Step number badge */}
-            <div className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 bg-indigo-600 text-white text-sm font-bold rounded-full">
+            <div className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 bg-slate-700 text-white text-sm font-bold rounded-full">
               {idx + 1}
             </div>
           </div>

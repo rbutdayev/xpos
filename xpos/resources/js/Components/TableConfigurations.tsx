@@ -2013,7 +2013,7 @@ export const auditLogTableConfig = {
         {
             label: 'Bax',
             href: (auditLog: any) => `/audit-logs/${auditLog.log_id}`,
-            className: 'text-blue-600 hover:text-blue-900',
+            className: 'text-slate-600 hover:text-slate-900',
             variant: 'view' as const
         }
     ]

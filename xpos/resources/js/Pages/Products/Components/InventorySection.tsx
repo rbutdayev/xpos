@@ -22,7 +22,7 @@ export default function InventorySection({ mode, data, errors, warehouses, onCha
         <div className="flex items-center gap-3">
           <input id="allow_negative_stock" type="checkbox" checked={!!data.allow_negative_stock}
             onChange={(e) => onChange('allow_negative_stock', e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500" />
           <label htmlFor="allow_negative_stock" className="text-sm text-gray-700">Mənfi stok icazəsi</label>
         </div>
       </div>

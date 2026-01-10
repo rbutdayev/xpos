@@ -98,7 +98,7 @@ export default function VariantMatrixBuilder({ productId, basePrice = 0, onVaria
                 onClick={() => toggleSize(size)}
                 className={`px-4 py-2 rounded-md font-medium transition-colors ${
                   selectedSizes.includes(size)
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    ? 'bg-slate-700 text-white hover:bg-slate-600'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -198,7 +198,7 @@ export default function VariantMatrixBuilder({ productId, basePrice = 0, onVaria
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              className="text-sm font-medium text-slate-600 hover:text-slate-700"
             >
               {showPreview ? 'Önizləməni gizlət' : 'Önizləmə göstər'}
             </button>

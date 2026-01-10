@@ -108,6 +108,16 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function createdAttendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class, 'created_by_admin_id');
+    }
+
     public function isOwner(): bool
     {
         return $this->role === 'account_owner';
@@ -144,6 +154,11 @@ class User extends Authenticatable
         }
 
         return in_array($this->role, $roles);
+    }
+
+    public function isAttendanceUser(): bool
+    {
+        return $this->role === 'attendance_user';
     }
 
     /**

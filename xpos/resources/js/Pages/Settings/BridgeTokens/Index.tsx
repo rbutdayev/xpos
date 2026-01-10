@@ -238,7 +238,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
                                     <p className="text-gray-500 mb-4">Hələ heç bir token yaradılmayıb</p>
                                     <button
                                         onClick={() => setShowCreateModal(true)}
-                                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                        className="px-6 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
                                     >
                                         İlk Tokeni Yarat
                                     </button>
@@ -298,7 +298,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <button
                                                             onClick={() => copyToken(token.token_preview)}
-                                                            className="text-blue-600 hover:text-blue-900 mr-3"
+                                                            className="text-slate-600 hover:text-slate-900 mr-3"
                                                             title="Kopyala"
                                                         >
                                                             📋
@@ -345,7 +345,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
                                     value={newTokenName}
                                     onChange={(e) => setNewTokenName(e.target.value)}
                                     placeholder="Məsələn: Əsas Kassa Terminali"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-slate-500 focus:border-slate-500"
                                     required
                                     disabled={isSubmitting}
                                 />
@@ -367,7 +367,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                    className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 disabled:opacity-50"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? 'Yaradılır...' : 'Yarat'}
@@ -398,7 +398,7 @@ export default function Index({ auth, tokens, downloads }: Props) {
                                 </code>
                                 <button
                                     onClick={() => copyToken(createdToken)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+                                    className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 whitespace-nowrap"
                                 >
                                     📋 Kopyala
                                 </button>

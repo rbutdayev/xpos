@@ -25,7 +25,7 @@ export default function ProgressIndicator({ steps, current, percent, onStepClick
         {/* Connecting line */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10" aria-hidden="true" />
         <div
-          className="absolute top-5 left-0 h-0.5 bg-indigo-600 transition-all duration-500 ease-out -z-10"
+          className="absolute top-5 left-0 h-0.5 bg-slate-700 transition-all duration-500 ease-out -z-10"
           style={{ width: `${(current / (steps.length - 1)) * 100}%` }}
           aria-hidden="true"
         />
@@ -53,7 +53,7 @@ export default function ProgressIndicator({ steps, current, percent, onStepClick
                     relative flex items-center justify-center w-10 h-10 rounded-full border-2
                     transition-all duration-300 transform
                     ${isCompleted
-                      ? 'bg-indigo-600 border-indigo-600 scale-100'
+                      ? 'bg-slate-700 border-indigo-600 scale-100'
                       : isCurrent
                         ? 'bg-white border-indigo-600 scale-110 shadow-lg shadow-indigo-200'
                         : 'bg-white border-gray-300 scale-100'

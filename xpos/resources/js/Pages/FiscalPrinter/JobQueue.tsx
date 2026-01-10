@@ -207,7 +207,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                         className={`
                                             relative flex items-center gap-2.5 px-4 py-3 rounded-md
                                             font-medium text-sm transition-all duration-200 ease-in-out
-                                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1
                                             ${selectedStatus === tab.key
                                                 ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-500/30 transform scale-[1.02]'
                                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
@@ -243,7 +243,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Satış nömrəsinə görə axtar..."
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-slate-500 focus:border-slate-500"
                                     />
                                     <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                 </div>
@@ -274,7 +274,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                                 selectedJobs.length === jobs.data.length
                                             }
                                             onChange={toggleAllJobs}
-                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            className="rounded border-gray-300 text-indigo-600 focus:ring-slate-500"
                                         />
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -320,7 +320,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                                     checked={selectedJobs.includes(job.id)}
                                                     onChange={() => toggleJobSelection(job.id)}
                                                     disabled={job.status === 'completed'}
-                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-slate-500"
                                                 />
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -330,7 +330,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                                 {job.sale ? (
                                                     <a
                                                         href={route('sales.show', job.sale.sale_id)}
-                                                        className="text-indigo-600 hover:text-indigo-900"
+                                                        className="text-slate-600 hover:text-slate-900"
                                                     >
                                                         {job.sale.sale_number}
                                                     </a>
@@ -363,7 +363,7 @@ export default function JobQueue({ jobs, statusCounts, filters }: Props) {
                                                     {job.status === 'failed' && job.is_retriable && (
                                                         <button
                                                             onClick={() => handleRetry(job.id)}
-                                                            className="text-blue-600 hover:text-blue-900"
+                                                            className="text-slate-600 hover:text-slate-900"
                                                             title="Təkrar et"
                                                         >
                                                             <ArrowPathIcon className="w-5 h-5" />

@@ -205,7 +205,7 @@ export default function AdminLogin({
                                         type="email"
                                         name="email"
                                         value={data.email}
-                                        className="block w-full pl-12 pr-4 py-3.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 hover:border-indigo-300"
+                                        className="block w-full pl-12 pr-4 py-3.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all duration-200 text-gray-900 placeholder-gray-400 hover:border-indigo-300"
                                         autoComplete="username"
                                         isFocused={true}
                                         placeholder="admin@onyx.az"
@@ -226,7 +226,7 @@ export default function AdminLogin({
                                         type={showPassword ? "text" : "password"}
                                         name="password"
                                         value={data.password}
-                                        className="block w-full pl-12 pr-14 py-3.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 hover:border-indigo-300"
+                                        className="block w-full pl-12 pr-14 py-3.5 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all duration-200 text-gray-900 placeholder-gray-400 hover:border-indigo-300"
                                         autoComplete="current-password"
                                         placeholder="Şifrənizi daxil edin"
                                         onChange={(e) => setData('password', e.target.value)}
@@ -254,7 +254,7 @@ export default function AdminLogin({
                                         onChange={(e) =>
                                             setData('remember', e.target.checked)
                                         }
-                                        className="rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="rounded border-indigo-300 text-indigo-600 focus:ring-slate-500"
                                     />
                                     <span className="ml-2 text-sm text-gray-600 font-medium group-hover:text-gray-900 transition-colors">
                                         Məni xatırla
@@ -264,7 +264,7 @@ export default function AdminLogin({
 
                             <div className="pt-2">
                                 <PrimaryButton
-                                    className="w-full justify-center py-3.5 px-6 border-0 rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 hover:from-indigo-700 hover:via-purple-700 hover:to-violet-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                                    className="w-full justify-center py-3.5 px-6 border-0 rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 hover:from-indigo-700 hover:via-purple-700 hover:to-violet-700 focus:outline-none focus:ring-4 focus:ring-slate-500/50 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                                     disabled={processing}
                                 >
                                     {processing ? (

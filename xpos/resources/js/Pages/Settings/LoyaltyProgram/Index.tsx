@@ -237,7 +237,7 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                                                 <label className="flex items-center">
                                                     <input
                                                         type="checkbox"
-                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                                                         checked={data.earn_on_discounted_items}
                                                         onChange={(e) => setData('earn_on_discounted_items', e.target.checked)}
                                                     />
@@ -324,7 +324,7 @@ export default function Index({ auth, program }: LoyaltyProgramProps) {
                                                 <label className="flex items-center">
                                                     <input
                                                         type="checkbox"
-                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-slate-500"
                                                         checked={data.is_active}
                                                         onChange={(e) => setData('is_active', e.target.checked)}
                                                     />
