@@ -406,22 +406,6 @@ export default function Index({
         }
     ];
 
-    const categories = [
-        { id: 'all', name: 'Hamısı', count: integrations.length },
-        { id: 'business', name: 'Biznes Modulları', count: integrations.filter(i => i.category === 'business').length },
-        { id: 'delivery', name: 'Çatdırılma', count: integrations.filter(i => i.category === 'delivery').length },
-        { id: 'communication', name: 'Əlaqə', count: integrations.filter(i => i.category === 'communication').length },
-        { id: 'fiscal', name: 'Fiskal', count: integrations.filter(i => i.category === 'fiscal').length },
-        { id: 'loyalty', name: 'Loyallıq', count: integrations.filter(i => i.category === 'loyalty').length },
-        { id: 'other', name: 'Digər', count: integrations.filter(i => i.category === 'other').length },
-    ];
-
-    const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
-
-    const filteredIntegrations = selectedCategory === 'all'
-        ? integrations
-        : integrations.filter(i => i.category === selectedCategory);
-
     const handleIntegrationClick = (integration: Integration) => {
         // Prevent clicks on disabled integrations
         if (integration.disabled) {
@@ -865,30 +849,15 @@ export default function Index({
 
     // Prepare data for SharedDataTable - it expects paginated data structure
     const paginatedData = {
-        data: filteredIntegrations,
+        data: integrations,
         links: [],
         current_page: 1,
         last_page: 1,
-        total: filteredIntegrations.length,
-        per_page: filteredIntegrations.length,
+        total: integrations.length,
+        per_page: integrations.length,
         from: 1,
-        to: filteredIntegrations.length
+        to: integrations.length
     };
-
-    // Category filter configuration
-    const tableFilters = [
-        {
-            key: 'category',
-            type: 'dropdown' as const,
-            label: 'Kateqoriya',
-            value: selectedCategory,
-            onChange: setSelectedCategory,
-            options: categories.map(cat => ({
-                value: cat.id,
-                label: `${cat.name} (${cat.count})`
-            }))
-        }
-    ];
 
     return (
         <AuthenticatedLayout>
@@ -905,34 +874,11 @@ export default function Index({
                     </p>
                 </div>
 
-                {/* Info Banner */}
-                <div className="mb-6 bg-slate-50/50 border border-slate-100 rounded-lg p-4">
-                    <div className="flex gap-3">
-                        <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-                                <svg className="w-4 h-4 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                                Tətbiqlər və inteqrasiyalar sizin biznesinizi daha effektiv idarə etməyə kömək edir.
-                                Hər bir xidməti aktivləşdirmək üçün uyğun parametrləri konfiqurasiya etməlisiniz.
-                            </p>
-                            <p className="text-xs text-gray-600 mt-2">
-                                <strong className="font-semibold">Qeyd:</strong> Bəzi inteqrasiyalar yalnız account owner tərəfindən idarə oluna bilər.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 <SharedDataTable
                     data={paginatedData as any}
                     columns={tableColumns as any}
                     selectable={true}
                     bulkActions={getBulkActions}
-                    filters={tableFilters}
                     emptyState={{
                         icon: <Cog6ToothIcon className="w-12 h-12" />,
                         title: 'Heç bir inteqrasiya tapılmadı',

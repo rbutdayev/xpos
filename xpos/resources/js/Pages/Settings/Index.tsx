@@ -1,10 +1,7 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import {
-    CogIcon,
-    BellIcon,
     ClockIcon,
-    BuildingOffice2Icon,
     PrinterIcon,
     DocumentDuplicateIcon,
     KeyIcon,
@@ -16,34 +13,8 @@ import {
     ShieldCheckIcon,
     ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
-import { AdminLayout, SettingsSection, FormGrid, FormField } from '@/Components/Admin';
-import { useAdminState } from '@/Hooks/Admin/useAdminState';
-import InputLabel from '@/Components/InputLabel';
-import TextInput from '@/Components/TextInput';
-import PrimaryButton from '@/Components/PrimaryButton';
-import Checkbox from '@/Components/Checkbox';
-import LanguageSwitcher from '@/Components/LanguageSwitcher';
-import { InformationCircleIcon, PhoneIcon, DocumentIcon } from '@heroicons/react/24/outline';
-import { Company } from '@/types';
+import { AdminLayout } from '@/Components/Admin';
 import { useTranslation } from 'react-i18next';
-
-interface Props {
-    company?: Company;
-    pos_settings?: {
-        auto_print_receipt: boolean;
-    };
-}
-
-interface CompanyFormData {
-    name: string;
-    address: string;
-    tax_number: string;
-    phone: string;
-    email: string;
-    website: string;
-    description: string;
-    default_language: string;
-}
 
 interface SettingItem {
     id: string;
@@ -52,17 +23,13 @@ interface SettingItem {
     href: string;
     icon: any;
     iconColor: string;
-    category: 'general' | 'hardware' | 'integrations' | 'monitoring';
+    category: 'hardware' | 'integrations' | 'monitoring';
 }
 
-export default function Index({ company, pos_settings }: Props) {
+export default function Index() {
     const { t } = useTranslation('settings');
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedCategories, setExpandedCategories] = useState<string[]>(['hardware', 'integrations', 'monitoring']);
-
-    const { data: posData, setData: setPosData, post: postPos, processing: processingPos } = useForm({
-        auto_print_receipt: pos_settings?.auto_print_receipt || false,
-    });
 
     const toggleCategory = (category: string) => {
         setExpandedCategories(prev =>
@@ -74,26 +41,7 @@ export default function Index({ company, pos_settings }: Props) {
 
     // Define all settings items
     const allSettings: SettingItem[] = [
-        // General - removed inline settings, only links to actual pages
-        {
-            id: 'shop-settings',
-            title: t('shop.title'),
-            description: t('shop.description'),
-            href: route('shop-settings.index'),
-            icon: BuildingOffice2Icon,
-            iconColor: 'text-blue-600',
-            category: 'general'
-        },
         // Hardware & Devices
-        {
-            id: 'printer-configs',
-            title: t('system.printer.title'),
-            description: t('system.printer.subtitle'),
-            href: route('printer-configs.index'),
-            icon: PrinterIcon,
-            iconColor: 'text-blue-600',
-            category: 'hardware'
-        },
         {
             id: 'fiscal-printer',
             title: t('fiscalPrinter.title'),
@@ -129,15 +77,6 @@ export default function Index({ company, pos_settings }: Props) {
             href: route('kiosk-tokens.index'),
             icon: ComputerDesktopIcon,
             iconColor: 'text-indigo-600',
-            category: 'integrations'
-        },
-        {
-            id: 'notification-channels',
-            title: t('system.notification.title'),
-            description: t('system.notification.subtitle'),
-            href: route('notification-channels.index'),
-            icon: BellIcon,
-            iconColor: 'text-yellow-600',
             category: 'integrations'
         },
         // Monitoring & Logs
@@ -193,7 +132,6 @@ export default function Index({ company, pos_settings }: Props) {
     // Group settings by category
     const groupedSettings = useMemo(() => {
         const groups: Record<string, SettingItem[]> = {
-            general: [],
             hardware: [],
             integrations: [],
             monitoring: []
@@ -206,12 +144,6 @@ export default function Index({ company, pos_settings }: Props) {
         return groups;
     }, [filteredSettings]);
 
-    // Quick access items (most frequently used)
-    const quickAccessItems = [
-        allSettings.find(s => s.id === 'shop-settings'),
-        allSettings.find(s => s.id === 'printer-configs'),
-        allSettings.find(s => s.id === 'notification-channels'),
-    ].filter(Boolean) as SettingItem[];
 
     const renderSettingItem = (item: SettingItem) => {
         const Icon = item.icon;
@@ -243,7 +175,6 @@ export default function Index({ company, pos_settings }: Props) {
     };
 
     const categoryConfig = {
-        general: { title: t('categories.general'), icon: CogIcon },
         hardware: { title: t('categories.hardware'), icon: PrinterIcon },
         integrations: { title: t('categories.integrations'), icon: ServerIcon },
         monitoring: { title: t('categories.monitoring'), icon: ChartBarIcon }
@@ -271,18 +202,6 @@ export default function Index({ company, pos_settings }: Props) {
                     </div>
                 </div>
             </div>
-
-            {/* Quick Access */}
-            {!searchQuery && (
-                <div className="bg-white rounded-lg shadow mb-6">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">{t('quickAccess.title')}</h3>
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                        {quickAccessItems.map(item => renderSettingItem(item))}
-                    </div>
-                </div>
-            )}
 
             {/* Categorized Settings */}
             <div className="space-y-6">
