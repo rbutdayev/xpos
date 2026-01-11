@@ -20,6 +20,7 @@ import {
     TrashIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
@@ -124,6 +125,8 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
     // Location permission modal state
     const [showLocationModal, setShowLocationModal] = useState(true);
     const [locationPermissionDismissed, setLocationPermissionDismissed] = useState(false);
+    const [permissionStatus, setPermissionStatus] = useState<'prompt' | 'granted' | 'denied' | 'unknown'>('unknown');
+    const [showSettingsInstructions, setShowSettingsInstructions] = useState(false);
 
     // Location state
     const [locationData, setLocationData] = useState<LocationData>({
@@ -408,30 +411,95 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
     const cartTotal = cart.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
     const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-    // Handle location permission request
-    const handleEnableLocation = () => {
-        setShowLocationModal(false);
-        setLocationPermissionDismissed(true);
-        // Trigger location input automatically
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    const timestamp = new Date().toISOString();
-                    setLocationData({
-                        latitude,
-                        longitude,
-                        address: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-                        timestamp,
+    // Check permission status on mount
+    useEffect(() => {
+        const checkPermission = async () => {
+            if ('permissions' in navigator) {
+                try {
+                    const result = await navigator.permissions.query({ name: 'geolocation' });
+                    setPermissionStatus(result.state);
+
+                    // If already granted, auto-dismiss modal
+                    if (result.state === 'granted') {
+                        setShowLocationModal(false);
+                        setLocationPermissionDismissed(true);
+                    }
+
+                    // Listen for permission changes
+                    result.addEventListener('change', () => {
+                        setPermissionStatus(result.state);
+                        if (result.state === 'granted') {
+                            setShowSettingsInstructions(false);
+                        }
                     });
-                    setShowFilters(true); // Expand filters to show captured location
-                },
-                (error) => {
-                    console.error('Location error:', error);
+                } catch (error) {
+                    console.error('Permission check error:', error);
+                    setPermissionStatus('unknown');
+                }
+            }
+        };
+        checkPermission();
+    }, []);
+
+    // Handle location permission request
+    const handleEnableLocation = async () => {
+        // Check current permission status
+        if ('permissions' in navigator) {
+            try {
+                const result = await navigator.permissions.query({ name: 'geolocation' });
+
+                if (result.state === 'denied') {
+                    // Permission was previously denied - show settings instructions
+                    setShowSettingsInstructions(true);
+                    return;
+                }
+            } catch (error) {
+                console.error('Permission query error:', error);
+            }
+        }
+
+        // Trigger location input automatically
+        if (!navigator.geolocation) {
+            alert('GPS bu cihazda mövcud deyil');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                const timestamp = new Date().toISOString();
+                setLocationData({
+                    latitude,
+                    longitude,
+                    address: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+                    timestamp,
+                });
+                setShowLocationModal(false);
+                setLocationPermissionDismissed(true);
+                setPermissionStatus('granted');
+                setShowSettingsInstructions(false);
+                setShowFilters(true); // Expand filters to show captured location
+            },
+            (error) => {
+                console.error('Location error:', error);
+
+                if (error.code === error.PERMISSION_DENIED) {
+                    // User denied permission - show settings instructions
+                    setPermissionStatus('denied');
+                    setShowSettingsInstructions(true);
+                } else {
+                    // Other error - still dismiss modal
+                    setShowLocationModal(false);
+                    setLocationPermissionDismissed(true);
                     setShowFilters(true); // Still expand filters so user can try again
                 }
-            );
-        }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            }
+        );
     };
 
     const handleDismissLocationModal = () => {
@@ -516,50 +584,129 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
 
                             {/* Content */}
                             <div className="p-6 space-y-4">
-                                <p className="text-slate-700 text-center leading-relaxed font-medium">
-                                    {t('expeditor.locationPermissionMessage', 'Sahə satışlarını qeyd etmək və müştəri ziyarətlərini izləmək üçün məkan məlumatınıza ehtiyacımız var.')}
-                                </p>
+                                {!showSettingsInstructions ? (
+                                    <>
+                                        <p className="text-slate-700 text-center leading-relaxed font-medium">
+                                            {t('expeditor.locationPermissionMessage', 'Sahə satışlarını qeyd etmək və müştəri ziyarətlərini izləmək üçün məkan məlumatınıza ehtiyacımız var.')}
+                                        </p>
 
-                                <div className="bg-gradient-to-br from-orange-50 to-pink-50 border-2 border-orange-200 rounded-2xl p-4">
-                                    <h3 className="font-black text-orange-900 mb-3 text-sm uppercase tracking-wide">
-                                        {t('expeditor.whyWeNeedLocation', 'Niyə məkan lazımdır?')}
-                                    </h3>
-                                    <ul className="space-y-2 text-sm text-orange-800 font-semibold">
-                                        <li className="flex items-start">
-                                            <span className="mr-2 text-orange-500">•</span>
-                                            <span>{t('expeditor.locationReason1', 'Müştəri ziyarətlərini qeyd etmək')}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="mr-2 text-orange-500">•</span>
-                                            <span>{t('expeditor.locationReason2', 'Satış yerini təyin etmək')}</span>
-                                        </li>
-                                        <li className="flex items-start">
-                                            <span className="mr-2 text-orange-500">•</span>
-                                            <span>{t('expeditor.locationReason3', 'Dəqiq hesabatlama və təhlil')}</span>
-                                        </li>
-                                    </ul>
-                                </div>
+                                        <div className="bg-gradient-to-br from-orange-50 to-pink-50 border-2 border-orange-200 rounded-2xl p-4">
+                                            <h3 className="font-black text-orange-900 mb-3 text-sm uppercase tracking-wide">
+                                                {t('expeditor.whyWeNeedLocation', 'Niyə məkan lazımdır?')}
+                                            </h3>
+                                            <ul className="space-y-2 text-sm text-orange-800 font-semibold">
+                                                <li className="flex items-start">
+                                                    <span className="mr-2 text-orange-500">•</span>
+                                                    <span>{t('expeditor.locationReason1', 'Müştəri ziyarətlərini qeyd etmək')}</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="mr-2 text-orange-500">•</span>
+                                                    <span>{t('expeditor.locationReason2', 'Satış yerini təyin etmək')}</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="mr-2 text-orange-500">•</span>
+                                                    <span>{t('expeditor.locationReason3', 'Dəqiq hesabatlama və təhlil')}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
 
-                                <div className="pt-2 space-y-3">
-                                    <button
-                                        onClick={handleEnableLocation}
-                                        className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 text-white py-4 rounded-2xl font-black text-base shadow-2xl active:scale-98 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <MapPinIcon className="w-5 h-5" />
-                                        {t('expeditor.enableLocation', 'Məkanı Aktivləşdir')}
-                                    </button>
+                                        <div className="pt-2 space-y-3">
+                                            <button
+                                                onClick={handleEnableLocation}
+                                                className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 text-white py-4 rounded-2xl font-black text-base shadow-2xl active:scale-98 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <MapPinIcon className="w-5 h-5" />
+                                                {t('expeditor.enableLocation', 'Məkanı Aktivləşdir')}
+                                            </button>
 
-                                    <button
-                                        onClick={handleDismissLocationModal}
-                                        className="w-full bg-slate-100 text-slate-700 py-3 rounded-2xl font-bold transition-colors active:scale-95"
-                                    >
-                                        {t('expeditor.maybeLater', 'Sonra')}
-                                    </button>
+                                            <button
+                                                onClick={handleDismissLocationModal}
+                                                className="w-full bg-slate-100 text-slate-700 py-3 rounded-2xl font-bold transition-colors active:scale-95"
+                                            >
+                                                {t('expeditor.maybeLater', 'Sonra')}
+                                            </button>
 
-                                    <p className="text-xs text-center text-slate-500 font-medium">
-                                        {t('expeditor.locationOptionalNote', 'Məkan məlumatı vacib deyil, lakin tövsiyə olunur')}
-                                    </p>
-                                </div>
+                                            <p className="text-xs text-center text-slate-500 font-medium">
+                                                {t('expeditor.locationOptionalNote', 'Məkan məlumatı vacib deyil, lakin tövsiyə olunur')}
+                                            </p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Settings Instructions */}
+                                        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4">
+                                            <div className="flex items-start gap-3">
+                                                <ExclamationCircleIcon className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                                                <div>
+                                                    <h3 className="font-black text-red-900 mb-1">
+                                                        {t('locationDenied', 'Məkan İcazəsi Rədd Edildi')}
+                                                    </h3>
+                                                    <p className="text-sm text-red-800 font-semibold">
+                                                        {t('locationDeniedMessage', 'Məkan icazəsini əvvəl rədd etmisiniz. İcazə vermək üçün cihaz parametrlərindən aktivləşdirməlisiniz.')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-sm max-h-[60vh] overflow-y-auto">
+                                            <h3 className="font-black text-slate-900 uppercase tracking-wide">
+                                                {t('howToEnable', 'Necə aktivləşdirmək olar?')}
+                                            </h3>
+
+                                            {/* iOS Instructions */}
+                                            <div className="space-y-2 bg-white p-3 rounded-xl">
+                                                <p className="font-extrabold text-slate-900">📱 iPhone/iPad (Safari):</p>
+                                                <ol className="list-decimal list-inside space-y-1.5 text-slate-700 ml-2 font-medium">
+                                                    <li>Settings (Parametrlər) → Safari</li>
+                                                    <li>Location (Məkan) → Allow (İcazə ver)</li>
+                                                    <li className="text-orange-600 font-bold">Və ya:</li>
+                                                    <li>Settings → Privacy (Məxfilik) → Location Services</li>
+                                                    <li>Safari Websites → Allow (İcazə ver)</li>
+                                                </ol>
+                                            </div>
+
+                                            {/* Android Chrome Instructions */}
+                                            <div className="space-y-2 bg-white p-3 rounded-xl">
+                                                <p className="font-extrabold text-slate-900">🤖 Android (Chrome):</p>
+                                                <ol className="list-decimal list-inside space-y-1.5 text-slate-700 ml-2 font-medium">
+                                                    <li>Chrome → ⋮ (Menyu) → Settings</li>
+                                                    <li>Site Settings → Location</li>
+                                                    <li>Bu saytı tapın və "Allow" seçin</li>
+                                                    <li className="text-orange-600 font-bold">Və ya:</li>
+                                                    <li>URL-in yanındakı kilid ikonasına toxunun</li>
+                                                    <li>Permissions → Location → Allow</li>
+                                                </ol>
+                                            </div>
+
+                                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-3 mt-3">
+                                                <p className="text-xs text-blue-900 font-bold flex items-start gap-2">
+                                                    <span>💡</span>
+                                                    <span>{t('refreshAfterSettings', 'Parametrləri dəyişdirdikdən sonra səhifəni yeniləyin')}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-2 space-y-3">
+                                            <button
+                                                onClick={() => window.location.reload()}
+                                                className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 text-white py-4 rounded-2xl font-black text-base shadow-2xl active:scale-98 transition-all"
+                                            >
+                                                {t('refreshPage', 'Səhifəni Yenilə')}
+                                            </button>
+
+                                            <button
+                                                onClick={() => {
+                                                    setShowLocationModal(false);
+                                                    setShowSettingsInstructions(false);
+                                                    setLocationPermissionDismissed(true);
+                                                }}
+                                                className="w-full bg-slate-100 text-slate-700 py-3 rounded-2xl font-bold transition-colors active:scale-95"
+                                            >
+                                                {t('expeditor.maybeLater', 'Sonra')}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

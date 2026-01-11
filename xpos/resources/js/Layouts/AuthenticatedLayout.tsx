@@ -10,6 +10,7 @@ import { getAppVersion } from '@/utils/version';
 import { Toaster } from 'react-hot-toast';
 import { SERVICE_TYPES, getServiceRoute } from '@/config/serviceTypes';
 import { useModuleAccess } from '@/Hooks/useModuleAccess';
+import { usePermissions } from '@/Hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import {
     HomeIcon,
@@ -57,6 +58,7 @@ export default function SlimSidebarLayout({
     const selectedWarehouse = usePage().props.selectedWarehouse as number | null;
 
     const { canAccessModule, hasAnyOnlineOrdering } = useModuleAccess();
+    const { can } = usePermissions();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarExpanded, setSidebarExpanded] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -470,25 +472,25 @@ export default function SlimSidebarLayout({
                     ${sidebarExpanded ? 'lg:w-64' : 'lg:w-20'}
                 `}>
                     {/* Sidebar header */}
-                    <div className="flex h-16 flex-shrink-0 items-center border-b border-slate-600 px-4 justify-center bg-white relative">
+                    <div className="flex h-16 flex-shrink-0 items-center px-4 justify-center relative">
                         {/* Mobile close button */}
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="lg:hidden absolute top-3 right-3 p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all duration-200 z-10"
+                            className="lg:hidden absolute top-3 right-3 p-2 rounded-lg hover:bg-slate-600/50 text-slate-300 hover:text-white transition-all duration-200 z-10"
                         >
                             <XMarkIcon className="h-6 w-6" />
                         </button>
 
-                        {/* Logo (when expanded) or Toggle button (when collapsed) */}
-                        {sidebarExpanded ? (
+                        {/* Logo text (when expanded on desktop or open on mobile) or Toggle button (when collapsed) */}
+                        {(sidebarOpen || sidebarExpanded) ? (
                             <>
-                                <Link href="/dashboard" className="flex items-center group">
-                                    <ApplicationLogo className="h-10 w-10" />
+                                <Link href="/dashboard" className="flex items-center justify-center group">
+                                    <span className="text-2xl font-bold text-white">xPOS</span>
                                 </Link>
                                 {/* Collapse button */}
                                 <button
                                     onClick={() => setSidebarExpanded(false)}
-                                    className="hidden lg:flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all duration-200 ml-auto"
+                                    className="hidden lg:flex items-center justify-center p-2 rounded-lg hover:bg-slate-600/50 text-slate-300 hover:text-white transition-all duration-200 ml-auto"
                                     title={t('navigation.collapse')}
                                 >
                                     <ChevronLeftIcon className="w-5 h-5" />
@@ -498,7 +500,7 @@ export default function SlimSidebarLayout({
                             /* Expand button (centered when collapsed) */
                             <button
                                 onClick={() => setSidebarExpanded(true)}
-                                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all duration-200"
+                                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-600/50 text-slate-200 hover:text-white transition-all duration-200"
                                 title={t('navigation.expand')}
                             >
                                 <Bars3Icon className="w-6 h-6" />
@@ -553,6 +555,14 @@ export default function SlimSidebarLayout({
                                     <p className="text-xs text-slate-400">{user.email}</p>
                                 </div>
                                 <Dropdown.Link href="/profile">{t('navigation.profile')}</Dropdown.Link>
+                                {can('use-attendance') && user.role !== 'attendance_user' && (
+                                    <Dropdown.Link href="/attendance/scan">
+                                        <div className="flex items-center gap-2">
+                                            <ClockIcon className="w-4 h-4" />
+                                            <span>{t('navigation.attendance')}</span>
+                                        </div>
+                                    </Dropdown.Link>
+                                )}
                                 <Dropdown.Link
                                     href={route('logout')}
                                     method="post"

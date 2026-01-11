@@ -17,21 +17,47 @@ class ModulePricingController
     {
         Gate::authorize('manage-knowledge-base'); // Reusing existing super admin gate
 
+        // Auto-sync modules from config file
+        $this->syncModulesFromConfig();
+
         $pricing = ModulePricingSetting::with('lastUpdatedBy:id,name')
             ->orderBy('module_name')
             ->get();
 
+        $configModules = config('modules.modules', []);
+
         return Inertia::render('SuperAdmin/ModulePricing', [
-            'modules' => $pricing->map(function($p) {
+            'modules' => $pricing->map(function($p) use ($configModules) {
+                $moduleConfig = $configModules[$p->module_name] ?? [];
                 return [
                     'id' => $p->id,
-                    'name' => $p->module_name,
+                    'name' => $moduleConfig['name'] ?? $p->module_name,
                     'price' => (float) $p->monthly_price,
                     'is_paid' => $p->monthly_price > 0,
                     'updated_at' => $p->updated_at?->format('Y-m-d H:i'),
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Sync modules from config file to database
+     * This ensures any new modules added to config are automatically created
+     */
+    protected function syncModulesFromConfig()
+    {
+        $configModules = config('modules.modules', []);
+
+        foreach ($configModules as $moduleKey => $moduleData) {
+            ModulePricingSetting::firstOrCreate(
+                ['module_name' => $moduleKey],
+                [
+                    'monthly_price' => $moduleData['default_price'] ?? 0.00,
+                    'is_active' => true,
+                    'description' => $moduleData['description'] ?? null,
+                ]
+            );
+        }
     }
 
     /**

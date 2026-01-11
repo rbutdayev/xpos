@@ -58,6 +58,7 @@ class DatabaseSeeder extends Seeder
             ReceiptTemplateSeeder::class,
             KnowledgeBaseCategoriesSeeder::class,  // 13 parent + 88 subcategories
             KnowledgeArticlesSeeder::class,        // 36 high-quality articles from KNOWLEDGE_BASE_ARTICLES.md
+            ModulePricingSeeder::class,            // Module pricing for all available modules
         ]);
     }
 }

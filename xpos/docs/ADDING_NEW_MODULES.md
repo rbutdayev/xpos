@@ -43,27 +43,27 @@ php artisan migrate
 
 ---
 
-## Step 2: Module Pricing (If Paid)
+## Step 2: Module Pricing Configuration
 
-If your module is paid, add pricing configuration.
+Add your module to the centralized configuration file. The system will **automatically** sync this to the database.
 
-### Database Seeder
+### Add to config/modules.php
 
-Add to `database/seeders/ModulePricingSeeder.php`:
+Add your module to the `modules` array in `config/modules.php`:
 
 ```php
-ModulePricingSetting::create([
-    'module_id' => 'your_module',
-    'module_name' => 'Your Module Name',
-    'price' => 20.00, // Monthly price in AZN
-    'is_active' => true,
-]);
+'modules' => [
+    // ... existing modules
+    'your_module' => [
+        'name' => 'Your Module Name',           // Display name (Azerbaijani)
+        'default_price' => 20.00,               // Monthly price in AZN (0.00 for free)
+        'description' => 'Brief description',   // Module description
+        'field' => 'your_module_enabled',       // Corresponding field in accounts table
+    ],
+],
 ```
 
-**Run seeder:**
-```bash
-php artisan db:seed --class=ModulePricingSeeder
-```
+**That's it!** No need to run seeders - the pricing will be auto-synced when a super admin visits the Module Pricing page.
 
 ---
 
