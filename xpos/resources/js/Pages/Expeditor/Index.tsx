@@ -449,9 +449,19 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
             return;
         }
 
-        // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
-        // This is the ONLY way to request location permission from the browser
-        navigator.geolocation.getCurrentPosition(
+        // Check if running on secure context (HTTPS or localhost)
+        if (!window.isSecureContext) {
+            console.warn('Geolocation requires secure context (HTTPS)');
+        }
+
+        // Detect if Chrome on Android - Chrome needs special handling
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Android/.test(navigator.userAgent);
+        const requestDelay = isChrome ? 100 : 0;
+
+        setTimeout(() => {
+            // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
+            // This is the ONLY way to request location permission from the browser
+            navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
                 const timestamp = new Date().toISOString();
@@ -493,10 +503,11 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 15000, // Increased timeout for Chrome
                 maximumAge: 0,
             }
         );
+        }, requestDelay);
     };
 
     const handleDismissLocationModal = () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useForm, usePage, router } from '@inertiajs/react';
+import { useForm, usePage, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -226,43 +226,100 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
             return;
         }
 
-        // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
-        // This is the ONLY way to request location permission from the browser
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                // Success - permission granted
-                setShowLocationModal(false);
-                setLocationPermissionGranted(true);
-                setPermissionStatus('granted');
-                setShowSettingsInstructions(false);
-            },
-            (error) => {
-                console.error('Geolocation error:', error);
+        // CRITICAL: Chrome 50+ requires HTTPS (except localhost)
+        const isHTTPS = window.location.protocol === 'https:';
+        const isLocalhost = window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname === '[::1]';
 
-                if (error.code === error.PERMISSION_DENIED) {
-                    // User denied permission - show settings instructions
-                    setPermissionStatus('denied');
-                    setShowSettingsInstructions(true);
-                } else if (error.code === error.POSITION_UNAVAILABLE) {
-                    // Position unavailable - but still close modal
+        console.log('🔍 Security check:', {
+            protocol: window.location.protocol,
+            hostname: window.location.hostname,
+            isSecureContext: window.isSecureContext,
+            isHTTPS,
+            isLocalhost
+        });
+
+        if (!window.isSecureContext && !isHTTPS && !isLocalhost) {
+            console.error('❌ HTTPS required for geolocation in Chrome');
+            setLocation(prev => ({
+                ...prev,
+                error: 'HTTPS tələb olunur! Chrome məkan üçün yalnız HTTPS saytlara icazə verir.',
+            }));
+            setShowSettingsInstructions(true);
+            return;
+        }
+
+        // Detect Chrome browser
+        const isChrome = /Chrome|Chromium/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const requestDelay = (isChrome && isAndroid) ? 100 : 0;
+
+        console.log('📱 Browser:', { isChrome, isAndroid, requestDelay });
+
+        setTimeout(() => {
+            console.log('📍 Requesting geolocation permission...');
+
+            // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
+            // This is the ONLY way to request location permission from the browser
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Success - permission granted
+                    console.log('✅ Location permission granted:', position.coords);
                     setShowLocationModal(false);
                     setLocationPermissionGranted(true);
-                } else if (error.code === error.TIMEOUT) {
-                    // Timeout - but still close modal
-                    setShowLocationModal(false);
-                    setLocationPermissionGranted(true);
-                } else {
-                    // Other error
-                    setShowLocationModal(false);
-                    setLocationPermissionGranted(true);
+                    setPermissionStatus('granted');
+                    setShowSettingsInstructions(false);
+                },
+                (error) => {
+                    console.error('❌ Geolocation error:', {
+                        code: error.code,
+                        message: error.message,
+                        PERMISSION_DENIED: error.PERMISSION_DENIED,
+                        POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+                        TIMEOUT: error.TIMEOUT
+                    });
+
+                    // Check for Chrome HTTPS requirement error
+                    if (error.message && error.message.toLowerCase().includes('only secure origins')) {
+                        console.error('🔒 HTTPS required!');
+                        setLocation(prev => ({
+                            ...prev,
+                            error: 'HTTPS tələb olunur!',
+                        }));
+                        setShowSettingsInstructions(true);
+                        return;
+                    }
+
+                    if (error.code === error.PERMISSION_DENIED) {
+                        // User denied permission - show settings instructions
+                        console.log('🚫 Permission DENIED by user or browser');
+                        setPermissionStatus('denied');
+                        setShowSettingsInstructions(true);
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        // Position unavailable - but still close modal
+                        console.log('⚠️ Position unavailable');
+                        setShowLocationModal(false);
+                        setLocationPermissionGranted(true);
+                    } else if (error.code === error.TIMEOUT) {
+                        // Timeout - but still close modal
+                        console.log('⏱️ Position timeout');
+                        setShowLocationModal(false);
+                        setLocationPermissionGranted(true);
+                    } else {
+                        // Other error
+                        console.log('❓ Unknown geolocation error');
+                        setShowLocationModal(false);
+                        setLocationPermissionGranted(true);
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000, // Increased timeout for Chrome
+                    maximumAge: 0,
                 }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-            }
-        );
+            );
+        }, requestDelay);
     };
 
     // QR Scanner initialization and cleanup
@@ -429,137 +486,143 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
         <div className="max-w-2xl mx-auto">
                 {/* Location Permission Modal - only show in GPS mode */}
                 {showLocationModal && scanMode === 'gps' && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
-                            {/* Header */}
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white text-center">
-                                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <MapPinIcon className="w-12 h-12" />
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+                            {/* Header - Compact */}
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-4 text-white text-center flex-shrink-0">
+                                <div className="flex items-center justify-center gap-3 mb-2">
+                                    <MapPinIcon className="w-8 h-8" />
+                                    <h2 className="text-lg font-bold">{t('locationPermissionTitle', 'Məkan İcazəsi')}</h2>
                                 </div>
-                                <h2 className="text-2xl font-bold mb-2">{t('locationPermissionTitle', 'Məkan İcazəsi Tələb olunur')}</h2>
                             </div>
 
-                            {/* Content */}
-                            <div className="p-6 space-y-4">
+                            {/* Content - Scrollable */}
+                            <div className="p-4 space-y-3 overflow-y-auto flex-1">
                                 {!showSettingsInstructions ? (
                                     <>
-                                        <p className="text-slate-700 text-center leading-relaxed">
-                                            {t('locationPermissionMessage', 'Davamiyyət qeydini təsdiq etmək üçün cari GPS məkanınıza ehtiyacımız var. Bu sizin filialda olduğunuzu təsdiq edir.')}
+                                        <p className="text-sm text-slate-700 text-center leading-relaxed">
+                                            {t('locationPermissionMessage', 'Davamiyyət qeydini təsdiq etmək üçün cari GPS məkanınıza ehtiyacımız var.')}
                                         </p>
 
-                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                            <h3 className="font-semibold text-blue-900 mb-2 text-sm">
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <h3 className="font-semibold text-blue-900 mb-1.5 text-xs">
                                                 {t('whyWeNeedLocation', 'Niyə məkan lazımdır?')}
                                             </h3>
-                                            <ul className="space-y-1.5 text-sm text-blue-800">
+                                            <ul className="space-y-1 text-xs text-blue-800">
                                                 <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
+                                                    <span className="mr-1.5">•</span>
                                                     <span>{t('locationReason1', 'Filialda olduğunuzu yoxlamaq')}</span>
                                                 </li>
                                                 <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
-                                                    <span>{t('locationReason2', 'Dəqiq davamiyyət qeydi aparmaq')}</span>
-                                                </li>
-                                                <li className="flex items-start">
-                                                    <span className="mr-2">•</span>
-                                                    <span>{t('locationReason3', 'Təhlükəsizlik və hesabatlama')}</span>
+                                                    <span className="mr-1.5">•</span>
+                                                    <span>{t('locationReason2', 'Dəqiq davamiyyət qeydi')}</span>
                                                 </li>
                                             </ul>
-                                        </div>
-
-                                        <div className="pt-2 space-y-3">
-                                            <button
-                                                onClick={handleEnableLocation}
-                                                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <MapPinIcon className="w-5 h-5" />
-                                                {t('enableLocation', 'Məkanı Aktivləşdir')}
-                                            </button>
-
-                                            {userBranch && (
-                                                <button
-                                                    onClick={() => {
-                                                        setShowLocationModal(false);
-                                                        setScanMode('qr');
-                                                    }}
-                                                    className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors"
-                                                >
-                                                    {t('useQrInstead', 'Əvəzinə QR kod istifadə et')}
-                                                </button>
-                                            )}
                                         </div>
                                     </>
                                 ) : (
                                     <>
                                         {/* Settings Instructions */}
-                                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                                            <div className="flex items-start gap-3">
-                                                <ExclamationCircleIcon className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                            <div className="flex items-start gap-2">
+                                                <ExclamationCircleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                                                 <div>
-                                                    <h3 className="font-bold text-red-900 mb-1">
+                                                    <h3 className="font-bold text-red-900 text-sm mb-0.5">
                                                         {t('locationDenied', 'Məkan İcazəsi Rədd Edildi')}
                                                     </h3>
-                                                    <p className="text-sm text-red-800">
-                                                        {t('locationDeniedMessage', 'Məkan icazəsini əvvəl rədd etmisiniz. İcazə vermək üçün cihaz parametrlərindən aktivləşdirməlisiniz.')}
+                                                    <p className="text-xs text-red-800">
+                                                        {t('locationDeniedMessage', 'İcazə vermək üçün cihaz parametrlərindən aktivləşdirin.')}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-sm">
-                                            <h3 className="font-bold text-slate-900">{t('howToEnable', 'Necə aktivləşdirmək olar?')}</h3>
+                                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2 text-xs">
+                                            <h3 className="font-bold text-slate-900 text-sm">{t('howToEnable', 'Necə aktivləşdirmək olar?')}</h3>
+
+                                            {/* Chrome Desktop/Mobile Instructions */}
+                                            <div className="space-y-1 bg-white p-2 rounded border border-orange-200">
+                                                <p className="font-bold text-orange-900 text-sm">🌐 Chrome (Hamısı):</p>
+                                                <div className="space-y-1 text-slate-700">
+                                                    <p className="font-semibold">Variant 1 - Ünvan panelindən:</p>
+                                                    <ol className="list-decimal list-inside space-y-0.5 ml-2">
+                                                        <li>URL yanındakı 🔒 kilid ikonasına klikləyin</li>
+                                                        <li>"Location" tapın → "Allow" seçin</li>
+                                                        <li>Səhifəni yeniləyin</li>
+                                                    </ol>
+
+                                                    <p className="font-semibold mt-2">Variant 2 - Parametrlərdən:</p>
+                                                    <ol className="list-decimal list-inside space-y-0.5 ml-2">
+                                                        <li>chrome://settings/content/location</li>
+                                                        <li>Bu saytı "Allowed" siyahısına əlavə edin</li>
+                                                    </ol>
+                                                </div>
+                                            </div>
 
                                             {/* iOS Instructions */}
-                                            <div className="space-y-2">
-                                                <p className="font-semibold text-slate-800">📱 iPhone/iPad (Safari):</p>
-                                                <ol className="list-decimal list-inside space-y-1 text-slate-700 ml-2">
-                                                    <li>Settings (Parametrlər) → Safari</li>
-                                                    <li>Location (Məkan) → Allow (İcazə ver)</li>
-                                                    <li>Və ya Settings → Privacy (Məxfilik) → Location Services</li>
-                                                    <li>Safari Websites → Allow (İcazə ver)</li>
+                                            <div className="space-y-1">
+                                                <p className="font-semibold text-slate-800">📱 iPhone (Safari):</p>
+                                                <ol className="list-decimal list-inside space-y-0.5 text-slate-700 ml-2">
+                                                    <li>Settings → Safari → Location</li>
+                                                    <li>Allow (İcazə ver)</li>
                                                 </ol>
                                             </div>
 
-                                            {/* Android Chrome Instructions */}
-                                            <div className="space-y-2">
-                                                <p className="font-semibold text-slate-800">🤖 Android (Chrome):</p>
-                                                <ol className="list-decimal list-inside space-y-1 text-slate-700 ml-2">
-                                                    <li>Chrome → ⋮ (Menyu) → Settings</li>
-                                                    <li>Site Settings → Location</li>
-                                                    <li>Bu saytı tapın və "Allow" seçin</li>
-                                                    <li>Və ya URL-in yanındakı kilid ikonasına toxunun</li>
-                                                    <li>Permissions → Location → Allow</li>
-                                                </ol>
-                                            </div>
-
-                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                                            <div className="bg-blue-50 border border-blue-200 rounded p-2 mt-2">
                                                 <p className="text-xs text-blue-800 font-medium">
-                                                    💡 {t('refreshAfterSettings', 'Parametrləri dəyişdirdikdən sonra səhifəni yeniləyin')}
+                                                    💡 {t('refreshAfterSettings', 'Dəyişdikdən sonra səhifəni yeniləyin')}
                                                 </p>
                                             </div>
                                         </div>
+                                    </>
+                                )}
+                            </div>
 
-                                        <div className="pt-2 space-y-3">
+                            {/* Buttons - Fixed at bottom */}
+                            <div className="p-4 bg-white border-t border-slate-200 flex-shrink-0 space-y-2">
+                                {!showSettingsInstructions ? (
+                                    <>
+                                        <button
+                                            onClick={handleEnableLocation}
+                                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <MapPinIcon className="w-5 h-5" />
+                                            {t('enableLocation', 'İcazə ver')}
+                                        </button>
+
+                                        {userBranch && (
                                             <button
-                                                onClick={() => window.location.reload()}
-                                                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all"
+                                                onClick={() => {
+                                                    setShowLocationModal(false);
+                                                    setScanMode('qr');
+                                                }}
+                                                className="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg font-medium active:scale-95 transition-all"
                                             >
-                                                {t('refreshPage', 'Səhifəni Yenilə')}
+                                                {t('useQrInstead', 'QR kod istifadə et')}
                                             </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => window.location.reload()}
+                                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold shadow-lg active:scale-95 transition-all"
+                                        >
+                                            {t('refreshPage', 'Səhifəni Yenilə')}
+                                        </button>
 
-                                            {userBranch && (
-                                                <button
-                                                    onClick={() => {
-                                                        setShowLocationModal(false);
-                                                        setShowSettingsInstructions(false);
-                                                        setScanMode('qr');
-                                                    }}
-                                                    className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors"
-                                                >
-                                                    {t('useQrInstead', 'Əvəzinə QR kod istifadə et')}
-                                                </button>
-                                            )}
-                                        </div>
+                                        {userBranch && (
+                                            <button
+                                                onClick={() => {
+                                                    setShowLocationModal(false);
+                                                    setShowSettingsInstructions(false);
+                                                    setScanMode('qr');
+                                                }}
+                                                className="w-full bg-slate-100 text-slate-700 py-2.5 rounded-lg font-medium active:scale-95 transition-all"
+                                            >
+                                                {t('useQrInstead', 'QR kod istifadə et')}
+                                            </button>
+                                        )}
                                     </>
                                 )}
                             </div>
@@ -898,9 +961,11 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
     // Conditional rendering based on user role
     if (user.role === 'attendance_user') {
         return (
-            <div className="min-h-screen bg-gray-100">
-                {/* Simple header with logout */}
-                <div className="bg-white border-b border-gray-200">
+            <>
+                <Head title={t('title')} />
+                <div className="min-h-screen bg-gray-100">
+                    {/* Simple header with logout */}
+                    <div className="bg-white border-b border-gray-200">
                     <div className="flex items-center justify-between px-4 py-3">
                         <h1 className="text-lg font-semibold text-gray-900">{t('title')}</h1>
                         <button
@@ -918,12 +983,14 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
                     {pageContent}
                 </div>
             </div>
+            </>
         );
     }
 
     // Regular users get full layout with sidebar
     return (
         <AuthenticatedLayout>
+            <Head title={t('title')} />
             {pageContent}
         </AuthenticatedLayout>
     );

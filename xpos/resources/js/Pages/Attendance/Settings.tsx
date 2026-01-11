@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useForm, Link, usePage } from '@inertiajs/react';
+import { useForm, Link, usePage, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -109,43 +109,49 @@ export default function Settings({ branches, allowedRadius, locale }: Props) {
         setGettingLocation(true);
         setLocationError(null);
 
-        // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
-        // This is the ONLY way to request location permission from the browser
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                locationForm.setData({
-                    latitude: position.coords.latitude.toFixed(8),
-                    longitude: position.coords.longitude.toFixed(8),
-                });
-                setGettingLocation(false);
-                setShowSettingsInstructions(false);
-            },
-            (error) => {
-                setGettingLocation(false);
-                console.error('Geolocation error:', error);
+        // Detect Chrome Android for special handling
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Android/.test(navigator.userAgent);
+        const requestDelay = isChrome ? 100 : 0;
 
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        // Show detailed settings instructions instead of just an error
-                        setShowSettingsInstructions(true);
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        setLocationError(t('attendance:settings.geolocationUnavailable'));
-                        break;
-                    case error.TIMEOUT:
-                        setLocationError(t('attendance:settings.geolocationTimeout'));
-                        break;
-                    default:
-                        setLocationError(t('attendance:settings.geolocationError'));
-                        break;
+        setTimeout(() => {
+            // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
+            // This is the ONLY way to request location permission from the browser
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    locationForm.setData({
+                        latitude: position.coords.latitude.toFixed(8),
+                        longitude: position.coords.longitude.toFixed(8),
+                    });
+                    setGettingLocation(false);
+                    setShowSettingsInstructions(false);
+                },
+                (error) => {
+                    setGettingLocation(false);
+                    console.error('Geolocation error:', error);
+
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            // Show detailed settings instructions instead of just an error
+                            setShowSettingsInstructions(true);
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            setLocationError(t('attendance:settings.geolocationUnavailable'));
+                            break;
+                        case error.TIMEOUT:
+                            setLocationError(t('attendance:settings.geolocationTimeout'));
+                            break;
+                        default:
+                            setLocationError(t('attendance:settings.geolocationError'));
+                            break;
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000, // Increased timeout for Chrome
+                    maximumAge: 0,
                 }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-            }
-        );
+            );
+        }, requestDelay);
     };
 
     const getBranchStatus = (branch: Branch) => {
@@ -160,6 +166,7 @@ export default function Settings({ branches, allowedRadius, locale }: Props) {
 
     return (
         <AuthenticatedLayout>
+            <Head title={t('attendance:settings.title')} />
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
