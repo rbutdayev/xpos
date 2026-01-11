@@ -204,23 +204,8 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
     }, []);
 
     // Handle location permission request
-    const handleEnableLocation = async () => {
-        // Check current permission status
-        if ('permissions' in navigator) {
-            try {
-                const result = await navigator.permissions.query({ name: 'geolocation' });
-
-                if (result.state === 'denied') {
-                    // Permission was previously denied - show settings instructions
-                    setShowSettingsInstructions(true);
-                    return;
-                }
-            } catch (error) {
-                console.error('Permission query error:', error);
-            }
-        }
-
-        // Request location permission
+    const handleEnableLocation = () => {
+        // Check if geolocation is supported
         if (!navigator.geolocation) {
             setLocation(prev => ({
                 ...prev,
@@ -229,7 +214,8 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
             return;
         }
 
-        // Try to get location - this will trigger browser permission prompt if needed
+        // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
+        // This is the ONLY way to request location permission from the browser
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 // Success - permission granted
@@ -239,14 +225,24 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
                 setShowSettingsInstructions(false);
             },
             (error) => {
+                console.error('Geolocation error:', error);
+
                 if (error.code === error.PERMISSION_DENIED) {
                     // User denied permission - show settings instructions
                     setPermissionStatus('denied');
                     setShowSettingsInstructions(true);
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    // Position unavailable - but still close modal
+                    setShowLocationModal(false);
+                    setLocationPermissionGranted(true);
+                } else if (error.code === error.TIMEOUT) {
+                    // Timeout - but still close modal
+                    setShowLocationModal(false);
+                    setLocationPermissionGranted(true);
                 } else {
                     // Other error
                     setShowLocationModal(false);
-                    setLocationPermissionGranted(true); // Still enable to show error
+                    setLocationPermissionGranted(true);
                 }
             },
             {

@@ -442,28 +442,15 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
     }, []);
 
     // Handle location permission request
-    const handleEnableLocation = async () => {
-        // Check current permission status
-        if ('permissions' in navigator) {
-            try {
-                const result = await navigator.permissions.query({ name: 'geolocation' });
-
-                if (result.state === 'denied') {
-                    // Permission was previously denied - show settings instructions
-                    setShowSettingsInstructions(true);
-                    return;
-                }
-            } catch (error) {
-                console.error('Permission query error:', error);
-            }
-        }
-
-        // Trigger location input automatically
+    const handleEnableLocation = () => {
+        // Check if geolocation is supported
         if (!navigator.geolocation) {
             alert('GPS bu cihazda mövcud deyil');
             return;
         }
 
+        // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
+        // This is the ONLY way to request location permission from the browser
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
@@ -487,11 +474,21 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
                     // User denied permission - show settings instructions
                     setPermissionStatus('denied');
                     setShowSettingsInstructions(true);
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    // Position unavailable - still dismiss modal
+                    setShowLocationModal(false);
+                    setLocationPermissionDismissed(true);
+                    setShowFilters(true);
+                } else if (error.code === error.TIMEOUT) {
+                    // Timeout - still dismiss modal
+                    setShowLocationModal(false);
+                    setLocationPermissionDismissed(true);
+                    setShowFilters(true);
                 } else {
                     // Other error - still dismiss modal
                     setShowLocationModal(false);
                     setLocationPermissionDismissed(true);
-                    setShowFilters(true); // Still expand filters so user can try again
+                    setShowFilters(true);
                 }
             },
             {

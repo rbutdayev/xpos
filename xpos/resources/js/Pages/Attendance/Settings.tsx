@@ -14,6 +14,8 @@ import {
     MapIcon,
     QrCodeIcon,
     PrinterIcon,
+    ExclamationCircleIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 interface Branch {
@@ -36,6 +38,7 @@ export default function Settings({ branches, allowedRadius }: Props) {
     const [isEditingLocation, setIsEditingLocation] = useState(false);
     const [gettingLocation, setGettingLocation] = useState(false);
     const [locationError, setLocationError] = useState<string | null>(null);
+    const [showSettingsInstructions, setShowSettingsInstructions] = useState(false);
 
     // Form for radius
     const radiusForm = useForm({
@@ -94,6 +97,8 @@ export default function Settings({ branches, allowedRadius }: Props) {
         setGettingLocation(true);
         setLocationError(null);
 
+        // IMPORTANT: Directly call getCurrentPosition() to trigger browser permission prompt
+        // This is the ONLY way to request location permission from the browser
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 locationForm.setData({
@@ -101,12 +106,16 @@ export default function Settings({ branches, allowedRadius }: Props) {
                     longitude: position.coords.longitude.toFixed(8),
                 });
                 setGettingLocation(false);
+                setShowSettingsInstructions(false);
             },
             (error) => {
                 setGettingLocation(false);
+                console.error('Geolocation error:', error);
+
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        setLocationError(t('attendance:settings.geolocationPermissionDenied'));
+                        // Show detailed settings instructions instead of just an error
+                        setShowSettingsInstructions(true);
                         break;
                     case error.POSITION_UNAVAILABLE:
                         setLocationError(t('attendance:settings.geolocationUnavailable'));
@@ -271,6 +280,87 @@ export default function Settings({ branches, allowedRadius }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {/* Settings Instructions Modal */}
+                {showSettingsInstructions && (
+                    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-6 text-white">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-start gap-3">
+                                        <ExclamationCircleIcon className="w-6 h-6 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <h3 className="font-bold text-lg">
+                                                {t('attendance:locationDenied', 'Məkan İcazəsi Rədd Edildi')}
+                                            </h3>
+                                            <p className="text-sm text-blue-100 mt-1">
+                                                {t('attendance:locationDeniedMessage', 'Məkan icazəsini əvvəl rədd etmisiniz.')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowSettingsInstructions(false)}
+                                        className="text-white hover:bg-white/20 rounded-lg p-1 transition-colors"
+                                    >
+                                        <XMarkIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-sm">
+                                    <h3 className="font-bold text-slate-900">{t('attendance:howToEnable', 'Necə aktivləşdirmək olar?')}</h3>
+
+                                    {/* iOS Instructions */}
+                                    <div className="space-y-2">
+                                        <p className="font-semibold text-slate-800">📱 iPhone/iPad (Safari):</p>
+                                        <ol className="list-decimal list-inside space-y-1 text-slate-700 ml-2">
+                                            <li>Settings (Parametrlər) → Safari</li>
+                                            <li>Location (Məkan) → Allow (İcazə ver)</li>
+                                            <li>Və ya Settings → Privacy (Məxfilik) → Location Services</li>
+                                            <li>Safari Websites → Allow (İcazə ver)</li>
+                                        </ol>
+                                    </div>
+
+                                    {/* Android Chrome Instructions */}
+                                    <div className="space-y-2">
+                                        <p className="font-semibold text-slate-800">🤖 Android (Chrome):</p>
+                                        <ol className="list-decimal list-inside space-y-1 text-slate-700 ml-2">
+                                            <li>Chrome → ⋮ (Menyu) → Settings</li>
+                                            <li>Site Settings → Location</li>
+                                            <li>Bu saytı tapın və "Allow" seçin</li>
+                                            <li>Və ya URL-in yanındakı kilid ikonasına toxunun</li>
+                                            <li>Permissions → Location → Allow</li>
+                                        </ol>
+                                    </div>
+
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                                        <p className="text-xs text-blue-800 font-medium">
+                                            💡 {t('attendance:refreshAfterSettings', 'Parametrləri dəyişdirdikdən sonra səhifəni yeniləyin')}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all"
+                                    >
+                                        {t('attendance:refreshPage', 'Səhifəni Yenilə')}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowSettingsInstructions(false)}
+                                        className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                                    >
+                                        {t('common:actions.close', 'Bağla')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Location Editor Modal */}
                 {isEditingLocation && selectedBranch && (
