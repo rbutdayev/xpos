@@ -27,10 +27,25 @@ class WarehouseTransferController extends Controller
     {
         Gate::authorize('viewAny', WarehouseTransfer::class);
 
-        $transfers = WarehouseTransfer::with(['fromWarehouse', 'toWarehouse', 'product', 'variant', 'requestedBy'])
-            ->byAccount(auth()->user()->account_id)
-            ->latest()
-            ->paginate(25);
+        $user = auth()->user();
+        $query = WarehouseTransfer::with(['fromWarehouse', 'toWarehouse', 'product', 'variant', 'requestedBy'])
+            ->byAccount($user->account_id);
+
+        // Branch managers can only see transfers involving warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $accessibleWarehouseIds = Warehouse::byAccount($user->account_id)
+                ->whereHas('branches', function($q) use ($user) {
+                    $q->where('branch_id', $user->branch_id);
+                })
+                ->pluck('id');
+
+            $query->where(function($q) use ($accessibleWarehouseIds) {
+                $q->whereIn('from_warehouse_id', $accessibleWarehouseIds)
+                  ->orWhereIn('to_warehouse_id', $accessibleWarehouseIds);
+            });
+        }
+
+        $transfers = $query->latest()->paginate(25);
 
         return Inertia::render('WarehouseTransfers/Index', [
             'transfers' => $transfers,
@@ -41,8 +56,19 @@ class WarehouseTransferController extends Controller
     {
         Gate::authorize('create', WarehouseTransfer::class);
 
-        $warehouses = Warehouse::byAccount(auth()->user()->account_id)->get(['id', 'name']);
-        $employees = User::where('account_id', auth()->user()->account_id)
+        $user = auth()->user();
+        $warehousesQuery = Warehouse::byAccount($user->account_id);
+
+        // Branch managers can only create transfers between warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $warehousesQuery->whereHas('branches', function($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        $warehouses = $warehousesQuery->get(['id', 'name']);
+
+        $employees = User::where('account_id', $user->account_id)
             ->whereIn('role', ['warehouse_manager', 'sales_staff', 'tailor'])
             ->get(['id', 'name', 'position']);
 
@@ -65,6 +91,28 @@ class WarehouseTransferController extends Controller
             'requested_by' => 'required|exists:users,id',
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        $user = auth()->user();
+
+        // Branch managers can only create transfers between warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $fromWarehouse = Warehouse::find($request->from_warehouse_id);
+            $toWarehouse = Warehouse::find($request->to_warehouse_id);
+
+            $hasFromAccess = $fromWarehouse && $fromWarehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            $hasToAccess = $toWarehouse && $toWarehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            if (!$hasFromAccess || !$hasToAccess) {
+                return back()->withErrors([
+                    'from_warehouse_id' => 'Seçilmiş anbarlara giriş icazəniz yoxdur.'
+                ]);
+            }
+        }
 
         // Validate variant belongs to product and account
         if (!empty($request->variant_id)) {
@@ -200,9 +248,26 @@ class WarehouseTransferController extends Controller
     {
         Gate::authorize('view', $warehouseTransfer);
 
+        $user = auth()->user();
+
         // Verify transfer belongs to current account
-        if ($warehouseTransfer->account_id !== auth()->user()->account_id) {
+        if ($warehouseTransfer->account_id !== $user->account_id) {
             abort(403);
+        }
+
+        // Branch managers can only view transfers involving warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $hasFromAccess = $warehouseTransfer->fromWarehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            $hasToAccess = $warehouseTransfer->toWarehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            if (!$hasFromAccess && !$hasToAccess) {
+                abort(403, 'Bu transferə giriş icazəniz yoxdur.');
+            }
         }
 
         $warehouseTransfer->load(['fromWarehouse', 'toWarehouse', 'product', 'variant', 'requestedBy', 'approvedBy']);

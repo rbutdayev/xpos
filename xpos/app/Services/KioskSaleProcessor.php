@@ -33,16 +33,13 @@ class KioskSaleProcessor
 {
     protected LoyaltyService $loyaltyService;
     protected FiscalPrinterService $fiscalService;
-    protected DashboardService $dashboardService;
 
     public function __construct(
         LoyaltyService $loyaltyService,
-        FiscalPrinterService $fiscalService,
-        DashboardService $dashboardService
+        FiscalPrinterService $fiscalService
     ) {
         $this->loyaltyService = $loyaltyService;
         $this->fiscalService = $fiscalService;
-        $this->dashboardService = $dashboardService;
     }
 
     /**
@@ -64,12 +61,6 @@ class KioskSaleProcessor
             $sale = DB::transaction(function () use ($saleData, $accountId) {
                 return $this->createSale($saleData, $accountId);
             });
-
-            // Clear dashboard cache after successful sale
-            $account = \App\Models\Account::find($accountId);
-            if ($account) {
-                $this->dashboardService->clearCache($account);
-            }
 
             Log::info('Kiosk: Single sale processed successfully', [
                 'sale_id' => $sale->sale_id,
@@ -152,14 +143,6 @@ class KioskSaleProcessor
                     'local_id' => $saleData['local_id'] ?? null,
                     'error' => $e->getMessage(),
                 ];
-            }
-        }
-
-        // Clear dashboard cache after batch upload
-        if (count($results) > 0) {
-            $account = \App\Models\Account::find($accountId);
-            if ($account) {
-                $this->dashboardService->clearCache($account);
             }
         }
 

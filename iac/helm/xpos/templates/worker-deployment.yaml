@@ -41,6 +41,11 @@ spec:
         - configMapRef:
             name: {{ include "xpos.fullname" . }}-config
         env:
+        # Pod identification for distributed tracing
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         - name: APP_KEY
           valueFrom:
             secretKeyRef:

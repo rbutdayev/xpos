@@ -9,7 +9,6 @@ use App\Models\Supplier;
 use App\Models\SupplierCredit;
 use App\Models\GoodsReceipt;
 use App\Services\DocumentUploadService;
-use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +19,12 @@ use Inertia\Inertia;
 class ExpenseController extends Controller
 {
     private DocumentUploadService $documentService;
-    private DashboardService $dashboardService;
 
-    public function __construct(DocumentUploadService $documentService, DashboardService $dashboardService)
+    public function __construct(DocumentUploadService $documentService)
     {
         $this->middleware('auth');
         $this->middleware('account.access');
         $this->documentService = $documentService;
-        $this->dashboardService = $dashboardService;
     }
 
     public function index(Request $request)
@@ -423,9 +420,6 @@ class ExpenseController extends Controller
             }
         }
 
-        // Clear dashboard cache to reflect new expense
-        $this->dashboardService->clearCache(Auth::user()->account);
-
         return redirect()->route('expenses.index')
                         ->with('success', 'Xerc uğurla yaradıldı');
     }
@@ -513,9 +507,6 @@ class ExpenseController extends Controller
             'receipt_file_path' => $receiptPath,
             'notes' => $request->notes,
         ]);
-
-        // Clear dashboard cache to reflect updated expense
-        $this->dashboardService->clearCache(Auth::user()->account);
 
         return redirect()->route('expenses.show', $expense)
                         ->with('success', __('app.updated_successfully'));
@@ -606,9 +597,6 @@ class ExpenseController extends Controller
 
                 DB::commit();
 
-                // Clear dashboard cache to reflect deleted expense
-                $this->dashboardService->clearCache(Auth::user()->account);
-
                 return redirect()->route('expenses.index')
                     ->with('success', 'Xerc silindi və mal qəbulu ödənilməmiş statusuna qaytarıldı');
 
@@ -640,9 +628,6 @@ class ExpenseController extends Controller
 
         // Delete expense (deleting hook will handle supplier credit reversal)
         $expense->delete();
-
-        // Clear dashboard cache to reflect deleted expense
-        $this->dashboardService->clearCache(Auth::user()->account);
 
         return redirect()->route('expenses.index')
                         ->with('success', __('app.deleted_successfully'));
@@ -855,9 +840,6 @@ class ExpenseController extends Controller
 
             DB::commit();
 
-            // Clear dashboard cache to reflect goods receipt payment
-            $this->dashboardService->clearCache(auth()->user()->account);
-
             return back()->with('success',
                 $supplierCredit->remaining_amount == 0
                     ? 'Mal qəbulu tam ödənilib'
@@ -962,9 +944,6 @@ class ExpenseController extends Controller
 
             DB::commit();
 
-            // Clear dashboard cache to reflect deleted expenses
-            $this->dashboardService->clearCache($user->account);
-
             // Build response message
             if ($deletedCount > 0 && count($failedExpenses) === 0) {
                 return redirect()->back()->with('success', "{$deletedCount} xerc uğurla silindi");
@@ -1064,9 +1043,6 @@ class ExpenseController extends Controller
             }
 
             DB::commit();
-
-            // Clear dashboard cache to reflect batch payment
-            $this->dashboardService->clearCache(auth()->user()->account);
 
             return back()->with('success', "Partiya ödənişi uğurla tamamlandı. Ödənildi: {$paymentAmount} AZN");
 

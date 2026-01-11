@@ -11,7 +11,6 @@ use App\Models\ProductStock;
 use App\Models\StockMovement;
 use App\Models\StockHistory;
 use App\Services\DocumentUploadService;
-use App\Services\DashboardService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -44,7 +43,7 @@ class ProcessGoodsReceipt implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(DocumentUploadService $documentService, DashboardService $dashboardService): void
+    public function handle(DocumentUploadService $documentService): void
     {
         $this->asyncJob->markAsStarted('Mal qəbulu emal edilir...');
 
@@ -232,14 +231,6 @@ class ProcessGoodsReceipt implements ShouldQueue
             // Clean up temp document
             if ($this->documentTempPath && Storage::disk('local')->exists($this->documentTempPath)) {
                 Storage::disk('local')->delete($this->documentTempPath);
-            }
-
-            // Clear dashboard cache (only for completed, not drafts)
-            if (!$isDraft) {
-                $account = \App\Models\Account::find($accountId);
-                if ($account) {
-                    $dashboardService->clearCache($account);
-                }
             }
 
             $successMessage = $isDraft

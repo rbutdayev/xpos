@@ -145,6 +145,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->web(append: [
+            \App\Http\Middleware\RequestLogging::class,  // Request logging with correlation ID for distributed tracing
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\SecurityHeaders::class,  // Security: Add security headers to all responses
@@ -154,6 +155,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->api(append: [
+            \App\Http\Middleware\RequestLogging::class,  // Request logging for API
             \App\Http\Middleware\SetLocale::class,  // Set application locale for API requests
         ]);
 
@@ -169,6 +171,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // API routes don't need CSRF protection (stateless)
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Log all exceptions with context
+        $exceptions->reportable(function (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Exception occurred', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        });
+
         // Handle database connection errors
         $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
             // Handle missing tables

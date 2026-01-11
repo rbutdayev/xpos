@@ -106,8 +106,8 @@ class HandleInertiaRequests extends Middleware
         $query = \App\Models\Warehouse::where('account_id', $user->account_id)
             ->where('is_active', true);
 
-        // If user is sales_staff, only show warehouses they have access to through their branch
-        if ($user->role === 'sales_staff' && $user->branch_id) {
+        // Branch-restricted roles only see warehouses they have access to through their branch
+        if (in_array($user->role, ['sales_staff', 'branch_manager']) && $user->branch_id) {
             $query->whereHas('branches', function($q) use ($user) {
                 $q->where('branch_id', $user->branch_id);
             });

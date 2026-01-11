@@ -380,12 +380,6 @@ class SupplierController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            // Clear dashboard cache
-            if (class_exists('App\Services\DashboardService')) {
-                $dashboardService = app('App\Services\DashboardService');
-                $dashboardService->clearCache(Auth::user()->account);
-            }
-
             DB::commit();
 
             return redirect()->back()->with('success', 'Əl ilə borc uğurla yaradıldı');

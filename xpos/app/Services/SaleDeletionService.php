@@ -9,7 +9,6 @@ use App\Models\StockMovement;
 use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\DashboardService;
 
 class SaleDeletionService
 {
@@ -42,10 +41,6 @@ class SaleDeletionService
 
             // 5. Soft delete the sale
             $sale->delete();
-
-            // 6. Clear dashboard cache so the deleted sale doesn't appear in revenue
-            $dashboardService = app(DashboardService::class);
-            $dashboardService->clearCache($sale->account);
 
             Log::info('Sale deleted successfully', [
                 'sale_id' => $sale->sale_id,

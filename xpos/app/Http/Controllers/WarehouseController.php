@@ -25,11 +25,19 @@ class WarehouseController extends Controller
     public function index()
     {
         Gate::authorize('manage-inventory');
-        
-        $warehouses = Auth::user()->account->warehouses()
-            ->with(['branchAccess.branch'])
-            ->get();
-        
+
+        $user = Auth::user();
+        $query = $user->account->warehouses()->with(['branchAccess.branch']);
+
+        // Branch managers can only see warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $query->whereHas('branches', function($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        $warehouses = $query->get();
+
         return Inertia::render('Warehouse/Index', [
             'warehouses' => $warehouses
         ]);
@@ -38,9 +46,17 @@ class WarehouseController extends Controller
     public function create()
     {
         Gate::authorize('manage-inventory');
-        
-        $branches = Auth::user()->account->branches()->where('is_active', true)->get();
-        
+
+        $user = Auth::user();
+        $branchesQuery = $user->account->branches()->where('is_active', true);
+
+        // Branch managers can only create warehouses for their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $branchesQuery->where('id', $user->branch_id);
+        }
+
+        $branches = $branchesQuery->get();
+
         return Inertia::render('Warehouse/Create', [
             'branches' => $branches
         ]);
@@ -93,9 +109,22 @@ class WarehouseController extends Controller
     {
         Gate::authorize('access-account-data', $warehouse);
         Gate::authorize('manage-inventory');
-        
+
+        $user = Auth::user();
+
+        // Branch managers can only view warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $hasAccess = $warehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            if (!$hasAccess) {
+                abort(403, 'Bu anbara giriş icazəniz yoxdur.');
+            }
+        }
+
         $warehouse->load(['branchAccess.branch']);
-        
+
         return Inertia::render('Warehouse/Show', [
             'warehouse' => $warehouse
         ]);
@@ -105,10 +134,31 @@ class WarehouseController extends Controller
     {
         Gate::authorize('access-account-data', $warehouse);
         Gate::authorize('manage-inventory');
-        
+
+        $user = Auth::user();
+
+        // Branch managers can only edit warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $hasAccess = $warehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            if (!$hasAccess) {
+                abort(403, 'Bu anbara giriş icazəniz yoxdur.');
+            }
+        }
+
         $warehouse->load(['branchAccess.branch']);
-        $branches = Auth::user()->account->branches()->where('is_active', true)->get();
-        
+
+        $branchesQuery = $user->account->branches()->where('is_active', true);
+
+        // Branch managers can only see their own branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $branchesQuery->where('id', $user->branch_id);
+        }
+
+        $branches = $branchesQuery->get();
+
         return Inertia::render('Warehouse/Edit', [
             'warehouse' => $warehouse,
             'branches' => $branches
@@ -119,7 +169,20 @@ class WarehouseController extends Controller
     {
         Gate::authorize('access-account-data', $warehouse);
         Gate::authorize('manage-inventory');
-        
+
+        $user = Auth::user();
+
+        // Branch managers can only update warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $hasAccess = $warehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            if (!$hasAccess) {
+                abort(403, 'Bu anbara giriş icazəniz yoxdur.');
+            }
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:main,auxiliary,mobile',
@@ -186,11 +249,19 @@ class WarehouseController extends Controller
     public function inventory()
     {
         Gate::authorize('manage-inventory');
-        
-        $warehouses = Auth::user()->account->warehouses()
-            ->where('is_active', true)
-            ->get();
-        
+
+        $user = Auth::user();
+        $query = $user->account->warehouses()->where('is_active', true);
+
+        // Branch managers can only see warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $query->whereHas('branches', function($q) use ($user) {
+                $q->where('branch_id', $user->branch_id);
+            });
+        }
+
+        $warehouses = $query->get();
+
         return Inertia::render('Inventory/Index', [
             'warehouses' => $warehouses
         ]);
@@ -200,6 +271,19 @@ class WarehouseController extends Controller
     {
         Gate::authorize('access-account-data', $warehouse);
         Gate::authorize('manage-inventory');
+
+        $user = Auth::user();
+
+        // Branch managers can only view inventory for warehouses accessible to their branch
+        if ($user->role === 'branch_manager' && $user->branch_id) {
+            $hasAccess = $warehouse->branches()
+                ->where('branch_id', $user->branch_id)
+                ->exists();
+
+            if (!$hasAccess) {
+                abort(403, 'Bu anbara giriş icazəniz yoxdur.');
+            }
+        }
 
         $query = ProductStock::with(['product.category', 'warehouse'])
             ->where('warehouse_id', $warehouse->id)

@@ -12,7 +12,6 @@ use App\Models\StockHistory;
 use App\Models\ProductStock;
 use App\Models\AsyncJob;
 use App\Services\DocumentUploadService;
-use App\Services\DashboardService;
 use App\Jobs\ProcessGoodsReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,14 +23,12 @@ use Inertia\Inertia;
 class GoodsReceiptController extends Controller
 {
     private DocumentUploadService $documentService;
-    private DashboardService $dashboardService;
 
-    public function __construct(DocumentUploadService $documentService, DashboardService $dashboardService)
+    public function __construct(DocumentUploadService $documentService)
     {
         $this->middleware('auth');
         $this->middleware('account.access');
         $this->documentService = $documentService;
-        $this->dashboardService = $dashboardService;
     }
 
     public function index(Request $request)
@@ -342,11 +339,6 @@ class GoodsReceiptController extends Controller
 
             DB::commit();
 
-            // Clear dashboard cache to reflect new goods receipt (only for completed, not drafts)
-            if (!$isDraft) {
-                $this->dashboardService->clearCache(auth()->user()->account);
-            }
-
             $successMessage = $isDraft
                 ? 'Mal qəbulu qaralama olaraq saxlanıldı'
                 : 'Mal qəbulu uğurla yaradıldı';
@@ -572,9 +564,6 @@ class GoodsReceiptController extends Controller
 
             DB::commit();
 
-            // Clear dashboard cache to reflect completed goods receipt
-            $this->dashboardService->clearCache(auth()->user()->account);
-
             return redirect()->route('goods-receipts.index')
                 ->with('success', 'Mal qəbulu uğurla tamamlandı');
 
@@ -790,11 +779,6 @@ class GoodsReceiptController extends Controller
             }
 
             DB::commit();
-
-            // Clear dashboard cache to reflect updated goods receipt (only for completed, not drafts)
-            if (!$isDraft) {
-                $this->dashboardService->clearCache(auth()->user()->account);
-            }
 
             return redirect()->route('goods-receipts.show', $goodsReceipt)
                 ->with('success', 'Mal qəbulu uğurla yeniləndi');
@@ -1116,9 +1100,6 @@ class GoodsReceiptController extends Controller
             $goodsReceipt->delete();
 
             DB::commit();
-
-            // Clear dashboard cache to reflect deleted goods receipt
-            $this->dashboardService->clearCache(auth()->user()->account);
 
             \Log::info("Goods receipt deletion completed successfully", [
                 'receipt_id' => $goodsReceipt->id,
@@ -1455,11 +1436,6 @@ class GoodsReceiptController extends Controller
             }
 
             DB::commit();
-
-            // Clear dashboard cache
-            if ($deletedCount > 0) {
-                $this->dashboardService->clearCache(auth()->user()->account);
-            }
 
             if (count($errors) > 0) {
                 return back()

@@ -58,6 +58,38 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        // JSON structured logging for Kubernetes/Cloud environments
+        'json' => [
+            'driver' => 'monolog',
+            'handler' => StreamHandler::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+            'with' => [
+                'stream' => 'php://stdout',
+            ],
+            'formatter' => \Monolog\Formatter\JsonFormatter::class,
+            'formatter_with' => [
+                'includeStacktraces' => true,
+            ],
+        ],
+
+        // Stack for Kubernetes (JSON + stderr for errors)
+        'kubernetes' => [
+            'driver' => 'stack',
+            'channels' => ['json', 'stderr_errors'],
+            'ignore_exceptions' => false,
+        ],
+
+        // Stderr only for errors
+        'stderr_errors' => [
+            'driver' => 'monolog',
+            'level' => 'error',
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => 'php://stderr',
+            ],
+            'formatter' => \Monolog\Formatter\JsonFormatter::class,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

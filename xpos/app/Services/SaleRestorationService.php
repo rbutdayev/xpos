@@ -9,7 +9,6 @@ use App\Models\StockMovement;
 use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\DashboardService;
 
 class SaleRestorationService
 {
@@ -33,10 +32,6 @@ class SaleRestorationService
 
             // 3. Restore the sale
             $sale->restore();
-
-            // 4. Clear dashboard cache so the restored sale appears in revenue again
-            $dashboardService = app(DashboardService::class);
-            $dashboardService->clearCache($sale->account);
 
             Log::info('Sale restored successfully', [
                 'sale_id' => $sale->sale_id,

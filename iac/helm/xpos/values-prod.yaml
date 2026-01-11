@@ -69,16 +69,16 @@ healthCheck:
     failureThreshold: 5
 
 worker:
-  replicaCount: 5
+  replicaCount: 1
 
   # IMPROVEMENT: Better resource alignment
   resources:
     requests:
-      memory: "384Mi"  # Closer to limit
-      cpu: "200m"
-    limits:
-      memory: "512Mi"
+      memory: "512Mi"  # Closer to limit
       cpu: "500m"
+    limits:
+      memory: "756Mi"
+      cpu: "750m"
 
   autoscaling:
     enabled: true

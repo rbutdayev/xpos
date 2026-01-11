@@ -173,10 +173,10 @@ config:
   session:
     driver: redis
 
-  # Logging
+  # Logging - Use 'kubernetes' for JSON structured logging with distributed tracing
   log:
-    channel: stderr
-    level: info
+    channel: kubernetes  # Options: kubernetes (JSON for k8s), stderr, stack, daily
+    level: info          # Options: debug, info, warning, error
 
 # Secrets (reference existing secrets or create new ones)
 # SECURITY: DO NOT commit real secrets to git!

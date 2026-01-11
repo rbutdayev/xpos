@@ -33,7 +33,7 @@ class DashboardService
     {
         $cacheKey = "dashboard:financial:{$account->id}:" . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account) {
             $currentMonth = Carbon::now();
             $previousMonth = Carbon::now()->subMonth();
 
@@ -173,7 +173,7 @@ class DashboardService
     {
         $cacheKey = "dashboard:operational:{$account->id}:" . ($warehouseId ?? 'all') . ':' . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
             // Active customers (purchased in last 90 days)
             $activeCustomers = Sale::where('account_id', $account->id)
                 ->where('sale_date', '>=', Carbon::now()->subDays(90))
@@ -244,7 +244,7 @@ class DashboardService
     {
         $cacheKey = "dashboard:operational_warehouse:{$account->id}:" . ($warehouseId ?? 'all') . ':' . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
             // Products in stock
             $productsInStock = DB::table('product_stock')
                 ->join('products', 'product_stock.product_id', '=', 'products.id')
@@ -282,7 +282,7 @@ class DashboardService
     {
         $cacheKey = "dashboard:inventory_alerts:{$account->id}:" . ($warehouseId ?? 'all') . ':' . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account, $warehouseId) {
             $baseQuery = DB::table('product_stock')
                 ->join('products', 'product_stock.product_id', '=', 'products.id')
                 ->where('products.account_id', $account->id)
@@ -318,7 +318,7 @@ class DashboardService
 
         $cacheKey = "dashboard:services:{$account->id}:" . ($userId ?? 'all') . ':' . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $userId) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account, $userId) {
             $baseQuery = \App\Models\TailorService::where('account_id', $account->id)
                 ->when($userId, fn($q) => $q->where('employee_id', $userId));
 
@@ -379,7 +379,7 @@ class DashboardService
 
         $cacheKey = "dashboard:rentals:{$account->id}:" . ($userId ?? 'all') . ':' . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account, $userId) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account, $userId) {
             $baseQuery = \App\Models\Rental::where('account_id', $account->id)
                 ->when($userId, fn($q) => $q->where('user_id', $userId));
 
@@ -407,7 +407,7 @@ class DashboardService
     {
         $cacheKey = "dashboard:credits:{$account->id}:" . Carbon::now()->format('Y-m-d-H');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($account) {
+        return Cache::tags(["account:{$account->id}", 'dashboard'])->remember($cacheKey, self::CACHE_TTL, function () use ($account) {
             $currentMonth = Carbon::now();
 
             return [
@@ -431,56 +431,15 @@ class DashboardService
     }
 
     /**
-     * Clear cache for an account
-     * Clears all cached dashboard data for a specific time range
+     * Clear all dashboard cache for an account using tags
+     * Much more efficient than clearing individual keys
      */
     public function clearCache(Account $account): void
     {
-        // Generate cache keys for the last 48 hours + next 2 hours
-        // This ensures we clear both current and recent cached data
-        $now = Carbon::now();
-        $hours = [];
-        for ($i = -48; $i <= 2; $i++) {
-            $hours[] = $now->copy()->addHours($i)->format('Y-m-d-H');
-        }
+        Cache::tags(["account:{$account->id}"])->flush();
 
-        // All cache key prefixes for this account
-        $prefixes = [
-            "dashboard:financial:{$account->id}:",
-            "dashboard:credits:{$account->id}:",
-        ];
-
-        // Prefixes that might have warehouse variations
-        $warehousePrefixes = [
-            "dashboard:operational:{$account->id}:",
-            "dashboard:operational_warehouse:{$account->id}:",
-            "dashboard:inventory_alerts:{$account->id}:",
-            "dashboard:services:{$account->id}:",
-            "dashboard:rentals:{$account->id}:",
-        ];
-
-        // Clear simple prefixes (no warehouse variations)
-        foreach ($prefixes as $prefix) {
-            foreach ($hours as $hour) {
-                Cache::forget($prefix . $hour);
-            }
-        }
-
-        // Clear warehouse-specific prefixes
-        // Try common warehouse IDs (1-20) and 'all'
-        $warehouseIds = array_merge(['all'], range(1, 20));
-        foreach ($warehousePrefixes as $basePrefix) {
-            foreach ($warehouseIds as $warehouseId) {
-                $prefix = str_replace($account->id . ':', $account->id . ':' . $warehouseId . ':', $basePrefix);
-                foreach ($hours as $hour) {
-                    Cache::forget($prefix . $hour);
-                }
-            }
-        }
-
-        \Log::info('Dashboard cache cleared', [
+        \Log::info('Dashboard cache cleared using tags', [
             'account_id' => $account->id,
-            'keys_cleared' => count($prefixes) * count($hours) + count($warehousePrefixes) * count($warehouseIds) * count($hours),
         ]);
     }
 }
