@@ -119,12 +119,15 @@ class AttendanceController extends Controller
                 ], 422);
             }
 
-            // For QR check-in, use branch location as attendance location
+            // For QR check-in, use user's location if available, otherwise use branch location
+            $hasUserLocation = !empty($validated['latitude']) && !empty($validated['longitude']);
+
             $result = $this->attendanceService->checkIn(
                 $user->id,
-                $branch->latitude,
-                $branch->longitude,
-                0 // Perfect accuracy for QR-based check-in
+                $hasUserLocation ? $validated['latitude'] : $branch->latitude,
+                $hasUserLocation ? $validated['longitude'] : $branch->longitude,
+                $hasUserLocation ? ($validated['accuracy'] ?? 0) : 0,
+                $hasUserLocation ? null : 'QR taranıb, amma istifadəçinin GPS məlumatı əlçatan deyil.'
             );
         } else {
             // GPS-based check-in
@@ -172,12 +175,15 @@ class AttendanceController extends Controller
                 ], 422);
             }
 
-            // For QR check-out, use branch location as attendance location
+            // For QR check-out, use user's location if available, otherwise use branch location
+            $hasUserLocation = !empty($validated['latitude']) && !empty($validated['longitude']);
+
             $result = $this->attendanceService->checkOut(
                 $user->id,
-                $branch->latitude,
-                $branch->longitude,
-                0 // Perfect accuracy for QR-based check-out
+                $hasUserLocation ? $validated['latitude'] : $branch->latitude,
+                $hasUserLocation ? $validated['longitude'] : $branch->longitude,
+                $hasUserLocation ? ($validated['accuracy'] ?? 0) : 0,
+                $hasUserLocation ? null : 'QR taranıb, amma istifadəçinin GPS məlumatı əlçatan deyil.'
             );
         } else {
             // GPS-based check-out

@@ -52,12 +52,16 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
     const [scannedBranchId, setScannedBranchId] = useState<number | null>(null);
     const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
+    // Location permission modal state
+    const [showLocationModal, setShowLocationModal] = useState(true);
+    const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+
     const [location, setLocation] = useState<LocationState>({
         latitude: null,
         longitude: null,
         accuracy: null,
         error: null,
-        acquiring: true,
+        acquiring: false,
     });
 
     const checkInForm = useForm({
@@ -104,8 +108,12 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
 
     const isWithinRadius = distanceFromBranch !== null && distanceFromBranch <= allowedRadius;
 
-    // Request GPS location on mount
+    // Request GPS location only after permission is granted
     useEffect(() => {
+        if (!locationPermissionGranted) {
+            return;
+        }
+
         if (!navigator.geolocation) {
             setLocation({
                 latitude: null,
@@ -116,6 +124,8 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
             });
             return;
         }
+
+        setLocation(prev => ({ ...prev, acquiring: true }));
 
         const watchId = navigator.geolocation.watchPosition(
             (position) => {
@@ -158,7 +168,13 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
         return () => {
             navigator.geolocation.clearWatch(watchId);
         };
-    }, [t]);
+    }, [locationPermissionGranted, t]);
+
+    // Handle location permission request
+    const handleEnableLocation = () => {
+        setShowLocationModal(false);
+        setLocationPermissionGranted(true);
+    };
 
     // QR Scanner initialization and cleanup
     useEffect(() => {
@@ -257,10 +273,11 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
                 method: 'gps',
             });
         } else {
+            // For QR mode, include location if available (optional)
             checkInForm.setData({
-                latitude: null,
-                longitude: null,
-                accuracy: null,
+                latitude: location.latitude || null,
+                longitude: location.longitude || null,
+                accuracy: location.accuracy || null,
                 branch_id: scannedBranchId,
                 method: 'qr',
             });
@@ -285,10 +302,11 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
                 method: 'gps',
             });
         } else {
+            // For QR mode, include location if available (optional)
             checkOutForm.setData({
-                latitude: null,
-                longitude: null,
-                accuracy: null,
+                latitude: location.latitude || null,
+                longitude: location.longitude || null,
+                accuracy: location.accuracy || null,
                 branch_id: scannedBranchId,
                 method: 'qr',
             });
@@ -320,6 +338,70 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
     // Render page content
     const pageContent = (
         <div className="max-w-2xl mx-auto">
+                {/* Location Permission Modal - only show in GPS mode */}
+                {showLocationModal && scanMode === 'gps' && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white text-center">
+                                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <MapPinIcon className="w-12 h-12" />
+                                </div>
+                                <h2 className="text-2xl font-bold mb-2">{t('locationPermissionTitle', 'Məkan İcazəsi Tələb olunur')}</h2>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 space-y-4">
+                                <p className="text-slate-700 text-center leading-relaxed">
+                                    {t('locationPermissionMessage', 'Davamiyyət qeydini təsdiq etmək üçün cari GPS məkanınıza ehtiyacımız var. Bu sizin filialda olduğunuzu təsdiq edir.')}
+                                </p>
+
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                    <h3 className="font-semibold text-blue-900 mb-2 text-sm">
+                                        {t('whyWeNeedLocation', 'Niyə məkan lazımdır?')}
+                                    </h3>
+                                    <ul className="space-y-1.5 text-sm text-blue-800">
+                                        <li className="flex items-start">
+                                            <span className="mr-2">•</span>
+                                            <span>{t('locationReason1', 'Filialda olduğunuzu yoxlamaq')}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="mr-2">•</span>
+                                            <span>{t('locationReason2', 'Dəqiq davamiyyət qeydi aparmaq')}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="mr-2">•</span>
+                                            <span>{t('locationReason3', 'Təhlükəsizlik və hesabatlama')}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="pt-2 space-y-3">
+                                    <button
+                                        onClick={handleEnableLocation}
+                                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <MapPinIcon className="w-5 h-5" />
+                                        {t('enableLocation', 'Məkanı Aktivləşdir')}
+                                    </button>
+
+                                    {userBranch && (
+                                        <button
+                                            onClick={() => {
+                                                setShowLocationModal(false);
+                                                setScanMode('qr');
+                                            }}
+                                            className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                                        >
+                                            {t('useQrInstead', 'Əvəzinə QR kod istifadə et')}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
@@ -332,7 +414,12 @@ export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedR
                         {userBranch && (
                             <div className="flex items-center justify-center gap-2 p-1 bg-slate-100 rounded-lg">
                                 <button
-                                    onClick={() => setScanMode('gps')}
+                                    onClick={() => {
+                                        if (scanMode !== 'gps' && !locationPermissionGranted) {
+                                            setShowLocationModal(true);
+                                        }
+                                        setScanMode('gps');
+                                    }}
                                     className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md transition-all ${
                                         scanMode === 'gps'
                                             ? 'bg-white text-blue-600 shadow-sm font-medium'

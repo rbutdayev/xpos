@@ -63,5 +63,9 @@ return [
         'tax_number' => 'vergi nömrəsi',
         'voen' => 'VÖEN',
         'return_date' => 'qaytarma tarixi',
+        'latitude' => 'enlik (latitude)',
+        'longitude' => 'uzunluq (longitude)',
+        'accuracy' => 'dəqiqlik',
+        'branch_id' => 'filial',
     ],
 ];

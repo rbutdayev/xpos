@@ -135,9 +135,10 @@ class AttendanceService
      * @param float $latitude
      * @param float $longitude
      * @param float $accuracy GPS accuracy in meters
+     * @param string|null $notes Optional notes to add to the record
      * @return array ['success' => bool, 'message' => string, 'attendance' => AttendanceRecord|null]
      */
-    public function checkIn(int $userId, float $latitude, float $longitude, float $accuracy): array
+    public function checkIn(int $userId, float $latitude, float $longitude, float $accuracy, ?string $notes = null): array
     {
         $user = User::with('branch')->find($userId);
 
@@ -207,6 +208,7 @@ class AttendanceService
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'device_type' => $this->detectDeviceType(request()->userAgent()),
+                'notes' => $notes,
             ]);
 
             Log::info('User checked in successfully', [
@@ -242,9 +244,10 @@ class AttendanceService
      * @param float $latitude
      * @param float $longitude
      * @param float $accuracy GPS accuracy in meters
+     * @param string|null $notes Optional notes to add to the record
      * @return array ['success' => bool, 'message' => string, 'attendance' => AttendanceRecord|null]
      */
-    public function checkOut(int $userId, float $latitude, float $longitude, float $accuracy): array
+    public function checkOut(int $userId, float $latitude, float $longitude, float $accuracy, ?string $notes = null): array
     {
         $user = User::with('branch')->find($userId);
 
@@ -321,6 +324,7 @@ class AttendanceService
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'device_type' => $this->detectDeviceType(request()->userAgent()),
+                'notes' => $notes,
             ]);
 
             Log::info('User checked out successfully', [

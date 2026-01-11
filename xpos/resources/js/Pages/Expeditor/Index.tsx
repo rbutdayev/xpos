@@ -121,6 +121,10 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
     const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
     const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '' });
 
+    // Location permission modal state
+    const [showLocationModal, setShowLocationModal] = useState(true);
+    const [locationPermissionDismissed, setLocationPermissionDismissed] = useState(false);
+
     // Location state
     const [locationData, setLocationData] = useState<LocationData>({
         latitude: null,
@@ -404,6 +408,37 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
     const cartTotal = cart.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
     const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+    // Handle location permission request
+    const handleEnableLocation = () => {
+        setShowLocationModal(false);
+        setLocationPermissionDismissed(true);
+        // Trigger location input automatically
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const timestamp = new Date().toISOString();
+                    setLocationData({
+                        latitude,
+                        longitude,
+                        address: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+                        timestamp,
+                    });
+                    setShowFilters(true); // Expand filters to show captured location
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    setShowFilters(true); // Still expand filters so user can try again
+                }
+            );
+        }
+    };
+
+    const handleDismissLocationModal = () => {
+        setShowLocationModal(false);
+        setLocationPermissionDismissed(true);
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Expeditor - Field Sales" />
@@ -462,6 +497,74 @@ export default function Index({ branches, initialProducts, defaultBranch, auth }
             `}</style>
 
             <div className="expeditor-page min-h-screen bg-gradient-to-b from-slate-50 to-white pb-32">
+                {/* Location Permission Modal */}
+                {showLocationModal && !locationPermissionDismissed && !locationData.latitude && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+                            {/* Header */}
+                            <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 px-6 py-8 text-white text-center">
+                                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <MapPinIcon className="w-12 h-12" />
+                                </div>
+                                <h2 className="expeditor-title text-2xl font-extrabold mb-2">
+                                    {t('expeditor.locationPermissionTitle', 'Məkan İcazəsi')}
+                                </h2>
+                                <p className="text-orange-100 text-sm font-medium">
+                                    {t('expeditor.locationPermissionSubtitle', 'Sahə satışları üçün')}
+                                </p>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 space-y-4">
+                                <p className="text-slate-700 text-center leading-relaxed font-medium">
+                                    {t('expeditor.locationPermissionMessage', 'Sahə satışlarını qeyd etmək və müştəri ziyarətlərini izləmək üçün məkan məlumatınıza ehtiyacımız var.')}
+                                </p>
+
+                                <div className="bg-gradient-to-br from-orange-50 to-pink-50 border-2 border-orange-200 rounded-2xl p-4">
+                                    <h3 className="font-black text-orange-900 mb-3 text-sm uppercase tracking-wide">
+                                        {t('expeditor.whyWeNeedLocation', 'Niyə məkan lazımdır?')}
+                                    </h3>
+                                    <ul className="space-y-2 text-sm text-orange-800 font-semibold">
+                                        <li className="flex items-start">
+                                            <span className="mr-2 text-orange-500">•</span>
+                                            <span>{t('expeditor.locationReason1', 'Müştəri ziyarətlərini qeyd etmək')}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="mr-2 text-orange-500">•</span>
+                                            <span>{t('expeditor.locationReason2', 'Satış yerini təyin etmək')}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="mr-2 text-orange-500">•</span>
+                                            <span>{t('expeditor.locationReason3', 'Dəqiq hesabatlama və təhlil')}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="pt-2 space-y-3">
+                                    <button
+                                        onClick={handleEnableLocation}
+                                        className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 text-white py-4 rounded-2xl font-black text-base shadow-2xl active:scale-98 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <MapPinIcon className="w-5 h-5" />
+                                        {t('expeditor.enableLocation', 'Məkanı Aktivləşdir')}
+                                    </button>
+
+                                    <button
+                                        onClick={handleDismissLocationModal}
+                                        className="w-full bg-slate-100 text-slate-700 py-3 rounded-2xl font-bold transition-colors active:scale-95"
+                                    >
+                                        {t('expeditor.maybeLater', 'Sonra')}
+                                    </button>
+
+                                    <p className="text-xs text-center text-slate-500 font-medium">
+                                        {t('expeditor.locationOptionalNote', 'Məkan məlumatı vacib deyil, lakin tövsiyə olunur')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Compact Mobile Header */}
                 <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
                     <div className="px-4 py-3">
