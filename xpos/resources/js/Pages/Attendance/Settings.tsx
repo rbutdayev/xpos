@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useForm, Link } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { useForm, Link, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -30,10 +30,22 @@ interface Branch {
 interface Props {
     branches: Branch[];
     allowedRadius: number;
+    locale?: string;
 }
 
-export default function Settings({ branches, allowedRadius }: Props) {
-    const { t } = useTranslation(['attendance', 'common']);
+export default function Settings({ branches, allowedRadius, locale }: Props) {
+    const { t, i18n } = useTranslation(['attendance', 'common']);
+    const { locale: backendLocale } = usePage().props as any;
+
+    // Use backend-determined locale (user → account → company → system default)
+    const effectiveLocale = locale || backendLocale || 'az';
+
+    // Initialize i18n with backend locale on mount
+    useEffect(() => {
+        if (i18n.language !== effectiveLocale) {
+            i18n.changeLanguage(effectiveLocale);
+        }
+    }, [effectiveLocale, i18n]);
     const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
     const [isEditingLocation, setIsEditingLocation] = useState(false);
     const [gettingLocation, setGettingLocation] = useState(false);

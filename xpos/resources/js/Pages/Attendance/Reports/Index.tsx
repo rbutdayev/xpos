@@ -1,5 +1,5 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SharedDataTable, { Column, Filter } from '@/Components/SharedDataTable';
@@ -58,11 +58,23 @@ interface Props {
         date_to?: string;
         per_page?: number;
     };
+    locale?: string;
 }
 
-export default function AttendanceReports({ attendances, branches, stats, filters }: Props) {
-    const { t } = useTranslation('attendance');
+export default function AttendanceReports({ attendances, branches, stats, filters, locale }: Props) {
+    const { t, i18n } = useTranslation('attendance');
     const { t: tc } = useTranslation('common');
+    const { locale: backendLocale } = usePage().props as any;
+
+    // Use backend-determined locale (user → account → company → system default)
+    const effectiveLocale = locale || backendLocale || 'az';
+
+    // Initialize i18n with backend locale on mount
+    useEffect(() => {
+        if (i18n.language !== effectiveLocale) {
+            i18n.changeLanguage(effectiveLocale);
+        }
+    }, [effectiveLocale, i18n]);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [branchFilter, setBranchFilter] = useState(filters.branch_id?.toString() || '');
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');

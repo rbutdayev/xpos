@@ -1,4 +1,5 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { QRCodeSVG } from 'qrcode.react';
@@ -13,10 +14,22 @@ interface Branch {
 
 interface Props {
     branches: Branch[];
+    locale?: string;
 }
 
-export default function AttendanceQRCodes({ branches }: Props) {
-    const { t } = useTranslation('attendance');
+export default function AttendanceQRCodes({ branches, locale }: Props) {
+    const { t, i18n } = useTranslation('attendance');
+    const { locale: backendLocale } = usePage().props as any;
+
+    // Use backend-determined locale (user → account → company → system default)
+    const effectiveLocale = locale || backendLocale || 'az';
+
+    // Initialize i18n with backend locale on mount
+    useEffect(() => {
+        if (i18n.language !== effectiveLocale) {
+            i18n.changeLanguage(effectiveLocale);
+        }
+    }, [effectiveLocale, i18n]);
 
     const handlePrint = () => {
         window.print();

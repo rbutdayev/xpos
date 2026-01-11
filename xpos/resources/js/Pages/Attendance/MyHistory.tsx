@@ -1,5 +1,5 @@
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
@@ -31,10 +31,22 @@ interface Props {
         date_from?: string;
         date_to?: string;
     };
+    locale?: string;
 }
 
-export default function MyHistory({ records, stats, filters }: Props) {
-    const { t } = useTranslation('attendance');
+export default function MyHistory({ records, stats, filters, locale }: Props) {
+    const { t, i18n } = useTranslation('attendance');
+    const { locale: backendLocale } = usePage().props as any;
+
+    // Use backend-determined locale (user → account → company → system default)
+    const effectiveLocale = locale || backendLocale || 'az';
+
+    // Initialize i18n with backend locale on mount
+    useEffect(() => {
+        if (i18n.language !== effectiveLocale) {
+            i18n.changeLanguage(effectiveLocale);
+        }
+    }, [effectiveLocale, i18n]);
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
 

@@ -33,6 +33,7 @@ interface Props {
         distance_from_branch: number;
     } | null;
     allowedRadius: number;
+    locale?: string;
 }
 
 interface LocationState {
@@ -43,9 +44,20 @@ interface LocationState {
     acquiring: boolean;
 }
 
-export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedRadius }: Props) {
-    const { t } = useTranslation('attendance');
+export default function Scan({ userBranch, todayCheckIn, todayCheckOut, allowedRadius, locale }: Props) {
+    const { t, i18n } = useTranslation('attendance');
     const user = usePage().props.auth.user;
+    const { locale: backendLocale } = usePage().props as any;
+
+    // Use backend-determined locale (user → account → company → system default)
+    const effectiveLocale = locale || backendLocale || 'az';
+
+    // Initialize i18n with backend locale on mount
+    useEffect(() => {
+        if (i18n.language !== effectiveLocale) {
+            i18n.changeLanguage(effectiveLocale);
+        }
+    }, [effectiveLocale, i18n]);
     const [scanMode, setScanMode] = useState<'gps' | 'qr'>('gps');
     const [qrScannerActive, setQrScannerActive] = useState(false);
     const [qrError, setQrError] = useState<string | null>(null);
